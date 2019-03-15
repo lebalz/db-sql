@@ -50,3 +50,11 @@ yarn-debug.log*
 # Ignore vs code settings
 .vscode
 .solargraph.yml
+
+/public/packs
+/public/packs-test
+/node_modules
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
+.browserslistrc
