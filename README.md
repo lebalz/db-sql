@@ -11,6 +11,8 @@ Things you may want to cover:
 
 * Configuration
 
+add pg extension pgcrypto `CREATE EXTENSION pgcrypto;`
+
 * Database creation
 
 * Database initialization

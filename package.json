@@ -22,6 +22,8 @@
     "typescript": "^3.3.3333"
   },
   "devDependencies": {
+    "morgan": "^1.9.1",
+    "express": "^4.16.4",
     "webpack-dev-server": "^3.2.1"
   }
 }
