@@ -28,13 +28,13 @@ module Resources
 
       desc 'Create DB Connection'
       params do
-        requires :name, type: String, desc: ''
-        requires :db_type, type: Symbol, default: :psql, values: %i[psql mysql mariadb sqlite], desc: ''
-        requires :host, type: String, desc: ''
-        requires :port, type: Integer, desc: ''
-        requires :password, type: String, desc: ''
-        optional :init_db, type: String, desc: ''
-        optional :init_schema, type: String, desc: ''
+        requires :name, type: String, desc: 'Display text for this connection'
+        requires :db_type, type: Symbol, default: :psql, values: %i[psql mysql mariadb sqlite], desc: 'db type'
+        requires :host, type: String, desc: 'host'
+        requires :port, type: Integer, desc: 'port'
+        requires :password, type: String, desc: 'db password'
+        optional :init_db, type: String, desc: 'initial database'
+        optional :init_schema, type: String, desc: 'initial schema'
       end
       post do
         encrypted_password = encrypt(params[:password])
