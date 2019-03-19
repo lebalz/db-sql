@@ -2,6 +2,7 @@ class User < ApplicationRecord
   has_secure_password
 
   has_many :login_tokens, dependent: :destroy
+  has_many :db_connections, dependent: :destroy
 
   validates :email, presence: true, uniqueness: true
 
