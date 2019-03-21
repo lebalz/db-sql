@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_03_18_190402) do
+ActiveRecord::Schema.define(version: 2019_03_21_070416) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -23,9 +23,9 @@ ActiveRecord::Schema.define(version: 2019_03_18_190402) do
     t.string "host"
     t.integer "port"
     t.string "password_encrypted"
-    t.string "iv"
-    t.string "init_db"
-    t.string "init_schema"
+    t.string "initialization_vector"
+    t.string "initial_db"
+    t.string "initial_schema"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_db_connections_on_user_id"

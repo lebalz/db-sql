@@ -14,8 +14,8 @@ module Resources
         cipher.key = aes_key
         pw_encrypted = cipher.update(password) + cipher.final
         {
-          password: Base64.strict_encode64(pw_encrypted),
-          iv: Base64.strict_encode64(iv),
+          encrypted_password: Base64.strict_encode64(pw_encrypted),
+          initialization_vector: Base64.strict_encode64(iv),
           key: key
         }
       end
@@ -33,8 +33,8 @@ module Resources
         requires :host, type: String, desc: 'host'
         requires :port, type: Integer, desc: 'port'
         requires :password, type: String, desc: 'db password'
-        optional :init_db, type: String, desc: 'initial database'
-        optional :init_schema, type: String, desc: 'initial schema'
+        optional :initial_db, type: String, desc: 'initial database'
+        optional :initial_schema, type: String, desc: 'initial schema'
       end
       post do
         encrypted_password = encrypt(params[:password])
@@ -44,10 +44,10 @@ module Resources
           db_type: DbConnection.db_types[params[:db_type]],
           host: params[:host],
           port: params[:port],
-          password_encrypted: encrypted_password[:password],
-          iv: encrypted_password[:iv],
-          init_db: params[:init_db],
-          init_schema: params[:init_schema]
+          password_encrypted: encrypted_password[:encrypted_password],
+          initialization_vector: encrypted_password[:initialization_vector],
+          initial_db: params[:initial_db],
+          initial_schema: params[:initial_schema]
         )
         present db_connection, with: Entities::DbConnection
       end

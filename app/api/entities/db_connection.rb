@@ -7,9 +7,9 @@ module Entities
     expose :host
     expose :port
     expose :password_encrypted
-    expose :iv
-    expose :init_db
-    expose :init_schema
+    expose :initialization_vector
+    expose :initial_db
+    expose :initial_schema
     expose :created_at
   end
 end
