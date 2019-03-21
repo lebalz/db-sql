@@ -6,10 +6,15 @@ module Resources
       # generate a key to encrypt db passwords client side
       # @param password [String] clear text password. (Not stored in backend)
       def crypto_key(password)
-        # OpenSSL::HMAC.hexdigest("SHA256", @user.id + password, password)
-        Base64.strict_encode64(
-          Digest::SHA256.digest(@user.id + password)
+        hash = OpenSSL::Digest::SHA256.new
+        key = OpenSSL::KDF.pbkdf2_hmac(
+          password,
+          salt: @user.id,
+          iterations: 20_000,
+          length: hash.length,
+          hash: hash
         )
+        Base64.strict_encode64(key)
       end
     end
     route_setting :auth, disabled: true
