@@ -45,7 +45,7 @@ RSpec.describe DbConnection, type: :model do
     it 'returns unique crypto key' do
       user1 = FactoryBot.create(:user)
       user2 = FactoryBot.create(:user)
-      expect(user1.crypto_key('foobar')).not_to equal(user2.crypto_key('foobar'))
+      expect(user1.crypto_key('foobar')).not_to eq(user2.crypto_key('foobar'))
     end
   end
 end

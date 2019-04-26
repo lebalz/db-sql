@@ -18,7 +18,6 @@
 
 class DbConnection < ApplicationRecord
   enum db_type: [:psql, :mysql, :mariadb, :sqlite]
-  enum default_port: { psql: 5432, mysql: 3306, mariadb: 3306 }
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
