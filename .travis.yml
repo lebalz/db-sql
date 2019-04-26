@@ -1,0 +1,12 @@
+addons:
+  postgresql: 11.2
+before_script:
+  - cp config/database.yml.travis config/database.yml
+  - psql -c 'create database travis_ci_test;' -U postgres
+dist: xenial
+language: ruby
+rvm:
+  - 2.6.2
+script:
+  - bundle exec rails db:setup RAILS_ENV=test
+  - bundle exec rspec

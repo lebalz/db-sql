@@ -1,26 +1,9 @@
-# README
+# DB-SQL
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Setup
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-add pg extension pgcrypto `CREATE EXTENSION pgcrypto;`
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+1. `mv .env.example .env`
+2. Update `.env` with your credentials.
+3. `yarn install`
+4. `bundle`
+5. `rails db:setup`
