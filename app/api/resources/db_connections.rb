@@ -1,25 +1,5 @@
 module Resources
   class DbConnections < Grape::API
-    
-    helpers do
-
-      def encrypt(password)
-        key = request.headers['Encryption-Key']
-        error!('No AES key sent', 401) unless key
-
-        aes_key = Base64.strict_decode64(key)
-        cipher = OpenSSL::Cipher::AES.new(256, :CBC)
-        iv = cipher.random_iv
-        cipher.encrypt
-        cipher.key = aes_key
-        pw_encrypted = cipher.update(password) + cipher.final
-        {
-          encrypted_password: Base64.strict_encode64(pw_encrypted),
-          initialization_vector: Base64.strict_encode64(iv),
-          key: key
-        }
-      end
-    end
     resource :db_connections do
       desc 'Get all Connections'
       get do
@@ -37,7 +17,10 @@ module Resources
         optional :initial_schema, type: String, desc: 'initial schema'
       end
       post do
-        encrypted_password = encrypt(params[:password])
+        encrypted_password = DbConnection.encrypt(
+          key: request.headers['Encryption-Key'],
+          password: params[:password]
+        )
         db_connection = DbConnection.create!(
           user: current_user,
           name: params[:name],
