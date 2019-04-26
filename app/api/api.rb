@@ -17,6 +17,7 @@ class API < Grape::API
   end
 
   format :json
+  default_format :json
   formatter :json, JsonFormatter
 
   include ErrorHandling
@@ -52,6 +53,7 @@ class API < Grape::API
 
   mount Resources::Login
   mount Resources::Users
+  mount Resources::DbConnections
 
   # This needs to happen at the very end of this file.
   add_swagger_documentation(

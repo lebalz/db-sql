@@ -1,5 +1,17 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: login_tokens
+#
+#  id         :uuid             not null, primary key
+#  token      :string
+#  user_id    :uuid             not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+
+
 class LoginToken < ApplicationRecord
   belongs_to :user
 
