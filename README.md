@@ -9,3 +9,11 @@
 3. `yarn install`
 4. `bundle`
 5. `rails db:setup`
+
+If pgcrypto is not installed for a database (and not the postgres user is used):
+
+```
+$ sudo -u postgres psql
+postgres=# \c db_sql_<development|test>;
+postgres=# CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+```
