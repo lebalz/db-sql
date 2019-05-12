@@ -1,3 +1,5 @@
+require "#{Rails.root}/lib/queries/query"
+
 # == Schema Information
 #
 # Table name: db_connections
@@ -56,6 +58,82 @@ class DbConnection < ApplicationRecord
       initialization_vector: Base64.strict_encode64(iv),
       key: key
     }
+  end
+
+  def db_adapter
+    case db_type.to_sym
+    when :psql
+      'postgresql'
+    when :mysql
+      'mysql2'
+    end
+  end
+
+  def default_database
+    case db_type.to_sym
+    when :psql
+      'postgres'
+    when :mysql
+      'mysql'
+    end
+  end
+
+  def connect(key:, database:)
+    original_connection = ActiveRecord::Base.remove_connection
+    ActiveRecord::Base.establish_connection(
+      adapter: db_adapter,
+      host: host,
+      port: port,
+      username: username,
+      password: password(key),
+      database: database || initial_db || default_database
+    )
+    yield
+  ensure
+    ActiveRecord::Base.establish_connection(original_connection)
+  end
+
+  def exec_query(key:, database: nil)
+    connect(key: key, database: database) do
+      ActiveRecord::Base.connection.exec_query(yield)
+    end
+  end
+
+  def databases(key:)  
+    exec_query(key: key) do
+      query_for(db_type: db_type, name: :databases)
+    end&.rows&.flatten
+  end
+
+  def tables(key:, database:)
+    connect(key: key, database: database) do
+      ActiveRecord::Base.connection.tables
+    end
+  end
+
+  def columns(key:, database:, table:)
+    connect(key: key, database: database) do
+      ActiveRecord::Base.connection.columns(table)
+    end.map(&:name)
+  end
+
+  def primary_keys(key:, database:, table:)
+    connect(key: key, database: database) do
+      ActiveRecord::Base.connection.primary_keys(table)
+    end
+  end
+
+  def foreign_keys(key:, database:, table:)
+    # seems to return only empty array!?
+    connect(key: key, database: database) do
+      ActiveRecord::Base.connection.foreign_keys(table)
+    end
+  end
+
+  def indexes(key:, database:, table:)
+    connect(key: key, database: database) do
+      ActiveRecord::Base.connection.indexes(table)
+    end
   end
 
 end

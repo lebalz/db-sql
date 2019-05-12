@@ -12,6 +12,7 @@ module Resources
         requires :db_type, type: Symbol, default: :psql, values: %i[psql mysql mariadb sqlite], desc: 'db type'
         requires :host, type: String, desc: 'host'
         requires :port, type: Integer, desc: 'port'
+        requires :username, type: String, desc: 'db user'
         requires :password, type: String, desc: 'db password'
         optional :initial_db, type: String, desc: 'initial database'
         optional :initial_schema, type: String, desc: 'initial schema'
@@ -27,12 +28,16 @@ module Resources
           db_type: DbConnection.db_types[params[:db_type]],
           host: params[:host],
           port: params[:port],
+          username: params[:username],
           password_encrypted: encrypted_password[:encrypted_password],
           initialization_vector: encrypted_password[:initialization_vector],
           initial_db: params[:initial_db],
           initial_schema: params[:initial_schema]
         )
         present db_connection, with: Entities::DbConnection
+      end
+
+      route_param :id, type: String, desc: 'DB Connection ID' do
       end
     end
   end
