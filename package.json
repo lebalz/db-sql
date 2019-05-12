@@ -2,28 +2,32 @@
   "name": "db-sql",
   "private": true,
   "dependencies": {
-    "@babel/preset-react": "^7.0.0",
     "@rails/webpacker": "^4.0.2",
-    "@types/react": "^16.8.8",
-    "@types/react-dom": "^16.8.2",
-    "@types/slate": "^0.44.0",
-    "@types/slate-react": "^0.21.1",
-    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "immutable": "^4.0.0-rc.12",
-    "mobx": "^5.9.0",
+    "mobx": "^5.9.4",
     "mobx-react": "^5.4.3",
     "prop-types": "^15.7.2",
-    "react": "^16.8.4",
-    "react-dom": "^16.8.4",
-    "react_ujs": "^2.4.4",
-    "slate": "^0.44.12",
-    "slate-react": "^0.21.18",
-    "ts-loader": "^5.3.3",
-    "typescript": "^3.3.3333"
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react_ujs": "^2.5.0",
+    "slate": "^0.47.2",
+    "slate-react": "^0.22.2",
+    "ts-loader": "^6.0.0"
   },
   "devDependencies": {
-    "morgan": "^1.9.1",
+    "typescript": "^3.4.5",
+    "@types/react": "^16.8.17",
+    "@types/react-dom": "^16.8.4",
+    "@types/slate": "^0.44.5",
+    "@types/slate-react": "^0.21.2",
     "express": "^4.16.4",
-    "webpack-dev-server": "^3.2.1"
+    "morgan": "^1.9.1",
+    "webpack-dev-server": "^3.3.1",
+    "babel-plugin-transform-decorators-legacy": "^1.3.5",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-react-app": "^9.0.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24"
   }
 }

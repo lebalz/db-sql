@@ -3,14 +3,12 @@
   <head>
     <title>DbSql</title>
     <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
-
-    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_pack_tag 'application' %>
+    <%= stylesheet_link_tag 'application', media: 'all' %>
+    <%= stylesheet_link_tag 'semantic', media: 'all' %>
   </head>
 
   <body>
     <%= yield %>
+    <%= javascript_pack_tag 'App' %>
   </body>
 </html>

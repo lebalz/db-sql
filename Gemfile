@@ -37,7 +37,6 @@ gem 'sidekiq'
 gem 'semantic-ui-sass'
 gem 'uglifier', '>=4.1.12'
 gem 'webpacker', '~>4.0.2'
-gem 'react-rails'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.1.0', require: false
