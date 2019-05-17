@@ -4,6 +4,8 @@ addons:
     packages:
       - postgresql-10
       - postgresql-client-10
+env:
+  - DB_SQL_DATABASE_USER=postgres
 before_script:
   - cp config/database.yml.travis config/database.yml
   - psql -c 'DROP DATABASE IF EXISTS travis_ci_test;' -U postgres
