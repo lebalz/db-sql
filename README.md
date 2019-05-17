@@ -15,8 +15,8 @@
 To create a new postgres user for this project:
 ```
 sudo -u postgres psql
-postgres=# create user foo with encrypted password 'bar';
-postgres=# alter role foo with superuser;
+postgres=# CREATE USER foo WITH ENCRYPTED PASSWORD 'bar';
+postgres=# ALTER ROLTE foo WITH superuser;
 ```
 
 If pgcrypto is not installed for a database, install it to the public schema:
