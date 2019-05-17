@@ -3,6 +3,7 @@
   "private": true,
   "dependencies": {
     "@rails/webpacker": "^4.0.2",
+    "axios": "^0.18.0",
     "immutable": "^4.0.0-rc.12",
     "mobx": "^5.9.4",
     "mobx-react": "^5.4.3",
@@ -10,24 +11,28 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react_ujs": "^2.5.0",
+    "semantic-ui-react": "^0.87.1",
     "slate": "^0.47.2",
     "slate-react": "^0.22.2",
     "ts-loader": "^6.0.0"
   },
   "devDependencies": {
-    "typescript": "^3.4.5",
     "@types/react": "^16.8.17",
     "@types/react-dom": "^16.8.4",
     "@types/slate": "^0.44.5",
     "@types/slate-react": "^0.21.2",
-    "express": "^4.16.4",
-    "morgan": "^1.9.1",
-    "webpack-dev-server": "^3.3.1",
     "babel-plugin-transform-decorators-legacy": "^1.3.5",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "babel-preset-react-app": "^9.0.0",
     "babel-preset-stage-0": "^6.24.1",
-    "babel-plugin-transform-react-remove-prop-types": "^0.4.24"
+    "express": "^4.16.4",
+    "morgan": "^1.9.1",
+    "tslint": "^5.16.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "tslint-react": "^4.0.0",
+    "typescript": "^3.4.5",
+    "webpack-dev-server": "^3.3.1"
   }
 }
