@@ -8,8 +8,8 @@ module Entities
     expose :last_login do |user, _|
       user.login_tokens.order(:updated_at).last.updated_at
     end
-    expose :aes_key do |_, options|
-      options[:aes_key]
+    expose :crypto_key do |_, options|
+      options[:crypto_key]
     end
     expose :created_at
   end

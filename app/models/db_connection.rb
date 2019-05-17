@@ -93,7 +93,7 @@ class DbConnection < ApplicationRecord
       port: port,
       username: username,
       password: password(key),
-      database: database || initial_db || default_database
+      database: database || initial_db || default_schema
     )
     yield
   ensure
