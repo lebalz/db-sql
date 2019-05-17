@@ -85,7 +85,6 @@ module Resources
           db_connection.update!(params[:data])
           present db_connection, with: Entities::DbConnection
         end
-
         
         desc 'Delete a connection'
         delete do
@@ -95,8 +94,60 @@ module Resources
 
         desc 'Get the databases of a db connection'
         get :databases do
-          { databases: db_connection.databases(key: crypto_key) }
+          db_connection.databases(key: crypto_key)
         end
+        route_param :database, type: String, desc: 'Database' do
+          desc 'Query the database'
+          params do
+            requires :query, type: String, desc: 'Sql query to perform on the database'
+          end
+          get :query do
+            result = db_connection.exec_query(key: crypto_key, database: params[:database]) do
+              params[:query]
+            end
+            result.to_hash
+          end
+
+          desc "Get the database's tables"
+          get :tables do
+            db_connection.tables(key: crypto_key, database: params[:database])
+          end
+          route_param :table, type: String, desc: 'Table' do
+            desc "Get the table's columns"
+            get :columns do
+              db_connection.columns(
+                key: crypto_key,
+                database: params[:database],
+                table: params[:table]
+              )
+            end
+            desc "Get the table's primary keys"
+            get :primary_keys do
+              db_connection.primary_keys(
+                key: crypto_key,
+                database: params[:database],
+                table: params[:table]
+              )
+            end
+            desc "Get the table's foreign keys"
+            get :foreign_keys do
+              present db_connection.foreign_keys(
+                key: crypto_key,
+                database: params[:database],
+                table: params[:table]
+              ), with: Entities::ForeignKey
+            end
+            desc "Get the table's indexes"
+            get :indexes do
+              present db_connection.indexes(
+                key: crypto_key,
+                database: params[:database],
+                table: params[:table]
+              ), with: Entities::Index
+            end
+          end  
+        end
+
       end
     end
   end
