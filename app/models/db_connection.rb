@@ -83,28 +83,37 @@ class DbConnection < ApplicationRecord
     end
   end
 
+  # @return [String] unique key for a db connection
+  def connection_key(database:)
+    database ||= initial_db || default_schema
+    "#{id}-#{database}"
+  end
+
   # @param key [String] base64 encoded crypto key from the user
   # @param database [String] name of the database
   def connect(key:, database:)
-    original_connection = ActiveRecord::Base.remove_connection
-    ActiveRecord::Base.establish_connection(
+    database ||= initial_db || default_schema
+    connection = ActiveRecord::ConnectionAdapters::ConnectionHandler.new
+    conn_key = connection_key(database: database)
+    connection.establish_connection(
       adapter: db_adapter,
       host: host,
       port: port,
       username: username,
       password: password(key),
-      database: database || initial_db || default_schema
+      database: database,
+      name: conn_key
     )
-    yield
+    yield(connection.retrieve_connection(conn_key))
   ensure
-    ActiveRecord::Base.establish_connection(original_connection)
+    connection.remove_connection(conn_key)
   end
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [ActiveRecord::Result]
   def exec_query(key:, database: nil)
-    connect(key: key, database: database) do
-      ActiveRecord::Base.connection.exec_query(yield)
+    connect(key: key, database: database) do |connection|
+      connection.exec_query(yield)
     end
   end
 
@@ -120,8 +129,8 @@ class DbConnection < ApplicationRecord
   # @param database [String] name of the database
   # @return [Array<String>] all tables in the database
   def tables(key:, database:)
-    connect(key: key, database: database) do
-      ActiveRecord::Base.connection.tables
+    connect(key: key, database: database) do |connection|
+      connection.tables
     end
   end
 
@@ -130,8 +139,8 @@ class DbConnection < ApplicationRecord
   # @param table [String] name of the table
   # @return [Array<String>] columns of a table
   def columns(key:, database:, table:)
-    connect(key: key, database: database) do
-      ActiveRecord::Base.connection.columns(table)
+    connect(key: key, database: database) do |connection|
+      connection.columns(table)
     end.map(&:name)
   end
 
@@ -140,8 +149,8 @@ class DbConnection < ApplicationRecord
   # @param table [String] name of the table
   # @return [Array<String>] primary keys of a table
   def primary_keys(key:, database:, table:)
-    connect(key: key, database: database) do
-      ActiveRecord::Base.connection.primary_keys(table)
+    connect(key: key, database: database) do |connection|
+      connection.primary_keys(table)
     end
   end
 
@@ -175,8 +184,8 @@ class DbConnection < ApplicationRecord
   #     }
   #   ]
   def foreign_keys(key:, database:, table:)
-    connect(key: key, database: database) do
-      ActiveRecord::Base.connection.foreign_keys(table).map { |fk_def| fk_def.to_h }
+    connect(key: key, database: database) do |connection|
+      connection.foreign_keys(table).map { |fk_def| fk_def.to_h }
     end
   end
 
@@ -201,8 +210,8 @@ class DbConnection < ApplicationRecord
   #     }
   #   ]
   def indexes(key:, database:, table:)
-    connect(key: key, database: database) do
-      ActiveRecord::Base.connection.indexes(table).map do |index_def|
+    connect(key: key, database: database) do |connection|
+      connection.indexes(table).map do |index_def|
         index_def.instance_values.symbolize_keys
       end
     end
