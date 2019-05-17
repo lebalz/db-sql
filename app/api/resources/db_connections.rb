@@ -105,7 +105,7 @@ module Resources
             result = db_connection.exec_query(key: crypto_key, database: params[:database]) do
               params[:query]
             end
-            result.to_hash
+            result.to_a
           end
 
           desc "Get the database's tables"
