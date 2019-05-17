@@ -3,7 +3,7 @@ require_relative '../rails_helper.rb'
 
 RSpec.describe "API::Resources::DbConnection" do
   before(:all) do
-    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD")
+    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
     sql_path = Rails.root.join('spec', 'fixtures', 'database', 'ninja_turtles_create.sql')
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
     @db_connection = FactoryBot.create(:db_connection)
@@ -17,7 +17,7 @@ RSpec.describe "API::Resources::DbConnection" do
     }
   end
   after(:all) do
-    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD")
+    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
     sql_path = Rails.root.join('spec', 'fixtures', 'database', 'ninja_turtles_drop.sql')
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
   end
