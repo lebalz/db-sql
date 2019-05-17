@@ -1,6 +1,6 @@
-import * as React from "react";
-import { Value } from "slate";
-import { Editor } from "slate-react";
+import * as React from 'react';
+import { Value } from 'slate';
+import { Editor } from 'slate-react';
 
 // Create our initial value...
 const initialValue = (Value as any).fromJSON({
@@ -18,16 +18,16 @@ const initialValue = (Value as any).fromJSON({
       },
     ],
   },
-})
+});
 class DbSql extends React.Component {
   // Set the initial value when the app is first constructed.
   state = {
     value: initialValue,
-  }
+  };
 
   // On change, update the app's React state with the new editor value.
   onChange = ({ value }) => {
-    this.setState({ value })
+    this.setState({ value });
   }
 
   render() {
@@ -41,4 +41,4 @@ class DbSql extends React.Component {
   }
 }
 
-export default DbSql
+export default DbSql;

@@ -1,4 +1,4 @@
-import { observable, reaction } from 'mobx';
+import { observable } from 'mobx';
 import SessionStore from './session_store';
 
 export class RootStore {
@@ -8,13 +8,12 @@ export class RootStore {
 
   @observable initialized = false;
 
-  constructor () {
+  constructor() {
     this.session = new SessionStore(this);
     this.stores.push(this.session)
 
     this.initialized = true;
   }
-
 }
 
 const instance = new RootStore();
