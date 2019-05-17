@@ -59,4 +59,4 @@ yarn-debug.log*
 .yarn-integrity
 .browserslistrc
 
-db/dev_seed.rb
+db_connections.yaml

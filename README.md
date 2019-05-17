@@ -12,17 +12,27 @@
 
 ### configure postgres *
 
-To create a postgres new user for this project:
+To create a new postgres user for this project:
 ```
 sudo -u postgres psql
 postgres=# create user foo with encrypted password 'bar';
 postgres=# alter role foo with superuser;
 ```
 
-If pgcrypto is not installed for a database (and not the postgres user is used):
-
+If pgcrypto is not installed for a database, install it to the public schema:
 ```
 $ sudo -u postgres psql
-postgres=# \c db_sql_<development|test>;
-postgres=# CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+postgres=# CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA public;
 ```
+
+### Custom Seeds
+
+If you need for development custom seeds of DbConnections with confidential credentials, then create a new File `seed_db_connections.yaml` in root:
+
+```sh
+cp seed_db_connections.example.yaml seed_db_connections.yaml
+```
+edit it to your needs and reseed.
+
+The fields `db_initial_db` and `db_initial_schema` ar optional.
+
