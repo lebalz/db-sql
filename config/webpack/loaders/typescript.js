@@ -7,5 +7,5 @@ module.exports = {
       loader: 'ts-loader',
       options: PnpWebpackPlugin.tsLoaderOptions()
     }
-  ]
+  ],
 }

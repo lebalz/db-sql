@@ -4,7 +4,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '2.6.2'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 5.2.2', '>= 5.2.2.1'
+gem 'rails', '~> 6.0.0.rc1'
 gem 'pg', '~> 0.18'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 1.3.6'
@@ -37,7 +37,6 @@ gem 'sidekiq'
 gem 'semantic-ui-sass'
 gem 'uglifier', '>=4.1.12'
 gem 'webpacker', '~>4.0.2'
-gem 'react-rails'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.1.0', require: false
