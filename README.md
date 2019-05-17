@@ -4,11 +4,20 @@
 
 ## Setup
 
-1. `mv .env.example .env`
+1. `cp .env.example .env`
 2. Update `.env` with your credentials.
 3. `yarn install`
 4. `bundle`
-5. `rails db:setup`
+5. `rails db:setup` *
+
+### configure postgres *
+
+To create a postgres new user for this project:
+```
+sudo -u postgres psql
+postgres=# create user foo with encrypted password 'bar';
+postgres=# alter role foo with superuser;
+```
 
 If pgcrypto is not installed for a database (and not the postgres user is used):
 
