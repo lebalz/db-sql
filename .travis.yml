@@ -6,6 +6,7 @@ addons:
       - postgresql-client-10
 env:
   - DB_SQL_DATABASE_USER=postgres
+  - DB_SQL_DATABASE_PASSWORD=
 before_script:
   - cp config/database.yml.travis config/database.yml
   - psql -c 'DROP DATABASE IF EXISTS travis_ci_test;' -U postgres

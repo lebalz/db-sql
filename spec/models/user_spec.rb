@@ -1,4 +1,16 @@
 # frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id              :uuid             not null, primary key
+#  email           :string
+#  password_digest :string
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+
 require_relative '../rails_helper'
 
 RSpec.describe DbConnection, type: :model do

@@ -1,5 +1,4 @@
 require "#{Rails.root}/lib/queries/query"
-
 # == Schema Information
 #
 # Table name: db_connections
@@ -16,6 +15,7 @@ require "#{Rails.root}/lib/queries/query"
 #  initial_schema        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
+#  username              :string
 #
 
 class DbConnection < ApplicationRecord
@@ -38,6 +38,7 @@ class DbConnection < ApplicationRecord
 
   # @param key [String] base64 encoded crypto key from the user
   # @param password [String] password for db server connection to encrypt
+  # @option iv [string]
   # @return [Hash<symbol, string>] hash with encrypted password
   #   including salt and initialization_vector:
   # @example encrypted password
@@ -46,12 +47,13 @@ class DbConnection < ApplicationRecord
   #     initialization_vector: <Base64 enctoded string>,
   #     key: string
   #   }
-  def self.encrypt(key:, password:)
+  def self.encrypt(key:, password:, iv: nil)
     error!('No AES key sent', 401) unless key
 
     aes_key = Base64.strict_decode64(key)
     cipher = OpenSSL::Cipher::AES.new(256, :CBC)
-    iv = cipher.random_iv
+    iv = iv ? Base64.strict_decode64(iv) : cipher.random_iv
+    cipher.iv = iv
     cipher.encrypt
     cipher.key = aes_key
     pw_encrypted = cipher.update(password) + cipher.final

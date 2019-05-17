@@ -28,7 +28,6 @@ module Resources
         optional :initial_schema, type: String, desc: 'initial schema'
       end
       post do
-        require 'pry'; binding.pry;
         encrypted_password = DbConnection.encrypt(
           key: request.headers['Crypto-Key'],
           password: params[:password]
@@ -56,7 +55,7 @@ module Resources
 
         desc 'Get cleartext password'
         get :password do
-          { password: db_connection.password(crypto_key) }
+          db_connection.password(crypto_key)
         end
 
         desc 'Update a connection'
