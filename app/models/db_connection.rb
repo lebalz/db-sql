@@ -86,7 +86,7 @@ class DbConnection < ApplicationRecord
   end
 
   # @return [String] unique key for a db connection
-  def connection_key(database:)
+  private def connection_key(database:)
     database ||= initial_db || default_schema
     "#{id}-#{database}"
   end
