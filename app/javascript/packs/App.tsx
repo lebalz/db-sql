@@ -1,11 +1,9 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { Provider, observer } from 'mobx-react';
 import rootStore from '../stores/root_store';
 import Login from '../views/Login';
-import { createBrowserHistory } from 'history';
-import { syncHistoryWithStore } from 'mobx-react-router';
-import { Router } from 'react-router';
+import { Router, Route } from 'react-router';
 import Dashboard from '../components/Dashboard';
 
 const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
@@ -14,18 +12,15 @@ const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
     sessionStore={rootStore.session}
     routerStore={rootStore.routing}
   >
-    <Router history={history}>
-      {
-        loggedIn
-          ? <Dashboard />
-          : <Login />
-      }
+    <Router history={rootStore.session.history}>
+      <Fragment>
+        <Route path="/login" component={Login}/>
+        <Route path="/dashboard" component={Dashboard}/>
+
+      </Fragment>
     </Router>
   </Provider>
 ));
-
-const browserHistory = createBrowserHistory();
-const history = syncHistoryWithStore(browserHistory, rootStore.routing);
 
 @observer
 class App extends React.Component {

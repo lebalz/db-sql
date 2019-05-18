@@ -40,13 +40,7 @@
     ],
     "jsx-no-lambda": false,
     "no-this-assignment": false,
-    "align": false,
-    "no-trailing-whitespace": [
-      "error",
-      {
-        "skipBlankLines": true
-      }
-    ]
+    "align": false
   },
   "rulesDirectory": []
 }

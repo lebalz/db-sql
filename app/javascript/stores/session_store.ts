@@ -2,6 +2,8 @@ import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
 import { login, LoginUser, User, logout, validate } from '../api/user';
 import api from '../api/base';
+import { createBrowserHistory, Action, Location } from 'history';
+import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
 
 export enum LocalStorageKey {
   User = 'db-sql-current-user',
@@ -11,14 +13,18 @@ export enum LocalStorageKey {
 
 class SessionStore {
   @observable pCurrentUser: User | null = null;
+  browserHistory = createBrowserHistory();
+  history: SynchronizedHistory;
   private readonly root: RootStore;
 
-  constructor(root: RootStore) {
+  constructor(root: RootStore, routerStore: RouterStore) {
     this.root = root;
+    this.history = syncHistoryWithStore(this.browserHistory, routerStore);
+    this.history.subscribe(this.onRouteChange);
     reaction(
       () => this.root.initialized,
       () => {
-        this.setCurrentUser(SessionStore.fetchFromLocalStorage());
+        this.setCurrentUser(this.fetchFromLocalStorage());
 
         // If a request comes back unauthorized,
         // log the user out
@@ -38,7 +44,15 @@ class SessionStore {
     );
   }
 
-  static fetchFromLocalStorage(): LoginUser | null {
+  onRouteChange = (location: Location, action: Action) => {
+    if (!this.isLoggedIn && location.pathname !== '/login') {
+      this.history.replace('/login');
+    } else if (this.isLoggedIn && location.pathname === '/login') {
+      this.history.replace('/dashboard');
+    }
+  }
+
+  fetchFromLocalStorage(): LoginUser | null {
     const user = localStorage.getItem(LocalStorageKey.User);
 
     if (user !== null) {
@@ -79,6 +93,7 @@ class SessionStore {
     delete api.defaults.headers[LocalStorageKey.Authorization];
     delete api.defaults.headers[LocalStorageKey.CryptoKey];
     localStorage.removeItem(LocalStorageKey.User);
+    this.history.push('/login');
   }
 
   @action setCurrentUser(user?: LoginUser) {
@@ -93,6 +108,7 @@ class SessionStore {
       if (data.valid) {
         api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
         localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
+        this.history.push('/dashboard');
       } else {
         this.resetAuthorization();
       }

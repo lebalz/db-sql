@@ -11,11 +11,11 @@ export class RootStore {
   @observable initialized = false;
 
   constructor() {
-    this.session = new SessionStore(this);
-    this.stores.push(this.session);
-
     this.routing = new RouterStore();
     this.stores.push(this.routing);
+
+    this.session = new SessionStore(this, this.routing);
+    this.stores.push(this.session);
 
     this.initialized = true;
   }
