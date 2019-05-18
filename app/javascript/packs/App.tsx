@@ -7,16 +7,18 @@ import Login from '../views/Login';
 import { createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import { Router } from 'react-router';
+import Dashboard from '../components/Dashboard';
 
 const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
   <Provider
     rootStore={rootStore}
     sessionStore={rootStore.session}
+    routerStore={rootStore.routing}
   >
     <Router history={history}>
       {
         loggedIn
-          ? <DbSql />
+          ? <Dashboard />
           : <Login />
       }
     </Router>

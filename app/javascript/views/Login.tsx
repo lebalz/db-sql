@@ -2,15 +2,23 @@ import React, { Fragment } from 'react';
 import { inject } from 'mobx-react';
 import SessionStore from '../stores/session_store';
 import { Icon, Header, Divider, Form } from 'semantic-ui-react';
+import { RouterStore } from 'mobx-react-router';
+import DbSqlIcon from '../shared/DbSqlIcon';
 
 interface InjectedProps {
   sessionStore: SessionStore;
+  routerStore: RouterStore;
 }
 
-@inject('sessionStore')
+@inject('sessionStore', 'routerStore')
 export default class Login extends React.Component {
   private email: string = '';
   private password: string = '';
+
+  constructor(props: {}) {
+    super(props);
+    this.injected.routerStore.replace('/login');
+  }
 
   get injected() {
     return this.props as InjectedProps;
@@ -36,10 +44,7 @@ export default class Login extends React.Component {
           }}
         >
           <div>
-            <Icon.Group size="massive">
-              <Icon circular inverted color="teal" name="gem" />
-              <Icon corner="bottom right" color="violet" name="database" />
-            </Icon.Group>
+            <DbSqlIcon size="massive" />
             <Header as="h1" textAlign="center" style={{ marginTop: '40px' }}>
               DB SQL
             </Header>
