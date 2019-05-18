@@ -1,10 +1,10 @@
 import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
-import { login, LoginUser, User } from '../api/user';
+import { login, LoginUser, User, logout } from '../api/user';
 import api from '../api/base';
 
 class SessionStore {
-  @observable currentUser: User | null = null;
+  @observable pCurrentUser: User | null = null;
   private readonly root: RootStore;
 
   constructor(root: RootStore) {
@@ -15,8 +15,15 @@ class SessionStore {
     );
   }
 
+  @computed get currentUser() {
+    if (!this.pCurrentUser) {
+      throw new Error('No logged in User');
+    }
+    return this.pCurrentUser;
+  }
+
   @computed get isLoggedIn() {
-    return !!this.currentUser;
+    return !!this.pCurrentUser;
   }
 
   @action login(email: string, password: string) {
@@ -27,8 +34,23 @@ class SessionStore {
     });
   }
 
-  @action setCurrentUser(user: LoginUser) {
-    this.currentUser = user;
+  @action logout() {
+    logout().catch(({ error }) => {
+      console.log(error);
+    }).then(() => {
+      this.resetAuthorization();
+    });
+  }
+
+  resetAuthorization() {
+    this.pCurrentUser = null;
+    delete api.defaults.headers['Authorization'];
+    delete api.defaults.headers['Crypto-Key'];
+    localStorage.removeItem('db-sql-current-user');
+  }
+
+  @action setCurrentUser(user?: LoginUser) {
+    this.pCurrentUser = user;
     if (user === null) return;
 
     api.defaults.headers['Authorization'] = user.token;

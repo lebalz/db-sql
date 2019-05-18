@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Value } from 'slate';
 import { Editor } from 'slate-react';
+import Logout from './Navigation/Logout';
 
 // Create our initial value...
 const initialValue = (Value as any).fromJSON({
@@ -33,6 +34,7 @@ class DbSql extends React.Component {
   render() {
     return (
       <React.Fragment>
+        <Logout />
         <h1>DB SQL</h1>
         <Editor value={this.state.value} onChange={this.onChange} />
         <p>{(new Date()).toLocaleString('de-CH')}</p>

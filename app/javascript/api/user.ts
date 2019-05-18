@@ -23,3 +23,9 @@ export function login(email: string, password: string): AxiosPromise<LoginUser> 
     }
   );
 }
+
+export function logout() {
+  return api.post(
+    'logout'
+  );
+}

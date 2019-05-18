@@ -17,7 +17,6 @@ export default class Login extends React.Component {
   }
 
   login() {
-    console.log('login with: ', this.email, this.password);
     this.injected.sessionStore.login(
       this.email,
       this.password
