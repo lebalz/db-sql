@@ -29,3 +29,10 @@ export function logout() {
     'logout'
   );
 }
+
+export function validate(user: User): AxiosPromise<{ valid: boolean }> {
+  return api.post(
+    'user/validate',
+    user
+  );
+}

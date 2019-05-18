@@ -1,7 +1,13 @@
 import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
-import { login, LoginUser, User, logout } from '../api/user';
+import { login, LoginUser, User, logout, validate } from '../api/user';
 import api from '../api/base';
+
+export enum LocalStorageKey {
+  User = 'db-sql-current-user',
+  Authorization = 'Authorization',
+  CryptoKey = 'Crypto-Key'
+}
 
 class SessionStore {
   @observable pCurrentUser: User | null = null;
@@ -11,8 +17,34 @@ class SessionStore {
     this.root = root;
     reaction(
       () => this.root.initialized,
-      initialized => console.log('Initialized: ', initialized)
+      () => {
+        this.setCurrentUser(SessionStore.fetchFromLocalStorage());
+
+        // If a request comes back unauthorized,
+        // log the user out
+        const that = this;
+        api.interceptors.response.use(
+          (response) => {
+            return response;
+          },
+          (error) => {
+            if (error.response.status === 401) {
+              that.resetAuthorization();
+            }
+            return Promise.reject(error);
+          }
+        );
+      }
     );
+  }
+
+  static fetchFromLocalStorage(): LoginUser | null {
+    const user = localStorage.getItem(LocalStorageKey.User);
+
+    if (user !== null) {
+      return JSON.parse(user);
+    }
+    return null;
   }
 
   @computed get currentUser() {
@@ -44,18 +76,30 @@ class SessionStore {
 
   resetAuthorization() {
     this.pCurrentUser = null;
-    delete api.defaults.headers['Authorization'];
-    delete api.defaults.headers['Crypto-Key'];
-    localStorage.removeItem('db-sql-current-user');
+    delete api.defaults.headers[LocalStorageKey.Authorization];
+    delete api.defaults.headers[LocalStorageKey.CryptoKey];
+    localStorage.removeItem(LocalStorageKey.User);
   }
 
   @action setCurrentUser(user?: LoginUser) {
     this.pCurrentUser = user;
     if (user === null) return;
 
-    api.defaults.headers['Authorization'] = user.token;
-    api.defaults.headers['Crypto-Key'] = user.crypto_key;
-    localStorage.setItem('db-sql-current-user', JSON.stringify(user));
+    api.defaults.headers[LocalStorageKey.Authorization] = user.token;
+
+    // validate that the used token is from this user.
+    // else reset authorization
+    validate(user).then(({ data }) => {
+      if (data.valid) {
+        api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
+        localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
+      } else {
+        this.resetAuthorization();
+      }
+    }).catch((error) => {
+      console.log(error);
+      this.resetAuthorization();
+    });
   }
 
 }

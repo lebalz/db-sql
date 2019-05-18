@@ -1,8 +1,7 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider, observer } from 'mobx-react';
 import rootStore from '../stores/root_store';
-import DbSql from '../components/DbSql';
 import Login from '../views/Login';
 import { createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
