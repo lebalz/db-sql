@@ -15,6 +15,7 @@ class SessionStore {
   @observable private user: User | null = null;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
+  routeBeforeLogin: string | null = null;
   private readonly root: RootStore;
 
   constructor(root: RootStore, routerStore: RouterStore) {
@@ -46,9 +47,10 @@ class SessionStore {
 
   onRouteChange = (location: Location, action: Action) => {
     if (!this.isLoggedIn && location.pathname !== '/login') {
+      this.routeBeforeLogin = location.pathname;
       this.history.replace('/login');
     } else if (this.isLoggedIn && location.pathname === '/login') {
-      this.history.replace('/dashboard');
+      this.history.replace(this.routeBeforeLogin || '/dashboard');
     }
   }
 
@@ -93,7 +95,8 @@ class SessionStore {
     delete api.defaults.headers[LocalStorageKey.Authorization];
     delete api.defaults.headers[LocalStorageKey.CryptoKey];
     localStorage.removeItem(LocalStorageKey.User);
-    this.history.push('/login');
+    this.routeBeforeLogin = null;
+    this.history.replace('/login');
   }
 
   @action setCurrentUser(user: LoginUser | null) {

@@ -4,9 +4,9 @@ import { AxiosPromise } from 'axios';
 export interface User {
   id: string;
   email: string;
-  last_login: Date;
-  created_at: Date;
-  updated_at: Date;
+  last_login: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LoginUser extends User {

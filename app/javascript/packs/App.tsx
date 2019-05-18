@@ -5,6 +5,7 @@ import rootStore from '../stores/root_store';
 import Login from '../views/Login';
 import { Router, Route } from 'react-router';
 import Dashboard from '../components/Dashboard';
+import Profile from '../components/Profile';
 
 const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
   <Provider
@@ -16,6 +17,7 @@ const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
       <Fragment>
         <Route path="/login" component={Login}/>
         <Route path="/dashboard" component={Dashboard}/>
+        <Route path="/profile" component={Profile}/>
 
       </Fragment>
     </Router>

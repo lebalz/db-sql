@@ -64,4 +64,16 @@ body {
     align-items: center;
     z-index: 10;
   }
+
+  .flex-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+    .flex-list-item {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
 }
