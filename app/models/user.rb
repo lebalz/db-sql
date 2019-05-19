@@ -22,6 +22,7 @@ class User < ApplicationRecord
 
     token = LoginToken.new
     login_tokens << token
+    self.login_count += 1 
     save!
     token.token
   end
@@ -45,6 +46,7 @@ class User < ApplicationRecord
           new_user_password: new_password
         )
       end
+      login_tokens.destroy_all
     end
   end
 

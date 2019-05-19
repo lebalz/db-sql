@@ -22,6 +22,5 @@ export default class User {
     this.updatedAt = new Date(user.updated_at);
     this.lastLogin = new Date(user.last_login);
     this.loginCount = user.login_count;
-    console.log(user.login_count);
   }
 }

@@ -23,7 +23,6 @@ RSpec.describe "API::Resources::User" do
       }
     end
     it 'can validate a user' do
-      login_count = @user.login_tokens.count
       post(
         "/api/user/validate",
         headers: @headers,
@@ -32,7 +31,7 @@ RSpec.describe "API::Resources::User" do
       expect(response.successful?).to be_truthy
       expect(json['email']).to eq(@user.email)
       expect(json['id']).to eq(@user.id)
-      expect(json['login_count']).to eq(login_count) if login_count > 0
+      expect(json['login_count']).to eq(@user.login_count)
     end
     context 'email is not from token' do
       let(:email) { 'bla@bar.ch' }
@@ -73,7 +72,7 @@ RSpec.describe "API::Resources::User" do
         "created_at" => @user.created_at.iso8601,
         "crypto_key" => nil,
         "token" => nil,
-        "login_count" => 1
+        "login_count" => @user.login_count
       })
     end
   end
@@ -99,7 +98,6 @@ RSpec.describe "API::Resources::User" do
       }
       FactoryBot.create(:db_connection, user: user)
       FactoryBot.create(:db_connection, user: user)
-      login_count = user.login_tokens.count
 
       post(
         '/api/user/new_password',
@@ -108,7 +106,7 @@ RSpec.describe "API::Resources::User" do
       )
       expect(response.successful?).to be true
       user.reload
-      expect(user.login_tokens.count).to eq(login_count + 1);
+      expect(user.login_tokens.count).to eq(1);
       expect(user.authenticate('asdfasdf')).to be false
       expect(user.authenticate('superPW111')).to be_truthy
       expect(json['token']).to eq(user.login_tokens.order(:updated_at).last.token)
