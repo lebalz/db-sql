@@ -5,6 +5,7 @@ export interface User {
   id: string;
   email: string;
   last_login: string;
+  login_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -30,7 +31,7 @@ export function logout() {
   );
 }
 
-export function validate(user: User): AxiosPromise<{ valid: boolean }> {
+export function validate(user: User): AxiosPromise<User> {
   return api.post(
     'user/validate',
     user

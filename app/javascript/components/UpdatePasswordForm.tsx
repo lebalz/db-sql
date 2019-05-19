@@ -112,7 +112,7 @@ export default class UpdatePasswordForm extends React.Component {
         {
           <Message
             error
-            header="Action Forbidden"
+            header="Errors"
             list={errorMessages}
           />
         }

@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { Segment, Menu, Icon, Accordion, InputOnChangeData } from 'semantic-ui-react';
 import NavBar from './Navigation/NavBar';
-import { inject } from 'mobx-react';
+import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
 import UpdatePasswordForm from './UpdatePasswordForm';
 
@@ -11,6 +11,7 @@ interface InjectedProps {
 }
 
 @inject('sessionStore')
+@observer
 export default class Profile extends React.Component {
   state = {
     editPassword: false
@@ -53,7 +54,7 @@ export default class Profile extends React.Component {
         <header>
           <NavBar />
         </header>
-        <main className="no-sidebar">
+        <main className="no-sidebar" style={{alignItems: 'center'}}>
           <Segment
             piled
             className="flex-list"
@@ -68,10 +69,24 @@ export default class Profile extends React.Component {
             </div>
             <div className="flex-list-item">
               <Menu.Item>
-                <Icon name="time" />
+                <Icon name="users" />
                 Member Since
               </Menu.Item>
-              {currentUser.created_at.substr(0, 10)}
+              {currentUser.createdAt.toLocaleDateString()}
+            </div>
+            <div className="flex-list-item">
+              <Menu.Item>
+                <Icon name="refresh" />
+                Updated
+              </Menu.Item>
+              {`${currentUser.updatedAt.toLocaleDateString()} ${currentUser.updatedAt.toLocaleTimeString()}`}
+            </div>
+            <div className="flex-list-item">
+              <Menu.Item>
+                <Icon name="log out" />
+                Login Count
+              </Menu.Item>
+              {currentUser.loginCount}
             </div>
           </Segment>
           <Accordion>

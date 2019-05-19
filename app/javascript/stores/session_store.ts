@@ -1,9 +1,11 @@
 import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
-import { login, LoginUser, User, logout, validate, newPassword as setNewPasswordCall } from '../api/user';
+import { login, LoginUser as ApiLoginUser, User as ApiUser, logout, validate, newPassword as setNewPasswordCall } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
 import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
+import User from '../models/User';
+import _ from 'lodash';
 
 export enum LocalStorageKey {
   User = 'db-sql-current-user',
@@ -59,7 +61,7 @@ class SessionStore {
     }
   }
 
-  fetchFromLocalStorage(): LoginUser | null {
+  fetchFromLocalStorage(): ApiLoginUser | null {
     const user = localStorage.getItem(LocalStorageKey.User);
 
     if (user !== null) {
@@ -87,7 +89,7 @@ class SessionStore {
     });
   }
 
-  setNewPassword(
+  @action setNewPassword(
     oldPassword: string,
     newPassword: string,
     newPasswordConfirmation: string
@@ -99,6 +101,7 @@ class SessionStore {
       newPasswordConfirmation
     ).then(({ data }) => {
       this.updateLocalUserCredentials(data);
+      this.pCurrentUser.updateWithUserProps(data);
       this.newPasswordState = NewPasswordState.Success;
     }).catch(() => {
       this.newPasswordState = NewPasswordState.Error;
@@ -130,15 +133,13 @@ class SessionStore {
     api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
     localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
     this.updateLocalUserCredentials(user);
-    this.history.push('/dashboard');
+    this.history.push(this.routeBeforeLogin || '/dashboard');
   }
 
-  @action
-  private updateLocalUserCredentials(user: LoginUser) {
+  private updateLocalUserCredentials(user: ApiLoginUser) {
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
     api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
     localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
-    this.pCurrentUser.updated_at = user.updated_at;
   }
 
 }
