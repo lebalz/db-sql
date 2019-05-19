@@ -59,5 +59,36 @@ RSpec.describe DbConnection, type: :model do
       user2 = FactoryBot.create(:user)
       expect(user1.crypto_key('foobar')).not_to eq(user2.crypto_key('foobar'))
     end
+
+    it 'can update password' do
+      user = FactoryBot.create(:user, password: 'unsafe_pw' )
+
+      connection1 = FactoryBot.create(
+        :db_connection,
+        db_password: 'foobar',
+        user_password: 'unsafe_pw',
+        user: user
+      )
+      connection2 = FactoryBot.create(
+        :db_connection,
+        db_password: 'blabla',
+        user_password: 'unsafe_pw',
+        user: user
+      )
+
+      expect(user.db_connections.size).to be(2)
+      user.change_password!(
+        old_password: 'unsafe_pw',
+        new_password: 'safe_pw',
+        password_confirmation: 'safe_pw'
+      )
+      
+      db_connections = user.db_connections
+      expect(db_connections.size).to be(2)
+      connection1.reload
+      expect(connection1.password(user.crypto_key('safe_pw'))).to eq('foobar')
+      connection2.reload
+      expect(connection2.password(user.crypto_key('safe_pw'))).to eq('blabla')
+    end
   end
 end

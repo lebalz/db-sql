@@ -32,6 +32,23 @@ class User < ApplicationRecord
     save
   end
 
+  def change_password!(old_password:, new_password:, password_confirmation:)
+    ActiveRecord::Base.transaction do
+      self.update_attributes!(
+        password: new_password,
+        password_confirmation: password_confirmation
+      )
+      db_connections.each do |db_connection|
+        db_connection.recrypt!(
+          old_crypto_key: crypto_key(old_password),
+          new_crypto_key: crypto_key(new_password),
+          new_user_password: new_password
+        )
+      end
+    end
+    login(new_password)
+  end
+
   # generate a key to encrypt db passwords client side
   # @param password [String] clear text password. (Not stored to db)
   # @return [String] base64 encoded key

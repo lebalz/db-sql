@@ -2,10 +2,13 @@ module Resources
   class DbConnections < Grape::API
     helpers do
       def db_connection
-        DbConnection.find(params[:id])
+        connection = DbConnection.find(params[:id])
+        error!('Db connection not found', 302) unless connection
+        connection
       end
 
       def crypto_key
+        error!('Crypto-Key is required', 400) unless request.headers.key?('Crypto-Key')
         request.headers['Crypto-Key']
       end
     end
@@ -30,7 +33,7 @@ module Resources
       post do
         encrypted_password = DbConnection.encrypt(
           key: request.headers['Crypto-Key'],
-          password: params[:password]
+          db_password: params[:password]
         )
         db_connection = DbConnection.create!(
           user: current_user,
@@ -77,7 +80,7 @@ module Resources
           if params[:data].key?('password')
             encrypted_password = DbConnection.encrypt(
               key: crypto_key,
-              password: params[:data]['password']
+              db_password: params[:data]['password']
             )
             params[:data]['password_encrypted'] = encrypted_password[:encrypted_password]
             params[:data]['initialization_vector'] = encrypted_password[:initialization_vector]

@@ -13,25 +13,23 @@ FactoryBot.define do
   end
 
   factory :db_connection do
+    transient do
+      user_password { 'asdfasdf' }
+      db_password { 'safe-db-password' }
+      crypt do
+        DbConnection.encrypt(
+          key: user.crypto_key(user_password),
+          db_password: db_password
+        )
+      end
+    end
     sequence(:name) { |n| "connection#{n}" }
     db_type { 0 }
     host { 'localhost' }
     port { DbConnection::DEFAULT_PORT_PSQL }
     username { 'foo' }
-    initialization_vector do
-      DbConnection.encrypt(
-        key: user.crypto_key('asdfasdf'),
-        password: 'safe-db-password',
-        initialization_vector: 'qPixwAt+bKMSRl2Sp9Vp1A=='
-      )[:initialization_vector]
-    end
-    password_encrypted do
-      DbConnection.encrypt(
-        key: user.crypto_key('asdfasdf'),
-        password: 'safe-db-password',
-        initialization_vector: 'qPixwAt+bKMSRl2Sp9Vp1A=='
-        )[:encrypted_password]
-    end
+    initialization_vector { crypt[:initialization_vector] }
+    password_encrypted { crypt[:encrypted_password] }
     association :user, factory: :user
   end
 end

@@ -49,20 +49,28 @@ class DbConnection < ApplicationRecord
     decipher.update(Base64.strict_decode64(password_encrypted)) + decipher.final
   end
 
+  def recrypt!(old_crypto_key:, new_crypto_key:,  new_user_password:)
+    db_password = password(old_crypto_key)
+    new_crypt = DbConnection.encrypt(
+      key: new_crypto_key,
+      db_password: db_password
+    )
+    update_attributes!(
+      initialization_vector: new_crypt[:initialization_vector],
+      password_encrypted: new_crypt[:encrypted_password]
+    )
+  end
+
   # @param key [String] base64 encoded crypto key from the user
   # @param password [String] password for db server connection to encrypt
-  # @option initialization_vector [String, nil] when not nil, this iv is used as the
-  #   cipher's iv. This is useful for e.g. testing in combination with FactoryBot.
-  #   When nil, a random iv is generated. 
   # @return [Hash<symbol, string>] hash with encrypted password
-  #   including salt and initialization_vector:
+  #   and initialization_vector:
   # @example encrypted password
   #   {
   #     encrypted_password: <Base64 encoded encrypted string>,
-  #     initialization_vector: <Base64 enctoded string>,
-  #     key: string
+  #     initialization_vector: <Base64 enctoded string>
   #   }
-  def self.encrypt(key:, password:, initialization_vector: nil)
+  def self.encrypt(key:, db_password:)
     error!('No AES key sent', 401) unless key
 
     aes_key = Base64.strict_decode64(key)
@@ -75,11 +83,10 @@ class DbConnection < ApplicationRecord
     cipher.iv = initialization_vector
     cipher.encrypt
     cipher.key = aes_key
-    pw_encrypted = cipher.update(password) + cipher.final
+    pw_encrypted = cipher.update(db_password) + cipher.final
     {
       encrypted_password: Base64.strict_encode64(pw_encrypted),
-      initialization_vector: Base64.strict_encode64(initialization_vector),
-      key: key
+      initialization_vector: Base64.strict_encode64(initialization_vector)
     }
   end
 
