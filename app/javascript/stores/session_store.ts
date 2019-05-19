@@ -88,7 +88,7 @@ class SessionStore {
     });
   }
 
-  resetAuthorization() {
+  @action resetAuthorization() {
     this.pCurrentUser = null;
     delete api.defaults.headers[LocalStorageKey.Authorization];
     delete api.defaults.headers[LocalStorageKey.CryptoKey];
