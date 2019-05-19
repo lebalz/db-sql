@@ -1,6 +1,6 @@
 import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
-import { login, LoginUser, User, logout, validate } from '../api/user';
+import { login, LoginUser, User, logout, validate, newPassword as setNewPasswordCall } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
 import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
@@ -11,11 +11,16 @@ export enum LocalStorageKey {
   CryptoKey = 'Crypto-Key'
 }
 
+export enum NewPasswordState {
+  Waiting, Error, Success, None
+}
+
 class SessionStore {
   @observable private user: User | null = null;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
   routeBeforeLogin: string | null = null;
+  @observable newPasswordState: NewPasswordState = NewPasswordState.None;
   private readonly root: RootStore;
 
   constructor(root: RootStore, routerStore: RouterStore) {
@@ -82,6 +87,24 @@ class SessionStore {
     });
   }
 
+  setNewPassword(
+    oldPassword: string,
+    newPassword: string,
+    newPasswordConfirmation: string
+  ) {
+    this.newPasswordState = NewPasswordState.Waiting;
+    setNewPasswordCall(
+      oldPassword,
+      newPassword,
+      newPasswordConfirmation
+    ).then(({ data }) => {
+      this.updateLocalUserCredentials(data);
+      this.newPasswordState = NewPasswordState.Success;
+    }).catch(() => {
+      this.newPasswordState = NewPasswordState.Error;
+    });
+  }
+
   @action logout() {
     logout().catch(({ error }) => {
       console.log(error);
@@ -106,7 +129,16 @@ class SessionStore {
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
     api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
     localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
+    this.updateLocalUserCredentials(user);
     this.history.push('/dashboard');
+  }
+
+  @action
+  private updateLocalUserCredentials(user: LoginUser) {
+    api.defaults.headers[LocalStorageKey.Authorization] = user.token;
+    api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
+    localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
+    this.pCurrentUser.updated_at = user.updated_at;
   }
 
 }

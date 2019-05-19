@@ -36,3 +36,18 @@ export function validate(user: User): AxiosPromise<{ valid: boolean }> {
     user
   );
 }
+
+export function newPassword(
+  oldPassword: string,
+  newPassword: string,
+  newPasswordConfirmation: string
+): AxiosPromise<LoginUser> {
+  return api.post(
+    'user/new_password',
+    {
+      old_password: oldPassword,
+      new_password: newPassword,
+      password_confirmation: newPasswordConfirmation
+    }
+  );
+}
