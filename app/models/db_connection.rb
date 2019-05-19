@@ -86,24 +86,24 @@ class DbConnection < ApplicationRecord
   end
 
   # @return [String] unique key for a db connection
-  private def connection_key(database:)
-    database ||= initial_db || default_schema
-    "#{id}-#{database}"
+  private def connection_key(database_name:)
+    database_name ||= initial_db || default_schema
+    "#{id}-#{database_name}"
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @param database [String] name of the database
-  def connect(key:, database:)
-    database ||= initial_db || default_schema
+  # @param database_name [String] name of the database_name
+  def connect(key:, database_name:)
+    database_name ||= initial_db || default_schema
     connection = ActiveRecord::ConnectionAdapters::ConnectionHandler.new
-    conn_key = connection_key(database: database)
+    conn_key = connection_key(database_name: database_name)
     connection.establish_connection(
       adapter: db_adapter,
       host: host,
       port: port,
       username: username,
       password: password(key),
-      database: database,
+      database: database_name,
       name: conn_key
     )
     yield(connection.retrieve_connection(conn_key))
@@ -113,54 +113,54 @@ class DbConnection < ApplicationRecord
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [ActiveRecord::Result]
-  def exec_query(key:, database: nil)
-    connect(key: key, database: database) do |connection|
+  def exec_query(key:, database_name: nil)
+    connect(key: key, database_name: database_name) do |connection|
       connection.exec_query(yield)
     end
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @return [Array<String>] all databases for a connection
-  def databases(key:)  
+  # @return [Array<String>] all database_name names for a connection
+  def database_names(key:)  
     exec_query(key: key) do
       query_for(db_type: db_type, name: :databases)
-    end&.rows&.flatten
+    end&.rows&.flatten&.sort || []
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @param database [String] name of the database
-  # @return [Array<String>] all tables in the database
-  def tables(key:, database:)
-    connect(key: key, database: database) do |connection|
-      connection.tables
+  # @param database_name [String] name of the database_name
+  # @return [Array<String>] all table_name names in the database_name
+  def table_names(key:, database_name:)
+    connect(key: key, database_name: database_name) do |connection|
+      connection.tables.sort
     end
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @param database [String] name of the database
-  # @param table [String] name of the table
-  # @return [Array<String>] columns of a table
-  def columns(key:, database:, table:)
-    connect(key: key, database: database) do |connection|
-      connection.columns(table)
+  # @param database_name [String] name of the database_name
+  # @param table_name [String] name of the table_name
+  # @return [Array<String>] columns of a table_name
+  def column_names(key:, database_name:, table_name:)
+    connect(key: key, database_name: database_name) do |connection|
+      connection.columns(table_name)
     end.map(&:name)
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @param database [String] name of the database
-  # @param table [String] name of the table
-  # @return [Array<String>] primary keys of a table
-  def primary_keys(key:, database:, table:)
-    connect(key: key, database: database) do |connection|
-      connection.primary_keys(table)
+  # @param database_name [String] name of the database_name
+  # @param table_name [String] name of the table_name
+  # @return [Array<String>] primary keys of a table_name
+  def primary_key_names(key:, database_name:, table_name:)
+    connect(key: key, database_name: database_name) do |connection|
+      connection.primary_keys(table_name).sort
     end
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @param database [String] name of the database
-  # @param table [String] name of the table
-  # @return [Array<Hash>] foreign keys of the table
-  # @example foreign keys of a table
+  # @param database_name [String] name of the database_name
+  # @param table_name [String] name of the table_name
+  # @return [Array<Hash>] foreign keys of the table_name
+  # @example foreign keys of a table_name
   #   [
   #     {
   #       from_table: "tore",
@@ -185,20 +185,20 @@ class DbConnection < ApplicationRecord
   #       }
   #     }
   #   ]
-  def foreign_keys(key:, database:, table:)
-    connect(key: key, database: database) do |connection|
-      connection.foreign_keys(table).map { |fk_def| fk_def.to_h }
+  def foreign_keys(key:, database_name:, table_name:)
+    connect(key: key, database_name: database_name) do |connection|
+      connection.foreign_keys(table_name).map { |fk_def| fk_def.to_h }
     end
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @param database [String] name of the database
-  # @param table [String] name of the table
-  # @return [Array<Hash>] indexs of a table
-  # @example indexes of a table
+  # @param database_name [String] name of the database_name
+  # @param table_name [String] name of the table_name
+  # @return [Array<Hash>] indexs of a table_name
+  # @example indexes of a table_name
   #   [
   #     {
-  #       table: "teams",
+  #       table_name: "teams",
   #       name: "id",
   #       unique: true,
   #       columns: ["id"],
@@ -211,9 +211,9 @@ class DbConnection < ApplicationRecord
   #       comment: nil
   #     }
   #   ]
-  def indexes(key:, database:, table:)
-    connect(key: key, database: database) do |connection|
-      connection.indexes(table).map do |index_def|
+  def indexes(key:, database_name:, table_name:)
+    connect(key: key, database_name: database_name) do |connection|
+      connection.indexes(table_name).map do |index_def|
         index_def.instance_values.symbolize_keys
       end
     end
