@@ -12,6 +12,9 @@ module Entities
     expose :last_login do |user, _|
       user.login_tokens.order(:updated_at).last.updated_at.iso8601
     end
+    expose :login_count do |user, _|
+      user.login_tokens.count
+    end
     expose :crypto_key do |_, options|
       options[:crypto_key]
     end
