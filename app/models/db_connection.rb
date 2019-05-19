@@ -1,3 +1,4 @@
+require Rails.root.join('lib','queries', 'query')
 # == Schema Information
 #
 # Table name: db_connections
