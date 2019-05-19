@@ -1,4 +1,3 @@
-require "#{Rails.root}/lib/queries/query"
 # == Schema Information
 #
 # Table name: db_connections
@@ -24,6 +23,19 @@ class DbConnection < ApplicationRecord
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
 
+  DEFAULT_AR_DB_ADAPTER = {
+    'psql' => 'postgresql',
+    'mysql' => 'mysql2',
+    'sqlite' => 'sqlite3',
+    'mariadb' => 'mariadb'
+  }.freeze
+
+  DEFAULT_DATABASE_NAME = {
+    'psql' => 'postgres',
+    'mysql' => 'mysql',
+    'mariadb' => 'mysql'
+  }.freeze
+
   belongs_to :user
 
   # @param key [String] base64 encoded crypto key from the user
@@ -38,7 +50,9 @@ class DbConnection < ApplicationRecord
 
   # @param key [String] base64 encoded crypto key from the user
   # @param password [String] password for db server connection to encrypt
-  # @option iv [string]
+  # @option initialization_vector [String, nil] when not nil, this iv is used as the
+  #   cipher's iv. This is useful for e.g. testing in combination with FactoryBot.
+  #   When nil, a random iv is generated. 
   # @return [Hash<symbol, string>] hash with encrypted password
   #   including salt and initialization_vector:
   # @example encrypted password
@@ -47,58 +61,35 @@ class DbConnection < ApplicationRecord
   #     initialization_vector: <Base64 enctoded string>,
   #     key: string
   #   }
-  def self.encrypt(key:, password:, iv: nil)
+  def self.encrypt(key:, password:, initialization_vector: nil)
     error!('No AES key sent', 401) unless key
 
     aes_key = Base64.strict_decode64(key)
     cipher = OpenSSL::Cipher::AES.new(256, :CBC)
-    iv = iv ? Base64.strict_decode64(iv) : cipher.random_iv
-    cipher.iv = iv
+    initialization_vector = if initialization_vector.nil?
+                              cipher.random_iv
+                            else
+                              Base64.strict_decode64(initialization_vector)
+                            end
+    cipher.iv = initialization_vector
     cipher.encrypt
     cipher.key = aes_key
     pw_encrypted = cipher.update(password) + cipher.final
     {
       encrypted_password: Base64.strict_encode64(pw_encrypted),
-      initialization_vector: Base64.strict_encode64(iv),
+      initialization_vector: Base64.strict_encode64(initialization_vector),
       key: key
     }
-  end
-
-  # @return [String, nil] default db adapter for AR 
-  def db_adapter
-    case db_type.to_sym
-    when :psql
-      'postgresql'
-    when :mysql
-      'mysql2'
-    end
-  end
-
-  # @return [String, nil] default schema which should be present in a
-  #   for the selected db 
-  def default_schema
-    case db_type.to_sym
-    when :psql
-      'postgres'
-    when :mysql
-      'mysql'
-    end
-  end
-
-  # @return [String] unique key for a db connection
-  private def connection_key(database_name:)
-    database_name ||= initial_db || default_schema
-    "#{id}-#{database_name}"
   end
 
   # @param key [String] base64 encoded crypto key from the user
   # @param database_name [String] name of the database_name
   def connect(key:, database_name:)
-    database_name ||= initial_db || default_schema
+    database_name ||= default_database_name
     connection = ActiveRecord::ConnectionAdapters::ConnectionHandler.new
     conn_key = connection_key(database_name: database_name)
     connection.establish_connection(
-      adapter: db_adapter,
+      adapter: DEFAULT_AR_DB_ADAPTER[db_type],
       host: host,
       port: port,
       username: username,
@@ -231,7 +222,7 @@ class DbConnection < ApplicationRecord
   #   ]
   def foreign_keys(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
-      connection.foreign_keys(table_name).map { |fk_def| fk_def.to_h }
+      connection.foreign_keys(table_name).map(&:to_h)
     end
   end
 
@@ -263,4 +254,16 @@ class DbConnection < ApplicationRecord
     end
   end
 
+  private
+
+  def default_database_name
+
+    initial_db || DEFAULT_DATABASE_NAME[db_type]
+  end
+
+  # @return [String] unique key for a db connection
+  def connection_key(database_name:)
+    database_name ||= default_database_name
+    "#{id}-#{database_name}"
+  end
 end

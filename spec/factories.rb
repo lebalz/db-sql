@@ -22,14 +22,14 @@ FactoryBot.define do
       DbConnection.encrypt(
         key: user.crypto_key('asdfasdf'),
         password: 'safe-db-password',
-        iv: 'qPixwAt+bKMSRl2Sp9Vp1A=='
+        initialization_vector: 'qPixwAt+bKMSRl2Sp9Vp1A=='
       )[:initialization_vector]
     end
     password_encrypted do
       DbConnection.encrypt(
         key: user.crypto_key('asdfasdf'),
         password: 'safe-db-password',
-        iv: 'qPixwAt+bKMSRl2Sp9Vp1A=='
+        initialization_vector: 'qPixwAt+bKMSRl2Sp9Vp1A=='
         )[:encrypted_password]
     end
     association :user, factory: :user
