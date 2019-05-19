@@ -112,13 +112,21 @@ module Resources
             db_connection.table_names(key: crypto_key, database_name: params[:database_name])
           end
           route_param :table_name, type: String, desc: 'Table name' do
-            desc "Get the table's columns"
+            desc "Get the table's column names"
             get :column_names do
               db_connection.column_names(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
               )
+            end
+            desc "Get the table's columns"
+            get :columns do
+              present db_connection.columns(
+                key: crypto_key,
+                database_name: params[:database_name],
+                table_name: params[:table_name]
+              ), with: Entities::Column
             end
             desc "Get the table's primary key names"
             get :primary_key_names do

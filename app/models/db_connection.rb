@@ -142,8 +142,52 @@ class DbConnection < ApplicationRecord
   # @return [Array<String>] columns of a table_name
   def column_names(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
-      connection.columns(table_name)
+      c = connection.columns(table_name)
     end.map(&:name)
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @param database_name [String] name of the database_name
+  # @param table_name [String] name of the table_name
+  # @return [Array<Hash>] columns of a table_name
+  # @example columns of a table
+  #   [
+  #     {
+  #       name: 'id',
+  #       collation: nil,
+  #       default: nil,
+  #       default_function: "nextval('ninja_turtles_id_seq'::regclass)",
+  #       null: false,
+  #       serial: true,
+  #       sql_type_metadata: {
+  #         limit: 4,
+  #         precision: nil,
+  #         scale: nil,
+  #         sql_type: 'integer',
+  #         type: :integer
+  #       }
+  #     }
+  #   ]
+  def columns(key:, database_name:, table_name:)
+    connect(key: key, database_name: database_name) do |connection|
+      c = connection.columns(table_name).map do |column|
+        {
+          name: column.name,
+          collation: column.collation,
+          default: column.default,
+          default_function: column.default_function,
+          null: column.null,
+          serial: column.serial?,
+          sql_type_metadata: {
+            limit: column.sql_type_metadata.limit,
+            precision: column.sql_type_metadata.precision,
+            scale: column.sql_type_metadata.scale,
+            sql_type: column.sql_type_metadata.sql_type,
+            type: column.sql_type_metadata.type
+          }
+        }
+      end
+    end
   end
 
   # @param key [String] base64 encoded crypto key from the user

@@ -368,6 +368,79 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json.first).to eq('id')
     end
   end
+  describe 'GET /api/db_connections/:id/:database_name/:table_name/columns' do
+    it 'can get columns of a table' do
+      get(
+        "/api/db_connections/#{@db_connection.id}/ninja_turtles_db/ninja_turtles/columns",
+        headers: @headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json.size).to be(2)
+      expect(json[0]).to eq({
+        "name" => "id",
+        "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
+        "null" => false,
+        "serial" =>true,
+        "sql_type_metadata" =>{
+          "limit" => 4,
+          "sql_type" => "integer",
+          "type" => "integer"
+        }
+      })
+      expect(json[1]).to eq({
+        "name" => "name",
+        "null" => true,
+        "sql_type_metadata" =>{
+          "sql_type" => "text",
+          "type" => "text"
+        }
+      })
+
+      get(
+        "/api/db_connections/#{@db_connection.id}/ninja_turtles_db/fights/columns",
+        headers: @headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json.size).to be(4)
+      expect(json[0]).to eq({
+        "name" => "id",
+        "default_function" => "nextval('fights_id_seq'::regclass)",
+        "null" => false,
+        "serial" =>true,
+        "sql_type_metadata" =>{
+          "limit" => 4,
+          "sql_type" => "integer",
+          "type" => "integer"
+        }
+      })
+      expect(json[1]).to eq({
+        "name" => "date",
+        "null" => true,
+        "sql_type_metadata" => {
+          "sql_type" => "timestamp without time zone",
+          "type" => "datetime"
+        }
+      })
+      expect(json[2]).to eq({
+        "name" => "badass_turtle_id",
+        "null" => true,
+        "sql_type_metadata" => {
+          "limit" => 4,
+          "sql_type" => "integer",
+          "type" => "integer"
+        }
+      })
+      expect(json[3]).to eq({
+        "name" => "kickass_turtle_id",
+        "null" => true,
+        "sql_type_metadata" => {
+          "limit" => 4,
+          "sql_type" => "integer",
+          "type" => "integer"
+        }
+      })
+    end
+  end
   describe 'GET /api/db_connections/:id/:database_name/:table_name/column_names' do
     it 'can get column names of a table' do
       get(
