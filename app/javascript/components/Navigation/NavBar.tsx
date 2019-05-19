@@ -21,7 +21,9 @@ export default class NavBar extends React.Component {
     const router = this.injected.routerStore;
     return (
       <Menu secondary pointing>
-        <Menu.Item>
+        <Menu.Item
+          onClick={() => router.push('/dashboard')}
+        >
           <DbSqlIcon size="large" />
           <Header
             as="h2"

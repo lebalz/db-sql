@@ -4,6 +4,7 @@ import NavBar from './Navigation/NavBar';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
 import UpdatePasswordForm from './UpdatePasswordForm';
+import Footer from './Navigation/Footer';
 
 
 interface InjectedProps {
@@ -102,6 +103,7 @@ export default class Profile extends React.Component {
             </Accordion.Content>
           </Accordion>
         </main>
+        <Footer />
       </Fragment>
     );
   }
