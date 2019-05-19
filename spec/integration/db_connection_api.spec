@@ -182,10 +182,18 @@ RSpec.describe "API::Resources::DbConnection" do
     end
   end
 
-  describe 'GET /api/db_connections/:id/:database/query' do
+  describe 'POST /api/db_connections/:id/:database/query' do
+    let(:params) do
+      {
+        query: "SELECT * FROM ninja_turtles"
+      }
+    end
     it 'can query the database' do
-      query = "SELECT * FROM ninja_turtles"
-      get "/api/db_connections/#{@db_connection.id}/ninja_turtles_db/query?query=#{URI.encode(query)}", headers: @headers
+      post(
+        "/api/db_connections/#{@db_connection.id}/ninja_turtles_db/query",
+        headers: @headers,
+        params: params
+      )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(3)
       expect(json[0]['name']).to eq('Ninja Reto')

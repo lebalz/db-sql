@@ -100,7 +100,7 @@ module Resources
           params do
             requires :query, type: String, desc: 'Sql query to perform on the database'
           end
-          get :query do
+          post :query do
             result = db_connection.exec_query(key: crypto_key, database: params[:database]) do
               params[:query]
             end
