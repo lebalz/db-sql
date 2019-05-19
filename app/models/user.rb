@@ -22,7 +22,7 @@ class User < ApplicationRecord
 
     token = LoginToken.new
     login_tokens << token
-    save
+    save!
     token.token
   end
 
@@ -46,7 +46,6 @@ class User < ApplicationRecord
         )
       end
     end
-    login(new_password)
   end
 
   # generate a key to encrypt db passwords client side
