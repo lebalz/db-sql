@@ -162,7 +162,7 @@ class DbConnection < ApplicationRecord
   #   ]
   def columns(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
-      c = connection.columns(table_name).map do |column|
+      connection.columns(table_name).map do |column|
         {
           name: column.name,
           collation: column.collation,
@@ -258,7 +258,6 @@ class DbConnection < ApplicationRecord
   private
 
   def default_database_name
-
     initial_db || DEFAULT_DATABASE_NAME[db_type]
   end
 

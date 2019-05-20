@@ -3,7 +3,7 @@
 # DB-SQL
 
 <p align="center">
-  <a href="#"><img src="./docs/logo.png"></a>
+  <a href="#" width="250"><img src="./docs/logo.png"></a>
 </p>
 
 ## Setup
