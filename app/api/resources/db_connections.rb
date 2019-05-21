@@ -55,7 +55,9 @@ module Resources
 
         desc 'Get cleartext password'
         get :password do
-          db_connection.password(crypto_key)
+          {
+            password: db_connection.password(crypto_key)
+          }
         end
 
         desc 'Update a connection'
