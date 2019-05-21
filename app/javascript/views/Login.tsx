@@ -1,9 +1,10 @@
 import React, { InputHTMLAttributes } from 'react';
 import { inject } from 'mobx-react';
 import SessionStore from '../stores/session_store';
-import { Header, Form } from 'semantic-ui-react';
+import { Header, Form, Accordion, Icon } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
+import Signup from './Signup';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -12,6 +13,10 @@ interface InjectedProps {
 
 @inject('sessionStore', 'routerStore')
 export default class Login extends React.Component {
+  state = {
+    signup: false
+  };
+
   private email: string = '';
   private password: string = '';
   get injected() {
@@ -65,6 +70,18 @@ export default class Login extends React.Component {
             <Form.Button content="Login" type="submit" />
           </Form.Group>
         </Form>
+        <Accordion>
+          <Accordion.Title
+            active={this.state.signup}
+            onClick={() => this.setState({ signup: !this.state.signup })}
+          >
+            <Icon name="users" />
+            Signup to DB-SQL
+          </Accordion.Title>
+          <Accordion.Content active={this.state.signup}>
+            <Signup />
+          </Accordion.Content>
+        </Accordion>
       </main>
     );
   }

@@ -1,5 +1,16 @@
 module Resources
   class Users < Grape::API
+    helpers do
+      def logout_existing_user
+        token = request.headers['Authorization']
+        return unless token
+        
+        login_token = LoginToken.find_by(token: token)
+        return unless login_token
+
+        login_token.destroy
+      end
+    end
     resource :user do
       desc 'Get current user'
       get do
@@ -36,7 +47,26 @@ module Resources
         else
           error!('Failed to update password', 401)
         end
+      end
 
+      
+      route_setting :auth, disabled: true
+      params do
+        requires :email, type: String
+        requires :password, type: String
+      end
+      post :signup do
+        logout_existing_user
+        @user = User.create(params)
+        error!(@user.errors.messages, 401) unless @user.persisted?
+
+        token = @user.login(params[:password])
+        if token
+          crypto_key = @user.crypto_key(params[:password])
+          present @user, with: Entities::User, token: token, crypto_key: crypto_key
+        else
+          error!('Invalid email or password', 401)
+        end
       end
     end
   end

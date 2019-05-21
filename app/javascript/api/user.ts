@@ -38,6 +38,16 @@ export function validate(user: User): AxiosPromise<User> {
   );
 }
 
+export function signup(email: string, password: string): AxiosPromise<LoginUser> {
+  return api.post(
+    'user/signup',
+    {
+      email: email,
+      password: password
+    }
+  );
+}
+
 export function newPassword(
   oldPassword: string,
   newPassword: string,

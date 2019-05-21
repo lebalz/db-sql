@@ -9,7 +9,7 @@ module Resources
     end
     post :login do
       @user = User.find_by(email: params[:email])
-      (error!('Invalid email or password', 401) unless @user)
+      error!('Invalid email or password', 401) unless @user
 
       token = @user.login(params[:password])
       if token
