@@ -3,105 +3,77 @@ import { Segment, Menu, Icon, Accordion, InputOnChangeData } from 'semantic-ui-r
 import NavBar from './Navigation/NavBar';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
-import UpdatePasswordForm from './UpdatePasswordForm';
 import Footer from './Navigation/Footer';
+import { RouteComponentProps } from 'react-router';
+import Account from './Profile/Account';
+import ChangePassword from './Profile/ChangePassword';
+import { RouterStore } from 'mobx-react-router';
+import UserStore from '../stores/user_store';
+import UserList from './Profile/UserList';
 
-
-interface InjectedProps {
-  sessionStore: SessionStore;
+interface MatchParams {
+  part: string;
 }
 
-@inject('sessionStore')
-@observer
-export default class Profile extends React.Component {
-  state = {
-    editPassword: false
-  };
-  private oldPassword: string = '';
-  private newPassword: string = '';
-  private newPasswordConfirmation: string = '';
+interface ProfileProps extends RouteComponentProps<MatchParams> { }
 
+interface InjectedProps extends ProfileProps {
+  sessionStore: SessionStore;
+  routerStore: RouterStore;
+  userStore: UserStore;
+}
+
+@inject('sessionStore', 'routerStore', 'userStore')
+@observer
+export default class Profile extends React.Component<ProfileProps> {
   get injected() {
     return this.props as InjectedProps;
   }
 
-  onChangePassword = (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
-    switch (data.name as String) {
-      case 'oldPassword':
-        this.oldPassword = event.target.value;
-        break;
-      case 'newPassword':
-        this.newPassword = event.target.value;
-        break;
-      case 'newPasswordConfirmation':
-        this.newPasswordConfirmation = event.target.value;
-        break;
-    }
-    this.forceUpdate();
-  }
-
-  setNewPassword() {
-    this.injected.sessionStore.setNewPassword(
-      this.oldPassword,
-      this.newPassword,
-      this.newPasswordConfirmation
-    );
+  get part() {
+    return this.props.match.params.part;
   }
 
   render() {
-    const { currentUser } = this.injected.sessionStore;
+    const router = this.injected.routerStore;
     return (
       <Fragment>
         <header>
           <NavBar />
         </header>
-        <main className="no-sidebar" style={{alignItems: 'center'}}>
-          <Segment
-            piled
-            className="flex-list"
-            style={{ width: '350px' }}
-          >
-            <div className="flex-list-item">
-              <Menu.Item>
-                <Icon name="mail" />
-                Mail
-            </Menu.Item>
-              {currentUser.email}
-            </div>
-            <div className="flex-list-item">
-              <Menu.Item>
-                <Icon name="users" />
-                Member Since
-              </Menu.Item>
-              {currentUser.createdAt.toLocaleDateString()}
-            </div>
-            <div className="flex-list-item">
-              <Menu.Item>
-                <Icon name="refresh" />
-                Updated
-              </Menu.Item>
-              {`${currentUser.updatedAt.toLocaleDateString()} ${currentUser.updatedAt.toLocaleTimeString()}`}
-            </div>
-            <div className="flex-list-item">
-              <Menu.Item>
-                <Icon name="log out" />
-                Login Count
-              </Menu.Item>
-              {currentUser.loginCount}
-            </div>
-          </Segment>
-          <Accordion>
-            <Accordion.Title
-              active={this.state.editPassword}
-              onClick={() => this.setState({ editPassword: !this.state.editPassword })}
-            >
-              <Icon name="key" />
-              Change Password
-            </Accordion.Title>
-            <Accordion.Content active={this.state.editPassword}>
-              <UpdatePasswordForm />
-            </Accordion.Content>
-          </Accordion>
+        <Menu id="sidebar" style={{ margin: 0 }}>
+          <Menu.Item
+            name="account"
+            active={this.part === 'account'}
+            onClick={() => router.push('./account')}
+          />
+          <Menu.Item
+            name="new password"
+            active={this.part === 'change_password'}
+            onClick={() => router.push('./change_password')}
+          />
+          {
+            this.injected.sessionStore.currentUser.isAdmin &&
+            <Menu.Item
+              name="users"
+              active={this.part === 'users'}
+              onClick={() => router.push('./users')}
+            />
+          }
+        </Menu>
+        <main style={{ alignItems: 'center' }}>
+          {(() => {
+            switch (this.part) {
+              case 'account':
+                return <Account />;
+              case 'change_password':
+                return <ChangePassword />;
+              case 'users':
+                return <UserList />;
+              default:
+                return '404';
+            }
+          })()}
         </main>
         <Footer />
       </Fragment>

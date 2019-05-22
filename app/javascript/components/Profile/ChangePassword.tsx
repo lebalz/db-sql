@@ -1,7 +1,7 @@
 import React from 'react';
-import { Form, InputOnChangeData, Message } from 'semantic-ui-react';
+import { Form, InputOnChangeData, Message, Segment } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { NewPasswordState } from '../stores/session_store';
+import SessionStore, { NewPasswordState } from '../../stores/session_store';
 
 
 interface InjectedProps {
@@ -10,7 +10,7 @@ interface InjectedProps {
 
 @inject('sessionStore')
 @observer
-export default class UpdatePasswordForm extends React.Component {
+export default class ChangePassword extends React.Component {
   state = {
     isSafe: true,
     isConfirmed: true
@@ -79,51 +79,56 @@ export default class UpdatePasswordForm extends React.Component {
 
     const validPassword = errorMessages.length === 0;
     return (
-      <Form onSubmit={() => this.setNewPassword()} error={!validPassword}>
-        <Form.Group>
-          <Form.Input
-            type="password"
-            label="Old Password"
-            placeholder="Old password"
-            name="oldPassword"
-            onChange={this.onChangePassword}
-          />
-        </Form.Group>
-        <Form.Group>
-          <Form.Input
-            error={!this.state.isSafe}
-            type="password"
-            label="New Password"
-            placeholder="New password"
-            name="newPassword"
-            onChange={this.onChangePassword}
-          />
-        </Form.Group>
-        <Form.Group>
-          <Form.Input
-            error={!this.state.isConfirmed}
-            type="password"
-            label="Confirm new password"
-            placeholder="Confirmation"
-            name="newPasswordConfirmation"
-            onChange={this.onChangePassword}
-          />
-        </Form.Group>
-        {
-          <Message
-            error
-            header="Errors"
-            list={errorMessages}
-          />
-        }
-        <Form.Button
-          loading={newPasswordState === NewPasswordState.Waiting}
-          content="Change Password"
-          type="submit"
-          disabled={!this.isValid}
-        />
-      </Form>
+      <Segment
+        color={newPasswordState === NewPasswordState.Success ? 'green' : 'red'}
+        style={{ minWidth: '350px' }}
+      >
 
+        <Form onSubmit={() => this.setNewPassword()} error={!validPassword}>
+          <Form.Group>
+            <Form.Input
+              type="password"
+              label="Old Password"
+              placeholder="Old password"
+              name="oldPassword"
+              onChange={this.onChangePassword}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Input
+              error={!this.state.isSafe}
+              type="password"
+              label="New Password"
+              placeholder="New password"
+              name="newPassword"
+              onChange={this.onChangePassword}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Input
+              error={!this.state.isConfirmed}
+              type="password"
+              label="Confirm new password"
+              placeholder="Confirmation"
+              name="newPasswordConfirmation"
+              onChange={this.onChangePassword}
+            />
+          </Form.Group>
+          {
+            <Message
+              error
+              header="Errors"
+              list={errorMessages}
+            />
+          }
+          <Form.Button
+            loading={newPasswordState === NewPasswordState.Waiting}
+            content="Change Password"
+            type="submit"
+            disabled={!this.isValid}
+          />
+        </Form>
+      </Segment>
     );
   }
 

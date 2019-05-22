@@ -43,8 +43,8 @@ export default class NavBar extends React.Component {
         <Menu.Item
           style={{ marginLeft: '2em' }}
           name="Profile"
-          active={router.location.pathname === '/profile'}
-          onClick={() => router.push('/profile')}
+          active={router.location.pathname.startsWith('/profile/')}
+          onClick={() => router.push('/profile/account')}
         >
           <Icon name="user" />
           Profile

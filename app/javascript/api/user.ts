@@ -1,11 +1,13 @@
 import api from './base';
 import { AxiosPromise } from 'axios';
+import { Role } from '../models/User';
 
 export interface User {
   id: string;
   email: string;
   last_login: string;
   login_count: number;
+  role: Role;
   created_at: string;
   updated_at: string;
 }
