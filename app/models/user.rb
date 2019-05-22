@@ -12,16 +12,14 @@
 class User < ApplicationRecord
   has_secure_password
 
+  enum role: [:user, :admin]
+
   
   has_many :login_tokens, dependent: :destroy
   has_many :db_connections, dependent: :destroy
   
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8, maximum: 128 }, if: -> { password.present? }
-
-  def admin?
-    false
-  end
 
   def login(password)
     return unless authenticate password

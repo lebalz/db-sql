@@ -7,5 +7,11 @@ class SeedUsers
       password: 'asdfasdf',
       password_confirmation: 'asdfasdf'
     )
+    User.create!(
+      email: 'admin@user.ch',
+      password: 'asdfasdf',
+      password_confirmation: 'asdfasdf',
+      role: 'admin'
+    )
   end
 end

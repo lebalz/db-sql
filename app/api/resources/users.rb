@@ -17,6 +17,13 @@ module Resources
         present current_user, with: Entities::User
       end
 
+      desc 'Get the role of a user'
+      get :role do
+        {
+          role: current_user.role
+        }
+      end
+
       desc 'Set new password'
       params do
         requires :old_password, type: String, desc: 'old password'
@@ -56,7 +63,7 @@ module Resources
       end
       post :signup do
         logout_existing_user
-        @user = User.create(params)
+        @user = User.create(email: params[:email], password: params[:password])
         error!(@user.errors.messages, 400) unless @user.persisted?
 
         token = @user.login(params[:password])
@@ -68,22 +75,15 @@ module Resources
         end
       end
 
-      route_param :id, type: String, desc: 'User id' do
-        params do
-          optional :password, type: String, desc: 'password'
-        end
-        delete :delete do
-          if current_user.admin?
-            to_delete = User.find(params[:id])
-            error!('User not found', 404) unless to_delete
-            error!(to_delete.errors.messages, 400) unless to_delete.destroy()
-            return status :no_content
-          end
-          error!('Not allowed to delete other users', 401) unless params[:id] == current_user.id
-          error!('Incorrect password', 401) unless current_user.authenticate(params[:password])
-          error!(current_user.errors.messages, 400) unless current_user.destroy
-          status :no_content
-        end
+      desc 'Delete current user'
+      params do
+        optional :password, type: String, desc: 'password'
+      end
+      delete :delete do
+        error!('Incorrect password', 401) unless current_user.authenticate(params[:password])
+        error!(current_user.errors.messages, 400) unless current_user.destroy
+
+        status :no_content
       end
     end
   end

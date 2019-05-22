@@ -20,5 +20,6 @@ module Entities
       expose :updated_at
       expose :created_at
     end
+    expose :role
   end
 end

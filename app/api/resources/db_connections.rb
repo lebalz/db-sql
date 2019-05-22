@@ -22,7 +22,7 @@ module Resources
       desc 'Create db connection'
       params do
         requires :name, type: String, desc: 'Display text for this connection'
-        requires :db_type, type: Symbol, default: :psql, values: %i[psql mysql mariadb sqlite], desc: 'db type'
+        requires :db_type, type: Symbol, default: :psql, values: DbConnection.db_types.symbolize_keys.keys, desc: 'db type'
         requires :host, type: String, desc: 'host'
         requires :port, type: Integer, desc: 'port'
         requires :username, type: String, desc: 'db user'
@@ -82,11 +82,23 @@ module Resources
               key: crypto_key,
               db_password: params[:data]['password']
             )
-            params[:data]['password_encrypted'] = encrypted_password[:encrypted_password]
-            params[:data]['initialization_vector'] = encrypted_password[:initialization_vector]
-            params[:data].delete('password')
+            db_connection.update!(
+              password_encrypted: encrypted_password[:encrypted_password],
+              initialization_vector: encrypted_password[:initialization_vector]
+            )
           end
-          db_connection.update!(params[:data])
+          change = ActionController::Parameters.new(params[:data])
+          db_connection.update!(
+            change.permit(
+              :name,
+              :db_type,
+              :host,
+              :port,
+              :username,
+              :initial_db,
+              :initial_schema
+            )
+          )
           present db_connection, with: Entities::DbConnection
         end
         
