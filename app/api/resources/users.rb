@@ -77,9 +77,9 @@ module Resources
 
       desc 'Delete current user'
       params do
-        optional :password, type: String, desc: 'password'
+        requires :password, type: String, desc: 'password'
       end
-      delete :delete do
+      delete do
         error!('Incorrect password', 401) unless current_user.authenticate(params[:password])
         error!(current_user.errors.messages, 400) unless current_user.destroy
 

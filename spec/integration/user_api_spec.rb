@@ -72,8 +72,28 @@ RSpec.describe "API::Resources::User" do
         "created_at" => @user.created_at.iso8601,
         "crypto_key" => nil,
         "token" => nil,
+        "role" => "user",
         "login_count" => @user.login_count
       })
+    end
+  end
+
+  describe 'DELETE /api/user' do
+    it 'can delete the current user' do
+      user = FactoryBot.create(:user)
+      login_token = FactoryBot.create(:login_token, user: user)
+      headers = {
+        'Authorization' => login_token.token
+      }
+      delete(
+        '/api/user',
+        headers: headers,
+        params: {
+          password: 'asdfasdf'
+        }
+      )
+      expect(response.successful?).to be true
+      expect(User.exists?(user.id)).to be_falsey
     end
   end
 

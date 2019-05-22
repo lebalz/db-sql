@@ -54,6 +54,13 @@ RSpec.describe DbConnection, type: :model do
       expect(user.errors[:password]).to_not include(error_msg)
     end
 
+    it 'validates length of #password' do
+      user = User.new(password: 'tooShrt')
+      error_msg = "is too short (minimum is 8 characters)"
+      expect(user.valid?).to be_falsy
+      expect(user.errors[:password]).to include(error_msg)
+    end
+
     it 'returns unique crypto key' do
       user1 = FactoryBot.create(:user)
       user2 = FactoryBot.create(:user)
@@ -79,16 +86,16 @@ RSpec.describe DbConnection, type: :model do
       expect(user.db_connections.size).to be(2)
       user.change_password!(
         old_password: 'unsafe_pw',
-        new_password: 'safe_pw',
-        password_confirmation: 'safe_pw'
+        new_password: 'safe_password',
+        password_confirmation: 'safe_password'
       )
       
       db_connections = user.db_connections
       expect(db_connections.size).to be(2)
       connection1.reload
-      expect(connection1.password(user.crypto_key('safe_pw'))).to eq('foobar')
+      expect(connection1.password(user.crypto_key('safe_password'))).to eq('foobar')
       connection2.reload
-      expect(connection2.password(user.crypto_key('safe_pw'))).to eq('blabla')
+      expect(connection2.password(user.crypto_key('safe_password'))).to eq('blabla')
     end
   end
 end
