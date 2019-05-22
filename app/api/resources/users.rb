@@ -68,7 +68,7 @@ module Resources
         end
       end
 
-      route_params :id, type: String, desc: 'User id' do
+      route_param :id, type: String, desc: 'User id' do
         params do
           optional :password, type: String, desc: 'password'
         end
