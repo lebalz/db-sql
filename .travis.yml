@@ -6,7 +6,8 @@ addons:
       - postgresql-client-10
 before_script:
   - cp config/database.yml.travis config/database.yml
-  - psql -c 'create database travis_ci_test;' -U postgres
+  - psql -c 'DROP DATABASE IF EXISTS travis_ci_test;' -U postgres
+  - psql -c 'CREATE DATABASE travis_ci_test;' -U postgres
 dist: xenial
 language: ruby
 rvm:

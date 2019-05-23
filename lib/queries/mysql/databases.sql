@@ -1,0 +1,1 @@
+SELECT DISTINCT table_schema as 'databases' FROM information_schema.tables;

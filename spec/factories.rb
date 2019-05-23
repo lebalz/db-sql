@@ -17,17 +17,20 @@ FactoryBot.define do
     db_type { 0 }
     host { 'localhost' }
     port { DbConnection::DEFAULT_PORT_PSQL }
+    username { 'foo' }
     initialization_vector do
       DbConnection.encrypt(
         key: user.crypto_key('asdfasdf'),
-        password: 'safe-db-password'
+        password: 'safe-db-password',
+        initialization_vector: 'qPixwAt+bKMSRl2Sp9Vp1A=='
       )[:initialization_vector]
     end
     password_encrypted do
       DbConnection.encrypt(
         key: user.crypto_key('asdfasdf'),
-        password: 'safe-db-password'
-      )[:encrypted_password]
+        password: 'safe-db-password',
+        initialization_vector: 'qPixwAt+bKMSRl2Sp9Vp1A=='
+        )[:encrypted_password]
     end
     association :user, factory: :user
   end

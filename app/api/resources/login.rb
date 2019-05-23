@@ -13,8 +13,8 @@ module Resources
 
       token = @user.login(params[:password])
       if token
-        aes_key = @user.crypto_key(params[:password])
-        present @user, with: Entities::User, token: token, aes_key: aes_key
+        crypto_key = @user.crypto_key(params[:password])
+        present @user, with: Entities::User, token: token, crypto_key: crypto_key
       else
         error!('Invalid email or password', 401)
       end

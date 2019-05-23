@@ -6,6 +6,7 @@ module Entities
     expose :db_type
     expose :host
     expose :port
+    expose :username
     expose :password_encrypted
     expose :initialization_vector
     expose :initial_db

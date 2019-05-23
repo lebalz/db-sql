@@ -164,6 +164,7 @@ GEM
     mustermann (1.0.3)
     mustermann-grape (1.0.0)
       mustermann (~> 1.0.0)
+    mysql2 (0.5.2)
     net-http-persistent (3.0.0)
       connection_pool (~> 2.2)
     net-http-pipeline (1.0.1)
@@ -364,6 +365,7 @@ DEPENDENCIES
   hiredis
   listen (>= 3.0.5, < 3.2)
   multi_json (~> 1.13.1)
+  mysql2 (~> 0.5.2)
   oj
   pg (~> 0.18)
   pronto

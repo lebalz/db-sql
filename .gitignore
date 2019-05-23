@@ -58,3 +58,5 @@ yarn-debug.log*
 yarn-debug.log*
 .yarn-integrity
 .browserslistrc
+
+db_connections.yaml

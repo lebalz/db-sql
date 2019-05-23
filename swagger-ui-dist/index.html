@@ -37,6 +37,7 @@
     window.onload = function () {
 
       let token;
+      let cryptoKey;
       const email = 'test@user.ch';
       const password = 'asdfasdf';
 
@@ -45,8 +46,11 @@
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onload = () => {
         if (xhr.status === 201) {
-          token = JSON.parse(xhr.response).token;
+          const response = JSON.parse(xhr.response);
+          token = response.token;
+          cryptoKey = response.crypto_key;
           console.log('Token: ', token);
+          console.log('Crypto-Key: ', cryptoKey);
 
           // Build a system
           const ui = SwaggerUIBundle({
@@ -63,6 +67,11 @@
             layout: "StandaloneLayout",
             requestInterceptor: (req) => {
               req.headers.Authorization = token;
+              req.headers['Crypto-Key'] = cryptoKey;
+              // bug in swagger-ui: set correct content type (not application/json)
+              if (['POST', 'PUT'].includes(req.method)) {
+                req.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+              }
               return req;
             },
           })

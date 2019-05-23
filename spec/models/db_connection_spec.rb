@@ -1,4 +1,24 @@
 # frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: db_connections
+#
+#  id                    :uuid             not null, primary key
+#  user_id               :uuid
+#  name                  :string
+#  db_type               :integer
+#  host                  :string
+#  port                  :integer
+#  password_encrypted    :string
+#  initialization_vector :string
+#  initial_db            :string
+#  initial_schema        :string
+#  created_at            :datetime         not null
+#  updated_at            :datetime         not null
+#  username              :string
+#
+
 require_relative '../rails_helper'
 
 RSpec.describe DbConnection, type: :model do

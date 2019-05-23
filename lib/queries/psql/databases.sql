@@ -1,0 +1,1 @@
+SELECT DISTINCT datname AS "databases" FROM pg_database WHERE datistemplate = false;
