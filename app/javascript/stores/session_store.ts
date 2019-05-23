@@ -44,12 +44,20 @@ class SessionStore {
           (error) => {
             if (error.response.status === 401) {
               this.reloadUser();
-              that.history.push('/dashboard');
             }
             return Promise.reject(error);
           }
         );
       }
+    );
+    reaction(
+      () => this.newPasswordState,
+      (state) => {
+        if (state !== NewPasswordState.None) {
+          this.newPasswordState = NewPasswordState.None;
+        }
+      },
+      { delay: 5000 }
     );
   }
 

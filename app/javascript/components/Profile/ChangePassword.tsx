@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form, InputOnChangeData, Message, Segment } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
+import { computed, reaction } from 'mobx';
 import SessionStore, { NewPasswordState } from '../../stores/session_store';
 
 
@@ -41,6 +42,7 @@ export default class ChangePassword extends React.Component {
   }
 
   setNewPassword() {
+    this.injected.sessionStore.newPasswordState = NewPasswordState.None;
     if (this.validate()) {
       this.injected.sessionStore.setNewPassword(
         this.oldPassword,
@@ -64,6 +66,17 @@ export default class ChangePassword extends React.Component {
     return this.state.isConfirmed && this.state.isSafe;
   }
 
+  @computed get segmentColor() {
+    const { newPasswordState } = this.injected.sessionStore;
+    if (newPasswordState === NewPasswordState.Success) {
+      return 'green';
+    }
+    if (!this.isValid || newPasswordState === NewPasswordState.Error) {
+      return 'red';
+    }
+    return 'blue';
+  }
+
   render() {
     const { newPasswordState } = this.injected.sessionStore;
     const errorMessages: string[] = [];
@@ -78,13 +91,30 @@ export default class ChangePassword extends React.Component {
     }
 
     const validPassword = errorMessages.length === 0;
+    const newPasswordSet = newPasswordState === NewPasswordState.Success;
+
     return (
       <Segment
-        color={newPasswordState === NewPasswordState.Success ? 'green' : 'red'}
+        color={this.segmentColor}
         style={{ minWidth: '350px' }}
       >
-
-        <Form onSubmit={() => this.setNewPassword()} error={!validPassword}>
+        <Form
+          onSubmit={() => this.setNewPassword()}
+          error={!validPassword}
+          success={newPasswordSet}
+        >
+          <Message
+            error
+            header="Errors"
+            list={errorMessages}
+            style={{ maxWidth: '320px' }}
+          />
+          <Message
+            success
+            header="Success"
+            content="Password updated"
+            style={{ maxWidth: '320px' }}
+          />
           <Form.Group>
             <Form.Input
               type="password"
@@ -114,13 +144,6 @@ export default class ChangePassword extends React.Component {
               onChange={this.onChangePassword}
             />
           </Form.Group>
-          {
-            <Message
-              error
-              header="Errors"
-              list={errorMessages}
-            />
-          }
           <Form.Button
             loading={newPasswordState === NewPasswordState.Waiting}
             content="Change Password"
