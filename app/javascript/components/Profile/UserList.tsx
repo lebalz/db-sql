@@ -2,8 +2,8 @@ import React, { Fragment } from 'react';
 import { Segment, Menu, Icon, List, Header, Table, Button } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import UserStore from '../../stores/user_store';
-import User from '../../models/User';
-import { deleteUser } from '../../api/admin';
+import User, { Role } from '../../models/User';
+import { deleteUser, updateUser } from '../../api/admin';
 
 interface InjectedProps {
   userStore: UserStore;
@@ -24,6 +24,10 @@ export default class UserList extends React.Component {
     deleteUser(id).then(() => this.injected.userStore.loadUsers(true));
   }
 
+  setUserRole(id: string, role: Role) {
+    updateUser(id, { role: role }).then(() => this.injected.userStore.loadUsers(true));
+  }
+
   render() {
     const { users } = this.injected.userStore;
     return (
@@ -32,7 +36,7 @@ export default class UserList extends React.Component {
           icon="refresh"
           onClick={() => this.injected.userStore.loadUsers(true)}
           floated="left"
-          style={{alignSelf: 'flex-start'}}
+          style={{ alignSelf: 'flex-start' }}
         />
         <Table celled>
           <Table.Header>
@@ -56,7 +60,22 @@ export default class UserList extends React.Component {
                     <Table.Cell content={User.formatDate(user.updatedAt)} />
                     <Table.Cell content={user.loginCount} />
                     <Table.Cell content={User.formatDate(user.lastLogin)} />
-                    <Table.Cell content={user.role} />
+                    <Table.Cell>
+                      <Button.Group size="mini">
+                        {
+                          Object.values(Role).map((role) => {
+                            return (
+                              <Button
+                                key={role}
+                                content={role}
+                                active={user.role === role}
+                                onClick={() => this.setUserRole(user.id, role)}
+                              />
+                            );
+                          })
+                        }
+                      </Button.Group>
+                    </Table.Cell>
                     <Table.Cell>
                       <Button
                         icon="trash"
@@ -73,5 +92,4 @@ export default class UserList extends React.Component {
       </Fragment>
     );
   }
-
 }

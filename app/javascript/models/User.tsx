@@ -1,5 +1,6 @@
 import { observable, action, computed } from 'mobx';
 import { User as UserProps } from '../api/user';
+import _ from 'lodash';
 
 export enum Role {
   Admin = 'admin',
@@ -22,12 +23,6 @@ export default class User {
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.role = props.role;
-  }
-
-  @action updateWithUserProps(user: UserProps) {
-    this.updatedAt = new Date(user.updated_at);
-    this.lastLogin = new Date(user.last_login);
-    this.loginCount = user.login_count;
   }
 
   @computed get isAdmin() {

@@ -1,6 +1,6 @@
 import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
-import { login, LoginUser as ApiLoginUser, User as ApiUser, logout, validate, newPassword as setNewPasswordCall } from '../api/user';
+import { login, LoginUser as ApiLoginUser, User as ApiUser, logout, validate, newPassword as setNewPasswordCall, user } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
 import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
@@ -32,7 +32,7 @@ class SessionStore {
     reaction(
       () => this.root.initialized,
       () => {
-        this.setCurrentUser(this.fetchFromLocalStorage());
+        this.setCurrentUser(this.fetchFromLocalStorage);
 
         // If a request comes back unauthorized,
         // log the user out
@@ -43,7 +43,8 @@ class SessionStore {
           },
           (error) => {
             if (error.response.status === 401) {
-              that.resetAuthorization();
+              this.reloadUser();
+              that.history.push('/dashboard');
             }
             return Promise.reject(error);
           }
@@ -61,7 +62,7 @@ class SessionStore {
     }
   }
 
-  fetchFromLocalStorage(): ApiLoginUser | null {
+  get fetchFromLocalStorage(): ApiLoginUser | null {
     const user = localStorage.getItem(LocalStorageKey.User);
 
     if (user !== null) {
@@ -101,10 +102,28 @@ class SessionStore {
       newPasswordConfirmation
     ).then(({ data }) => {
       this.updateLocalUserCredentials(data);
-      this.pCurrentUser.updateWithUserProps(data);
+      this.pCurrentUser = new User(data);
       this.newPasswordState = NewPasswordState.Success;
     }).catch(() => {
       this.newPasswordState = NewPasswordState.Error;
+    });
+  }
+
+  @action reloadUser() {
+    user().then(({ data }) => {
+      const user = this.fetchFromLocalStorage;
+      const updated = _.merge(
+        user,
+        _.pickBy(data, v => v !== null && v !== undefined)
+      );
+      if (!user) return;
+      localStorage.setItem(
+        LocalStorageKey.User,
+        JSON.stringify(updated)
+      );
+      this.pCurrentUser = new User(data);
+    }).catch(() => {
+      this.resetAuthorization();
     });
   }
 

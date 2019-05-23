@@ -13,3 +13,12 @@ export function deleteUser(id: string) {
     `admin/users/${id}`
   );
 }
+
+export function updateUser(id: string, change: Partial<User>) {
+  return api.put(
+    `admin/users/${id}`,
+    {
+      data: change
+    }
+  );
+}

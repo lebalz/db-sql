@@ -17,7 +17,7 @@ class UserStore {
     if (!forceReload && this.users.length > 0) return;
 
     users().then(({ data }) => {
-      const users = data.map(user => new User(user));
+      const users = _.sortBy(data, ['email']).map(user => new User(user));
       this.users.replace(users);
     }).catch(() => {
       console.log('No admin authorization');

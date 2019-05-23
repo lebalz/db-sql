@@ -40,6 +40,10 @@ export function validate(user: User): AxiosPromise<User> {
   );
 }
 
+export function user(): AxiosPromise<User> {
+  return api.get('user');
+}
+
 export function signup(email: string, password: string): AxiosPromise<LoginUser> {
   return api.post(
     'user/signup',
