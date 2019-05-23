@@ -75,11 +75,7 @@ class DbConnection < ApplicationRecord
 
     aes_key = Base64.strict_decode64(key)
     cipher = OpenSSL::Cipher::AES.new(256, :CBC)
-    initialization_vector = if initialization_vector.nil?
-                              cipher.random_iv
-                            else
-                              Base64.strict_decode64(initialization_vector)
-                            end
+    initialization_vector = cipher.random_iv
     cipher.iv = initialization_vector
     cipher.encrypt
     cipher.key = aes_key

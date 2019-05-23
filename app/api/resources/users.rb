@@ -4,7 +4,7 @@ module Resources
       def logout_existing_user
         token = request.headers['Authorization']
         return unless token
-        
+
         login_token = LoginToken.find_by(token: token)
         return unless login_token
 
