@@ -1,14 +1,18 @@
 # frozen_string_literal: true
-
 # == Schema Information
 #
 # Table name: users
 #
-#  id              :uuid             not null, primary key
-#  email           :string
-#  password_digest :string
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
+#  id                :uuid             not null, primary key
+#  email             :string
+#  password_digest   :string
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  login_count       :integer          default(0)
+#  role              :integer          default("user")
+#  activation_digest :string
+#  activated         :boolean          default(FALSE)
+#  activated_at      :datetime
 #
 
 require_relative '../rails_helper'

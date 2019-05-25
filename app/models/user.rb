@@ -2,24 +2,33 @@
 #
 # Table name: users
 #
-#  id              :uuid             not null, primary key
-#  email           :string
-#  password_digest :string
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
+#  id                :uuid             not null, primary key
+#  email             :string
+#  password_digest   :string
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  login_count       :integer          default(0)
+#  role              :integer          default("user")
+#  activation_digest :string
+#  activated         :boolean          default(FALSE)
+#  activated_at      :datetime
 #
 
 class User < ApplicationRecord
   has_secure_password
+  before_create :create_activation_digest
+  before_save   :downcase_email
 
   enum role: [:user, :admin]
 
-  
   has_many :login_tokens, dependent: :destroy
   has_many :db_connections, dependent: :destroy
-  
+
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8, maximum: 128 }, if: -> { password.present? }
+
+  attr_accessor :activation_token
+
 
   def login(password)
     return unless authenticate password
@@ -67,5 +76,41 @@ class User < ApplicationRecord
       hash: hash
     )
     Base64.strict_encode64(key)
+  end
+
+  def activate(token)
+    valid = BCrypt::Password.new(activation_digest)
+                            .is_password?(token)
+    return false unless valid
+
+    update_attributes(
+      activated: true,
+      activated_at: Time.zone.now
+    )
+  end
+
+  # resets the activation digest. This is used when
+  # the activation link must be resend
+  def reset_activation_digest
+    return unless !activated?
+    create_activation_digest
+    save!
+    self
+  end
+
+  private
+  
+  # Converts email to all lower-case.
+  def downcase_email
+    self.email = email.downcase
+  end
+
+  def create_activation_digest
+    self.activation_token  = SecureRandom.urlsafe_base64
+
+    self.activation_digest = BCrypt::Password.create(
+      @activation_token,
+      cost: BCrypt::Engine.cost
+    )
   end
 end

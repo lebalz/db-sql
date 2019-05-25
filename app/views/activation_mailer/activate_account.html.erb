@@ -1,0 +1,9 @@
+<h1>Welcome to DB SQL</h1>
+
+Please verify your email address <%= @user.email %> to complete your registration.
+
+<a href=<%= "#{api_url}/user/#{@user.id}/activate?activation_token=#{@user.activation_token}" %> >
+  Activate your Account
+</a>
+
+Your DB-SQL Team

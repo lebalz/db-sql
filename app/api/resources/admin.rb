@@ -2,7 +2,7 @@ module Resources
   class Admin < Grape::API
     resource :admin do
       before do
-        error!('No admin rights', 401) unless current_user.admin?
+        error!('No admin rights', 403) unless current_user.admin?
       end
 
       resource :users do
@@ -14,7 +14,7 @@ module Resources
         route_param :id, type: String, desc: 'User id' do
           desc 'Delete user'
           delete do
-            error!('You can not delete current user', 401) if current_user.id == params[:id]
+            error!('You can not delete current user', 403) if current_user.id == params[:id]
             to_delete = User.find(params[:id])
             error!('User not found', 404) unless to_delete
             error!(to_delete.errors.messages, 400) unless to_delete.destroy()

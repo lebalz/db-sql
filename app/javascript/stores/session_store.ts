@@ -1,6 +1,13 @@
 import { observable, reaction, computed, action } from 'mobx';
 import { RootStore } from './root_store';
-import { login, LoginUser as ApiLoginUser, User as ApiUser, logout, validate, newPassword as setNewPasswordCall, user } from '../api/user';
+import {
+  login,
+  LoginUser as ApiLoginUser,
+  logout,
+  newPassword as setNewPasswordCall,
+  user,
+  deleteAccount as deleteAccountCall
+} from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
 import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
@@ -43,7 +50,7 @@ class SessionStore {
           },
           (error) => {
             if (error.response.status === 401) {
-              this.reloadUser();
+              this.resetAuthorization();
             }
             return Promise.reject(error);
           }
@@ -93,7 +100,7 @@ class SessionStore {
   @action login(email: string, password: string) {
     login(email, password).then(({ data }) => {
       this.setCurrentUser(data);
-    }).catch(() => {
+    }).catch((error) => {
       console.log('Loginfehler!!');
     });
   }
@@ -143,6 +150,18 @@ class SessionStore {
     });
   }
 
+  @action deleteAccount(password: string) {
+    this.newPasswordState = NewPasswordState.Waiting;
+    deleteAccountCall(password).then(
+      () => {
+        this.resetAuthorization();
+        this.history.push('/login');
+      }
+    ).catch((e) => {
+      this.newPasswordState = NewPasswordState.Error;
+    });
+  }
+
   @action resetAuthorization() {
     this.user = null;
     delete api.defaults.headers[LocalStorageKey.Authorization];
@@ -159,14 +178,15 @@ class SessionStore {
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
     api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
     localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
-    this.updateLocalUserCredentials(user);
+
+    // when the user came from the local storage, we must update the user
+    // with the current data
+    this.reloadUser();
     this.history.push(this.routeBeforeLogin || '/dashboard');
   }
 
   private updateLocalUserCredentials(user: ApiLoginUser) {
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
-    api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
-    localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
   }
 
 }

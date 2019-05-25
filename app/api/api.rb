@@ -43,7 +43,11 @@ class API < Grape::API
         error!('Login token expired', 401)
       else
         @current_user = login_token.user
+        if (!@current_user.activated? && DateTime.now >= @current_user.created_at + 2.days)
+          error!('Activate your account', 403)
+        end
       end
+      @current_user
     end
 
     def current_user

@@ -5,9 +5,9 @@ import { Role } from '../models/User';
 export interface User {
   id: string;
   email: string;
-  last_login: string;
   login_count: number;
   role: Role;
+  activated: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -65,6 +65,23 @@ export function newPassword(
       old_password: oldPassword,
       new_password: newPassword,
       password_confirmation: newPasswordConfirmation
+    }
+  );
+}
+
+export function resendActivationLink() {
+  return api.post(
+    'user/resend_activation_link'
+  );
+}
+
+export function deleteAccount(password: string) {
+  return api.delete(
+    'user',
+    {
+      data: {
+        password: password
+      }
     }
   );
 }

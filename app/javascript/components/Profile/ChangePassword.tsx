@@ -1,7 +1,7 @@
 import React from 'react';
-import { Form, InputOnChangeData, Message, Segment } from 'semantic-ui-react';
+import { Form, InputOnChangeData, Message, Segment, Header } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import { computed, reaction } from 'mobx';
+import { computed } from 'mobx';
 import SessionStore, { NewPasswordState } from '../../stores/session_store';
 
 
@@ -98,6 +98,7 @@ export default class ChangePassword extends React.Component {
         color={this.segmentColor}
         style={{ minWidth: '350px' }}
       >
+        <Header as="h2" content="Change your Password" />
         <Form
           onSubmit={() => this.setNewPassword()}
           error={!validPassword}
@@ -118,7 +119,7 @@ export default class ChangePassword extends React.Component {
           <Form.Group>
             <Form.Input
               type="password"
-              label="Old Password"
+              label="Old password"
               placeholder="Old password"
               name="oldPassword"
               onChange={this.onChangePassword}
@@ -128,7 +129,7 @@ export default class ChangePassword extends React.Component {
             <Form.Input
               error={!this.state.isSafe}
               type="password"
-              label="New Password"
+              label="New password"
               placeholder="New password"
               name="newPassword"
               onChange={this.onChangePassword}

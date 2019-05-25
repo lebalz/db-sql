@@ -33,13 +33,13 @@ RSpec.describe "API::Resources::Admin" do
     end
     context 'user is not admin' do
       let(:request_headers) { @user_headers }
-      it 'returns 401' do
+      it 'returns 403' do
         get(
           "/api/admin/users",
           headers: request_headers
         )
         expect(response.successful?).to be_falsey
-        expect(response.status).to be(401)
+        expect(response.status).to be(403)
       end
     end
   end
@@ -82,7 +82,7 @@ RSpec.describe "API::Resources::Admin" do
     end
     context 'user is not admin' do
       let(:request_headers) { @user_headers }
-      it 'returns 401' do
+      it 'returns 403' do
         put(
           "/api/admin/users/#{@user.id}",
           headers: request_headers,
@@ -93,7 +93,7 @@ RSpec.describe "API::Resources::Admin" do
           }
         )
         expect(response.successful?).to be_falsey
-        expect(response.status).to be(401)
+        expect(response.status).to be(403)
         @user.reload
         expect(@user.admin?).to be_falsey
       end
@@ -125,18 +125,18 @@ RSpec.describe "API::Resources::Admin" do
         headers: request_headers
       )
       expect(response.successful?).to be_falsey
-      expect(response.status).to be(401)
+      expect(response.status).to be(403)
       expect(@admin.persisted?).to be_truthy
     end
     context 'user is not admin' do
       let(:request_headers) { @user_headers }
-      it 'returns 401' do
+      it 'returns 403' do
         delete(
           "/api/admin/users/#{@admin.id}",
           headers: request_headers
         )
         expect(response.successful?).to be_falsey
-        expect(response.status).to be(401)
+        expect(response.status).to be(403)
       end
     end
   end

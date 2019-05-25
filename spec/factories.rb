@@ -10,6 +10,8 @@ FactoryBot.define do
   factory :user do
     sequence(:email) { |n| "sqler#{n}@db.ch" }
     password { 'asdfasdf' }
+    activated { true }
+    activated_at { DateTime.now }
     trait :admin do
       sequence(:email) { |n| "admin#{n}@db.ch" }
       role { 'admin' }

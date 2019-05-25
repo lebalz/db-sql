@@ -10,6 +10,9 @@ module Resources
     post :login do
       @user = User.find_by(email: params[:email])
       error!('Invalid email or password', 401) unless @user
+      if (!@user.activated? && DateTime.now >= @user.created_at + 2.days)
+        error!('Activate your account', 403)
+      end
 
       token = @user.login(params[:password])
       if token

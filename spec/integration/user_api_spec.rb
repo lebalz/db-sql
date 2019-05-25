@@ -67,13 +67,15 @@ RSpec.describe "API::Resources::User" do
       expect(json).to eq({
         "id" => @user.id,
         "email" => @user.email,
-        "last_login" => @login_token.updated_at.iso8601,
         "updated_at" => @user.updated_at.iso8601,
         "created_at" => @user.created_at.iso8601,
         "crypto_key" => nil,
         "token" => nil,
         "role" => "user",
-        "login_count" => @user.login_count
+        "login_count" => @user.login_count,
+        "activation_digest" => @user.activation_digest,
+        "activated" => @user.activated,
+        "activated_at" => @user.activated_at
       })
     end
   end

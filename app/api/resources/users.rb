@@ -31,7 +31,7 @@ module Resources
         requires :password_confirmation, type: String, desc: 'new password confirmation'
       end
       post :new_password do
-        error!('Incorrect old password', 401) unless current_user.authenticate(params[:old_password])
+        error!('Incorrect old password', 403) unless current_user.authenticate(params[:old_password])
 
         is_confirmed = params[:new_password] === params[:password_confirmation]
         error!('Password confirmation does not match new password', 400) unless is_confirmed
@@ -52,7 +52,7 @@ module Resources
             crypto_key: crypto_key
           )
         else
-          error!('Failed to update password', 401)
+          error!('Failed to update password', 400)
         end
       end
 
@@ -65,7 +65,7 @@ module Resources
         logout_existing_user
         @user = User.create(email: params[:email], password: params[:password])
         error!(@user.errors.messages, 400) unless @user.persisted?
-
+        ActivationMailer.activate_account(@user).deliver_now
         token = @user.login(params[:password])
         if token
           crypto_key = @user.crypto_key(params[:password])
@@ -75,12 +75,40 @@ module Resources
         end
       end
 
+      post :resend_activation_link do
+        user = current_user.reset_activation_digest
+        if user
+          ActivationMailer.activate_account(user).deliver_now
+        else
+          error!('Could not resend activation link', 400)
+        end
+      end
+
+      route_param :id, type: String, desc: 'Id of a user' do
+        route_setting :auth, disabled: true
+        params do
+          requires :activation_token, type: String
+        end
+        get :activate do
+          user = User.find(params[:id])
+          return error!('Invalid activation link', 400) unless user
+          
+          return if user.activated?
+  
+          activated = user.activate(params[:activation_token])
+          error!('Invalid activation link', 400) unless activated
+          redirect '/login'
+        end
+      end
+
       desc 'Delete current user'
       params do
+        # requires :data, type: Hash do
         requires :password, type: String, desc: 'password'
+        # end
       end
       delete do
-        error!('Incorrect password', 401) unless current_user.authenticate(params[:password])
+        error!('Incorrect password', 403) unless current_user.authenticate(params[:password])
         error!(current_user.errors.messages, 400) unless current_user.destroy
 
         status :no_content

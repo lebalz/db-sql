@@ -77,4 +77,20 @@ body {
       margin: 10px 0;
     }
   }
+
+  // account activation step
+  .ui.steps.activation {
+    border: 2px rgb(197, 64, 64) solid;
+    .step {
+      padding: 0.2em 1em;
+      &.active {
+        .icon {
+          color: rgb(197, 64, 64);
+        }
+        .title {
+          color: rgb(197, 64, 64);
+        }
+      }
+    }
+  }
 }
