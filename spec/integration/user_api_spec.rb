@@ -73,9 +73,7 @@ RSpec.describe "API::Resources::User" do
         "token" => nil,
         "role" => "user",
         "login_count" => @user.login_count,
-        "activation_digest" => @user.activation_digest,
         "activated" => @user.activated,
-        "activated_at" => @user.activated_at
       })
     end
   end
