@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import DbSqlIcon from '../../shared/DbSqlIcon';
 import { Header, Menu, Icon, Step, Popup } from 'semantic-ui-react';
-import { inject } from 'mobx-react';
+import { inject, observer } from 'mobx-react';
 import { RouterStore } from 'mobx-react-router';
 import SessionStore from '../../stores/session_store';
 import { resendActivationLink } from '../../api/user';
@@ -12,6 +12,7 @@ interface InjectedProps {
 }
 
 @inject('sessionStore', 'routerStore')
+@observer
 export default class NavBar extends React.Component {
 
   get injected() {

@@ -2,7 +2,7 @@
 
 Please verify your email address <%= @user.email %> to complete your registration.
 
-<a href=<%= "#{api_url}/user/#{@user.id}/activate?activation_token=#{@user.activation_token}" %> >
+<a href=<%= "#{api_url}/user/#{@user.id}/activate?activation_token=#{@user.activation_token}" %> target="_blank" >
   Activate your Account
 </a>
 
