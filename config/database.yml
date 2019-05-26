@@ -10,7 +10,7 @@ default: &default
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: <%= ENV.fetch("DB_SQL_DATABASE_USER") %>
   password: <%= ENV.fetch("DB_SQL_DATABASE_PASSWORD") %>
-  host: <%= ENV.fetch("DB_SQL_DATABASE_HOST") { 'localhost' } %>
+  host: <%= ENV.fetch("DATABASE_URL") { 'localhost' } %>
 
 development:
   <<: *default
@@ -24,7 +24,7 @@ test:
   database: db_sql_test
 
 production:
-  <<: *default
-  database: db_sql_production
-  username: db_sql
-  password: <%= ENV["DB_SQL_DATABASE_PASSWORD"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("DATABASE_URL") { 'localhost' } %>
