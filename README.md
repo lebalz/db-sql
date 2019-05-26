@@ -81,3 +81,13 @@ node swagger_ui.js
 ```
 
 will start swagger on [http://localhost:4000](http://localhost:4000).
+
+## Mailing
+
+In production [Sendgrid](https://sendgrid.com) is used to send mails. Fill in your credentials
+in the `.env` file to work with sendgrid. (`API Keys > Create API Key > Full Access`).
+
+### Mails in Development
+
+Use the mailcatcher gem to receive emails in development: `bundle exec mailcatcher`.
+Mails sent with `:smtp` to [http://localhost:1025](http://localhost:1025) are catched by mailcatcher and can be seen in the inbox at [http://localhost:1080](http://localhost:1080).

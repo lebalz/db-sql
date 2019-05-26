@@ -86,6 +86,7 @@ module Resources
 
       route_param :id, type: String, desc: 'Id of a user' do
         route_setting :auth, disabled: true
+        desc 'Activate a useraccount'
         params do
           requires :activation_token, type: String
         end
