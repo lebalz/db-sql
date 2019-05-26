@@ -1,7 +1,7 @@
-import React, { InputHTMLAttributes } from 'react';
-import { inject } from 'mobx-react';
-import SessionStore from '../stores/session_store';
-import { Header, Form, Accordion, Icon } from 'semantic-ui-react';
+import React from 'react';
+import { inject, observer } from 'mobx-react';
+import SessionStore, { PasswordState } from '../stores/session_store';
+import { Header, Form, Accordion, Icon, Message } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
 import Signup from './Signup';
@@ -12,6 +12,7 @@ interface InjectedProps {
 }
 
 @inject('sessionStore', 'routerStore')
+@observer
 export default class Login extends React.Component {
   state = {
     signup: false
@@ -33,6 +34,7 @@ export default class Login extends React.Component {
   }
 
   render() {
+    const { passwordState } = this.injected.sessionStore;
     return (
       <main
         className="fullscreen"
@@ -49,7 +51,10 @@ export default class Login extends React.Component {
             DB SQL
             </Header>
         </div>
-        <Form onSubmit={() => this.login()}>
+        <Form
+          onSubmit={() => this.login()}
+          error={passwordState === PasswordState.Error}
+        >
           <Form.Group>
             <Form.Input
               icon="at"
@@ -67,8 +72,17 @@ export default class Login extends React.Component {
               id="password-input"
               onChange={e => this.password = e.target.value}
             />
-            <Form.Button content="Login" type="submit" />
+            <Form.Button
+              content="Login"
+              type="submit"
+              loading={passwordState === PasswordState.Waiting}
+            />
           </Form.Group>
+          <Message
+            error
+            header="Login Failed"
+            content="E-Mail or Password is incorrect"
+          />
         </Form>
         <Accordion>
           <Accordion.Title

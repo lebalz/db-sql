@@ -9,11 +9,14 @@ interface InjectedProps {
   sessionStore: SessionStore;
 }
 
+enum LoginState { None, Waiting, Success, Error };
+
 @inject('sessionStore')
 @observer
 export default class Signup extends React.Component {
   state = {
-    isSafe: true
+    isSafe: true,
+    loginState: LoginState.None
   };
   private email: string = '';
   private password: string = '';
@@ -38,10 +41,13 @@ export default class Signup extends React.Component {
 
   signup() {
     if (this.validate()) {
+      this.setState({ loginState: LoginState.Waiting });
       signup(this.email, this.password).then(({ data }) => {
         this.injected.sessionStore.setCurrentUser(data);
+        this.setState({ loginState: LoginState.Success });
       }).catch((error) => {
         console.log(error);
+        this.setState({ loginState: LoginState.Error });
       });
     }
   }
@@ -60,17 +66,25 @@ export default class Signup extends React.Component {
 
   render() {
     const errorMessages: string[] = [];
+    const createError = this.state.loginState === LoginState.Error;
     if (!this.state.isSafe) {
       errorMessages.push('The length of the new password must be between 8 and 128 characters.');
     }
- 
+    if (createError) {
+      errorMessages.push('Your email address is not valid or already used.');
+    }
+
     const validPassword = errorMessages.length === 0;
     return (
-      <Form onSubmit={() => this.signup()} error={!validPassword}>
+      <Form
+        onSubmit={() => this.signup()}
+        error={!validPassword || createError}
+      >
         <Form.Group>
           <Form.Input
             icon="mail"
             iconPosition="left"
+            error={createError}
             type="text"
             label="E-Mail"
             placeholder="E-Mail"
@@ -90,15 +104,14 @@ export default class Signup extends React.Component {
             onChange={this.onChange}
           />
         </Form.Group>
-        {
-          <Message
-            error
-            header="Errors"
-            list={errorMessages}
-          />
-        }
+        <Message
+          error
+          header="Errors"
+          list={errorMessages}
+        />
         <Form.Button
           content="Signup"
+          loading={this.state.loginState === LoginState.Waiting}
           type="submit"
           disabled={!this.isValid}
         />

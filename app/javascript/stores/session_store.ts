@@ -60,7 +60,7 @@ class SessionStore {
     reaction(
       () => this.passwordState,
       (state) => {
-        if (state !== PasswordState.None) {
+        if (![PasswordState.None, PasswordState.Waiting].includes(state)) {
           this.passwordState = PasswordState.None;
         }
       },
@@ -98,10 +98,13 @@ class SessionStore {
   }
 
   @action login(email: string, password: string) {
+    this.passwordState = PasswordState.Waiting;
     login(email, password).then(({ data }) => {
       this.setCurrentUser(data);
+      this.passwordState = PasswordState.Success;
     }).catch((error) => {
       console.log('Loginfehler!!');
+      this.passwordState = PasswordState.Error;
     });
   }
 
@@ -155,6 +158,7 @@ class SessionStore {
     deleteAccountCall(password).then(
       () => {
         this.resetAuthorization();
+        this.passwordState = PasswordState.Success;
         this.history.push('/login');
       }
     ).catch((e) => {
