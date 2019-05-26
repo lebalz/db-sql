@@ -86,12 +86,19 @@ class DbConnection < ApplicationRecord
     }
   end
 
+  def localhost?
+    ActionDispatch::Request::LOCALHOST =~ host || /localhost/i =~ host
+  end
+
   # @param key [String] base64 encoded crypto key from the user
   # @param database_name [String] name of the database_name
   def connect(key:, database_name:)
     database_name ||= default_database_name
     connection = ActiveRecord::ConnectionAdapters::ConnectionHandler.new
     conn_key = connection_key(database_name: database_name)
+
+    # don't let a user connect to the servers localhost
+    db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
     connection.establish_connection(
       adapter: DEFAULT_AR_DB_ADAPTER[db_type],
       host: host,
