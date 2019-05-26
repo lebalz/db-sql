@@ -78,6 +78,7 @@ group :development do
 
   gem 'solargraph'
   gem 'annotate'
+  gem 'mailcatcher'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
