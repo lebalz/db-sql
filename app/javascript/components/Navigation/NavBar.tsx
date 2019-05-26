@@ -79,7 +79,7 @@ export default class NavBar extends React.Component {
                       <br/>
                       Check your junkmails too.
                       <br/>
-                      <a onClick={() => resendActivationLink()}>Resend the activation link</a>
+                      <a onClick={() => resendActivationLink()} href="#">Resend the activation link</a>
                     </div>
                   }
                   on="hover"
