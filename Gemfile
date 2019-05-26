@@ -8,8 +8,6 @@ gem 'rails', '~> 6.0.0.rc1'
 gem 'pg', '~> 0.18'
 gem 'mysql2', '~>0.5.2'
 
-# Use sqlite3 as the database for Active Record
-gem 'sqlite3', '~> 1.3.6'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 
@@ -65,6 +63,9 @@ group :development, :test do
   gem 'factory_bot_rails'
 
   gem 'database_cleaner'
+
+  # Dokku currently does not suppoert sqlite3
+  gem 'sqlite3', '~> 1.3.6'
 end
 
 group :development do
