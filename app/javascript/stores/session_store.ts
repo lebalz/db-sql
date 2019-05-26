@@ -120,7 +120,7 @@ class SessionStore {
       newPasswordConfirmation
     ).then(({ data }) => {
       this.updateLocalUserCredentials(data);
-      this.pCurrentUser = new User(data);
+      this.user = new User(data);
       this.passwordState = PasswordState.Success;
     }).catch(() => {
       this.passwordState = PasswordState.Error;
@@ -139,7 +139,7 @@ class SessionStore {
         LocalStorageKey.User,
         JSON.stringify(updated)
       );
-      this.pCurrentUser = new User(data);
+      this.user = new User(data);
     }).catch(() => {
       this.resetAuthorization();
     });
@@ -175,9 +175,13 @@ class SessionStore {
     this.history.replace('/login');
   }
 
-  @action setCurrentUser(user: LoginUser | null) {
-    this.user = user;
-    if (user === null) return;
+  @action setCurrentUser(user: ApiLoginUser | null) {
+    if (user === null) {
+      this.user = null;
+      return;
+    }
+
+    this.user = new User(user);
 
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
     api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
