@@ -20,7 +20,7 @@ export enum LocalStorageKey {
   CryptoKey = 'Crypto-Key'
 }
 
-export enum NewPasswordState {
+export enum PasswordState {
   Waiting, Error, Success, None
 }
 
@@ -29,7 +29,7 @@ class SessionStore {
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
   routeBeforeLogin: string | null = null;
-  @observable newPasswordState: NewPasswordState = NewPasswordState.None;
+  @observable passwordState: PasswordState = PasswordState.None;
   private readonly root: RootStore;
 
   constructor(root: RootStore, routerStore: RouterStore) {
@@ -58,10 +58,10 @@ class SessionStore {
       }
     );
     reaction(
-      () => this.newPasswordState,
+      () => this.passwordState,
       (state) => {
-        if (state !== NewPasswordState.None) {
-          this.newPasswordState = NewPasswordState.None;
+        if (state !== PasswordState.None) {
+          this.passwordState = PasswordState.None;
         }
       },
       { delay: 5000 }
@@ -110,7 +110,7 @@ class SessionStore {
     newPassword: string,
     newPasswordConfirmation: string
   ) {
-    this.newPasswordState = NewPasswordState.Waiting;
+    this.passwordState = PasswordState.Waiting;
     setNewPasswordCall(
       oldPassword,
       newPassword,
@@ -118,9 +118,9 @@ class SessionStore {
     ).then(({ data }) => {
       this.updateLocalUserCredentials(data);
       this.pCurrentUser = new User(data);
-      this.newPasswordState = NewPasswordState.Success;
+      this.passwordState = PasswordState.Success;
     }).catch(() => {
-      this.newPasswordState = NewPasswordState.Error;
+      this.passwordState = PasswordState.Error;
     });
   }
 
@@ -151,14 +151,14 @@ class SessionStore {
   }
 
   @action deleteAccount(password: string) {
-    this.newPasswordState = NewPasswordState.Waiting;
+    this.passwordState = PasswordState.Waiting;
     deleteAccountCall(password).then(
       () => {
         this.resetAuthorization();
         this.history.push('/login');
       }
     ).catch((e) => {
-      this.newPasswordState = NewPasswordState.Error;
+      this.passwordState = PasswordState.Error;
     });
   }
 
