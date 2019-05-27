@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { Icon, Table, Button } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import UserStore from '../../stores/user_store';
+import UserStore, { ReloadState } from '../../stores/user_store';
 import User, { Role } from '../../models/User';
 import { deleteUser, updateUser } from '../../api/admin';
 import SessionStore from '../../stores/session_store';
@@ -31,17 +31,35 @@ export default class UserList extends React.Component {
   }
 
   render() {
-    const { users } = this.injected.userStore;
+    const { users, reloadState } = this.injected.userStore;
     const { currentUser } = this.injected.sessionStore;
+    let reloadIcon: string;
+    let reloadIconColor: 'red' | 'green' | 'grey';
+    switch (reloadState) {
+      case ReloadState.Error:
+        reloadIcon = 'times circle';
+        reloadIconColor = 'red';
+        break;
+      case ReloadState.Success:
+        reloadIcon = 'check circle';
+        reloadIconColor = 'green';
+        break;
+      default:
+        reloadIcon = 'refresh';
+        reloadIconColor = 'grey';
+    }
+
     return (
       <Fragment>
         <Button
-          icon="refresh"
+          icon={reloadIcon}
+          color={reloadIconColor}
           label="Refresh users"
           labelPosition="left"
           onClick={() => this.injected.userStore.loadUsers(true)}
           floated="left"
           style={{ alignSelf: 'flex-start' }}
+          loading={reloadState === ReloadState.Loading}
         />
         <Table celled>
           <Table.Header>
