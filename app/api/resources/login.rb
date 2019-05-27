@@ -8,7 +8,7 @@ module Resources
       requires :password, type: String
     end
     post :login do
-      @user = User.find_by(email: params[:email])
+      @user = User.find_by(email: params[:email].downcase)
       error!('Invalid email or password', 401) unless @user
       if (!@user.activated? && DateTime.now >= @user.created_at + 2.days)
         error!('Activate your account', 403)
