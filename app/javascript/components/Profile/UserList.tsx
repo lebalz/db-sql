@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react';
 import { Icon, Table, Button } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
+import { computed } from 'mobx';
 import UserStore, { ReloadState } from '../../stores/user_store';
 import User, { Role } from '../../models/User';
 import { deleteUser, updateUser } from '../../api/admin';
@@ -30,30 +31,38 @@ export default class UserList extends React.Component {
     updateUser(id, { role: role }).then(() => this.injected.userStore.loadUsers(true));
   }
 
+  @computed get reloadIcon() {
+    const { reloadState } = this.injected.userStore;
+    switch (reloadState) {
+      case ReloadState.Error:
+        return 'times circle';
+      case ReloadState.Success:
+        return 'check circle';
+      default:
+        return 'refresh';
+    }
+  }
+
+  @computed get reloadIconColor() {
+    const { reloadState } = this.injected.userStore;
+    switch (reloadState) {
+      case ReloadState.Error:
+        return 'red';
+      case ReloadState.Success:
+        return 'green';
+      default:
+        return 'grey';
+    }
+  }
+
   render() {
     const { users, reloadState } = this.injected.userStore;
     const { currentUser } = this.injected.sessionStore;
-    let reloadIcon: string;
-    let reloadIconColor: 'red' | 'green' | 'grey';
-    switch (reloadState) {
-      case ReloadState.Error:
-        reloadIcon = 'times circle';
-        reloadIconColor = 'red';
-        break;
-      case ReloadState.Success:
-        reloadIcon = 'check circle';
-        reloadIconColor = 'green';
-        break;
-      default:
-        reloadIcon = 'refresh';
-        reloadIconColor = 'grey';
-    }
-
     return (
       <Fragment>
         <Button
-          icon={reloadIcon}
-          color={reloadIconColor}
+          icon={this.reloadIcon}
+          color={this.reloadIconColor}
           label="Refresh users"
           labelPosition="left"
           onClick={() => this.injected.userStore.loadUsers(true)}
@@ -101,7 +110,7 @@ export default class UserList extends React.Component {
                     <Table.Cell>
                       <Icon
                         name={user.activated ? 'check circle' : 'times circle'}
-                        color={user.activated ? 'green' : 'red' }
+                        color={user.activated ? 'green' : 'red'}
                       />
                     </Table.Cell>
                     <Table.Cell>

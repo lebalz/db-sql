@@ -1,6 +1,6 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { PasswordState } from '../stores/session_store';
+import SessionStore, { RequestState } from '../stores/session_store';
 import { Header, Form, Accordion, Icon, Message } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
@@ -53,7 +53,7 @@ export default class Login extends React.Component {
         </div>
         <Form
           onSubmit={() => this.login()}
-          error={passwordState === PasswordState.Error}
+          error={passwordState === RequestState.Error}
         >
           <Form.Group>
             <Form.Input
@@ -75,7 +75,7 @@ export default class Login extends React.Component {
             <Form.Button
               content="Login"
               type="submit"
-              loading={passwordState === PasswordState.Waiting}
+              loading={passwordState === RequestState.Waiting}
             />
           </Form.Group>
           <Message

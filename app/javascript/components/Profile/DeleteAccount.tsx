@@ -1,7 +1,7 @@
 import React from 'react';
 import { InputOnChangeData, Message, Segment, Form, Header } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { PasswordState } from '../../stores/session_store';
+import SessionStore, { RequestState } from '../../stores/session_store';
 
 
 interface InjectedProps {
@@ -43,7 +43,7 @@ export default class DeleteAccount extends React.Component {
         />
         <Form
           onSubmit={() => this.deleteAccount()}
-          error={passwordState === PasswordState.Error}
+          error={passwordState === RequestState.Error}
         >
           <Message
             error
@@ -61,7 +61,7 @@ export default class DeleteAccount extends React.Component {
             />
           </Form.Group>
           <Form.Button
-            loading={passwordState === PasswordState.Waiting}
+            loading={passwordState === RequestState.Waiting}
             content="Delete Account"
             type="submit"
           />

@@ -6,7 +6,8 @@ import {
   logout,
   newPassword as setNewPasswordCall,
   user,
-  deleteAccount as deleteAccountCall
+  deleteAccount as deleteAccountCall,
+  resendActivationLink as resendActivationLinkCall
 } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
@@ -20,7 +21,7 @@ export enum LocalStorageKey {
   CryptoKey = 'Crypto-Key'
 }
 
-export enum PasswordState {
+export enum RequestState {
   Waiting, Error, Success, None
 }
 
@@ -29,7 +30,8 @@ class SessionStore {
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
   routeBeforeLogin: string | null = null;
-  @observable passwordState: PasswordState = PasswordState.None;
+  @observable passwordState: RequestState = RequestState.None;
+  @observable resendActivationLinkState: RequestState = RequestState.None;
   private readonly root: RootStore;
 
   constructor(root: RootStore, routerStore: RouterStore) {
@@ -60,8 +62,8 @@ class SessionStore {
     reaction(
       () => this.passwordState,
       (state) => {
-        if (![PasswordState.None, PasswordState.Waiting].includes(state)) {
-          this.passwordState = PasswordState.None;
+        if (![RequestState.None, RequestState.Waiting].includes(state)) {
+          this.passwordState = RequestState.None;
         }
       },
       { delay: 5000 }
@@ -98,13 +100,13 @@ class SessionStore {
   }
 
   @action login(email: string, password: string) {
-    this.passwordState = PasswordState.Waiting;
+    this.passwordState = RequestState.Waiting;
     login(email, password).then(({ data }) => {
       this.setCurrentUser(data);
-      this.passwordState = PasswordState.Success;
+      this.passwordState = RequestState.Success;
     }).catch((error) => {
       console.log('Loginfehler!!');
-      this.passwordState = PasswordState.Error;
+      this.passwordState = RequestState.Error;
     });
   }
 
@@ -113,7 +115,7 @@ class SessionStore {
     newPassword: string,
     newPasswordConfirmation: string
   ) {
-    this.passwordState = PasswordState.Waiting;
+    this.passwordState = RequestState.Waiting;
     setNewPasswordCall(
       oldPassword,
       newPassword,
@@ -121,9 +123,9 @@ class SessionStore {
     ).then(({ data }) => {
       this.updateLocalUserCredentials(data);
       this.user = new User(data);
-      this.passwordState = PasswordState.Success;
+      this.passwordState = RequestState.Success;
     }).catch(() => {
-      this.passwordState = PasswordState.Error;
+      this.passwordState = RequestState.Error;
     });
   }
 
@@ -153,16 +155,29 @@ class SessionStore {
     });
   }
 
+  @action resendActivationLink() {
+    this.resendActivationLinkState = RequestState.Waiting;
+    resendActivationLinkCall().then(() => {
+      this.resendActivationLinkState = RequestState.Success;
+    }).catch(() => {
+      this.resendActivationLinkState = RequestState.Error;
+    }).then(
+      result => new Promise(resolve => setTimeout(resolve, 5000, result))
+    ).finally(
+      () => this.resendActivationLinkState = RequestState.None
+    );
+  }
+
   @action deleteAccount(password: string) {
-    this.passwordState = PasswordState.Waiting;
+    this.passwordState = RequestState.Waiting;
     deleteAccountCall(password).then(
       () => {
         this.resetAuthorization();
-        this.passwordState = PasswordState.Success;
+        this.passwordState = RequestState.Success;
         this.history.push('/login');
       }
     ).catch((e) => {
-      this.passwordState = PasswordState.Error;
+      this.passwordState = RequestState.Error;
     });
   }
 

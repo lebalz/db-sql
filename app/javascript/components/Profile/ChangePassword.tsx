@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, InputOnChangeData, Message, Segment, Header } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
-import SessionStore, { PasswordState } from '../../stores/session_store';
+import SessionStore, { RequestState } from '../../stores/session_store';
 
 
 interface InjectedProps {
@@ -42,7 +42,7 @@ export default class ChangePassword extends React.Component {
   }
 
   setNewPassword() {
-    this.injected.sessionStore.passwordState = PasswordState.None;
+    this.injected.sessionStore.passwordState = RequestState.None;
     if (this.validate()) {
       this.injected.sessionStore.setNewPassword(
         this.oldPassword,
@@ -68,10 +68,10 @@ export default class ChangePassword extends React.Component {
 
   @computed get segmentColor() {
     const { passwordState } = this.injected.sessionStore;
-    if (passwordState === PasswordState.Success) {
+    if (passwordState === RequestState.Success) {
       return 'green';
     }
-    if (!this.isValid || passwordState === PasswordState.Error) {
+    if (!this.isValid || passwordState === RequestState.Error) {
       return 'red';
     }
     return 'blue';
@@ -86,12 +86,12 @@ export default class ChangePassword extends React.Component {
     if (!this.state.isConfirmed) {
       errorMessages.push('The password confirmation is not equal to the new password.');
     }
-    if (passwordState === PasswordState.Error) {
+    if (passwordState === RequestState.Error) {
       errorMessages.push('Your current password was wrong. Please try again.');
     }
 
     const validPassword = errorMessages.length === 0;
-    const newPasswordSet = passwordState === PasswordState.Success;
+    const newPasswordSet = passwordState === RequestState.Success;
 
     return (
       <Segment
@@ -146,7 +146,7 @@ export default class ChangePassword extends React.Component {
             />
           </Form.Group>
           <Form.Button
-            loading={passwordState === PasswordState.Waiting}
+            loading={passwordState === RequestState.Waiting}
             content="Change Password"
             type="submit"
             disabled={!this.isValid}

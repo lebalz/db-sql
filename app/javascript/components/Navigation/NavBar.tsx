@@ -2,9 +2,9 @@ import React, { Fragment } from 'react';
 import DbSqlIcon from '../../shared/DbSqlIcon';
 import { Header, Menu, Icon, Step, Popup } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
+import { computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
-import SessionStore from '../../stores/session_store';
-import { resendActivationLink } from '../../api/user';
+import SessionStore, { RequestState } from '../../stores/session_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -19,8 +19,33 @@ export default class NavBar extends React.Component {
     return this.props as InjectedProps;
   }
 
+  @computed get resendIcon() {
+    const { resendActivationLinkState } = this.injected.sessionStore;
+    switch (resendActivationLinkState) {
+      case RequestState.Error:
+        return 'times circle';
+      case RequestState.Success:
+        return 'check circle';
+      default:
+        return 'refresh';
+    }
+  }
+
+  @computed get resendIconColor() {
+    const { resendActivationLinkState } = this.injected.sessionStore;
+    switch (resendActivationLinkState) {
+      case RequestState.Error:
+        return 'red';
+      case RequestState.Success:
+        return 'green';
+      default:
+        return 'grey';
+    }
+  }
+
   render() {
     const router = this.injected.routerStore;
+    const { resendActivationLinkState } = this.injected.sessionStore;
     return (
       <Fragment>
         <Menu secondary pointing>
@@ -73,17 +98,30 @@ export default class NavBar extends React.Component {
                   hoverable
                   wide
                   header="Account not activated"
-                  content={
-                    <div>
-                      Check your mails and activate your account with sent activation link.
-                      <br/>
-                      Check your junkmails too.
-                      <br/>
-                      <a onClick={() => resendActivationLink()} href="#">Resend the activation link</a>
-                    </div>
-                  }
                   on="hover"
-                />
+                >
+                  <Popup.Header>
+                    Check your mails
+                  </Popup.Header>
+                  <Popup.Content>
+                    An activation link has been sent to you.
+                    <br />
+                    <a
+                      onClick={() => this.injected.sessionStore.resendActivationLink()}
+                      href="#"
+                    >
+                      Resend the activation link
+                    </a>
+                    {
+                      resendActivationLinkState !== RequestState.None &&
+                      <Icon
+                        loading={resendActivationLinkState === RequestState.Waiting}
+                        name={this.resendIcon}
+                        color={this.resendIconColor}
+                      />
+                    }
+                  </Popup.Content>
+                </Popup>
                 <Step disabled>
                   <Step.Content>
                     <Step.Title>Done</Step.Title>
