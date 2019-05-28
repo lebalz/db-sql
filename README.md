@@ -52,7 +52,7 @@ To create a new postgres user for this project:
 ```sh
 sudo -u postgres psql
 postgres=# CREATE USER foo WITH ENCRYPTED PASSWORD 'bar';
-postgres=# ALTER ROLTE foo WITH superuser;
+postgres=# ALTER ROLE foo WITH superuser;
 ```
 
 If pgcrypto is not installed for a database, install it to the public schema:
