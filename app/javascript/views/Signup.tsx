@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, InputOnChangeData, Message } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { RequestState } from '../stores/session_store';
+import SessionStore from '../stores/session_store';
 import { signup } from '../api/user';
 
 

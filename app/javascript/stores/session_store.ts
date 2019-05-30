@@ -70,11 +70,18 @@ class SessionStore {
     );
   }
 
+  isNoLoginRequired(location: Location) {
+    return (
+      location.pathname === '/login'
+      || location.pathname.startsWith('/reset_password/')
+    );
+  }
+
   onRouteChange = (location: Location, action: Action) => {
-    if (!this.isLoggedIn && location.pathname !== '/login') {
+    if (!this.isLoggedIn && !this.isNoLoginRequired(location)) {
       this.routeBeforeLogin = location.pathname;
       this.history.replace('/login');
-    } else if (this.isLoggedIn && location.pathname === '/login') {
+    } else if (this.isLoggedIn && this.isNoLoginRequired(location)) {
       this.history.replace(this.routeBeforeLogin || '/dashboard');
     }
   }

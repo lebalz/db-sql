@@ -6,8 +6,9 @@ import Login from '../views/Login';
 import { Router, Route, Redirect, Switch } from 'react-router';
 import Dashboard from '../components/Dashboard';
 import Profile from '../components/Profile';
+import ResetPassword from '../views/ResetPassword';
 
-const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
+const AppContent = observer(() => (
   <Provider
     rootStore={rootStore}
     sessionStore={rootStore.session}
@@ -20,6 +21,7 @@ const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
           <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/profile/:part" component={Profile} />
+          <Route path="/reset_password/:id" component={ResetPassword} />
           <Redirect from="/" exact to="/dashboard" />
           <Redirect to="/dashboard" />
         </Switch>
@@ -31,7 +33,7 @@ const AppContent = observer(({ loggedIn }: { loggedIn: boolean }) => (
 @observer
 class App extends React.Component {
   render() {
-    return <AppContent loggedIn={rootStore.session.isLoggedIn} />;
+    return <AppContent />;
   }
 }
 

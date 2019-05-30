@@ -5,6 +5,7 @@ import { Header, Form, Accordion, Icon, Message } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
 import Signup from './Signup';
+import ForgotPassword from './ForgotPassword';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -15,7 +16,8 @@ interface InjectedProps {
 @observer
 export default class Login extends React.Component {
   state = {
-    signup: false
+    signup: false,
+    forgotPassword: false
   };
 
   private email: string = '';
@@ -31,6 +33,10 @@ export default class Login extends React.Component {
     );
     this.password = '';
     document.querySelector<HTMLInputElement>('#password-input').value = '';
+  }
+
+  get queryParams() {
+    return new URLSearchParams(this.injected.routerStore.location.search);
   }
 
   render() {
@@ -54,7 +60,12 @@ export default class Login extends React.Component {
         <Form
           onSubmit={() => this.login()}
           error={passwordState === RequestState.Error}
+          success={this.queryParams.get('reset') === 'success'}
         >
+          <Message
+            success
+            content="Password successfully reset. Login with the new password."
+          />
           <Form.Group>
             <Form.Input
               icon="at"
@@ -94,6 +105,17 @@ export default class Login extends React.Component {
           </Accordion.Title>
           <Accordion.Content active={this.state.signup}>
             <Signup />
+          </Accordion.Content>
+        </Accordion>
+        <Accordion>
+          <Accordion.Title
+            active={this.state.forgotPassword}
+            onClick={() => this.setState({ forgotPassword: !this.state.forgotPassword })}
+          >
+            Forgot password?
+          </Accordion.Title>
+          <Accordion.Content active={this.state.forgotPassword}>
+            <ForgotPassword />
           </Accordion.Content>
         </Accordion>
       </main>

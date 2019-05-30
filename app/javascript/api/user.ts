@@ -85,3 +85,28 @@ export function deleteAccount(password: string) {
     }
   );
 }
+
+export function requestPasswordReset(email: string) {
+  return api.post(
+    'user/reset_password',
+    {
+      email: email
+    }
+  );
+}
+
+export function resetPassword(
+  id: string,
+  resetToken: string,
+  password: string,
+  passwordConfirmation: string
+) {
+  return api.post(
+    `user/${id}/reset_password`,
+    {
+      reset_token: resetToken,
+      password: password,
+      password_confirmation: passwordConfirmation
+    }
+  );
+}
