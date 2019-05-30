@@ -49,8 +49,12 @@ class DbConnection < ApplicationRecord
     decipher.update(Base64.strict_decode64(password_encrypted)) + decipher.final
   end
 
-  def recrypt!(old_crypto_key:, new_crypto_key:,  new_user_password:)
+  def recrypt!(old_crypto_key:, new_crypto_key:)
     db_password = password(old_crypto_key)
+    reset_crypto_key(new_crypto_key: new_crypto_key, db_password: db_password)
+  end
+
+  def reset_crypto_key(new_crypto_key:, db_password: '-')
     new_crypt = DbConnection.encrypt(
       key: new_crypto_key,
       db_password: db_password
@@ -144,7 +148,7 @@ class DbConnection < ApplicationRecord
   # @return [Array<String>] columns of a table_name
   def column_names(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
-      c = connection.columns(table_name)
+      connection.columns(table_name)
     end.map(&:name)
   end
 

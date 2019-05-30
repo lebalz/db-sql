@@ -27,7 +27,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8, maximum: 128 }, if: -> { password.present? }
 
-  attr_accessor :activation_token
+  attr_accessor :activation_token, :reset_password_token
 
 
   def login(password)
@@ -35,7 +35,7 @@ class User < ApplicationRecord
 
     token = LoginToken.new
     login_tokens << token
-    self.login_count += 1 
+    self.login_count += 1
     save!
     token.token
   end
@@ -46,17 +46,41 @@ class User < ApplicationRecord
     save
   end
 
-  def change_password!(old_password:, new_password:, password_confirmation:)
+  def change_password!(
+    old_password:,
+    new_password:,
+    password_confirmation:
+  )
     ActiveRecord::Base.transaction do
-      self.update_attributes!(
+      update_attributes!(
         password: new_password,
         password_confirmation: password_confirmation
       )
       db_connections.each do |db_connection|
         db_connection.recrypt!(
           old_crypto_key: crypto_key(old_password),
-          new_crypto_key: crypto_key(new_password),
-          new_user_password: new_password
+          new_crypto_key: crypto_key(new_password)
+        )
+      end
+      login_tokens.destroy_all
+    end
+  end
+
+  # !! all db connection passwords will be useless
+  # because we can not decrypt them. They are blanked out
+  def reset_password!(reset_token:, password:, password_confirmation:)
+    return unless password_reset_authenticated?(token: reset_token)
+
+    ActiveRecord::Base.transaction do
+      update_attributes!(
+        password: password,
+        password_confirmation: password_confirmation,
+        reset_password_digest: nil,
+        reset_password_mail_sent_at: nil
+      )
+      db_connections.each do |db_connection|
+        db_connection.reset_crypto_key(
+          new_crypto_key: crypto_key(password)
         )
       end
       login_tokens.destroy_all
@@ -90,16 +114,54 @@ class User < ApplicationRecord
   end
 
   # resets the activation digest. This is used when
-  # the activation link must be resend
+  # the activation link is resend
   def reset_activation_digest
-    return unless !activated?
+    return if activated?
+
     create_activation_digest
     save!
     self
   end
 
+  def request_password_reset
+    create_reset_password_digest
+    save!
+    self
+  end
+
+  # @return [boolean] returns if a password reset was requested.
+  #   however it does not check if the request is expired
+  def password_reset_requested?
+    !!(reset_password_digest && reset_password_mail_sent_at)
+  end
+
+  def pending_password_reset_request?
+    return false unless password_reset_requested?
+
+    DateTime.now < reset_password_mail_sent_at + 12.hours
+  end
+
   private
-  
+
+  def password_reset_authenticated?(token:)
+    unless password_reset_requested?
+      errors.add(:base, 'No password reset requested')
+      return false
+    end
+    unless pending_password_reset_request?
+      errors.add(:base, 'The reset link is outdated, request a new one.')
+      return false
+    end
+    valid = BCrypt::Password.new(reset_password_digest)
+                            .is_password?(token)
+
+    unless valid
+      errors.add(:base, 'Invalid reset token')
+      return false
+    end
+    true
+  end
+
   # Converts email to all lower-case.
   def downcase_email
     self.email = email.downcase
@@ -110,6 +172,15 @@ class User < ApplicationRecord
 
     self.activation_digest = BCrypt::Password.create(
       @activation_token,
+      cost: BCrypt::Engine.cost
+    )
+  end
+
+  def create_reset_password_digest
+    self.reset_password_token = SecureRandom.urlsafe_base64
+    self.reset_password_mail_sent_at = DateTime.now
+    self.reset_password_digest = BCrypt::Password.create(
+      @reset_password_token,
       cost: BCrypt::Engine.cost
     )
   end

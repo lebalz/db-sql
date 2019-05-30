@@ -11,6 +11,7 @@ module Resources
         login_token.destroy
       end
     end
+
     resource :user do
       desc 'Get current user'
       get do
@@ -75,6 +76,19 @@ module Resources
         end
       end
 
+      route_setting :auth, disabled: true
+      params do
+        requires :email, type: String
+      end
+      post :reset_password do
+        logout_existing_user
+        @user = User.find_by(email: params[:email])
+        error!('No user found with this email', 400) unless @user
+
+        @user.request_password_reset
+        ResetPasswordMailer.reset(@user).deliver_now
+      end
+
       post :resend_activation_link do
         user = current_user.reset_activation_digest
         if user
@@ -93,11 +107,49 @@ module Resources
         get :activate do
           user = User.find(params[:id])
           return error!('Invalid activation link', 400) unless user
-          
+
           return if user.activated?
-  
+
           activated = user.activate(params[:activation_token])
           error!('Invalid activation link', 400) unless activated
+          redirect '/login'
+        end
+
+        route_setting :auth, disabled: true
+        desc 'Reset password'
+        params do
+          requires :reset_token, type: String
+        end
+        get :reset_password do
+          user = User.find(params[:id])
+          reset_requested = user&.reset_password_digest && user&.reset_password_mail_sent_at
+          error!('Invalid link', 400) unless reset_requested
+          expired = DateTime.now >= user.reset_password_mail_sent_at + 12.hours
+          error!('The reset link is outdated, request a new one.') if expired
+
+          valid = BCrypt::Password.new(user.reset_password_digest)
+                                  .is_password?(params[:reset_token])
+          error!('Invalid reset token', 403) unless valid
+
+          redirect "/reset_password/#{user.id}?reset_token=#{params[:reset_token]}"
+        end
+
+        route_setting :auth, disabled: true
+        desc 'Reset password'
+        params do
+          requires :reset_token, type: String
+          requires :password, type: String
+          requires :password_confirmation, type: String
+        end
+        post :reset_password do
+          user = User.find(params[:id])
+          error!('Invalid link', 400) unless user
+          user.reset_password!(
+            reset_token: params[:reset_token],
+            password: params[:password],
+            password_confirmation: params[:password_confirmation]
+          )
+          error!(user.errors[:base].first, 400) unless user.errors[:base].empty?
           redirect '/login'
         end
       end
