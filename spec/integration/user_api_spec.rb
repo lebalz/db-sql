@@ -13,51 +13,6 @@ RSpec.describe "API::Resources::User" do
     FactoryBot.create(:db_connection, user: @user)
     FactoryBot.create(:db_connection, user: @user)
   end
-  describe 'POST /api/user/validate' do
-    let(:id) { @user.id }
-    let(:email) { @user.email }
-    let(:params) do
-      {
-        id: id,
-        email: email
-      }
-    end
-    it 'can validate a user' do
-      post(
-        "/api/user/validate",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['email']).to eq(@user.email)
-      expect(json['id']).to eq(@user.id)
-      expect(json['login_count']).to eq(@user.login_count)
-    end
-    context 'email is not from token' do
-      let(:email) { 'bla@bar.ch' }
-      it 'returns 401' do
-        post(
-          "/api/user/validate",
-          headers: @headers,
-          params: params
-        )
-        expect(response.successful?).to be_falsey
-        expect(response.status).to be(401)
-      end
-    end
-    context 'id is not from token' do
-      let(:id) { 'rand-whatever' }
-      it 'returns 401' do
-        post(
-          "/api/user/validate",
-          headers: @headers,
-          params: params
-        )
-        expect(response.successful?).to be_falsey
-        expect(response.status).to be(401)
-      end
-    end
-  end
 
   describe 'GET /api/user' do
     it 'can get the current user' do
