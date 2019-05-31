@@ -8,7 +8,7 @@ interface InjectedProps {
 }
 
 @inject('sessionStore')
-export default class Logout extends React.Component {
+export default class LogoutButton extends React.Component {
   get injected() {
     return this.props as InjectedProps;
   }

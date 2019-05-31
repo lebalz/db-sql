@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { InputHTMLAttributes } from 'react';
 import { inject } from 'mobx-react';
 import SessionStore from '../stores/session_store';
 import { Header, Form } from 'semantic-ui-react';
@@ -23,6 +23,8 @@ export default class Login extends React.Component {
       this.email,
       this.password
     );
+    this.password = '';
+    document.querySelector<HTMLInputElement>('#password-input').value = '';
   }
 
   render() {
@@ -57,6 +59,7 @@ export default class Login extends React.Component {
               type="password"
               placeholder="Passwort"
               name="password"
+              id="password-input"
               onChange={e => this.password = e.target.value}
             />
             <Form.Button content="Login" type="submit" />

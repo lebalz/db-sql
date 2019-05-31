@@ -1,6 +1,5 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import DbSqlIcon from '../../shared/DbSqlIcon';
-import { Header } from 'semantic-ui-react';
 
 export default class Footer extends React.Component {
   render() {

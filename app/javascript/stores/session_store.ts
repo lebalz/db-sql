@@ -12,7 +12,7 @@ export enum LocalStorageKey {
 }
 
 class SessionStore {
-  @observable pCurrentUser: User | null = null;
+  @observable private user: User | null = null;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
   private readonly root: RootStore;
@@ -62,14 +62,14 @@ class SessionStore {
   }
 
   @computed get currentUser() {
-    if (!this.pCurrentUser) {
+    if (!this.user) {
       throw new Error('No logged in User');
     }
-    return this.pCurrentUser;
+    return this.user;
   }
 
   @computed get isLoggedIn() {
-    return !!this.pCurrentUser;
+    return !!this.user;
   }
 
   @action login(email: string, password: string) {
@@ -89,33 +89,21 @@ class SessionStore {
   }
 
   @action resetAuthorization() {
-    this.pCurrentUser = null;
+    this.user = null;
     delete api.defaults.headers[LocalStorageKey.Authorization];
     delete api.defaults.headers[LocalStorageKey.CryptoKey];
     localStorage.removeItem(LocalStorageKey.User);
     this.history.push('/login');
   }
 
-  @action setCurrentUser(user?: LoginUser) {
-    this.pCurrentUser = user;
+  @action setCurrentUser(user: LoginUser | null) {
+    this.user = user;
     if (user === null) return;
 
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
-
-    // validate that the used token is from this user.
-    // else reset authorization
-    validate(user).then(({ data }) => {
-      if (data.valid) {
-        api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
-        localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
-        this.history.push('/dashboard');
-      } else {
-        this.resetAuthorization();
-      }
-    }).catch((error) => {
-      console.log(error);
-      this.resetAuthorization();
-    });
+    api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
+    localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
+    this.history.push('/dashboard');
   }
 
 }
