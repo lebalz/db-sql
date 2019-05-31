@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Entities
   class Index < Grape::Entity
     expose :table

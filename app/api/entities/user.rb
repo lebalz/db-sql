@@ -1,8 +1,8 @@
+# frozen_string_literal: true
+
 module Entities
   class User < Grape::Entity
-    format_with(:iso_timestamp) do |date|
-      date.iso8601
-    end
+    format_with(:iso_timestamp, &:iso8601)
 
     expose :id
     expose :email

@@ -1,4 +1,6 @@
-require Rails.root.join('lib','queries', 'query')
+# frozen_string_literal: true
+
+require Rails.root.join('lib', 'queries', 'query')
 # == Schema Information
 #
 # Table name: db_connections
@@ -19,7 +21,7 @@ require Rails.root.join('lib','queries', 'query')
 #
 
 class DbConnection < ApplicationRecord
-  enum db_type: [:psql, :mysql, :mariadb, :sqlite]
+  enum db_type: %i[psql mysql mariadb sqlite]
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
@@ -105,7 +107,7 @@ class DbConnection < ApplicationRecord
     db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
     connection.establish_connection(
       adapter: DEFAULT_AR_DB_ADAPTER[db_type],
-      host: host,
+      host: db_host,
       port: port,
       username: username,
       password: password(key),
@@ -127,7 +129,7 @@ class DbConnection < ApplicationRecord
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [Array<String>] all database_name names for a connection
-  def database_names(key:)  
+  def database_names(key:)
     exec_query(key: key) do
       query_for(db_type: db_type, name: :databases)
     end&.rows&.flatten&.sort || []

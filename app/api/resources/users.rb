@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Resources
   class Users < Grape::API
     helpers do
@@ -27,15 +29,20 @@ module Resources
 
       desc 'Set new password'
       params do
-        requires :old_password, type: String, desc: 'old password'
-        requires :new_password, type: String, desc: 'new password'
-        requires :password_confirmation, type: String, desc: 'new password confirmation'
+        requires(:old_password, type: String, desc: 'old password')
+        requires(:new_password, type: String, desc: 'new password')
+        requires(
+          :password_confirmation,
+          type: String,
+          desc: 'new password confirmation'
+        )
       end
       post :new_password do
-        error!('Incorrect old password', 403) unless current_user.authenticate(params[:old_password])
+        authenticated = current_user.authenticate(params[:old_password])
+        error!('Incorrect old password', 403) unless authenticated
 
-        is_confirmed = params[:new_password] === params[:password_confirmation]
-        error!('Password confirmation does not match new password', 400) unless is_confirmed
+        is_confirmed = params[:new_password] == params[:password_confirmation]
+        error!('Password confirmation failed', 400) unless is_confirmed
         @user = current_user
         @user.change_password!(
           old_password: params[:old_password],
@@ -70,7 +77,12 @@ module Resources
         token = @user.login(params[:password])
         if token
           crypto_key = @user.crypto_key(params[:password])
-          present @user, with: Entities::User, token: token, crypto_key: crypto_key
+          present(
+            @user,
+            with: Entities::User,
+            token: token,
+            crypto_key: crypto_key
+          )
         else
           error!('Invalid email or password', 401)
         end
@@ -122,16 +134,19 @@ module Resources
         end
         get :reset_password do
           user = User.find(params[:id])
-          reset_requested = user&.reset_password_digest && user&.reset_password_mail_sent_at
+          reset_requested = user&.reset_password_digest &&
+            user&.reset_password_mail_sent_at
+
           error!('Invalid link', 400) unless reset_requested
           expired = DateTime.now >= user.reset_password_mail_sent_at + 12.hours
           error!('The reset link is outdated, request a new one.') if expired
 
+          token = params[:reset_token]
           valid = BCrypt::Password.new(user.reset_password_digest)
-                                  .is_password?(params[:reset_token])
+                                  .is_password?(token)
           error!('Invalid reset token', 403) unless valid
 
-          redirect "/reset_password/#{user.id}?reset_token=#{params[:reset_token]}"
+          redirect "/reset_password/#{user.id}?reset_token=#{token}"
         end
 
         route_setting :auth, disabled: true
@@ -161,7 +176,8 @@ module Resources
         # end
       end
       delete do
-        error!('Incorrect password', 403) unless current_user.authenticate(params[:password])
+        authenticated = current_user.authenticate(params[:password])
+        error!('Incorrect password', 403) unless authenticated
         error!(current_user.errors.messages, 400) unless current_user.destroy
 
         status :no_content

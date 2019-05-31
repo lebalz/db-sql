@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: users
@@ -72,7 +73,7 @@ RSpec.describe DbConnection, type: :model do
     end
 
     it 'can update password' do
-      user = FactoryBot.create(:user, password: 'unsafe_pw' )
+      user = FactoryBot.create(:user, password: 'unsafe_pw')
 
       connection1 = FactoryBot.create(
         :db_connection,
@@ -93,7 +94,7 @@ RSpec.describe DbConnection, type: :model do
         new_password: 'safe_password',
         password_confirmation: 'safe_password'
       )
-      
+
       db_connections = user.db_connections
       expect(db_connections.size).to be(2)
       connection1.reload

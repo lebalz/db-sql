@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../rails_helper.rb'
 
 RSpec.describe "API::Resources::User" do
@@ -19,7 +20,7 @@ RSpec.describe "API::Resources::User" do
       get('/api/user', headers: @headers)
       expect(response.successful?).to be true
 
-      expect(json).to eq({
+      expect(json).to eq(
         "id" => @user.id,
         "email" => @user.email,
         "updated_at" => @user.updated_at.iso8601,
@@ -28,8 +29,8 @@ RSpec.describe "API::Resources::User" do
         "token" => nil,
         "role" => "user",
         "login_count" => @user.login_count,
-        "activated" => @user.activated,
-      })
+        "activated" => @user.activated
+      )
     end
   end
 
@@ -81,7 +82,7 @@ RSpec.describe "API::Resources::User" do
       )
       expect(response.successful?).to be true
       user.reload
-      expect(user.login_tokens.count).to eq(1);
+      expect(user.login_tokens.count).to eq(1)
       expect(user.authenticate('asdfasdf')).to be false
       expect(user.authenticate('superPW111')).to be_truthy
       expect(json['token']).to eq(user.login_tokens.order(:updated_at).last.token)

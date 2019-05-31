@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: users
@@ -19,16 +21,24 @@ class User < ApplicationRecord
   before_create :create_activation_digest
   before_save   :downcase_email
 
-  enum role: [:user, :admin]
+  enum role: %i[user admin]
 
   has_many :login_tokens, dependent: :destroy
   has_many :db_connections, dependent: :destroy
 
-  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :password, length: { minimum: 8, maximum: 128 }, if: -> { password.present? }
+  validates(
+    :email,
+    presence: true,
+    uniqueness: true,
+    format: { with: URI::MailTo::EMAIL_REGEXP }
+  )
+  validates(
+    :password,
+    length: { minimum: 8, maximum: 128 },
+    if: -> { password.present? }
+  )
 
   attr_accessor :activation_token, :reset_password_token
-
 
   def login(password)
     return unless authenticate password
@@ -127,6 +137,10 @@ class User < ApplicationRecord
     create_reset_password_digest
     save!
     self
+  end
+
+  def activation_expired?
+    !activated? && DateTime.now >= @current_user.created_at + 2.days
   end
 
   # @return [boolean] returns if a password reset was requested.

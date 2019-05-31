@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Resources
   class Admin < Grape::API
     resource :admin do
@@ -14,17 +16,24 @@ module Resources
         route_param :id, type: String, desc: 'User id' do
           desc 'Delete user'
           delete do
-            error!('You can not delete current user', 403) if current_user.id == params[:id]
+            delete_self = current_user.id == params[:id]
+            error!('You can not delete current user', 403) if delete_self
             to_delete = User.find(params[:id])
             error!('User not found', 404) unless to_delete
-            error!(to_delete.errors.messages, 400) unless to_delete.destroy()
-            return status :no_content
+            error!(to_delete.errors.messages, 400) unless to_delete.destroy
+            status :no_content
           end
 
           desc 'Update user'
           params do
             requires :data, type: Hash do
-              optional :role, type: Symbol, default: :user, values: User.roles.symbolize_keys.keys, desc: 'user roles'
+              optional(
+                :role,
+                type: Symbol,
+                default: :user,
+                values: User.roles.symbolize_keys.keys,
+                desc: 'user roles'
+              )
             end
           end
           put do
@@ -32,8 +41,9 @@ module Resources
             error!('User not found', 404) unless user
 
             change = ActionController::Parameters.new(params[:data])
-            error!(user.errors.messages, 400) unless user.update(change.permit(:role))
-            return status :no_content
+            success = user.update(change.permit(:role))
+            error!(user.errors.messages, 400) unless success
+            status :no_content
           end
         end
       end

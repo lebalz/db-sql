@@ -11,7 +11,6 @@
 #  updated_at :datetime         not null
 #
 
-
 class LoginToken < ApplicationRecord
   belongs_to :user
 

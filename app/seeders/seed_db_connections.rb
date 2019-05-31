@@ -19,7 +19,7 @@ class SeedDbConnections
       user: user
     )
     return unless File.exist? Rails.root.join('db_connections.yaml')
-  
+
     connections = YAML.load_file(Rails.root.join('db_connections.yaml'))
     connections.each do |name, connection|
       user = User.find_by(email: connection['app_user'])

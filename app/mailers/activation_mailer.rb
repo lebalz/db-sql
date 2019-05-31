@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ActivationMailer < ApplicationMailer
   default from: 'no-reply@db-sql.ch'
 

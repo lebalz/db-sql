@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ResetPasswordMailer < ApplicationMailer
   default from: 'no-reply@db-sql.ch'
   def reset(user)
