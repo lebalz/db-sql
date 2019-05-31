@@ -4,6 +4,64 @@ body {
   font-family: sans-serif;
 
   #app {
+    display: grid;
+    grid-template-columns: 350px auto;
+    grid-template-rows: 82px auto 28px;
+    grid-template-areas:
+      "header header"
+      "sidebar main"
+      "footer footer";
+    justify-items: stretch;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: hidden;
+  }
+
+  .fullscreen {
+    grid-column-start: sidebar;
+    grid-column-end: main;
+    grid-row-start: header;
+    grid-row-end: footer;
+  }
+
+  .no-sidebar {
+    grid-column-start: sidebar;
+    grid-column-end: main;
+  }
+
+  header {
+    grid-area: header;
+    flex: 0 0 auto;
+    z-index: 10;
+  }
+
+  #sidebar {
+    grid-area: sidebar;
+    border-right: 1px solid rgba($color: #004950, $alpha: 0.8);
+    color: rgba($color: #669996, $alpha: 0.9);
+    padding: 1em 0;
+
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+
+  }
+
+  main {
+    grid-area: main;
+    flex: 1;
+    display: flex !important;
+    flex-direction: column;
     padding: 2em;
+    box-shadow: 0 0 20px 0 rgba($color: #242424, $alpha: 0.4);
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    grid-area: footer;
+    align-items: center;
+    z-index: 10;
   }
 }

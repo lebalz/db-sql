@@ -1,9 +1,9 @@
 module Resources
   class Users < Grape::API
-    resource :users do
-      desc 'Get all Users'
+    resource :user do
+      desc 'Get current user'
       get do
-        present User.all, with: Entities::User
+        present current_user, with: Entities::User
       end
     end
   end

@@ -11,6 +11,7 @@ module Entities
     expose :crypto_key do |_, options|
       options[:crypto_key]
     end
+    expose :updated_at
     expose :created_at
   end
 end
