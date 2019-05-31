@@ -24,7 +24,8 @@
     "variable-name": [
       true,
       "allow-pascal-case",
-      "allow-snake-case"
+      "allow-snake-case",
+      "allow-leading-underscore"
     ],
     "jsx-no-multiline-js": false,
     "jsx-boolean-value": [

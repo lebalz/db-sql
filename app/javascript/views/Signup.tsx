@@ -20,9 +20,17 @@ export default class Signup extends React.Component {
   };
   private email: string = '';
   private password: string = '';
+  _isMounted: boolean = false;
 
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  componentDidMount() {
+    this._isMounted = true;
+  }
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   onChange = (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
@@ -44,10 +52,10 @@ export default class Signup extends React.Component {
       this.setState({ loginState: LoginState.Waiting });
       signup(this.email, this.password).then(({ data }) => {
         this.injected.sessionStore.setCurrentUser(data);
-        this.setState({ loginState: LoginState.Success });
+        this._isMounted && this.setState({ loginState: LoginState.Success });
       }).catch((error) => {
         console.log(error);
-        this.setState({ loginState: LoginState.Error });
+        this._isMounted && this.setState({ loginState: LoginState.Error });
       });
     }
   }

@@ -97,7 +97,6 @@ export default class NavBar extends React.Component {
                   }
                   hoverable
                   wide
-                  header="Account not activated"
                   on="hover"
                 >
                   <Popup.Header>
