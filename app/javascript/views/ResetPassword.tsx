@@ -38,22 +38,29 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
     return this.props.match.params.id;
   }
 
+  get resetToken() {
+    return this.queryParams.get('reset_token');
+  }
+
   get queryParams() {
     return new URLSearchParams(this.props.location.search);
   }
 
   resetPassword() {
     if (!this.validatePassword()) return;
+
     this.setState({ requestState: RequestState.Waiting });
-    const query = new URLSearchParams(this.props.location.search);
     resetPasswordCall(
       this.id,
-      this.queryParams.get('reset_token') || '',
+      this.resetToken || '',
       this.password,
       this.passwordConfirmation
     ).then(() => {
       this.setState({ requestState: RequestState.Success });
-      this.injected.routerStore.push('/login?reset=success');
+      this.injected.routerStore.push({
+        pathname: '/login',
+        search: '?reset=success'
+      });
     }).catch((error) => {
       this.setState({ requestState: RequestState.Error });
       const msg = error.response.data.error || 'Unexpected server error';
@@ -64,12 +71,14 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
   validatePassword(): boolean {
     if (this.password !== this.passwordConfirmation) {
       this.setState({ passwordState: PasswordState.NotEqual });
-    } else if (this.password.length < 8 || this.password.length > 128) {
-      this.setState({ passwordState: PasswordState.InvalidLength });
-    } else {
-      this.setState({ passwordState: PasswordState.Ok });
+      return false;
     }
-    return this.state.passwordState === PasswordState.Ok;
+    if (this.password.length < 8 || this.password.length > 128) {
+      this.setState({ passwordState: PasswordState.InvalidLength });
+      return false;
+    }
+    this.setState({ passwordState: PasswordState.Ok });
+    return true;
   }
 
   get hasError() {
