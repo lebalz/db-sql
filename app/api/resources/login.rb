@@ -15,17 +15,15 @@ module Resources
       end
 
       token = @user.login(params[:password])
-      if token
-        crypto_key = @user.crypto_key(params[:password])
-        present(
-          @user,
-          with: Entities::User,
-          token: token,
-          crypto_key: crypto_key
-        )
-      else
-        error!('Invalid email or password', 401)
-      end
+      error!('Invalid email or password', 401) unless token
+
+      crypto_key = @user.crypto_key(params[:password])
+      present(
+        @user,
+        with: Entities::User,
+        token: token,
+        crypto_key: crypto_key
+      )
     end
 
     post :logout do

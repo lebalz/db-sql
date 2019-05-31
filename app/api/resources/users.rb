@@ -43,6 +43,7 @@ module Resources
 
         is_confirmed = params[:new_password] == params[:password_confirmation]
         error!('Password confirmation failed', 400) unless is_confirmed
+
         @user = current_user
         @user.change_password!(
           old_password: params[:old_password],
@@ -51,17 +52,15 @@ module Resources
         )
         @user.reload
         token = @user.login(params[:new_password])
-        if token
-          crypto_key = @user.crypto_key(params[:new_password])
-          present(
-            @user,
-            with: Entities::User,
-            token: token,
-            crypto_key: crypto_key
-          )
-        else
-          error!('Failed to update password', 400)
-        end
+        error!('Failed to update password', 400) unless token
+
+        crypto_key = @user.crypto_key(params[:new_password])
+        present(
+          @user,
+          with: Entities::User,
+          token: token,
+          crypto_key: crypto_key
+        )
       end
 
       route_setting :auth, disabled: true
@@ -75,17 +74,15 @@ module Resources
         error!(@user.errors.messages, 400) unless @user.persisted?
         ActivationMailer.activate_account(@user).deliver_now
         token = @user.login(params[:password])
-        if token
-          crypto_key = @user.crypto_key(params[:password])
-          present(
-            @user,
-            with: Entities::User,
-            token: token,
-            crypto_key: crypto_key
-          )
-        else
-          error!('Invalid email or password', 401)
-        end
+        error!('Invalid email or password', 401) unless token
+
+        crypto_key = @user.crypto_key(params[:password])
+        present(
+          @user,
+          with: Entities::User,
+          token: token,
+          crypto_key: crypto_key
+        )
       end
 
       route_setting :auth, disabled: true
@@ -99,15 +96,15 @@ module Resources
 
         @user.request_password_reset
         ResetPasswordMailer.reset(@user).deliver_now
+        status :no_content
       end
 
       post :resend_activation_link do
         user = current_user.reset_activation_digest
-        if user
-          ActivationMailer.activate_account(user).deliver_now
-        else
-          error!('Could not resend activation link', 400)
-        end
+        error!('Could not resend activation link', 400) unless user
+
+        ActivationMailer.activate_account(user).deliver_now
+        status :no_content
       end
 
       route_param :id, type: String, desc: 'Id of a user' do
@@ -131,32 +128,10 @@ module Resources
         desc 'Reset password'
         params do
           requires :reset_token, type: String
-        end
-        get :reset_password do
-          user = User.find(params[:id])
-          reset_requested = user&.reset_password_digest &&
-            user&.reset_password_mail_sent_at
-
-          error!('Invalid link', 400) unless reset_requested
-          expired = DateTime.now >= user.reset_password_mail_sent_at + 12.hours
-          error!('The reset link is outdated, request a new one.') if expired
-
-          token = params[:reset_token]
-          valid = BCrypt::Password.new(user.reset_password_digest)
-                                  .is_password?(token)
-          error!('Invalid reset token', 403) unless valid
-
-          redirect "/reset_password/#{user.id}?reset_token=#{token}"
-        end
-
-        route_setting :auth, disabled: true
-        desc 'Reset password'
-        params do
-          requires :reset_token, type: String
           requires :password, type: String
           requires :password_confirmation, type: String
         end
-        post :reset_password do
+        put :reset_password do
           user = User.find(params[:id])
           error!('Invalid link', 400) unless user
           user.reset_password!(
@@ -165,15 +140,13 @@ module Resources
             password_confirmation: params[:password_confirmation]
           )
           error!(user.errors[:base].first, 400) unless user.errors[:base].empty?
-          redirect '/login'
+          status :no_content
         end
       end
 
       desc 'Delete current user'
       params do
-        # requires :data, type: Hash do
         requires :password, type: String, desc: 'password'
-        # end
       end
       delete do
         authenticated = current_user.authenticate(params[:password])

@@ -103,7 +103,7 @@ export function resetPassword(
   password: string,
   passwordConfirmation: string
 ) {
-  return api.post(
+  return api.put(
     `user/${id}/reset_password`,
     {
       reset_token: resetToken,

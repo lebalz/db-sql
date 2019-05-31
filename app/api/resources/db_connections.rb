@@ -196,7 +196,6 @@ module Resources
             end
           end
         end
-
       end
     end
   end
