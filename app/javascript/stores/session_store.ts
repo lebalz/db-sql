@@ -25,11 +25,16 @@ export enum RequestState {
   Waiting, Error, Success, None
 }
 
+interface Route {
+  path?: string;
+  query?: string;
+}
+
 class SessionStore {
   @observable private user: User | null = null;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
-  routeBeforeLogin: string | null = null;
+  routeBeforeLogin: Route = {};
   @observable passwordState: RequestState = RequestState.None;
   @observable resendActivationLinkState: RequestState = RequestState.None;
   private readonly root: RootStore;
@@ -74,15 +79,33 @@ class SessionStore {
     return (
       location.pathname === '/login'
       || location.pathname.startsWith('/reset_password/')
+      || location.pathname.startsWith('/activate/')
     );
+  }
+
+  get route(): Route {
+    const { location } = this.history;
+    return {
+      path: location.pathname,
+      query: location.search
+    };
   }
 
   onRouteChange = (location: Location, action: Action) => {
     if (!this.isLoggedIn && !this.isNoLoginRequired(location)) {
-      this.routeBeforeLogin = location.pathname;
+      this.routeBeforeLogin = this.route;
       this.history.replace('/login');
-    } else if (this.isLoggedIn && this.isNoLoginRequired(location)) {
-      this.history.replace(this.routeBeforeLogin || '/dashboard');
+    } else if (this.isLoggedIn && location.pathname === '/login') {
+      let { routeBeforeLogin } = this;
+      if (routeBeforeLogin.path === '/login') {
+        routeBeforeLogin = {};
+      }
+      this.history.replace({
+        pathname: routeBeforeLogin.path || '/dashboard',
+        search: routeBeforeLogin.query || ''
+      });
+    } else if (this.isNoLoginRequired(location)) {
+      this.routeBeforeLogin = this.route;
     }
   }
 
@@ -150,6 +173,8 @@ class SessionStore {
       );
       this.user = new User(data);
     }).catch(() => {
+      if (this.isNoLoginRequired(this.root.routing.location)) return;
+
       this.resetAuthorization();
     });
   }
@@ -193,7 +218,7 @@ class SessionStore {
     delete api.defaults.headers[LocalStorageKey.Authorization];
     delete api.defaults.headers[LocalStorageKey.CryptoKey];
     localStorage.removeItem(LocalStorageKey.User);
-    this.routeBeforeLogin = null;
+    this.routeBeforeLogin = {};
     this.history.replace('/login');
   }
 
@@ -212,7 +237,11 @@ class SessionStore {
     // when the user came from the local storage, we must update the user
     // with the current data
     this.reloadUser();
-    this.history.push(this.routeBeforeLogin || '/dashboard');
+    if (this.routeBeforeLogin.path === '/login') this.routeBeforeLogin = {};
+    this.history.push({
+      pathname: this.routeBeforeLogin.path || '/dashboard',
+      search: this.routeBeforeLogin.query || ''
+    });
   }
 
   private updateLocalUserCredentials(user: ApiLoginUser) {

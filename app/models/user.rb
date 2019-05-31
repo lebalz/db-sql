@@ -115,6 +115,7 @@ class User < ApplicationRecord
   def activate(token)
     valid = BCrypt::Password.new(activation_digest)
                             .is_password?(token)
+
     return false unless valid
 
     update_attributes(
@@ -140,7 +141,7 @@ class User < ApplicationRecord
   end
 
   def activation_expired?
-    !activated? && DateTime.now >= @current_user.created_at + 2.days
+    !activated? && DateTime.now >= created_at + 2.days
   end
 
   # @return [boolean] returns if a password reset was requested.

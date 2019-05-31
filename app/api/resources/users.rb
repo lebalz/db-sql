@@ -116,15 +116,15 @@ module Resources
         params do
           requires :activation_token, type: String
         end
-        get :activate do
+        put :activate do
           user = User.find(params[:id])
           return error!('Invalid activation link', 400) unless user
 
-          return if user.activated?
+          return status(:no_content) if user.activated?
 
           activated = user.activate(params[:activation_token])
           error!('Invalid activation link', 400) unless activated
-          redirect '/login'
+          status :no_content
         end
 
         route_setting :auth, disabled: true

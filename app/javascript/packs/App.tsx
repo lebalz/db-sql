@@ -7,6 +7,7 @@ import { Router, Route, Redirect, Switch } from 'react-router';
 import Dashboard from '../components/Dashboard';
 import Profile from '../components/Profile';
 import ResetPassword from '../views/ResetPassword';
+import ActivateAccount from '../views/ActivateAccount';
 
 const AppContent = observer(() => (
   <Provider
@@ -22,6 +23,7 @@ const AppContent = observer(() => (
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/profile/:part" component={Profile} />
           <Route path="/reset_password/:id" component={ResetPassword} />
+          <Route path="/activate/:id" component={ActivateAccount} />
           <Redirect from="/" exact to="/dashboard" />
           <Redirect to="/dashboard" />
         </Switch>

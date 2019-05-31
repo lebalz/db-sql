@@ -33,13 +33,6 @@ export function logout() {
   );
 }
 
-export function validate(user: User): AxiosPromise<User> {
-  return api.post(
-    'user/validate',
-    user
-  );
-}
-
 export function user(): AxiosPromise<User> {
   return api.get('user');
 }
@@ -82,6 +75,15 @@ export function deleteAccount(password: string) {
       data: {
         password: password
       }
+    }
+  );
+}
+
+export function activateAccount(id: string, activationToken: string) {
+  return api.put(
+    `user/${id}/activate`,
+    {
+      activation_token: activationToken
     }
   );
 }
