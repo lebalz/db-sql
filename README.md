@@ -72,6 +72,15 @@ edit it to your needs and reseed.
 
 The fields `db_initial_db` and `db_initial_schema` ar optional.
 
+
+
+## Mailing
+
+In production [Sendgrid](https://sendgrid.com) is used to send mails. Fill in your credentials
+in the `.env` file to work with sendgrid. (`API Keys > Create API Key > Full Access`).
+
+# Development
+
 ## Swagger
 
 The project uses a grape api and supports swagger ui. It expects rails to running on port `3000` and that the user `test@user.ch` with password `asdfasdf` is seeded.
@@ -82,10 +91,17 @@ node swagger_ui.js
 
 will start swagger on [http://localhost:4000](http://localhost:4000).
 
-## Mailing
 
-In production [Sendgrid](https://sendgrid.com) is used to send mails. Fill in your credentials
-in the `.env` file to work with sendgrid. (`API Keys > Create API Key > Full Access`).
+## Generate Documentation
+
+Run `bin/generate_docs`. This will generate the documentation of the rails models, located at `./doc/`.
+
+## Testing
+
+Run the tests with
+```sh
+bundle exec rspec
+```
 
 ### Mails in Development
 
