@@ -78,8 +78,8 @@ class SessionStore {
   isNoLoginRequired(location: Location) {
     return (
       location.pathname === '/login'
-      || location.pathname.startsWith('/reset_password/')
-      || location.pathname.startsWith('/activate/')
+      || /users\/.*\/reset_password/.test(location.pathname)
+      || /users\/.*\/activate/.test(location.pathname)
     );
   }
 

@@ -22,8 +22,8 @@ const AppContent = observer(() => (
           <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/profile/:part" component={Profile} />
-          <Route path="/reset_password/:id" component={ResetPassword} />
-          <Route path="/activate/:id" component={ActivateAccount} />
+          <Route path="/users/:id/reset_password" component={ResetPassword} />
+          <Route path="/users/:id/activate" component={ActivateAccount} />
           <Redirect from="/" exact to="/dashboard" />
           <Redirect to="/dashboard" />
         </Switch>
