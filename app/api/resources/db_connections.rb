@@ -6,12 +6,14 @@ module Resources
       def db_connection
         connection = DbConnection.find(params[:id])
         error!('Db connection not found', 302) unless connection
+
         connection
       end
 
       def crypto_key
         has_key = request.headers.key?('Crypto-Key')
         error!('Crypto-Key is required', 400) unless has_key
+
         request.headers['Crypto-Key']
       end
     end

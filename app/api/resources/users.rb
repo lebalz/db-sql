@@ -15,7 +15,6 @@ module Resources
     end
 
     resource :users do
-
       route_setting :auth, disabled: true
       params do
         requires :email, type: String
@@ -25,6 +24,7 @@ module Resources
         logout_existing_user
         @user = User.create(email: params[:email], password: params[:password])
         error!(@user.errors.messages, 400) unless @user.persisted?
+
         ActivationMailer.activate_account(@user).deliver_now
         token = @user.login(params[:password])
         error!('Invalid email or password', 401) unless token
@@ -101,6 +101,7 @@ module Resources
           )
         end
 
+        desc 'Send a new activation link'
         post :resend_activation_link do
           user = current_user.reset_activation_digest
           error!('Could not resend activation link', 400) unless user
@@ -149,6 +150,7 @@ module Resources
         post :reset_password do
           user = User.find(params[:id])
           error!('Invalid link', 400) unless user
+
           user.reset_password(
             reset_token: params[:reset_token],
             password: params[:password],

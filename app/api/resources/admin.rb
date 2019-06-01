@@ -18,9 +18,11 @@ module Resources
           delete do
             delete_self = current_user.id == params[:id]
             error!('You can not delete current user', 403) if delete_self
+
             to_delete = User.find(params[:id])
             error!('User not found', 404) unless to_delete
             error!(to_delete.errors.messages, 400) unless to_delete.destroy
+
             status :no_content
           end
 
@@ -43,6 +45,7 @@ module Resources
             change = ActionController::Parameters.new(params[:data])
             success = user.update(change.permit(:role))
             error!(user.errors.messages, 400) unless success
+
             status :no_content
           end
         end
