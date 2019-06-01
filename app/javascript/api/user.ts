@@ -34,17 +34,7 @@ export function logout() {
 }
 
 export function user(): AxiosPromise<User> {
-  return api.get('user');
-}
-
-export function signup(email: string, password: string): AxiosPromise<LoginUser> {
-  return api.post(
-    'user/signup',
-    {
-      email: email,
-      password: password
-    }
-  );
+  return api.get('users/current');
 }
 
 export function newPassword(
@@ -52,8 +42,8 @@ export function newPassword(
   newPassword: string,
   newPasswordConfirmation: string
 ): AxiosPromise<LoginUser> {
-  return api.post(
-    'user/new_password',
+  return api.put(
+    'users/current/password',
     {
       old_password: oldPassword,
       new_password: newPassword,
@@ -64,13 +54,13 @@ export function newPassword(
 
 export function resendActivationLink() {
   return api.post(
-    'user/resend_activation_link'
+    'users/current/resend_activation_link'
   );
 }
 
 export function deleteAccount(password: string) {
   return api.delete(
-    'user',
+    'users/current',
     {
       data: {
         password: password
@@ -79,20 +69,30 @@ export function deleteAccount(password: string) {
   );
 }
 
-export function activateAccount(id: string, activationToken: string) {
-  return api.put(
-    `user/${id}/activate`,
+export function signup(email: string, password: string): AxiosPromise<LoginUser> {
+  return api.post(
+    'users',
     {
-      activation_token: activationToken
+      email: email,
+      password: password
     }
   );
 }
 
 export function requestPasswordReset(email: string) {
   return api.post(
-    'user/reset_password',
+    'users/reset_password',
     {
       email: email
+    }
+  );
+}
+
+export function activateAccount(id: string, activationToken: string) {
+  return api.put(
+    `users/${id}/activate`,
+    {
+      activation_token: activationToken
     }
   );
 }
@@ -104,7 +104,7 @@ export function resetPassword(
   passwordConfirmation: string
 ) {
   return api.put(
-    `user/${id}/reset_password`,
+    `users/${id}/reset_password`,
     {
       reset_token: resetToken,
       password: password,

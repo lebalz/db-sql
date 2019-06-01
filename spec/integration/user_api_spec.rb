@@ -15,9 +15,9 @@ RSpec.describe "API::Resources::User" do
     FactoryBot.create(:db_connection, user: @user)
   end
 
-  describe 'GET /api/user' do
+  describe 'GET /api/users/current' do
     it 'can get the current user' do
-      get('/api/user', headers: @headers)
+      get('/api/users/current', headers: @headers)
       expect(response.successful?).to be true
 
       expect(json).to eq(
@@ -34,7 +34,7 @@ RSpec.describe "API::Resources::User" do
     end
   end
 
-  describe 'DELETE /api/user' do
+  describe 'DELETE /api/users/current' do
     it 'can delete the current user' do
       user = FactoryBot.create(:user)
       login_token = FactoryBot.create(:login_token, user: user)
@@ -42,7 +42,7 @@ RSpec.describe "API::Resources::User" do
         'Authorization' => login_token.token
       }
       delete(
-        '/api/user',
+        '/api/users/current',
         headers: headers,
         params: {
           password: 'asdfasdf'
@@ -53,7 +53,7 @@ RSpec.describe "API::Resources::User" do
     end
   end
 
-  describe 'POST /api/user/new_password' do
+  describe 'PUT /api/users/current/password' do
     let(:old_password) { 'asdfasdf' }
     let(:new_password) { 'superPW111' }
     let(:password_confirmation) { 'superPW111' }
@@ -75,8 +75,8 @@ RSpec.describe "API::Resources::User" do
       FactoryBot.create(:db_connection, user: user)
       FactoryBot.create(:db_connection, user: user)
 
-      post(
-        '/api/user/new_password',
+      put(
+        '/api/users/current/password',
         headers: headers,
         params: params
       )
@@ -94,8 +94,8 @@ RSpec.describe "API::Resources::User" do
     context 'not valid old password' do
       let(:old_password) { 'wrong' }
       it 'will not update password' do
-        post(
-          '/api/user/new_password',
+        put(
+          '/api/users/current/password',
           headers: @headers,
           params: params
         )
@@ -106,8 +106,8 @@ RSpec.describe "API::Resources::User" do
     context 'not valid confirmation' do
       let(:password_confirmation) { 'wrong' }
       it 'will not update password' do
-        post(
-          '/api/user/new_password',
+        put(
+          '/api/users/current/password',
           headers: @headers,
           params: params
         )
@@ -118,8 +118,8 @@ RSpec.describe "API::Resources::User" do
     context 'not valid new password with confirmation' do
       let(:new_password) { 'wrong' }
       it 'will not update password' do
-        post(
-          '/api/user/new_password',
+        put(
+          '/api/users/current/password',
           headers: @headers,
           params: params
         )

@@ -29,8 +29,8 @@ RSpec.describe "API::Resources::Admin" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]['id']).to eq(@admin.id)
-      expect(json[1]['id']).to eq(@user.id)
+      ids = json.map { |user| user['id'] }.sort
+      expect(ids).to eq([@admin.id, @user.id].sort)
     end
     context 'user is not admin' do
       let(:request_headers) { @user_headers }
