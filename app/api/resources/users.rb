@@ -146,10 +146,10 @@ module Resources
           requires :password, type: String
           requires :password_confirmation, type: String
         end
-        put :reset_password do
+        post :reset_password do
           user = User.find(params[:id])
           error!('Invalid link', 400) unless user
-          user.reset_password!(
+          user.reset_password(
             reset_token: params[:reset_token],
             password: params[:password],
             password_confirmation: params[:password_confirmation]
