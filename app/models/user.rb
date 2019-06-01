@@ -34,7 +34,7 @@ class User < ApplicationRecord
   )
   validates(
     :password,
-    length: { minimum: 8, maximum: 128 },
+    length: { minimum: 8, maximum: 72 },
     if: -> { password.present? }
   )
 
@@ -78,7 +78,7 @@ class User < ApplicationRecord
 
   # !! all db connection passwords will be useless
   # because we can not decrypt them. They are blanked out
-  def reset_password!(reset_token:, password:, password_confirmation:)
+  def reset_password(reset_token:, password:, password_confirmation:)
     return unless password_reset_authenticated?(token: reset_token)
 
     ActiveRecord::Base.transaction do

@@ -61,7 +61,7 @@ export default class Signup extends React.Component {
   }
 
   validate() {
-    const isSafe = this.password.length >= 8 && this.password.length < 128;
+    const isSafe = this.password.length >= 8 && this.password.length < 73;
     this.setState({
       isSafe: isSafe,
     });
@@ -76,7 +76,7 @@ export default class Signup extends React.Component {
     const errorMessages: string[] = [];
     const createError = this.state.loginState === LoginState.Error;
     if (!this.state.isSafe) {
-      errorMessages.push('The length of the new password must be between 8 and 128 characters.');
+      errorMessages.push('The length of the new password must be between 8 and 72 characters.');
     }
     if (createError) {
       errorMessages.push('Your email address is not valid or already used.');

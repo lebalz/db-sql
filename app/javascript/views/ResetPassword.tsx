@@ -73,7 +73,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
       this.setState({ passwordState: PasswordState.NotEqual });
       return false;
     }
-    if (this.password.length < 8 || this.password.length > 128) {
+    if (this.password.length < 8 || this.password.length > 72) {
       this.setState({ passwordState: PasswordState.InvalidLength });
       return false;
     }
@@ -91,7 +91,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
   get errors(): string[] {
     const error_list: string[] = [];
     if (this.state.passwordState === PasswordState.InvalidLength) {
-      error_list.push('Password length must be between 8 and 128 characters.');
+      error_list.push('Password length must be between 8 and 72 characters.');
     }
     if (this.state.passwordState === PasswordState.NotEqual) {
       error_list.push("The password confirmation doesn't match the password");
