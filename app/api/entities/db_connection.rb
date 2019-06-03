@@ -14,5 +14,6 @@ module Entities
     expose :initial_db
     expose :initial_schema
     expose :created_at
+    expose :updated_at
   end
 end

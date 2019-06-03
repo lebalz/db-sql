@@ -2,6 +2,7 @@ import { observable } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import SessionStore from './session_store';
 import UserStore from './user_store';
+import DbConnectionStore from './db_connection_store';
 
 export class RootStore {
   stores = observable<any>([]);
@@ -9,6 +10,7 @@ export class RootStore {
   session: SessionStore;
   routing: RouterStore;
   user: UserStore;
+  dbConnection: DbConnectionStore;
 
   @observable initialized = false;
 
@@ -21,6 +23,9 @@ export class RootStore {
 
     this.user = new UserStore(this);
     this.stores.push(this.user);
+
+    this.dbConnection = new DbConnectionStore(this);
+    this.stores.push(this.dbConnection);
 
     this.initialized = true;
   }
