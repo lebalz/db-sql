@@ -21,7 +21,9 @@ class User < ApplicationRecord
   before_create :create_activation_digest
   before_save   :downcase_email
 
-  enum role: %i[user admin]
+  ROLES = %i[user admin].freeze
+
+  enum role: ROLES
 
   has_many :login_tokens, dependent: :destroy
   has_many :db_connections, dependent: :destroy

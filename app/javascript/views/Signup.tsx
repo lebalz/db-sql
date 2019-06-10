@@ -3,6 +3,7 @@ import { Form, InputOnChangeData, Message } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
 import { signup } from '../api/user';
+import { isSafePassword } from './helper';
 
 
 interface InjectedProps {
@@ -61,7 +62,7 @@ export default class Signup extends React.Component {
   }
 
   validate() {
-    const isSafe = this.password.length >= 8 && this.password.length < 73;
+    const isSafe = isSafePassword(this.password);
     this.setState({
       isSafe: isSafe,
     });

@@ -31,7 +31,7 @@ module Resources
           :db_type,
           type: Symbol,
           default: :psql,
-          values: DbConnection.db_types.symbolize_keys.keys,
+          values: DbConnection::DB_TYPES,
           desc: 'db type'
         )
         requires(:host, type: String, desc: 'host')

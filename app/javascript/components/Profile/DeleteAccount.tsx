@@ -39,7 +39,7 @@ export default class DeleteAccount extends React.Component {
         <Message
           info
           icon="info"
-          content="All your data is deleted permanently and can not be restored."
+          content="All your data is deleted permanently and cannot be restored."
         />
         <Form
           onSubmit={() => this.deleteAccount()}

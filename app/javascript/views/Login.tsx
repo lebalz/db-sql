@@ -33,7 +33,9 @@ export default class Login extends React.Component {
     );
     this.password = '';
     const passwordInput = document.querySelector<HTMLInputElement>('#password-input');
-    if (passwordInput) passwordInput.value = '';
+    if (passwordInput) {
+      passwordInput.value = '';
+    }
   }
 
   get queryParams() {

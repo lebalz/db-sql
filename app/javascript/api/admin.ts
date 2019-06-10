@@ -14,11 +14,11 @@ export function deleteUser(id: string) {
   );
 }
 
-export function updateUser(id: string, change: Partial<User>) {
+export function updateUser(id: string, userParams: Partial<User>) {
   return api.put(
     `admin/users/${id}`,
     {
-      data: change
+      data: userParams
     }
   );
 }

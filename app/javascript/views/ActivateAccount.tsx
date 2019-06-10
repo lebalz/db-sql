@@ -69,9 +69,6 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
             <Loader indeterminate>Activating Account</Loader>
           </Dimmer>
           <DbSqlIcon size="large" />
-          {/* <Header as="h1" textAlign="center" style={{ marginTop: '40px' }}>
-            DB SQL
-          </Header> */}
           {this.state.requestState === RequestState.Success &&
             <Fragment>
               <Message

@@ -10,7 +10,7 @@ module Resources
         login_token = LoginToken.find_by(token: token)
         return unless login_token
 
-        login_token.destroy
+        login_token.destroy!
       end
     end
 

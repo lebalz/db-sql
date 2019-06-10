@@ -8,7 +8,7 @@ module Resources
       end
 
       resource :users do
-        desc 'Get current user'
+        desc 'Get all users'
         get do
           present User.all, with: Entities::User
         end
@@ -33,7 +33,7 @@ module Resources
                 :role,
                 type: Symbol,
                 default: :user,
-                values: User.roles.symbolize_keys.keys,
+                values: User::ROLES,
                 desc: 'user roles'
               )
             end

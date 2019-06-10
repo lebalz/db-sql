@@ -6,6 +6,7 @@ import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
 import { RouteComponentProps } from 'react-router';
 import { resetPassword as resetPasswordCall } from '../api/user';
+import { isSafePassword } from './helper';
 
 interface MatchParams {
   id: string;
@@ -73,7 +74,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
       this.setState({ passwordState: PasswordState.NotEqual });
       return false;
     }
-    if (this.password.length < 8 || this.password.length > 72) {
+    if (!isSafePassword(this.password)) {
       this.setState({ passwordState: PasswordState.InvalidLength });
       return false;
     }

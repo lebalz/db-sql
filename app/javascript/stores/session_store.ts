@@ -223,7 +223,7 @@ class SessionStore {
   }
 
   @action setCurrentUser(user: ApiLoginUser | null) {
-    if (user === null) {
+    if (!user) {
       this.user = null;
       return;
     }

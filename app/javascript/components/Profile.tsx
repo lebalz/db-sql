@@ -31,12 +31,9 @@ export default class Profile extends React.Component<ProfileProps> {
     return this.props as InjectedProps;
   }
 
-  get part() {
-    return this.props.match.params.part;
-  }
-
   render() {
     const router = this.injected.routerStore;
+    const part = this.props.match.params.part;
     return (
       <Fragment>
         <header>
@@ -46,19 +43,19 @@ export default class Profile extends React.Component<ProfileProps> {
           <Menu.Item
             name="account"
             icon="address card"
-            active={this.part === 'account'}
+            active={part === 'account'}
             onClick={() => router.push('./account')}
           />
           <Menu.Item
             name="new password"
             icon="key"
-            active={this.part === 'change_password'}
+            active={part === 'change_password'}
             onClick={() => router.push('./change_password')}
           />
           <Menu.Item
             name="delete account"
             icon="trash"
-            active={this.part === 'delete_account'}
+            active={part === 'delete_account'}
             onClick={() => router.push('./delete_account')}
           />
           {
@@ -68,7 +65,7 @@ export default class Profile extends React.Component<ProfileProps> {
               <Menu.Item
                 name="users"
                 icon="users"
-                active={this.part === 'users'}
+                active={part === 'users'}
                 onClick={() => router.push('./users')}
               />
             </Fragment>
@@ -76,7 +73,7 @@ export default class Profile extends React.Component<ProfileProps> {
         </Menu>
         <main style={{ alignItems: 'center' }}>
           {(() => {
-            switch (this.part) {
+            switch (part) {
               case 'account':
                 return <Account />;
               case 'change_password':

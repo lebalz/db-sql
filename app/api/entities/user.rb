@@ -2,6 +2,8 @@
 
 module Entities
   class User < Grape::Entity
+    # format timestamps in iso8601 format,
+    # e.g. 2019-05-28T19:49:02Z means 28.05.2019 at 19:49:02 in timezone 0 (=Z)
     format_with(:iso_timestamp, &:iso8601)
 
     expose :id

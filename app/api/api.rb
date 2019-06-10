@@ -28,7 +28,7 @@ class API < Grape::API
     header['Access-Control-Allow-Methods'] = http_methods
     header['Access-Control-Allow-Headers'] = '*'
     header['Access-Control-Request-Method'] = '*'
-    disabled_auth = route.settings[:auth] && route.settings[:auth][:disabled]
+    disabled_auth = route.settings.dig(:auth, :disabled)
     authenticate unless disabled_auth
   end
   helpers do

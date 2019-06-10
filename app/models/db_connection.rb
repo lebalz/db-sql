@@ -21,7 +21,8 @@ require Rails.root.join('lib', 'queries', 'query')
 #
 
 class DbConnection < ApplicationRecord
-  enum db_type: %i[psql mysql mariadb sqlite]
+  DB_TYPES = %i[psql mysql mariadb sqlite].freeze
+  enum db_type: DbConnection::DB_TYPES
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
