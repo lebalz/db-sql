@@ -4,8 +4,8 @@ import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import UserStore, { ReloadState } from '../../stores/user_store';
 import User, { Role } from '../../models/User';
-import { deleteUser, updateUser } from '../../api/admin';
 import SessionStore from '../../stores/session_store';
+import _ from 'lodash';
 
 interface InjectedProps {
   userStore: UserStore;
@@ -15,20 +15,16 @@ interface InjectedProps {
 @inject('userStore', 'sessionStore')
 @observer
 export default class UserList extends React.Component {
-  componentDidMount() {
-    this.injected.userStore.loadUsers();
-  }
-
   get injected() {
     return this.props as InjectedProps;
   }
 
   onDeleteUser(id: string) {
-    deleteUser(id).then(() => this.injected.userStore.loadUsers(true));
+    this.injected.userStore.deleteUser(id);
   }
 
   setUserRole(id: string, role: Role) {
-    updateUser(id, { role: role }).then(() => this.injected.userStore.loadUsers(true));
+    this.injected.userStore.updateUser(id, { role: role });
   }
 
   @computed get reloadIcon() {
@@ -65,7 +61,7 @@ export default class UserList extends React.Component {
           color={this.reloadIconColor}
           label="Refresh users"
           labelPosition="left"
-          onClick={() => this.injected.userStore.loadUsers(true)}
+          onClick={() => this.injected.userStore.loadUsers()}
           floated="left"
           style={{ alignSelf: 'flex-start' }}
           loading={reloadState === ReloadState.Loading}
@@ -84,7 +80,7 @@ export default class UserList extends React.Component {
           </Table.Header>
           <Table.Body>
             {
-              users.map((user) => {
+              _.sortBy(users, ['email']).map((user) => {
                 return (
                   <Table.Row key={user.email}>
                     <Table.Cell content={user.email} />

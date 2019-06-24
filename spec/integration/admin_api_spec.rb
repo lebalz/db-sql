@@ -7,7 +7,7 @@ RSpec.describe "API::Resources::Admin" do
     @admin = FactoryBot.create(:user, :admin)
     @login_token = FactoryBot.create(:login_token, user: @admin)
     @crypto_key = @admin.crypto_key('asdfasdf')
-    @headers = {
+    @admin_headers = {
       'Authorization' => @login_token.token,
       'Crypto-Key' => @crypto_key
     }
@@ -21,7 +21,7 @@ RSpec.describe "API::Resources::Admin" do
     }
   end
   describe 'GET /api/admin/users' do
-    let(:request_headers) { @headers }
+    let(:request_headers) { @admin_headers }
     it 'can get all users' do
       get(
         "/api/admin/users",
@@ -46,7 +46,7 @@ RSpec.describe "API::Resources::Admin" do
   end
 
   describe 'PUT /api/admin/users/:id' do
-    let(:request_headers) { @headers }
+    let(:request_headers) { @admin_headers }
     it 'can update user role' do
       user = FactoryBot.create(:user)
       expect(user.admin?).to be_falsey
@@ -101,8 +101,40 @@ RSpec.describe "API::Resources::Admin" do
     end
   end
 
+  describe 'GET /api/admin/users/:id' do
+    let(:request_headers) { @admin_headers }
+    it 'can get a user' do
+      user = FactoryBot.create(:user)
+      get(
+        "/api/admin/users/#{user.id}",
+        headers: request_headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json['email']).to eq(user.email)
+    end
+    it 'returns 404' do
+      get(
+        "/api/admin/users/eifach-es-textli",
+        headers: request_headers
+      )
+      expect(response.successful?).to be_falsey
+      expect(response.status).to be(404)
+    end
+    context 'user is not admin' do
+      let(:request_headers) { @user_headers }
+      it 'returns 403' do
+        get(
+          "/api/admin/users/#{@user.id}",
+          headers: request_headers
+        )
+        expect(response.successful?).to be_falsey
+        expect(response.status).to be(403)
+      end
+    end
+  end
+
   describe 'DELETE /api/admin/users/:id' do
-    let(:request_headers) { @headers }
+    let(:request_headers) { @admin_headers }
     it 'can delete user' do
       user = FactoryBot.create(:user)
       delete(

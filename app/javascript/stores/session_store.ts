@@ -237,6 +237,9 @@ class SessionStore {
     // when the user came from the local storage, we must update the user
     // with the current data
     this.reloadUser();
+    if (this.user.isAdmin) {
+      this.root.user.loadUsers();
+    }
     if (this.routeBeforeLogin.path === '/login') this.routeBeforeLogin = {};
     this.history.push({
       pathname: this.routeBeforeLogin.path || '/dashboard',

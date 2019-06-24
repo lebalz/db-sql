@@ -14,6 +14,14 @@ module Resources
         end
 
         route_param :id, type: String, desc: 'User id' do
+
+          desc 'User'
+          get do
+            user = User.find(params[:id])
+            error!('User not found', 404) unless user
+            present user, with: Entities::User
+          end
+
           desc 'Delete user'
           delete do
             delete_self = current_user.id == params[:id]

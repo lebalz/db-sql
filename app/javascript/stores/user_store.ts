@@ -1,8 +1,8 @@
-import { observable, reaction, computed, action } from 'mobx';
+import { observable, action } from 'mobx';
 import { RootStore } from './root_store';
 import User from '../models/User';
 import _ from 'lodash';
-import { users } from '../api/admin';
+import { users, deleteUser, updateUser as apiUpdate, user as apiUser } from '../api/admin';
 
 export enum ReloadState {
   None, Loading, Success, Error
@@ -18,9 +18,7 @@ class UserStore {
     this.root = root;
   }
 
-  @action loadUsers(forceReload: boolean = false) {
-    if (!forceReload && this.users.length > 0) return;
-
+  @action loadUsers() {
     this.reloadState = ReloadState.Loading;
     users().then(({ data }) => {
       const users = _.sortBy(data, ['email']).map(user => new User(user));
@@ -35,6 +33,33 @@ class UserStore {
     ).finally(
       () => this.reloadState = ReloadState.None
     );
+  }
+
+  @action updateUser(id: string, update: Partial<User>) {
+    apiUpdate(id, update).then(
+      () => apiUser(id)
+    ).then(
+      ({ data }) => {
+        const oldUser = this.users.find(user => user.id === id);
+        if (!oldUser) return;
+
+        this.users.remove(oldUser);
+        this.users.push(
+          new User(data)
+        );
+      }
+    ).catch(
+      e => console.log(e)
+    );
+  }
+
+  @action deleteUser(id: string) {
+    deleteUser(id).then(() => {
+      const user = this.users.find(user => user.id === id);
+      user && this.users.remove(user);
+    }).catch((error) => {
+      console.log(error);
+    });
   }
 
 }

@@ -14,6 +14,12 @@ export function deleteUser(id: string) {
   );
 }
 
+export function user(id: string): AxiosPromise<User> {
+  return api.get(
+    `admin/users/${id}`
+  );
+}
+
 export function updateUser(id: string, userParams: Partial<User>) {
   return api.put(
     `admin/users/${id}`,

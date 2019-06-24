@@ -60,6 +60,10 @@ group :development, :test do
 
   gem 'solargraph'
 
+  # for vscode-development
+  gem 'ruby-debug-ide', '~>0.7.0'
+  gem 'debase', '~>0.2.3.beta5'
+
   gem 'factory_bot_rails'
 
   gem 'database_cleaner'
