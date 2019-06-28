@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { observer, inject } from 'mobx-react';
 import DbConnection, { DbType } from '../models/DbConnection';
 import { Card, Label, Button } from 'semantic-ui-react';
@@ -15,7 +15,7 @@ interface InjectedProps extends Props {
 
 @inject('dbConnectionStore')
 @observer
-export default class DbConnectionCard extends React.Component<Props> {
+export default class DbConnectionOverview extends React.Component<Props> {
 
   get injected() {
     return this.props as InjectedProps;
@@ -42,7 +42,7 @@ export default class DbConnectionCard extends React.Component<Props> {
             floated="left"
             circular
             icon="settings"
-            onClick={() => this.injected.dbConnectionStore.changingDbConnection = this.dbConnection}
+            onClick={() => this.injected.dbConnectionStore.editedDbConnection = this.dbConnection}
           />
           <Button
             basic

@@ -9,7 +9,7 @@ class DbConnectionStore {
   private readonly root: RootStore;
   dbConnections = observable<DbConnection>([]);
   @observable requestState: RequestState = RequestState.None;
-  @observable changingDbConnection: null | DbConnection = null;
+  @observable editedDbConnection: null | DbConnection = null;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -21,6 +21,14 @@ class DbConnectionStore {
           this.loadDbConnections(true);
         } else {
           this.clearStore();
+        }
+      }
+    );
+    reaction(
+      () => this.editedDbConnection,
+      (connection) => {
+        if (connection) {
+          connection.loadPassword();
         }
       }
     );

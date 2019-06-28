@@ -1,6 +1,6 @@
 import api from './base';
 import { AxiosPromise } from 'axios';
-import { DbType } from '../models/DbConnection';
+import { DbType, UpdateProps } from '../models/DbConnection';
 
 export interface DbConnection {
   id: string;
@@ -15,11 +15,11 @@ export interface DbConnection {
   updated_at: string;
 }
 
-export interface NewDbConnection extends DbConnection {
+interface CreateProps extends DbConnection {
   password: string;
 }
 
-export function newDbConnection(dbConnection: NewDbConnection) {
+export function newDbConnection(dbConnection: CreateProps) {
   return api.post(
     '/db_connections',
     dbConnection
@@ -28,4 +28,21 @@ export function newDbConnection(dbConnection: NewDbConnection) {
 
 export function dbConnections(): AxiosPromise<DbConnection[]> {
   return api.get('/db_connections');
+}
+
+export function dbConnectionPassword(id: string): AxiosPromise<{ password: string }> {
+  return api.get(`/db_connections/${id}/password`);
+}
+
+export function updateConnection(connection: UpdateProps) {
+  return api.put(
+    `/db_connections/${connection.id}`,
+    {
+      data: connection
+    }
+  );
+}
+
+export function databaseNames(id: string): AxiosPromise<string[]> {
+  return api.get(`/db_connections/${id}/database_names`);
 }

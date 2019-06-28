@@ -1,11 +1,20 @@
-import { observable, computed } from 'mobx';
-import { DbConnection as DbConnectionProps } from '../api/db_connection';
+import { observable, computed, action } from 'mobx';
+import { DbConnection as DbConnectionProps, dbConnectionPassword, databaseNames } from '../api/db_connection';
 import _ from 'lodash';
 import User from './User';
 
 export enum DbType {
   Psql = 'psql',
   MySql = 'mysql'
+}
+
+export enum QueryState {
+  None, Executing, Success, Error
+}
+
+export interface UpdateProps extends Partial<DbConnectionProps> {
+  id: string;
+  password?: string;
 }
 
 export default class DbConnection {
@@ -19,6 +28,9 @@ export default class DbConnection {
   @observable username: string;
   @observable initialDb?: string;
   @observable initialSchema?: string;
+  @observable password?: string;
+  @observable valid?: boolean;
+  @observable queryState: QueryState = QueryState.None;
 
   constructor(props: DbConnectionProps) {
     this.id = props.id;
@@ -35,5 +47,44 @@ export default class DbConnection {
 
   static formatDate(date: Date) {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+  }
+
+  @action loadPassword() {
+    dbConnectionPassword(this.id).then(
+      ({ data }) => {
+        this.password = data.password;
+      }
+    );
+  }
+
+  @action testConnection() {
+    this.queryState = QueryState.Executing;
+    databaseNames(this.id).then(
+      ({ data }) => {
+        console.log(data.join(', '));
+        this.valid = true;
+      this.queryState = QueryState.Success;
+    }
+    ).catch((e) => {
+      this.valid = false;
+      this.queryState = QueryState.Error;
+    });
+  }
+
+  @computed get params() {
+    const connection: UpdateProps = {
+      id: this.id,
+      name: this.name,
+      db_type: this.dbType,
+      host: this.host,
+      port: this.port,
+      username: this.username,
+      initial_db: this.initialDb,
+      initial_schema: this.initialSchema,
+    };
+    if (this.password) {
+      connection.password = this.password;
+    }
+    return connection;
   }
 }

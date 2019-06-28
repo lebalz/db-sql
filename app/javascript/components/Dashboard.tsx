@@ -6,8 +6,8 @@ import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbConnectionStore from '../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
-import DbConnectionCard from './DbConnectionCard';
-import DbConnectionModal from './DbConnectionModal';
+import DbConnectionOverview from './DbConnectionOverview';
+import DbConnectionEdit from './DbConnectionEdit';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -31,7 +31,7 @@ export default class Dashboard extends React.Component {
           <NavBar />
         </header>
         <main className="no-sidebar">
-          <DbConnectionModal />
+          <DbConnectionEdit />
           <Header as="h1" content="Welcome to DB SQL" />
           <div
             style={{
@@ -46,7 +46,7 @@ export default class Dashboard extends React.Component {
             {
               dbConnections.map((dbConnection) => {
                 return (
-                  <DbConnectionCard
+                  <DbConnectionOverview
                     key={dbConnection.id}
                     dbConnection={dbConnection}
                     style={{
