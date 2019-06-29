@@ -1,7 +1,8 @@
 import { observable, computed, action } from 'mobx';
-import { DbConnection as DbConnectionProps, dbConnectionPassword, databaseNames } from '../api/db_connection';
+import { DbConnection as DbConnectionProps, dbConnectionPassword, databases } from '../api/db_connection';
 import _ from 'lodash';
 import User from './User';
+import Database from './Database';
 
 export enum DbType {
   Psql = 'psql',
@@ -31,6 +32,7 @@ export default class DbConnection {
   @observable password?: string;
   @observable valid?: boolean;
   @observable queryState: QueryState = QueryState.None;
+  databases = observable<Database>([]);
 
   constructor(props: DbConnectionProps) {
     this.id = props.id;
@@ -57,18 +59,31 @@ export default class DbConnection {
     );
   }
 
-  @action testConnection() {
+  @action loadDatabases() {
     this.queryState = QueryState.Executing;
-    databaseNames(this.id).then(
+    databases(this.id).then(
       ({ data }) => {
-        console.log(data.join(', '));
-        this.valid = true;
-      this.queryState = QueryState.Success;
-    }
+        this.databases.replace(data.map(db => new Database(this, db)));
+        this.queryState = QueryState.Success;
+      }
     ).catch((e) => {
-      this.valid = false;
       this.queryState = QueryState.Error;
     });
+  }
+
+  @computed get props(): DbConnectionProps {
+    return {
+      id: this.id,
+      name: this.name,
+      db_type: this.dbType,
+      host: this.host,
+      port: this.port,
+      username: this.username,
+      initial_db: this.initialDb,
+      initial_schema: this.initialSchema,
+      created_at: this.createdAt.toISOString(),
+      updated_at: this.updatedAt.toISOString()
+    };
   }
 
   @computed get params() {

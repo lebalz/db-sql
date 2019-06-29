@@ -15,6 +15,13 @@ export interface DbConnection {
   updated_at: string;
 }
 
+export interface Database {
+  name: string;
+}
+export interface DbTable {
+  name: string;
+}
+
 interface CreateProps extends DbConnection {
   password: string;
 }
@@ -43,6 +50,12 @@ export function updateConnection(connection: UpdateProps) {
   );
 }
 
-export function databaseNames(id: string): AxiosPromise<string[]> {
-  return api.get(`/db_connections/${id}/database_names`);
+export function databases(id: string): AxiosPromise<Database[]> {
+  return api.get(`/db_connections/${id}/databases`);
+}
+
+export function tables(id: string, databaseName: string): AxiosPromise<DbTable[]> {
+  return api.get(
+    `/db_connections/${id}/${databaseName}/tables`
+  );
 }

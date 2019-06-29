@@ -1,15 +1,18 @@
 import { observable, action, reaction } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
-import { dbConnections } from '../api/db_connection';
+import { dbConnections, updateConnection } from '../api/db_connection';
 import { RequestState } from './session_store';
 import DbConnection from '../models/DbConnection';
+import { TempDbConnection } from '../models/TempDbConnection';
 
 class DbConnectionStore {
   private readonly root: RootStore;
   dbConnections = observable<DbConnection>([]);
   @observable requestState: RequestState = RequestState.None;
-  @observable editedDbConnection: null | DbConnection = null;
+  @observable saveState: RequestState = RequestState.None;
+
+  @observable tempDbConnection: null | TempDbConnection = null;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -25,7 +28,7 @@ class DbConnectionStore {
       }
     );
     reaction(
-      () => this.editedDbConnection,
+      () => this.tempDbConnection,
       (connection) => {
         if (connection) {
           connection.loadPassword();
@@ -52,6 +55,21 @@ class DbConnectionStore {
     ).finally(
       () => this.requestState = RequestState.None
     );
+  }
+
+  @action updateDbConnection(dbConnection: TempDbConnection) {
+    this.saveState = RequestState.Waiting;
+    updateConnection(dbConnection.params).then(() => {
+      const connection = this.dbConnections.find(db => db.id === dbConnection.id);
+      if (!connection) return;
+      this.dbConnections.remove(connection);
+      this.dbConnections.push(
+        new DbConnection(dbConnection.props)
+      );
+      this.saveState = RequestState.Success;
+    }).catch(() => {
+      this.saveState = RequestState.Error;
+    });
   }
 
   @action clearStore() {
