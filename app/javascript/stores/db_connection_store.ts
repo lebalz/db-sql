@@ -1,7 +1,7 @@
 import { observable, action, reaction } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
-import { dbConnections, updateConnection } from '../api/db_connection';
+import { dbConnections, updateConnection, createConnection } from '../api/db_connection';
 import { RequestState } from './session_store';
 import DbConnection from '../models/DbConnection';
 import { TempDbConnection } from '../models/TempDbConnection';
@@ -24,14 +24,6 @@ class DbConnectionStore {
           this.loadDbConnections(true);
         } else {
           this.clearStore();
-        }
-      }
-    );
-    reaction(
-      () => this.tempDbConnection,
-      (connection) => {
-        if (connection) {
-          connection.loadPassword();
         }
       }
     );
@@ -65,6 +57,18 @@ class DbConnectionStore {
       this.dbConnections.remove(connection);
       this.dbConnections.push(
         new DbConnection(dbConnection.props)
+      );
+      this.saveState = RequestState.Success;
+    }).catch(() => {
+      this.saveState = RequestState.Error;
+    });
+  }
+
+  @action createDbConnection(dbConnection: TempDbConnection) {
+    this.saveState = RequestState.Waiting;
+    createConnection(dbConnection.tempDbPorps).then(({ data }) => {
+      this.dbConnections.push(
+        new DbConnection(data)
       );
       this.saveState = RequestState.Success;
     }).catch(() => {

@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Header } from 'semantic-ui-react';
+import { Header, Button } from 'semantic-ui-react';
 import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
@@ -9,12 +9,26 @@ import { inject, observer } from 'mobx-react';
 import DbConnectionOverview from './DbConnectionOverview';
 import DbConnectionEdit from './DbConnectionEdit';
 import _ from 'lodash';
+import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
+import { DbConnection as DbConnectionProps } from '../api/db_connection';
+import { DbType } from '../models/DbConnection';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   dbConnectionStore: DbConnectionStore;
 }
+
+const DEFAULT_DB_CONNECTION: DbConnectionProps = {
+  created_at: (new Date()).toISOString(),
+  updated_at: (new Date()).toISOString(),
+  db_type: DbType.Psql,
+  host: '',
+  id: '',
+  name: '',
+  port: 5432,
+  username: ''
+};
 
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
@@ -60,6 +74,14 @@ export default class Dashboard extends React.Component {
               })
             }
           </div>
+          <Button
+            icon="add"
+            size="big"
+            onClick={() => {
+              const temp = new TempDbConnection(DEFAULT_DB_CONNECTION, TempDbConnectionRole.Create)
+              this.injected.dbConnectionStore.tempDbConnection = temp;
+            }}
+          />
         </main>
         <Footer />
       </Fragment>

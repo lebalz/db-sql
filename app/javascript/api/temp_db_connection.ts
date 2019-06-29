@@ -4,6 +4,7 @@ import { DbType, UpdateProps } from '../models/DbConnection';
 import { Database, DbTable } from './db_connection';
 
 export interface DbConnection {
+  name: string;
   db_type: DbType;
   host: string;
   port: number;

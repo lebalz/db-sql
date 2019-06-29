@@ -51,14 +51,6 @@ export default class DbConnection {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }
 
-  @action loadPassword() {
-    dbConnectionPassword(this.id).then(
-      ({ data }) => {
-        this.password = data.password;
-      }
-    );
-  }
-
   @action loadDatabases() {
     this.queryState = QueryState.Executing;
     databases(this.id).then(

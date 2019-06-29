@@ -3,7 +3,7 @@ import { observer, inject } from 'mobx-react';
 import DbConnection, { DbType } from '../models/DbConnection';
 import { Card, Label, Button } from 'semantic-ui-react';
 import DbConnectionStore from '../stores/db_connection_store';
-import { TempDbConnection } from '../models/TempDbConnection';
+import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
 
 interface Props {
   dbConnection: DbConnection;
@@ -45,7 +45,7 @@ export default class DbConnectionOverview extends React.Component<Props> {
             icon="settings"
             onClick={
               () => {
-                const temp = new TempDbConnection(this.dbConnection.props);
+                const temp = new TempDbConnection(this.dbConnection.props, TempDbConnectionRole.Update);
                 this.injected.dbConnectionStore.tempDbConnection = temp;
               }
             }

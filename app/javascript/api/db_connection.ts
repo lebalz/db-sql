@@ -22,8 +22,14 @@ export interface DbTable {
   name: string;
 }
 
-interface CreateProps extends DbConnection {
-  password: string;
+interface CreateProps {
+  name: string;
+  db_type: DbType;
+  host: string;
+  port: number;
+  username: string;
+  initial_db?: string;
+  initial_schema?: string;
 }
 
 export function newDbConnection(dbConnection: CreateProps) {
@@ -47,6 +53,12 @@ export function updateConnection(connection: UpdateProps) {
     {
       data: connection
     }
+  );
+}
+export function createConnection(connection: CreateProps): AxiosPromise<DbConnection> {
+  return api.post(
+    '/db_connections',
+    connection
   );
 }
 

@@ -7,6 +7,7 @@ import { computed, reaction } from 'mobx';
 import { updateConnection } from '../api/db_connection';
 import _ from 'lodash';
 import { RequestState } from '../stores/session_store';
+import { TempDbConnectionRole } from '../models/TempDbConnection';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -81,7 +82,14 @@ export default class DbConnectionEdit extends React.Component {
   }
 
   onSave() {
-    this.injected.dbConnectionStore.updateDbConnection(this.dbConnection);
+    switch (this.dbConnection.role) {
+      case TempDbConnectionRole.Create:
+        this.injected.dbConnectionStore.createDbConnection(this.dbConnection);
+        break;
+      case TempDbConnectionRole.Update:
+        this.injected.dbConnectionStore.updateDbConnection(this.dbConnection);
+        break;
+    }
   }
 
   render() {
@@ -199,7 +207,7 @@ export default class DbConnectionEdit extends React.Component {
                     }}
                     placeholder="Password"
                     value={this.dbConnection.password || ''}
-                    loading={!this.dbConnection.password}
+                    loading={this.dbConnection.password === undefined}
                     onChange={e => this.dbConnection.password = e.target.value}
                     type={this.state.showPassword ? 'text' : 'password'}
                   />

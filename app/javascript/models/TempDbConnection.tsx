@@ -6,15 +6,22 @@ import DbConnection, { QueryState } from './DbConnection';
 import Database from './Database';
 import DbTable from './DbTable';
 
+export enum TempDbConnectionRole {
+  Update, Create
+}
+
 export class TempDbConnection extends DbConnection {
+  readonly role: TempDbConnectionRole;
   tables = observable<DbTable>([]);
-  constructor(props: DbConnectionProps) {
+  constructor(props: DbConnectionProps, role: TempDbConnectionRole) {
     super(props);
+    this.role = role;
     this.loadDatabases = _.debounce(
       this.loadDatabases,
       1000,
       { leading: false }
     );
+    this.loadPassword();
 
     reaction(
       () => (this.dbConnectionHash),
@@ -47,8 +54,21 @@ export class TempDbConnection extends DbConnection {
     );
   }
 
+  @action loadPassword() {
+    if (this.role === TempDbConnectionRole.Create) {
+      this.password = '';
+      return;
+    }
+    dbConnectionPassword(this.id).then(
+      ({ data }) => {
+        this.password = data.password;
+      }
+    );
+  }
+
   @computed get tempDbPorps(): TempDbConnectionProps {
     return {
+      name: this.name,
       db_type: this.dbType,
       host: this.host,
       port: this.port,
