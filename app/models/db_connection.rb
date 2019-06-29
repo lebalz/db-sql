@@ -36,8 +36,8 @@ class DbConnection < ApplicationRecord
 
   DEFAULT_DATABASE_NAME = {
     'psql' => 'postgres',
-    'mysql' => 'mysql',
-    'mariadb' => 'mysql'
+    'mysql' => 'information_schema',
+    'mariadb' => 'information_schema'
   }.freeze
 
   belongs_to :user
@@ -118,6 +118,16 @@ class DbConnection < ApplicationRecord
     yield(connection.retrieve_connection(conn_key))
   ensure
     connection.remove_connection(conn_key)
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @return [Boolean] true when a connection can be established
+  def test_connection(key:)
+    connect(key: key, database_name: DEFAULT_DATABASE_NAME[db_type]) do |conn|
+      return !!conn
+    end
+  rescue StandardError
+    false
   end
 
   # @param key [String] base64 encoded crypto key from the user
