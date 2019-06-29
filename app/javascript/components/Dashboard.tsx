@@ -8,6 +8,7 @@ import DbConnectionStore from '../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import DbConnectionOverview from './DbConnectionOverview';
 import DbConnectionEdit from './DbConnectionEdit';
+import _ from 'lodash';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -44,7 +45,7 @@ export default class Dashboard extends React.Component {
             }}
           >
             {
-              dbConnections.map((dbConnection) => {
+              _.sortBy(dbConnections, ['name']).map((dbConnection) => {
                 return (
                   <DbConnectionOverview
                     key={dbConnection.id}

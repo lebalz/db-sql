@@ -1,10 +1,12 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import { DbType, QueryState } from '../models/DbConnection';
-import { Label, Button, Modal, Form, Grid } from 'semantic-ui-react';
+import { Label, Button, Modal, Form, Grid, DropdownProps } from 'semantic-ui-react';
 import DbConnectionStore from '../stores/db_connection_store';
-import { computed } from 'mobx';
+import { computed, reaction } from 'mobx';
 import { updateConnection } from '../api/db_connection';
+import _ from 'lodash';
+import { RequestState } from '../stores/session_store';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -13,6 +15,19 @@ interface InjectedProps {
 @inject('dbConnectionStore')
 @observer
 export default class DbConnectionEdit extends React.Component {
+
+  constructor(props: any) {
+    super(props);
+
+    reaction(
+      () => (this.injected.dbConnectionStore.saveState),
+      (state) => {
+        if (state === RequestState.Success) {
+          this.onClose();
+        }
+      }
+    );
+  }
 
   get injected() {
     return this.props as InjectedProps;
@@ -23,28 +38,50 @@ export default class DbConnectionEdit extends React.Component {
   };
 
   @computed get dbConnection() {
-    return this.injected.dbConnectionStore.editedDbConnection!;
+    return this.injected.dbConnectionStore.tempDbConnection!;
   }
 
   @computed get isModalOpen() {
-    return !!this.injected.dbConnectionStore.editedDbConnection;
+    return !!this.injected.dbConnectionStore.tempDbConnection;
+  }
+
+  @computed get dbNameOptions() {
+    return _.uniq([
+      undefined,
+      ...this.dbConnection.databases.map(db => db.name),
+      this.dbConnection.initialDb
+    ]).map((name) => {
+      return { key: `db-${name}`, text: name, value: name };
+    });
+  }
+
+  @computed get dbTableOptions() {
+    return _.uniq([
+      undefined,
+      ...this.dbConnection.tables.map(table => table.name),
+      this.dbConnection.initialSchema
+    ]).map((name) => {
+      return { key: `table-${name}`, text: name, value: name };
+    });
   }
 
   onClose() {
-    const { editedDbConnection } = this.injected.dbConnectionStore;
-    if (editedDbConnection) {
-      editedDbConnection.password = undefined;
-    }
     this.setState({ showPassword: false });
-    this.injected.dbConnectionStore.editedDbConnection = null;
+    this.injected.dbConnectionStore.tempDbConnection = null;
+  }
+
+  handleInitDbChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    const value = data.value as (string | undefined);
+    this.dbConnection.initialDb = value;
+  }
+
+  handleInitSchemaChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    const value = data.value as (string | undefined);
+    this.dbConnection.initialSchema = value;
   }
 
   onSave() {
-    updateConnection(this.dbConnection.params).then(
-      () => this.onClose()
-    ).catch(
-      e => console.log('error on save ', e)
-    );
+    this.injected.dbConnectionStore.updateDbConnection(this.dbConnection);
   }
 
   render() {
@@ -76,7 +113,7 @@ export default class DbConnectionEdit extends React.Component {
                 <Grid.Column>
                   <Label
                     as="a"
-                    color={this.dbConnection.dbType === DbType.Psql ? "blue" : "orange"}
+                    color={this.dbConnection.dbType === DbType.Psql ? 'blue' : 'orange'}
                     ribbon
                     content="Database Type"
                   />
@@ -109,11 +146,13 @@ export default class DbConnectionEdit extends React.Component {
                   <Form>
                     <Form.Group inline widths="1">
                       <Form.Input
+                        required
                         value={this.dbConnection.host}
                         onChange={e => this.dbConnection.host = e.target.value}
                         type="text"
                       />
                       <Form.Input
+                        required
                         style={{ width: '6rem' }}
                         value={this.dbConnection.port}
                         onChange={e => this.dbConnection.port = parseInt(e.target.value, 10)}
@@ -133,6 +172,7 @@ export default class DbConnectionEdit extends React.Component {
                   />
                   <Form.Input
                     fluid
+                    required
                     placeholder="Username"
                     value={this.dbConnection.username}
                     onChange={e => this.dbConnection.username = e.target.value}
@@ -148,6 +188,7 @@ export default class DbConnectionEdit extends React.Component {
                   />
                   <Form.Input
                     fluid
+                    required
                     icon={{
                       name: 'eye',
                       circular: true,
@@ -172,16 +213,15 @@ export default class DbConnectionEdit extends React.Component {
                     ribbon
                     content="Initial DB (optional)"
                   />
-                  <Form.Input
+                  <Form.Dropdown
+                    options={this.dbNameOptions}
+                    placeholder="Initial DB"
+                    search
+                    selection
                     fluid
-                    placeholder="Initial Database"
+                    allowAdditions
                     value={this.dbConnection.initialDb || ''}
-                    onChange={(e) => {
-                      this.dbConnection.initialDb = e.target.value.length === 0
-                        ? undefined
-                        : e.target.value;
-                    }}
-                    type="text"
+                    onChange={this.handleInitDbChange}
                   />
                 </Grid.Column>
                 <Grid.Column>
@@ -191,16 +231,15 @@ export default class DbConnectionEdit extends React.Component {
                     ribbon
                     content="Initial Table (optional)"
                   />
-                  <Form.Input
+                  <Form.Dropdown
+                    options={this.dbTableOptions}
+                    placeholder="Initial Schema"
+                    search
+                    selection
                     fluid
-                    placeholder="Initial Table"
+                    allowAdditions
                     value={this.dbConnection.initialSchema || ''}
-                    onChange={(e) => {
-                      this.dbConnection.initialSchema = e.target.value.length === 0
-                        ? undefined
-                        : e.target.value;
-                    }}
-                    type="text"
+                    onChange={this.handleInitSchemaChange}
                   />
                 </Grid.Column>
               </Grid.Row>
@@ -222,9 +261,10 @@ export default class DbConnectionEdit extends React.Component {
                     onClick={() => this.onSave()}
                   />
                   <Button
-                    content="Dismiss"
+                    content="Cancel"
                     color="red"
                     floated="right"
+                    onClick={() => this.onClose()}
                   />
                 </Grid.Column>
               </Grid.Row>
