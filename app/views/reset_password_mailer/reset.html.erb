@@ -1,0 +1,15 @@
+<h1>Reset your DB SQL password</h1>
+
+You receive this mail because there was request to reset your DB SQL password. Please ignore this mail when you didn't request a new password.
+
+<a
+  id="reset-link"
+  href="<%= "#{root_url}users/#{@user.id}/reset_password?reset_token=#{@user.reset_password_token}" %>"
+  target="_blank"
+>
+  Reset Password
+</a>
+
+Best regards,
+
+Your DB-SQL Team

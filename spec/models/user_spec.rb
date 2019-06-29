@@ -4,11 +4,16 @@
 #
 # Table name: users
 #
-#  id              :uuid             not null, primary key
-#  email           :string
-#  password_digest :string
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
+#  id                :uuid             not null, primary key
+#  email             :string
+#  password_digest   :string
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  login_count       :integer          default(0)
+#  role              :integer          default("user")
+#  activation_digest :string
+#  activated         :boolean          default(FALSE)
+#  activated_at      :datetime
 #
 
 require_relative '../rails_helper'
@@ -54,10 +59,48 @@ RSpec.describe DbConnection, type: :model do
       expect(user.errors[:password]).to_not include(error_msg)
     end
 
+    it 'validates length of #password' do
+      user = User.new(password: 'tooShrt')
+      error_msg = "is too short (minimum is 8 characters)"
+      expect(user.valid?).to be_falsy
+      expect(user.errors[:password]).to include(error_msg)
+    end
+
     it 'returns unique crypto key' do
       user1 = FactoryBot.create(:user)
       user2 = FactoryBot.create(:user)
       expect(user1.crypto_key('foobar')).not_to eq(user2.crypto_key('foobar'))
+    end
+
+    it 'can update password' do
+      user = FactoryBot.create(:user, password: 'unsafe_pw')
+
+      connection1 = FactoryBot.create(
+        :db_connection,
+        db_password: 'foobar',
+        user_password: 'unsafe_pw',
+        user: user
+      )
+      connection2 = FactoryBot.create(
+        :db_connection,
+        db_password: 'blabla',
+        user_password: 'unsafe_pw',
+        user: user
+      )
+
+      expect(user.db_connections.size).to be(2)
+      user.change_password!(
+        old_password: 'unsafe_pw',
+        new_password: 'safe_password',
+        password_confirmation: 'safe_password'
+      )
+
+      db_connections = user.db_connections
+      expect(db_connections.size).to be(2)
+      connection1.reload
+      expect(connection1.password(user.crypto_key('safe_password'))).to eq('foobar')
+      connection2.reload
+      expect(connection2.password(user.crypto_key('safe_password'))).to eq('blabla')
     end
   end
 end

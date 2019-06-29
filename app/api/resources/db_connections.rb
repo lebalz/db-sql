@@ -1,11 +1,19 @@
+# frozen_string_literal: true
+
 module Resources
   class DbConnections < Grape::API
     helpers do
       def db_connection
-        DbConnection.find(params[:id])
+        connection = DbConnection.find(params[:id])
+        error!('Db connection not found', 302) unless connection
+
+        connection
       end
 
       def crypto_key
+        has_key = request.headers.key?('Crypto-Key')
+        error!('Crypto-Key is required', 400) unless has_key
+
         request.headers['Crypto-Key']
       end
     end
@@ -18,19 +26,25 @@ module Resources
 
       desc 'Create db connection'
       params do
-        requires :name, type: String, desc: 'Display text for this connection'
-        requires :db_type, type: Symbol, default: :psql, values: %i[psql mysql mariadb sqlite], desc: 'db type'
-        requires :host, type: String, desc: 'host'
-        requires :port, type: Integer, desc: 'port'
-        requires :username, type: String, desc: 'db user'
-        requires :password, type: String, desc: 'db password'
-        optional :initial_db, type: String, desc: 'initial database'
-        optional :initial_schema, type: String, desc: 'initial schema'
+        requires(:name, type: String, desc: 'Display text for this connection')
+        requires(
+          :db_type,
+          type: Symbol,
+          default: :psql,
+          values: DbConnection::DB_TYPES,
+          desc: 'db type'
+        )
+        requires(:host, type: String, desc: 'host')
+        requires(:port, type: Integer, desc: 'port')
+        requires(:username, type: String, desc: 'db user')
+        requires(:password, type: String, desc: 'db password')
+        optional(:initial_db, type: String, desc: 'initial database')
+        optional(:initial_schema, type: String, desc: 'initial schema')
       end
       post do
         encrypted_password = DbConnection.encrypt(
           key: request.headers['Crypto-Key'],
-          password: params[:password]
+          db_password: params[:password]
         )
         db_connection = DbConnection.create!(
           user: current_user,
@@ -63,30 +77,51 @@ module Resources
         desc 'Update a connection'
         params do
           requires :data, type: Hash do
-            optional :name, type: String, desc: 'Display text for this connection'
-            optional :db_type, type: Symbol, values: %i[psql mysql mariadb sqlite], desc: 'db type'
-            optional :host, type: String, desc: 'host'
-            optional :port, type: Integer, desc: 'port'
-            optional :username, type: String, desc: 'db user'
-            optional :password, type: String, desc: 'db password'
-            optional :initial_db, type: String, desc: 'initial database'
-            optional :initial_schema, type: String, desc: 'initial schema'
+            optional(
+              :name,
+              type: String,
+              desc: 'Display text for this connection'
+            )
+            optional(
+              :db_type,
+              type: Symbol,
+              values: %i[psql mysql mariadb sqlite],
+              desc: 'db type'
+            )
+            optional(:host, type: String, desc: 'host')
+            optional(:port, type: Integer, desc: 'port')
+            optional(:username, type: String, desc: 'db user')
+            optional(:password, type: String, desc: 'db password')
+            optional(:initial_db, type: String, desc: 'initial database')
+            optional(:initial_schema, type: String, desc: 'initial schema')
           end
         end
         put do
           if params[:data].key?('password')
             encrypted_password = DbConnection.encrypt(
               key: crypto_key,
-              password: params[:data]['password']
+              db_password: params[:data]['password']
             )
-            params[:data]['password_encrypted'] = encrypted_password[:encrypted_password]
-            params[:data]['initialization_vector'] = encrypted_password[:initialization_vector]
-            params[:data].delete('password')
+            db_connection.update!(
+              password_encrypted: encrypted_password[:encrypted_password],
+              initialization_vector: encrypted_password[:initialization_vector]
+            )
           end
-          db_connection.update!(params[:data])
+          change = ActionController::Parameters.new(params[:data])
+          db_connection.update!(
+            change.permit(
+              :name,
+              :db_type,
+              :host,
+              :port,
+              :username,
+              :initial_db,
+              :initial_schema
+            )
+          )
           present db_connection, with: Entities::DbConnection
         end
-        
+
         desc 'Delete a connection'
         delete do
           db_connection.destroy!
@@ -100,18 +135,25 @@ module Resources
         route_param :database_name, type: String, desc: 'Database name' do
           desc 'Query the database'
           params do
-            requires :query, type: String, desc: 'Sql query to perform on the database'
+            requires(
+              :query,
+              type: String,
+              desc: 'Sql query to perform on the database'
+            )
           end
           post :query do
-            result = db_connection.exec_query(key: crypto_key, database_name: params[:database_name]) do
+            db_name = params[:database_name]
+            db_connection.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
-            end
-            result.to_a
+            end.to_a
           end
 
           desc "Get the database's tables"
           get :table_names do
-            db_connection.table_names(key: crypto_key, database_name: params[:database_name])
+            db_connection.table_names(
+              key: crypto_key,
+              database_name: params[:database_name]
+            )
           end
           route_param :table_name, type: String, desc: 'Table name' do
             desc "Get the table's column names"
@@ -154,9 +196,8 @@ module Resources
                 table_name: params[:table_name]
               ), with: Entities::Index
             end
-          end  
+          end
         end
-
       end
     end
   end

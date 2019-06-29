@@ -1,12 +1,15 @@
 import api from './base';
 import { AxiosPromise } from 'axios';
+import { Role } from '../models/User';
 
 export interface User {
   id: string;
   email: string;
-  last_login: Date;
-  created_at: Date;
-  updated_at: Date;
+  login_count: number;
+  role: Role;
+  activated: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LoginUser extends User {
@@ -30,9 +33,82 @@ export function logout() {
   );
 }
 
-export function validate(user: User): AxiosPromise<{ valid: boolean }> {
+export function user(): AxiosPromise<User> {
+  return api.get('users/current');
+}
+
+export function newPassword(
+  oldPassword: string,
+  newPassword: string,
+  newPasswordConfirmation: string
+): AxiosPromise<LoginUser> {
+  return api.put(
+    'users/current/password',
+    {
+      old_password: oldPassword,
+      new_password: newPassword,
+      password_confirmation: newPasswordConfirmation
+    }
+  );
+}
+
+export function resendActivationLink() {
   return api.post(
-    'user/validate',
-    user
+    'users/current/resend_activation_link'
+  );
+}
+
+export function deleteAccount(password: string) {
+  return api.delete(
+    'users/current',
+    {
+      data: {
+        password: password
+      }
+    }
+  );
+}
+
+export function signup(email: string, password: string): AxiosPromise<LoginUser> {
+  return api.post(
+    'users',
+    {
+      email: email,
+      password: password
+    }
+  );
+}
+
+export function requestPasswordReset(email: string) {
+  return api.post(
+    'users/reset_password',
+    {
+      email: email
+    }
+  );
+}
+
+export function activateAccount(id: string, activationToken: string) {
+  return api.put(
+    `users/${id}/activate`,
+    {
+      activation_token: activationToken
+    }
+  );
+}
+
+export function resetPassword(
+  id: string,
+  resetToken: string,
+  password: string,
+  passwordConfirmation: string
+) {
+  return api.post(
+    `users/${id}/reset_password`,
+    {
+      reset_token: resetToken,
+      password: password,
+      password_confirmation: passwordConfirmation
+    }
   );
 }

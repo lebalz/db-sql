@@ -15,5 +15,4 @@ export default class DbSqlIcon extends React.Component<Props> {
       </Icon.Group>
     );
   }
-
 }

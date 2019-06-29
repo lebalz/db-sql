@@ -1,4 +1,6 @@
-require Rails.root.join('lib','queries', 'query')
+# frozen_string_literal: true
+
+require Rails.root.join('lib', 'queries', 'query')
 # == Schema Information
 #
 # Table name: db_connections
@@ -19,7 +21,8 @@ require Rails.root.join('lib','queries', 'query')
 #
 
 class DbConnection < ApplicationRecord
-  enum db_type: [:psql, :mysql, :mariadb, :sqlite]
+  DB_TYPES = %i[psql mysql mariadb sqlite].freeze
+  enum db_type: DbConnection::DB_TYPES
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
@@ -49,38 +52,49 @@ class DbConnection < ApplicationRecord
     decipher.update(Base64.strict_decode64(password_encrypted)) + decipher.final
   end
 
+  def recrypt!(old_crypto_key:, new_crypto_key:)
+    db_password = password(old_crypto_key)
+    reset_crypto_key(new_crypto_key: new_crypto_key, db_password: db_password)
+  end
+
+  def reset_crypto_key(new_crypto_key:, db_password: '-')
+    new_crypt = DbConnection.encrypt(
+      key: new_crypto_key,
+      db_password: db_password
+    )
+    update_attributes!(
+      initialization_vector: new_crypt[:initialization_vector],
+      password_encrypted: new_crypt[:encrypted_password]
+    )
+  end
+
   # @param key [String] base64 encoded crypto key from the user
   # @param password [String] password for db server connection to encrypt
-  # @option initialization_vector [String, nil] when not nil, this iv is used as the
-  #   cipher's iv. This is useful for e.g. testing in combination with FactoryBot.
-  #   When nil, a random iv is generated. 
   # @return [Hash<symbol, string>] hash with encrypted password
-  #   including salt and initialization_vector:
+  #   and initialization_vector:
   # @example encrypted password
   #   {
   #     encrypted_password: <Base64 encoded encrypted string>,
-  #     initialization_vector: <Base64 enctoded string>,
-  #     key: string
+  #     initialization_vector: <Base64 enctoded string>
   #   }
-  def self.encrypt(key:, password:, initialization_vector: nil)
+  def self.encrypt(key:, db_password:)
     error!('No AES key sent', 401) unless key
 
     aes_key = Base64.strict_decode64(key)
     cipher = OpenSSL::Cipher::AES.new(256, :CBC)
-    initialization_vector = if initialization_vector.nil?
-                              cipher.random_iv
-                            else
-                              Base64.strict_decode64(initialization_vector)
-                            end
+    initialization_vector = cipher.random_iv
     cipher.iv = initialization_vector
     cipher.encrypt
     cipher.key = aes_key
-    pw_encrypted = cipher.update(password) + cipher.final
+    pw_encrypted = cipher.update(db_password) + cipher.final
     {
       encrypted_password: Base64.strict_encode64(pw_encrypted),
-      initialization_vector: Base64.strict_encode64(initialization_vector),
-      key: key
+      initialization_vector: Base64.strict_encode64(initialization_vector)
     }
+  end
+
+  def localhost?
+    ActionDispatch::Request::LOCALHOST =~ host || /localhost/i =~ host
   end
 
   # @param key [String] base64 encoded crypto key from the user
@@ -89,9 +103,12 @@ class DbConnection < ApplicationRecord
     database_name ||= default_database_name
     connection = ActiveRecord::ConnectionAdapters::ConnectionHandler.new
     conn_key = connection_key(database_name: database_name)
+
+    # don't let a user connect to the servers localhost
+    db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
     connection.establish_connection(
       adapter: DEFAULT_AR_DB_ADAPTER[db_type],
-      host: host,
+      host: db_host,
       port: port,
       username: username,
       password: password(key),
@@ -113,7 +130,7 @@ class DbConnection < ApplicationRecord
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [Array<String>] all database_name names for a connection
-  def database_names(key:)  
+  def database_names(key:)
     exec_query(key: key) do
       query_for(db_type: db_type, name: :databases)
     end&.rows&.flatten&.sort || []
@@ -134,7 +151,7 @@ class DbConnection < ApplicationRecord
   # @return [Array<String>] columns of a table_name
   def column_names(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
-      c = connection.columns(table_name)
+      connection.columns(table_name)
     end.map(&:name)
   end
 

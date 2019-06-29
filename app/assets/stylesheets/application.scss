@@ -5,7 +5,7 @@ body {
 
   #app {
     display: grid;
-    grid-template-columns: 350px auto;
+    grid-template-columns: 250px auto;
     grid-template-rows: 82px auto 28px;
     grid-template-areas:
       "header header"
@@ -63,5 +63,34 @@ body {
     grid-area: footer;
     align-items: center;
     z-index: 10;
+  }
+
+  .flex-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+    .flex-list-item {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+  }
+
+  // account activation step
+  .ui.steps.activation {
+    border: 2px rgb(197, 64, 64) solid;
+    .step {
+      padding: 0.2em 1em;
+      &.active {
+        .icon {
+          color: rgb(197, 64, 64);
+        }
+        .title {
+          color: rgb(197, 64, 64);
+        }
+      }
+    }
   }
 }

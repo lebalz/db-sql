@@ -1,9 +1,11 @@
-import React, { InputHTMLAttributes } from 'react';
-import { inject } from 'mobx-react';
-import SessionStore from '../stores/session_store';
-import { Header, Form } from 'semantic-ui-react';
+import React from 'react';
+import { inject, observer } from 'mobx-react';
+import SessionStore, { RequestState } from '../stores/session_store';
+import { Header, Form, Accordion, Icon, Message } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
+import Signup from './Signup';
+import ForgotPassword from './ForgotPassword';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -11,7 +13,13 @@ interface InjectedProps {
 }
 
 @inject('sessionStore', 'routerStore')
+@observer
 export default class Login extends React.Component {
+  state = {
+    signup: false,
+    forgotPassword: false
+  };
+
   private email: string = '';
   private password: string = '';
   get injected() {
@@ -24,10 +32,18 @@ export default class Login extends React.Component {
       this.password
     );
     this.password = '';
-    document.querySelector<HTMLInputElement>('#password-input').value = '';
+    const passwordInput = document.querySelector<HTMLInputElement>('#password-input');
+    if (passwordInput) {
+      passwordInput.value = '';
+    }
+  }
+
+  get queryParams() {
+    return new URLSearchParams(this.injected.routerStore.location.search);
   }
 
   render() {
+    const { passwordState } = this.injected.sessionStore;
     return (
       <main
         className="fullscreen"
@@ -44,7 +60,15 @@ export default class Login extends React.Component {
             DB SQL
             </Header>
         </div>
-        <Form onSubmit={() => this.login()}>
+        <Form
+          onSubmit={() => this.login()}
+          error={passwordState === RequestState.Error}
+          success={this.queryParams.get('reset') === 'success'}
+        >
+          <Message
+            success
+            content="Password successfully reset. Login with the new password."
+          />
           <Form.Group>
             <Form.Input
               icon="at"
@@ -62,9 +86,41 @@ export default class Login extends React.Component {
               id="password-input"
               onChange={e => this.password = e.target.value}
             />
-            <Form.Button content="Login" type="submit" />
+            <Form.Button
+              content="Login"
+              type="submit"
+              loading={passwordState === RequestState.Waiting}
+            />
           </Form.Group>
+          <Message
+            error
+            header="Login Failed"
+            content="E-Mail or Password is incorrect"
+          />
         </Form>
+        <Accordion>
+          <Accordion.Title
+            active={this.state.signup}
+            onClick={() => this.setState({ signup: !this.state.signup })}
+          >
+            <Icon name="users" />
+            Signup to DB-SQL
+          </Accordion.Title>
+          <Accordion.Content active={this.state.signup}>
+            <Signup />
+          </Accordion.Content>
+        </Accordion>
+        <Accordion>
+          <Accordion.Title
+            active={this.state.forgotPassword}
+            onClick={() => this.setState({ forgotPassword: !this.state.forgotPassword })}
+          >
+            Forgot password?
+          </Accordion.Title>
+          <Accordion.Content active={this.state.forgotPassword}>
+            <ForgotPassword />
+          </Accordion.Content>
+        </Accordion>
       </main>
     );
   }

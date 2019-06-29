@@ -28,7 +28,7 @@ RSpec.describe DbConnection, type: :model do
       key = user.crypto_key('asdfasdf')
       encrypted_password = DbConnection.encrypt(
         key: key,
-        password: 'safe-db-password'
+        db_password: 'safe-db-password'
       )
       db_connection = DbConnection.create!(
         user: user,

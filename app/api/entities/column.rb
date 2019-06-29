@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Entities
   class ColumnSqlTypeMetadata < Grape::Entity
     with_options(expose_nil: false) do

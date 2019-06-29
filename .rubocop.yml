@@ -1,0 +1,134 @@
+# https://github.com/bbatsov/rubocop/blob/master/config/default.yml
+
+AllCops:
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  TargetRubyVersion: 2.6
+  Include:
+    - Rakefile
+
+LineLength:
+  Max: 80
+  Exclude:
+    - test/**/**
+
+Layout/ExtraSpacing:
+  Enabled: false
+
+Layout/SpaceInsideStringInterpolation:
+  Enabled: false
+
+Layout/EmptyLinesAroundBlockBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
+
+Layout/EmptyLineBetweenDefs:
+  NumberOfEmptyLines: [1, 2]
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Layout/AlignParameters:
+  EnforcedStyle: with_first_parameter
+
+Layout/DotPosition:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Enabled: false
+
+Style/TrivialAccessors:
+  AllowPredicates: true
+
+Style/Semicolon:
+  AllowAsExpressionSeparator: true
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/SingleLineMethods:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/RegexpLiteral:
+  Enabled: false
+
+Style/CommandLiteral:
+  Enabled: false
+
+Style/FormatString:
+  Enabled: false
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/SymbolProc:
+  AutoCorrect: false
+
+Style/EmptyMethod:
+  Enabled: false
+
+Style/MultilineTernaryOperator:
+  Enabled: false
+
+Style/DoubleNegation:
+  Enabled: false
+
+Style/EmptyCaseCondition:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+
+Naming/PredicateName:
+  Enabled: false
+
+Naming/MethodName:
+  Enabled: false
+
+Performance/RedundantBlockCall:
+  Enabled: false
+
+Lint/UnusedMethodArgument:
+  Enabled: true
+  AutoCorrect: false

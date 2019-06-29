@@ -5,7 +5,7 @@ class SeedDbConnections
     user = User.find_by(email: 'test@user.ch')
     encrypted_password = DbConnection.encrypt(
       key: user.crypto_key('asdfasdf'),
-      password: ActiveRecord::Base.connection_config[:database]
+      db_password: ActiveRecord::Base.connection_config[:database]
     )
     DbConnection.create!(
       name: 'dev',
@@ -19,7 +19,7 @@ class SeedDbConnections
       user: user
     )
     return unless File.exist? Rails.root.join('db_connections.yaml')
-  
+
     connections = YAML.load_file(Rails.root.join('db_connections.yaml'))
     connections.each do |name, connection|
       user = User.find_by(email: connection['app_user'])
@@ -28,7 +28,7 @@ class SeedDbConnections
 
       encrypted_password = DbConnection.encrypt(
         key: user.crypto_key(user_password),
-        password: connection['db_password']
+        db_password: connection['db_password']
       )
       DbConnection.create!(
         name: name,

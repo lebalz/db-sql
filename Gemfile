@@ -8,8 +8,6 @@ gem 'rails', '~> 6.0.0.rc1'
 gem 'pg', '~> 0.18'
 gem 'mysql2', '~>0.5.2'
 
-# Use sqlite3 as the database for Active Record
-gem 'sqlite3', '~> 1.3.6'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 
@@ -60,14 +58,24 @@ group :development, :test do
 
   gem 'rspec-rails'
 
+  gem 'solargraph'
+
+  # for vscode-development
+  gem 'ruby-debug-ide', '~>0.7.0'
+  gem 'debase', '~>0.2.3.beta5'
+
   gem 'factory_bot_rails'
 
   gem 'database_cleaner'
+
+  # Dokku currently does not suppoert sqlite3
+  gem 'sqlite3', '~> 1.3.6'
 end
 
 group :development do
   gem 'pronto'
   gem 'pronto-rubocop'
+  gem 'rubocop'
   
   gem 'listen', '>= 3.0.5', '< 3.2'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
@@ -75,6 +83,7 @@ group :development do
   gem 'spring-watcher-listen', '~> 2.0.0'
 
   gem 'annotate'
+  gem 'mailcatcher'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

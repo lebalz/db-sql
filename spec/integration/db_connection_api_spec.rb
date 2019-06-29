@@ -1,10 +1,16 @@
 # frozen_string_literal: true
+
 require_relative '../rails_helper.rb'
 
 RSpec.describe "API::Resources::DbConnection" do
   before(:all) do
     pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
-    sql_path = Rails.root.join('spec', 'fixtures', 'database', 'ninja_turtles_create.sql')
+    sql_path = Rails.root.join(
+      'spec',
+      'fixtures',
+      'database',
+      'ninja_turtles_create.sql'
+    )
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
     @db_connection = FactoryBot.create(:db_connection)
 
@@ -18,7 +24,12 @@ RSpec.describe "API::Resources::DbConnection" do
   end
   after(:all) do
     pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
-    sql_path = Rails.root.join('spec', 'fixtures', 'database', 'ninja_turtles_drop.sql')
+    sql_path = Rails.root.join(
+      'spec',
+      'fixtures',
+      'database',
+      'ninja_turtles_drop.sql'
+    )
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
   end
 
@@ -30,7 +41,7 @@ RSpec.describe "API::Resources::DbConnection" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      
+
       expect(json[0]['db_type']).to eq(@db_connection.db_type)
       expect(json[0]['host']).to eq(@db_connection.host)
       expect(json[0]['initial_db']).to eq(nil)
@@ -226,7 +237,6 @@ RSpec.describe "API::Resources::DbConnection" do
     end
   end
 
-  
   describe 'DELETE /api/db_connections/:id' do
     it 'can delete a db connection' do
       db_connection = FactoryBot.create(:db_connection)
@@ -376,25 +386,25 @@ RSpec.describe "API::Resources::DbConnection" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]).to eq({
+      expect(json[0]).to eq(
         "name" => "id",
         "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
         "null" => false,
-        "serial" =>true,
-        "sql_type_metadata" =>{
+        "serial" => true,
+        "sql_type_metadata" => {
           "limit" => 4,
           "sql_type" => "integer",
           "type" => "integer"
         }
-      })
-      expect(json[1]).to eq({
+      )
+      expect(json[1]).to eq(
         "name" => "name",
         "null" => true,
-        "sql_type_metadata" =>{
+        "sql_type_metadata" => {
           "sql_type" => "text",
           "type" => "text"
         }
-      })
+      )
 
       get(
         "/api/db_connections/#{@db_connection.id}/ninja_turtles_db/fights/columns",
@@ -402,26 +412,26 @@ RSpec.describe "API::Resources::DbConnection" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(4)
-      expect(json[0]).to eq({
+      expect(json[0]).to eq(
         "name" => "id",
         "default_function" => "nextval('fights_id_seq'::regclass)",
         "null" => false,
-        "serial" =>true,
-        "sql_type_metadata" =>{
+        "serial" => true,
+        "sql_type_metadata" => {
           "limit" => 4,
           "sql_type" => "integer",
           "type" => "integer"
         }
-      })
-      expect(json[1]).to eq({
+      )
+      expect(json[1]).to eq(
         "name" => "date",
         "null" => true,
         "sql_type_metadata" => {
           "sql_type" => "timestamp without time zone",
           "type" => "datetime"
         }
-      })
-      expect(json[2]).to eq({
+      )
+      expect(json[2]).to eq(
         "name" => "badass_turtle_id",
         "null" => true,
         "sql_type_metadata" => {
@@ -429,8 +439,8 @@ RSpec.describe "API::Resources::DbConnection" do
           "sql_type" => "integer",
           "type" => "integer"
         }
-      })
-      expect(json[3]).to eq({
+      )
+      expect(json[3]).to eq(
         "name" => "kickass_turtle_id",
         "null" => true,
         "sql_type_metadata" => {
@@ -438,7 +448,7 @@ RSpec.describe "API::Resources::DbConnection" do
           "sql_type" => "integer",
           "type" => "integer"
         }
-      })
+      )
     end
   end
   describe 'GET /api/db_connections/:id/:database_name/:table_name/column_names' do
