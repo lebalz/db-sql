@@ -128,6 +128,13 @@ module Resources
           status :no_content
         end
 
+        desc 'Get the databases of a db connection'
+        get :databases do
+          present(
+            db_connection.database_names(key: crypto_key).map { |n| { name: n } },
+            with: Entities::Database
+          )
+        end
         desc 'Get the database names of a db connection'
         get :database_names do
           db_connection.database_names(key: crypto_key)
@@ -149,6 +156,17 @@ module Resources
           end
 
           desc "Get the database's tables"
+          get :databases do
+            present(
+              db_connection.table_names(
+                key: crypto_key,
+                database_name: params[:database_name]
+              ).map { |n| { name: n } },
+              with: Entities::Table
+            )
+          end
+
+          desc "Get the names of the database's tables"
           get :table_names do
             db_connection.table_names(
               key: crypto_key,

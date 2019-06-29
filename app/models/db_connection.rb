@@ -131,7 +131,7 @@ class DbConnection < ApplicationRecord
   # @param key [String] base64 encoded crypto key from the user
   # @return [Array<String>] all database_name names for a connection
   def database_names(key:)
-    exec_query(key: key) do
+    exec_query(key: key, database_name: DEFAULT_DATABASE_NAME[db_type]) do
       query_for(db_type: db_type, name: :databases)
     end&.rows&.flatten&.sort || []
   end
