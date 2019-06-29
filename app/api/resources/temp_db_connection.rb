@@ -53,8 +53,23 @@ module Resources
     end
     resource :temp_db_connection do
       desc 'Get the database names of a db connection'
-      get :database_names do
+      post :database_names do
         db_connection.database_names(key: crypto_key)
+      end
+
+      desc 'Tests wheter a connection can be established'
+      post :test do
+        {
+          success: db_connection.test_connection(key: crypto_key)
+        }
+      end
+
+      desc 'Get the databases of a db connection'
+      post :databases do
+        present(
+          db_connection.database_names(key: crypto_key).map { |n| { name: n } },
+          with: Entities::Database
+        )
       end
       route_param :database_name, type: String, desc: 'Database name' do
         desc 'Query the database'
@@ -73,7 +88,18 @@ module Resources
         end
 
         desc "Get the database's tables"
-        get :table_names do
+        post :tables do
+          present(
+            db_connection.table_names(
+              key: crypto_key,
+              database_name: params[:database_name]
+            ).map { |n| { name: n } },
+            with: Entities::Table
+          )
+        end
+
+        desc "Get the database's tables"
+        post :table_names do
           db_connection.table_names(
             key: crypto_key,
             database_name: params[:database_name]
@@ -81,7 +107,7 @@ module Resources
         end
         route_param :table_name, type: String, desc: 'Table name' do
           desc "Get the table's column names"
-          get :column_names do
+          post :column_names do
             db_connection.column_names(
               key: crypto_key,
               database_name: params[:database_name],
@@ -89,7 +115,7 @@ module Resources
             )
           end
           desc "Get the table's columns"
-          get :columns do
+          post :columns do
             present db_connection.columns(
               key: crypto_key,
               database_name: params[:database_name],
@@ -97,7 +123,7 @@ module Resources
             ), with: Entities::Column
           end
           desc "Get the table's primary key names"
-          get :primary_key_names do
+          post :primary_key_names do
             db_connection.primary_key_names(
               key: crypto_key,
               database_name: params[:database_name],
@@ -105,7 +131,7 @@ module Resources
             )
           end
           desc "Get the table's foreign keys"
-          get :foreign_keys do
+          post :foreign_keys do
             present db_connection.foreign_keys(
               key: crypto_key,
               database_name: params[:database_name],
@@ -113,7 +139,7 @@ module Resources
             ), with: Entities::ForeignKey
           end
           desc "Get the table's indexes"
-          get :indexes do
+          post :indexes do
             present db_connection.indexes(
               key: crypto_key,
               database_name: params[:database_name],
