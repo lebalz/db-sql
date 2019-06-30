@@ -7,7 +7,7 @@ import { RouterStore } from 'mobx-react-router';
 import DbConnectionStore from '../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import DbConnectionOverview from './DbConnectionOverview';
-import DbConnectionEdit from './DbConnectionEdit';
+import { TempDbConnection as TempDbConnectionComponent } from './TempDbConnection';
 import _ from 'lodash';
 import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
 import { DbConnection as DbConnectionProps } from '../api/db_connection';
@@ -46,7 +46,7 @@ export default class Dashboard extends React.Component {
           <NavBar />
         </header>
         <main className="no-sidebar">
-          <DbConnectionEdit />
+          <TempDbConnectionComponent />
           <Header as="h1" content="Welcome to DB SQL" />
           <div
             style={{

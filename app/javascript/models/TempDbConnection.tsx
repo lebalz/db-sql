@@ -5,6 +5,7 @@ import _ from 'lodash';
 import DbConnection, { QueryState } from './DbConnection';
 import Database from './Database';
 import DbTable from './DbTable';
+import { RequestState } from '../stores/session_store';
 
 export enum TempDbConnectionRole {
   Update, Create
@@ -12,6 +13,11 @@ export enum TempDbConnectionRole {
 
 export class TempDbConnection extends DbConnection {
   readonly role: TempDbConnectionRole;
+  @observable testConnectionState: RequestState = RequestState.None;
+  @observable message?: String = undefined;
+  @observable validConnection?: boolean = false;
+  @observable tablesLoaded?: boolean = false;
+
   tables = observable<DbTable>([]);
   constructor(props: DbConnectionProps, role: TempDbConnectionRole) {
     super(props);
@@ -21,37 +27,38 @@ export class TempDbConnection extends DbConnection {
       1000,
       { leading: false }
     );
-    this.loadPassword();
 
     reaction(
       () => (this.dbConnectionHash),
       (hash) => {
-        Promise.all([
-          this.loadDatabases()
-        ]).then(() => {
-          if (this.databases.length > 0 && !this.databases.find(db => db.name === this.initialDb)) {
-            this.initialDb = undefined;
-            this.initialSchema = undefined;
-          }
-        });
+        this.testConnection();
+      }
+    );
+    reaction(
+      () => (this.validConnection),
+      (valid) => {
+        if (!valid) return;
+        this.loadDatabases();
+      }
+    );
+    reaction(
+      () => (this.isLoaded),
+      (isLoaded) => {
+        if (!isLoaded) {
+          this.tablesLoaded = false;
+          return;
+        }
+
+        this.loadTables();
       }
     );
     reaction(
       () => (this.initialDb),
-      (initDb) => {
-        if (initDb && initDb.length > 0) {
-          Promise.all([
-            this.loadTables()
-          ]).then(() => {
-            if (!this.tables.find(table => table.name === this.initialSchema)) {
-              this.initialSchema = undefined;
-            }
-          });
-        } else {
-          this.initialSchema = undefined;
-        }
+      (initialDb) => {
+        this.loadTables();
       }
     );
+    this.loadPassword();
   }
 
   @action loadPassword() {
@@ -73,8 +80,8 @@ export class TempDbConnection extends DbConnection {
       host: this.host,
       port: this.port,
       username: this.username,
-      initial_db: this.initialDb,
-      initial_schema: this.initialSchema,
+      initial_db: this.isLoaded ? this.initialDb : undefined,
+      initial_schema: this.tablesLoaded ? this.initialSchema : undefined,
       password: this.password || ''
     };
   }
@@ -87,37 +94,56 @@ export class TempDbConnection extends DbConnection {
   }
 
   @action.bound loadDatabases() {
-    this.queryState = QueryState.Executing;
+    this.isLoaded = undefined;
     databases(this.tempDbPorps).then(
       ({ data }) => {
         this.databases.replace(data.map(db => new Database(this, db)));
-        this.valid = true;
-        this.queryState = QueryState.Success;
+        this.isLoaded = true;
       }
     ).catch((e) => {
       this.databases.replace([]);
-      this.queryState = QueryState.Error;
-      this.valid = false;
+      this.isLoaded = false;
     });
   }
 
   @action loadTables() {
     const db = this.databases.find(db => db.name === this.initialDb);
-    if (!db) return;
+    if (!db) {
+      this.tablesLoaded = false;
+      this.initialSchema = undefined;
+      return;
+    }
 
+    this.tablesLoaded = undefined;
     tables(this.tempDbPorps, db.name).then(
       ({ data }) => {
+        this.tablesLoaded = true;
         this.tables.replace(data.map(table => new DbTable(db, table)));
+        const table = this.tables.find(table => table.name === this.initialSchema);
+        if (!table) {
+          this.initialSchema = undefined;
+        }
       }
     ).catch((e) => {
+      this.tablesLoaded = false;
+      this.initialSchema = undefined;
       this.tables.replace([]);
     });
   }
 
   @action testConnection() {
+    this.testConnectionState = RequestState.Waiting;
+    this.validConnection = undefined;
     test(this.tempDbPorps).then(({ data }) => {
-      console.log(data);
-      this.valid = data.success;
+      this.validConnection = data.success;
+      this.message = data.success
+        ? 'Connection established'
+        : data.message;
+      this.testConnectionState = RequestState.Success;
+    }).catch((e) => {
+      this.validConnection = false;
+      this.message = e.message;
+      this.testConnectionState = RequestState.Error;
     });
   }
 }

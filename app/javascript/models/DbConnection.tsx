@@ -30,9 +30,10 @@ export default class DbConnection {
   @observable initialDb?: string;
   @observable initialSchema?: string;
   @observable password?: string;
-  @observable valid?: boolean;
   @observable queryState: QueryState = QueryState.None;
   databases = observable<Database>([]);
+
+  @observable isLoaded?: boolean = undefined;
 
   constructor(props: DbConnectionProps) {
     this.id = props.id;
@@ -52,14 +53,15 @@ export default class DbConnection {
   }
 
   @action loadDatabases() {
-    this.queryState = QueryState.Executing;
+    this.isLoaded = undefined;
     databases(this.id).then(
       ({ data }) => {
         this.databases.replace(data.map(db => new Database(this, db)));
-        this.queryState = QueryState.Success;
+        this.isLoaded = true;
       }
     ).catch((e) => {
-      this.queryState = QueryState.Error;
+      this.databases.replace([]);
+      this.isLoaded = false;
     });
   }
 

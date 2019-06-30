@@ -1,7 +1,7 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import { DbType, QueryState } from '../models/DbConnection';
-import { Label, Button, Modal, Form, Grid, DropdownProps } from 'semantic-ui-react';
+import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon } from 'semantic-ui-react';
 import DbConnectionStore from '../stores/db_connection_store';
 import { computed, reaction } from 'mobx';
 import { updateConnection } from '../api/db_connection';
@@ -15,7 +15,7 @@ interface InjectedProps {
 
 @inject('dbConnectionStore')
 @observer
-export default class DbConnectionEdit extends React.Component {
+export class TempDbConnection extends React.Component {
 
   constructor(props: any) {
     super(props);
@@ -92,16 +92,50 @@ export default class DbConnectionEdit extends React.Component {
     }
   }
 
+  @computed get message() {
+    let icon: 'circle notched' | 'check' | 'times' = 'check';
+    const { validConnection, message } = this.dbConnection;
+    let header = 'Success';
+    let content = message;
+    if (validConnection === undefined) {
+      header = 'Loading';
+      icon = 'circle notched';
+      content = 'Testing Connection';
+    } else if (!validConnection) {
+      header = 'Error';
+      icon = 'times';
+    }
+    return (
+      <Message
+        icon
+        info={validConnection === undefined}
+        error={validConnection === false}
+        success={validConnection}
+        onDismiss={() => this.dbConnection.message = undefined}
+      >
+        <Icon name={icon} loading={validConnection === undefined} />
+        <Message.Content >
+          <Message.Header content={header} />
+          {content}
+        </Message.Content>
+      </Message>
+    );
+  }
+
   render() {
-    // const { name, host, port, dbType } = this.dbConnection;
     return (
       <Modal
         open={this.isModalOpen}
         onClose={() => this.onClose()}
       >
         <Modal.Header content="Database Connection" />
+        {this.isModalOpen && this.dbConnection.message &&
+          this.message
+        }
         {this.isModalOpen &&
-          <Modal.Content id="db-connection-modal">
+          <Modal.Content
+            id="db-connection-modal"
+          >
             <Grid stackable columns={2}>
               <Grid.Row>
                 <Grid.Column>
@@ -227,7 +261,8 @@ export default class DbConnectionEdit extends React.Component {
                     search
                     selection
                     fluid
-                    allowAdditions
+                    disabled={!this.dbConnection.isLoaded}
+                    loading={this.dbConnection.isLoaded === undefined}
                     value={this.dbConnection.initialDb || ''}
                     onChange={this.handleInitDbChange}
                   />
@@ -245,7 +280,8 @@ export default class DbConnectionEdit extends React.Component {
                     search
                     selection
                     fluid
-                    allowAdditions
+                    disabled={!this.dbConnection.tablesLoaded}
+                    loading={this.dbConnection.tablesLoaded === undefined}
                     value={this.dbConnection.initialSchema || ''}
                     onChange={this.handleInitSchemaChange}
                   />
@@ -257,7 +293,7 @@ export default class DbConnectionEdit extends React.Component {
                     content="Test"
                     color="blue"
                     floated="left"
-                    loading={this.dbConnection.queryState === QueryState.Executing}
+                    loading={this.dbConnection.testConnectionState === RequestState.Waiting}
                     onClick={() => this.dbConnection.testConnection()}
                   />
                 </Grid.Column>
@@ -280,7 +316,7 @@ export default class DbConnectionEdit extends React.Component {
           </Modal.Content>
         }
       </Modal>
-    )
+    );
   }
 
 }

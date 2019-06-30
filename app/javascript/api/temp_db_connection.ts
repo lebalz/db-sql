@@ -14,6 +14,11 @@ export interface DbConnection {
   password: string;
 }
 
+export interface TestResult {
+  success: boolean;
+  message?: string;
+}
+
 export function databases(dbConnection: DbConnection): AxiosPromise<Database[]> {
   return api.post(
     '/temp_db_connection/databases',
@@ -28,7 +33,7 @@ export function tables(dbConnection: DbConnection, databaseName: string): AxiosP
   );
 }
 
-export function test(dbConnection: DbConnection): AxiosPromise<{ success: boolean }> {
+export function test(dbConnection: DbConnection): AxiosPromise<TestResult> {
   return api.post(
     '/temp_db_connection/test',
     dbConnection
