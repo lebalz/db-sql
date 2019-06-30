@@ -67,13 +67,6 @@ module Resources
           present db_connection, with: Entities::DbConnection
         end
 
-        desc 'Tests wheter a connection can be established'
-        get :test do
-          {
-            success: db_connection.test_connection(key: crypto_key)
-          }
-        end
-
         desc 'Get cleartext password'
         get :password do
           {

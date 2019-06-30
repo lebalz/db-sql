@@ -121,13 +121,27 @@ class DbConnection < ApplicationRecord
   end
 
   # @param key [String] base64 encoded crypto key from the user
-  # @return [Boolean] true when a connection can be established
+  # @return [Hash]
+  #   e.g.
+  #     {
+  #       success: true,
+  #     }
+  #   or
+  #     {
+  #       success: false,
+  #       message: "Could not connect to server: Connection refused..."
+  #     }
   def test_connection(key:)
     connect(key: key, database_name: DEFAULT_DATABASE_NAME[db_type]) do |conn|
-      return !!conn
+      return {
+        success: !!conn
+      }
     end
-  rescue StandardError
-    false
+  rescue StandardError => e
+    {
+      success: false,
+      message: e.message
+    }
   end
 
   # @param key [String] base64 encoded crypto key from the user

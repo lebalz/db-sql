@@ -59,9 +59,7 @@ module Resources
 
       desc 'Tests wheter a connection can be established'
       post :test do
-        {
-          success: db_connection.test_connection(key: crypto_key)
-        }
+        db_connection.test_connection(key: crypto_key)
       end
 
       desc 'Get the databases of a db connection'
