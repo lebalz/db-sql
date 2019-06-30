@@ -18,7 +18,7 @@ module Resources
           password_encrypted: encrypted_password[:encrypted_password],
           initialization_vector: encrypted_password[:initialization_vector],
           initial_db: params[:initial_db],
-          initial_schema: params[:initial_schema]
+          initial_table: params[:initial_table]
         )
         unless connection.valid?
           error!(
@@ -49,7 +49,7 @@ module Resources
       requires(:username, type: String, desc: 'db user')
       requires(:password, type: String, desc: 'db password')
       optional(:initial_db, type: String, desc: 'initial database')
-      optional(:initial_schema, type: String, desc: 'initial schema')
+      optional(:initial_table, type: String, desc: 'initial table')
     end
     resource :temp_db_connection do
       desc 'Get the database names of a db connection'

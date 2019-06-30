@@ -52,7 +52,12 @@ body {
     overflow-y: hidden;
     display: flex;
     flex-direction: column;
+  }
 
+  #host-port-group {
+    .required.field:first-child {
+      width: 100%;
+    }
   }
 
   main {

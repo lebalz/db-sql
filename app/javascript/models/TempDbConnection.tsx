@@ -81,7 +81,7 @@ export class TempDbConnection extends DbConnection {
       port: this.port,
       username: this.username,
       initial_db: this.isLoaded ? this.initialDb : undefined,
-      initial_schema: this.tablesLoaded ? this.initialSchema : undefined,
+      initial_table: this.tablesLoaded ? this.initialTable : undefined,
       password: this.password || ''
     };
   }
@@ -110,7 +110,7 @@ export class TempDbConnection extends DbConnection {
     const db = this.databases.find(db => db.name === this.initialDb);
     if (!db) {
       this.tablesLoaded = false;
-      this.initialSchema = undefined;
+      this.initialTable = undefined;
       return;
     }
 
@@ -119,14 +119,14 @@ export class TempDbConnection extends DbConnection {
       ({ data }) => {
         this.tablesLoaded = true;
         this.tables.replace(data.map(table => new DbTable(db, table)));
-        const table = this.tables.find(table => table.name === this.initialSchema);
+        const table = this.tables.find(table => table.name === this.initialTable);
         if (!table) {
-          this.initialSchema = undefined;
+          this.initialTable = undefined;
         }
       }
     ).catch((e) => {
       this.tablesLoaded = false;
-      this.initialSchema = undefined;
+      this.initialTable = undefined;
       this.tables.replace([]);
     });
   }

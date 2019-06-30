@@ -39,7 +39,7 @@ class SeedDbConnections
         username: connection['db_username'],
         password_encrypted: encrypted_password[:encrypted_password],
         initial_db: connection['db_initial_db'],
-        initial_schema: connection['db_initial_schema'],
+        initial_table: connection['db_initial_table'],
         user: user
       )
     end

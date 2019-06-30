@@ -5,7 +5,7 @@ foobar:
   db_username: 'root'
   db_password: 'foobar'
   db_initial_db: 'foo'
-  db_initial_schema: 'bar'
+  db_initial_table: 'bar'
   app_user: 'test@user.ch'
   app_user_password: 'asdfasdf'
 foobar2:

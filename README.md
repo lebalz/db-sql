@@ -70,7 +70,7 @@ cp seed_db_connections.example.yaml seed_db_connections.yaml
 ```
 edit it to your needs and reseed.
 
-The fields `db_initial_db` and `db_initial_schema` ar optional.
+The fields `db_initial_db` and `db_initial_table` ar optional.
 
 
 

@@ -60,7 +60,7 @@ export class TempDbConnection extends React.Component {
     return _.uniq([
       undefined,
       ...this.dbConnection.tables.map(table => table.name),
-      this.dbConnection.initialSchema
+      this.dbConnection.initialTable
     ]).map((name) => {
       return { key: `table-${name}`, text: name, value: name };
     });
@@ -76,9 +76,9 @@ export class TempDbConnection extends React.Component {
     this.dbConnection.initialDb = value;
   }
 
-  handleInitSchemaChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  handleInitTableChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
     const value = data.value as (string | undefined);
-    this.dbConnection.initialSchema = value;
+    this.dbConnection.initialTable = value;
   }
 
   onSave() {
@@ -185,8 +185,8 @@ export class TempDbConnection extends React.Component {
                     ribbon
                     content="Host: Port"
                   />
-                  <Form>
-                    <Form.Group inline widths="1">
+                  <Form id="host-port-group">
+                    <Form.Group>
                       <Form.Input
                         required
                         value={this.dbConnection.host}
@@ -276,14 +276,14 @@ export class TempDbConnection extends React.Component {
                   />
                   <Form.Dropdown
                     options={this.dbTableOptions}
-                    placeholder="Initial Schema"
+                    placeholder="Initial Table"
                     search
                     selection
                     fluid
                     disabled={!this.dbConnection.tablesLoaded}
                     loading={this.dbConnection.tablesLoaded === undefined}
-                    value={this.dbConnection.initialSchema || ''}
-                    onChange={this.handleInitSchemaChange}
+                    value={this.dbConnection.initialTable || ''}
+                    onChange={this.handleInitTableChange}
                   />
                 </Grid.Column>
               </Grid.Row>

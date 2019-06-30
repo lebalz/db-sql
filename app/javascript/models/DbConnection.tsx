@@ -28,7 +28,7 @@ export default class DbConnection {
   @observable port: number;
   @observable username: string;
   @observable initialDb?: string;
-  @observable initialSchema?: string;
+  @observable initialTable?: string;
   @observable password?: string;
   @observable queryState: QueryState = QueryState.None;
   databases = observable<Database>([]);
@@ -43,7 +43,7 @@ export default class DbConnection {
     this.port = props.port;
     this.username = props.username;
     this.initialDb = props.initial_db;
-    this.initialSchema = props.initial_schema;
+    this.initialTable = props.initial_table;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
   }
@@ -74,7 +74,7 @@ export default class DbConnection {
       port: this.port,
       username: this.username,
       initial_db: this.initialDb,
-      initial_schema: this.initialSchema,
+      initial_table: this.initialTable,
       created_at: this.createdAt.toISOString(),
       updated_at: this.updatedAt.toISOString()
     };
@@ -89,7 +89,7 @@ export default class DbConnection {
       port: this.port,
       username: this.username,
       initial_db: this.initialDb,
-      initial_schema: this.initialSchema,
+      initial_table: this.initialTable,
     };
     if (this.password) {
       connection.password = this.password;

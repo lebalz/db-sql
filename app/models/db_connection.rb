@@ -14,7 +14,7 @@ require Rails.root.join('lib', 'queries', 'query')
 #  password_encrypted    :string
 #  initialization_vector :string
 #  initial_db            :string
-#  initial_schema        :string
+#  initial_table        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  username              :string

@@ -10,7 +10,7 @@ export interface DbConnection {
   port: number;
   username: string;
   initial_db?: string;
-  initial_schema?: string;
+  initial_table?: string;
   created_at: string;
   updated_at: string;
 }
@@ -29,7 +29,7 @@ interface CreateProps {
   port: number;
   username: string;
   initial_db?: string;
-  initial_schema?: string;
+  initial_table?: string;
 }
 
 export function newDbConnection(dbConnection: CreateProps) {

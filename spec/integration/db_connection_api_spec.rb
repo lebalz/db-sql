@@ -45,7 +45,7 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json[0]['db_type']).to eq(@db_connection.db_type)
       expect(json[0]['host']).to eq(@db_connection.host)
       expect(json[0]['initial_db']).to eq(nil)
-      expect(json[0]['initial_schema']).to eq(nil)
+      expect(json[0]['initial_table']).to eq(nil)
       expect(json[0]['initialization_vector']).not_to be_empty
       expect(json[0]['name']).to eq(@db_connection.name)
       expect(json[0]['password_encrypted']).not_to eq("asdfasdf")
@@ -78,7 +78,7 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json['db_type']).to eq("mysql")
       expect(json['host']).to eq("localhost")
       expect(json['initial_db']).to eq(nil)
-      expect(json['initial_schema']).to eq(nil)
+      expect(json['initial_table']).to eq(nil)
       expect(json['initialization_vector']).not_to be_empty
       expect(json['name']).to eq("test db connection")
       expect(json['password_encrypted']).not_to eq("retoholz")
@@ -163,22 +163,22 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(db_connection.initial_db).to eq('foobar')
       db_connection.destroy!
     end
-    it 'can update :initial_schema of a db connection' do
+    it 'can update :initial_table of a db connection' do
       db_connection = FactoryBot.create(:db_connection)
-      expect(db_connection.initial_schema).to be_nil
+      expect(db_connection.initial_table).to be_nil
       put(
         "/api/db_connections/#{db_connection.id}",
         headers: @headers,
         params: {
           data: {
-            initial_schema: 'foobar'
+            initial_table: 'foobar'
           }
         }
       )
       expect(response.successful?).to be_truthy
-      expect(json['initial_schema']).to eq('foobar')
+      expect(json['initial_table']).to eq('foobar')
       db_connection.reload
-      expect(db_connection.initial_schema).to eq('foobar')
+      expect(db_connection.initial_table).to eq('foobar')
       db_connection.destroy!
     end
     it 'can update :port of a db connection' do

@@ -10,7 +10,7 @@ export interface DbConnection {
   port: number;
   username: string;
   initial_db?: string;
-  initial_schema?: string;
+  initial_table?: string;
   password: string;
 }
 
