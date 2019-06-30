@@ -1,0 +1,9 @@
+{
+  "name": "DB-SQL",
+  "description": "Web based dbms for PostgreSQL and MySql",
+  "scripts": {
+    "dokku": {
+      "postdeploy": "bundle exec rails db:migrate"
+    }
+  }
+ }
