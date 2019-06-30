@@ -179,7 +179,7 @@ export class TempDbConnection extends React.Component {
                       color="teal"
                     >
                       <Button
-                        content="PostgreSQl"
+                        content="PostgreSQL"
                         active={this.dbConnection.dbType === DbType.Psql}
                         onClick={() => this.dbConnection.dbType = DbType.Psql}
                       />

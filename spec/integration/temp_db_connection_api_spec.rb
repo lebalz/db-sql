@@ -54,11 +54,11 @@ RSpec.describe "API::Resources::TempDbConnection" do
         headers: @headers,
         params: {
           **@temp_db_connection,
-          password: 'wrong-pw'
+          host: ''
         }
       )
       expect(response.successful?).to be_truthy
-      expect(json).to eq('success' => false, 'message' => "FATAL:  password authentication failed for user \"foo\"\nFATAL:  password authentication failed for user \"foo\"\n")
+      expect(json).to eq('success' => false, 'message' => "FATAL:  Peer authentication failed for user \"foo\"\n")
     end
   end
 
