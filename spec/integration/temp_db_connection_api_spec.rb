@@ -53,12 +53,15 @@ RSpec.describe "API::Resources::TempDbConnection" do
         "/api/temp_db_connection/test",
         headers: @headers,
         params: {
-          **@temp_db_connection,
-          host: ''
+          db_type: 'mysql',
+          host: 'localhost',
+          port: DbConnection::DEFAULT_PORT_PSQL,
+          username: 'foo',
+          password: 'safe-db-password'
         }
       )
       expect(response.successful?).to be_truthy
-      expect(json).to eq('success' => false, 'message' => "FATAL:  Peer authentication failed for user \"foo\"\n")
+      expect(json).to eq('success' => false, 'message' => "Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (2)")
     end
   end
 
