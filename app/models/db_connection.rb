@@ -210,7 +210,7 @@ class DbConnection < ApplicationRecord
           default: column.default,
           default_function: column.default_function,
           null: column.null,
-          serial: column.serial?,
+          serial: column.respond_to?(:serial?) ? column.serial? : false,
           sql_type_metadata: {
             limit: column.sql_type_metadata.limit,
             precision: column.sql_type_metadata.precision,
