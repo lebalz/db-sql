@@ -33,7 +33,7 @@ export default class DbConnection {
   @observable queryState: QueryState = QueryState.None;
   databases = observable<Database>([]);
 
-  @observable isLoaded?: boolean = undefined;
+  @observable isLoaded?: boolean = false;
 
   constructor(props: DbConnectionProps) {
     this.id = props.id;

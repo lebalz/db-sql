@@ -22,9 +22,9 @@ export class TempDbConnection extends DbConnection {
   constructor(props: DbConnectionProps, role: TempDbConnectionRole) {
     super(props);
     this.role = role;
-    this.loadDatabases = _.debounce(
-      this.loadDatabases,
-      1000,
+    this.testConnection = _.debounce(
+      this.testConnection,
+      400,
       { leading: false }
     );
 
@@ -93,7 +93,7 @@ export class TempDbConnection extends DbConnection {
     return [this.dbType, this.host, this.port, this.username, this.password].join(';');
   }
 
-  @action.bound loadDatabases() {
+  @action loadDatabases() {
     this.isLoaded = undefined;
     databases(this.tempDbPorps).then(
       ({ data }) => {
@@ -131,7 +131,7 @@ export class TempDbConnection extends DbConnection {
     });
   }
 
-  @action testConnection() {
+  @action.bound testConnection() {
     this.testConnectionState = RequestState.Waiting;
     this.validConnection = undefined;
     test(this.tempDbPorps).then(({ data }) => {
