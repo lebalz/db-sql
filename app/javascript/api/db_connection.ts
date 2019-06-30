@@ -43,6 +43,10 @@ export function dbConnections(): AxiosPromise<DbConnection[]> {
   return api.get('/db_connections');
 }
 
+export function remove(id: string) {
+  return api.delete(`/db_connections/${id}`);
+}
+
 export function dbConnectionPassword(id: string): AxiosPromise<{ password: string }> {
   return api.get(`/db_connections/${id}/password`);
 }

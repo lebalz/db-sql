@@ -1,13 +1,14 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import { DbType, QueryState } from '../models/DbConnection';
-import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon } from 'semantic-ui-react';
+import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Confirm, Popup } from 'semantic-ui-react';
 import DbConnectionStore from '../stores/db_connection_store';
-import { computed, reaction } from 'mobx';
-import { updateConnection } from '../api/db_connection';
+import { computed, reaction, action } from 'mobx';
+import { updateConnection, remove } from '../api/db_connection';
 import _ from 'lodash';
 import { RequestState } from '../stores/session_store';
-import { TempDbConnectionRole } from '../models/TempDbConnection';
+import { TempDbConnectionRole, TempDbConnection as TempDbConnectionModel } from '../models/TempDbConnection';
+import { Role } from '../models/User';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -35,7 +36,8 @@ export class TempDbConnection extends React.Component {
   }
 
   state = {
-    showPassword: false
+    showPassword: false,
+    showDeleteConfirm: true
   };
 
   @computed get dbConnection() {
@@ -92,6 +94,18 @@ export class TempDbConnection extends React.Component {
     }
   }
 
+  @action duplicate() {
+    const dup = new TempDbConnectionModel(this.dbConnection.props, TempDbConnectionRole.Create);
+    dup.name = `${dup.name}-copy`;
+    dup.password = this.dbConnection.password;
+    this.injected.dbConnectionStore.tempDbConnection = dup;
+  }
+
+  delete() {
+    this.injected.dbConnectionStore.remove(this.dbConnection);
+    this.onClose();
+  }
+
   @computed get message() {
     let icon: 'circle notched' | 'check' | 'times' = 'check';
     const { validConnection, message } = this.dbConnection;
@@ -123,12 +137,13 @@ export class TempDbConnection extends React.Component {
   }
 
   render() {
+    const name = this.dbConnection ? this.dbConnection.name : '';
     return (
       <Modal
         open={this.isModalOpen}
         onClose={() => this.onClose()}
       >
-        <Modal.Header content="Database Connection" />
+        <Modal.Header content={`Database Connection: ${name}`} />
         {this.isModalOpen && this.dbConnection.message &&
           this.message
         }
@@ -147,7 +162,7 @@ export class TempDbConnection extends React.Component {
                   />
                   <Form.Input
                     fluid
-                    value={this.dbConnection.name}
+                    value={name}
                     onChange={e => this.dbConnection.name = e.target.value}
                     type="text"
                   />
@@ -287,33 +302,63 @@ export class TempDbConnection extends React.Component {
                   />
                 </Grid.Column>
               </Grid.Row>
-              <Grid.Row>
-                <Grid.Column>
-                  <Button
-                    content="Test"
-                    color="blue"
-                    floated="left"
-                    loading={this.dbConnection.testConnectionState === RequestState.Waiting}
-                    onClick={() => this.dbConnection.testConnection()}
-                  />
-                </Grid.Column>
-                <Grid.Column>
-                  <Button
-                    content="Save"
-                    color="green"
-                    floated="right"
-                    onClick={() => this.onSave()}
-                  />
-                  <Button
-                    content="Cancel"
-                    color="red"
-                    floated="right"
-                    onClick={() => this.onClose()}
-                  />
-                </Grid.Column>
-              </Grid.Row>
             </Grid>
           </Modal.Content>
+        }
+        {this.dbConnection &&
+          <Modal.Actions>
+            <Button
+              icon="plug"
+              labelPosition="left"
+              content="Test"
+              color="blue"
+              loading={this.dbConnection.testConnectionState === RequestState.Waiting}
+              onClick={() => this.dbConnection.testConnection()}
+            />
+            <Button
+              icon="copy"
+              labelPosition="left"
+              content="Duplicate"
+              color="grey"
+              onClick={() => this.duplicate()}
+            />
+            <Popup
+              on="click"
+              position="top right"
+              trigger={
+                <Button
+                  icon="trash"
+                  labelPosition="left"
+                  content="Remove"
+                  color="red"
+                />
+              }
+              header="Confirm"
+              content={
+                <Button
+                  icon="trash"
+                  labelPosition="left"
+                  content="Yes Delete"
+                  color="red"
+                  onClick={() => this.delete()}
+                />
+              }
+            />
+            <Button
+              icon="cancel"
+              labelPosition="left"
+              content="Cancel"
+              color="black"
+              onClick={() => this.onClose()}
+            />
+            <Button
+              icon="save"
+              labelPosition="left"
+              content="Save"
+              color="green"
+              onClick={() => this.onSave()}
+            />
+          </Modal.Actions>
         }
       </Modal>
     );

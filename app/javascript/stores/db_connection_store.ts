@@ -1,7 +1,7 @@
 import { observable, action, reaction } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
-import { dbConnections, updateConnection, createConnection } from '../api/db_connection';
+import { dbConnections, updateConnection, createConnection, remove as removeApi } from '../api/db_connection';
 import { RequestState } from './session_store';
 import DbConnection from '../models/DbConnection';
 import { TempDbConnection } from '../models/TempDbConnection';
@@ -78,6 +78,18 @@ class DbConnectionStore {
 
   @action clearStore() {
     this.dbConnections.clear();
+  }
+
+  @action remove(dbConnection: TempDbConnection) {
+    removeApi(dbConnection.id).then(() => {
+      const connection = this.dbConnections.find(con => con.id === dbConnection.id);
+      if (!connection) {
+        return;
+      }
+      this.dbConnections.remove(connection);
+    }).catch((e) => {
+      console.log(e);
+    });
   }
 
 }
