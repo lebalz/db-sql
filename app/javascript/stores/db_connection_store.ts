@@ -1,4 +1,4 @@
-import { observable, action, reaction } from 'mobx';
+import { observable, action, reaction, computed } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
 import { dbConnections, updateConnection, createConnection, remove as removeApi } from '../api/db_connection';
@@ -13,6 +13,7 @@ class DbConnectionStore {
   @observable saveState: RequestState = RequestState.None;
 
   @observable tempDbConnection: null | TempDbConnection = null;
+  @observable activeConnection: null | DbConnection = null;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -27,6 +28,19 @@ class DbConnectionStore {
         }
       }
     );
+  }
+
+  @computed get loadedConnections() {
+    return this.dbConnections.filter(conn => !!conn.isLoaded);
+  }
+
+  @action setActiveConnection(dbConnection: DbConnection) {
+    this.root.routing.push('/connections');
+    Promise.all([
+      dbConnection.loadDatabases()
+    ]).then(() => {
+      this.activeConnection = dbConnection;
+    });
   }
 
   @action loadDbConnections(forceReload: boolean = false) {

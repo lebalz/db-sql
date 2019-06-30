@@ -77,6 +77,15 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
+          <Menu.Item
+            style={{ marginLeft: '2em' }}
+            name="Connections"
+            active={router.location.pathname.startsWith('/connections')}
+            onClick={() => router.push('/connections')}
+          >
+            <Icon name="plug" />
+            Connections
+          </Menu.Item>
           {
             !this.injected.sessionStore.currentUser.activated &&
             <Menu.Item style={{ paddingBottom: 0, marginLeft: '4em' }}>

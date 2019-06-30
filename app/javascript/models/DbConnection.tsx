@@ -51,7 +51,10 @@ export default class DbConnection {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }
 
-  @action loadDatabases() {
+  @action loadDatabases(forceLoad: boolean = false) {
+    if (this.isLoaded && !forceLoad) {
+      return;
+    }
     this.isLoaded = undefined;
     databases(this.id).then(
       ({ data }) => {

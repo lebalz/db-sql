@@ -22,6 +22,24 @@ export interface DbTable {
   name: string;
 }
 
+export interface SqlTypeMetadata {
+  limit: number;
+  precision?: number;
+  scale?: number;
+  sql_type: string;
+  type: string;
+}
+
+export interface Column {
+  name: string;
+  collation: string;
+  default: string;
+  default_function: string;
+  null: boolean;
+  serial: boolean;
+  sql_type_metadata: SqlTypeMetadata;
+}
+
 interface CreateProps {
   name: string;
   db_type: DbType;
@@ -73,5 +91,11 @@ export function databases(id: string): AxiosPromise<Database[]> {
 export function tables(id: string, databaseName: string): AxiosPromise<DbTable[]> {
   return api.get(
     `/db_connections/${id}/${databaseName}/tables`
+  );
+}
+
+export function columns(id: string, databaseName: string, tableName: string): AxiosPromise<Column[]> {
+  return api.get(
+    `/db_connections/${id}/${databaseName}/${tableName}/columns`
   );
 }
