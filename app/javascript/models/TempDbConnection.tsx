@@ -2,7 +2,7 @@ import { computed, action, reaction, observable } from 'mobx';
 import { DbConnection as DbConnectionProps, dbConnectionPassword } from '../api/db_connection';
 import { DbConnection as TempDbConnectionProps, databases, test, tables } from '../api/temp_db_connection';
 import _ from 'lodash';
-import DbConnection, { QueryState } from './DbConnection';
+import DbConnection from './DbConnection';
 import Database from './Database';
 import DbTable from './DbTable';
 import { RequestState } from '../stores/session_store';

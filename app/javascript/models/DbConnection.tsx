@@ -1,7 +1,6 @@
 import { observable, computed, action } from 'mobx';
-import { DbConnection as DbConnectionProps, dbConnectionPassword, databases } from '../api/db_connection';
+import { DbConnection as DbConnectionProps, databases } from '../api/db_connection';
 import _ from 'lodash';
-import User from './User';
 import Database from './Database';
 
 export enum DbType {

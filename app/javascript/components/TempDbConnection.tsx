@@ -1,14 +1,12 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
-import { DbType, QueryState } from '../models/DbConnection';
-import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Confirm, Popup } from 'semantic-ui-react';
+import { DbType } from '../models/DbConnection';
+import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Popup } from 'semantic-ui-react';
 import DbConnectionStore from '../stores/db_connection_store';
 import { computed, reaction, action } from 'mobx';
-import { updateConnection, remove } from '../api/db_connection';
 import _ from 'lodash';
 import { RequestState } from '../stores/session_store';
 import { TempDbConnectionRole, TempDbConnection as TempDbConnectionModel } from '../models/TempDbConnection';
-import { Role } from '../models/User';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;

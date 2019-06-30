@@ -1,4 +1,4 @@
-import { observable, computed, action } from 'mobx';
+import { observable } from 'mobx';
 import { DbTable as DbTableProps } from '../api/db_connection';
 import _ from 'lodash';
 import { QueryState } from './DbConnection';
