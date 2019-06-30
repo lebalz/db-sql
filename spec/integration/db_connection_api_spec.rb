@@ -250,6 +250,17 @@ RSpec.describe "API::Resources::DbConnection" do
     end
   end
 
+  describe 'GET /api/db_connections/:id/databases' do
+    it 'can list databases of a connection' do
+      get(
+        "/api/db_connections/#{@db_connection.id}/databases",
+        headers: @headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json).to include("name" => "ninja_turtles_db")
+    end
+  end
+
   describe 'GET /api/db_connections/:id/database_names' do
     it 'can list database names of a connection' do
       get(
@@ -302,6 +313,19 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json.size).to be(2)
       expect(json[0]).to eq('fights')
       expect(json[1]).to eq('ninja_turtles')
+    end
+  end
+
+  describe 'GET /api/db_connections/:id/:database_name/tables' do
+    it 'can get tables of a database' do
+      get(
+        "/api/db_connections/#{@db_connection.id}/ninja_turtles_db/tables",
+        headers: @headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json.size).to be(2)
+      expect(json[0]).to eq('name' => 'fights')
+      expect(json[1]).to eq('name' => 'ninja_turtles')
     end
   end
 
