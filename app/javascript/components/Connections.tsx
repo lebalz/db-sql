@@ -12,6 +12,8 @@ import _ from 'lodash';
 import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
 import { DbConnection as DbConnectionProps } from '../api/db_connection';
 import { DbType } from '../models/DbConnection';
+import Database from '../models/Database';
+import DbTable from '../models/DbTable';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -25,6 +27,17 @@ export default class Connections extends React.Component {
 
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  handleDbClicked = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, db: Database) => {
+    db.toggleShow();
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  handleTableClicked = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, db: DbTable) => {
+    db.toggleShow();
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   render() {
@@ -50,32 +63,33 @@ export default class Connections extends React.Component {
                   <List.Item
                     as="a"
                     key={`db-${i}`}
-                    onClick={() => db.load()}
+                    onClick={e => this.handleDbClicked(e, db)}
                   >
                     <List.Icon name="database" />
                     <List.Content>
                       {db.name}
                     </List.Content>
-                    {db.isLoaded &&
+                    {db.show && db.isLoaded &&
                       <List.List>
                         {db.tables.map((table, ii) => {
                           return (
                             <List.Item
                               as="a"
                               key={`db-${i}-${ii}`}
-                              onClick={() => table.load()}
+                              onClick={e => this.handleTableClicked(e, table)}
                             >
                               <List.Icon name="table" />
                               <List.Content>
                                 {table.name}
                               </List.Content>
-                              {table.isLoaded &&
+                              {table.show && table.isLoaded &&
                                 <List.List>
                                   {table.columns.map((column, iii) => {
                                     return (
                                       <List.Item
                                         as="a"
                                         key={`db-${i}-${ii}-${iii}`}
+                                        onClick={e => e.stopPropagation()}
                                       >
                                         <List.Icon name="columns" />
                                         <List.Content>

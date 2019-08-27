@@ -1,4 +1,4 @@
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, reaction } from 'mobx';
 import { Database as DatabaseProps, tables } from '../api/db_connection';
 import _ from 'lodash';
 import DbConnection, { QueryState } from './DbConnection';
@@ -10,10 +10,23 @@ export default class Database {
   tables = observable<DbTable>([]);
   @observable queryState: QueryState = QueryState.None;
   @observable isLoaded: boolean | null = false;
+  @observable show: boolean = false;
 
   constructor(dbConnection: DbConnection, props: DatabaseProps) {
     this.dbConnection = dbConnection;
     this.name = props.name;
+    reaction(
+      () => this.show,
+      (show: boolean) => {
+        if (show) {
+          this.load();
+        }
+      }
+    );
+  }
+
+  @action toggleShow() {
+    this.show = !this.show;
   }
 
   @computed get id() {
