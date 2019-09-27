@@ -1,4 +1,4 @@
-FROM ruby:2.6
+FROM ruby:2.6.2
 
 # Install NodeJS and Yarn
 RUN apt-get update
