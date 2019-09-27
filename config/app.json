@@ -3,6 +3,7 @@
   "description": "Web based dbms for PostgreSQL and MySql",
   "scripts": {
     "dokku": {
+      "predeploy": "bundle exec rake assets:precompile",
       "postdeploy": "bundle exec rails db:migrate"
     }
   }
