@@ -182,6 +182,7 @@ module Resources
                 table_name: params[:table_name]
               )
             end
+
             desc "Get the table's columns"
             get :columns do
               present db_connection.columns(
@@ -190,6 +191,7 @@ module Resources
                 table_name: params[:table_name]
               ), with: Entities::Column
             end
+
             desc "Get the table's primary key names"
             get :primary_key_names do
               db_connection.primary_key_names(
@@ -198,6 +200,7 @@ module Resources
                 table_name: params[:table_name]
               )
             end
+
             desc "Get the table's foreign keys"
             get :foreign_keys do
               present db_connection.foreign_keys(
@@ -206,6 +209,7 @@ module Resources
                 table_name: params[:table_name]
               ), with: Entities::ForeignKey
             end
+
             desc "Get the table's indexes"
             get :indexes do
               present db_connection.indexes(
