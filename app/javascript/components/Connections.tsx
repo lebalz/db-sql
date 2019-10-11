@@ -6,15 +6,11 @@ import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbConnectionStore from '../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
-import DbConnectionOverview from './Dashboard/DbConnectionOverview';
-import { TempDbConnection as TempDbConnectionComponent } from './Dashboard/TempDbConnection';
 import _ from 'lodash';
-import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
-import { DbConnection as DbConnectionProps } from '../api/db_connection';
-import { DbType } from '../models/DbConnection';
 import Database from '../models/Database';
 import DbTable from '../models/DbTable';
 import { computed } from 'mobx';
+import DbColumn from '../models/DbColumn';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -93,50 +89,48 @@ export default class Connections extends React.Component {
                 switch (item.kind) {
                   case 'db':
                     return <List.Item
-                    as="a"
-                    key={`db-${i}`}
+                      as="a"
+                      key={`db-${i}`}
                       className="db-item"
                       onClick={e => item.obj.toggleShow()}
-                  >
-                    <List.Icon name="database" />
-                    <List.Content>
+                    >
+                      <List.Icon name="database" />
+                      <List.Content>
                         {item.obj.name}
-                    </List.Content>
+                      </List.Content>
                     </List.Item>;
                   case 'table':
                     return <List.Item
-                              as="a"
+                      as="a"
                       key={`db-${i}`}
                       className="table-item"
                       onClick={e => item.obj.toggleShow()}
-                            >
-                              <List.Icon name="table" />
-                              <List.Content>
+                    >
+                      <List.Icon name="table" />
+                      <List.Content>
                         {item.obj.name}
-                              </List.Content>
+                      </List.Content>
                     </List.Item>;
                   case 'column':
                     return <List.Item
-                                        as="a"
+                      as="a"
                       key={`db-${i}`}
                       className="column-item"
-                                      >
-                                        <List.Icon name="columns" />
-                                        <List.Content>
+                    >
+                      <List.Icon name="columns" />
+                      <List.Content>
                         {item.obj.name}
-                                        </List.Content>
-                                      </List.Item>
-                                    );
-                                  })
-                                  }
-                                </List.List>
-                              }
-                            </List.Item>
-                          );
-                        })
-                        }
+                      </List.Content>
+                      {
+                        item.obj.isPrimaryKey &&
+                        <List.Icon name="key" color="yellow" />
+                      }
+                      {
+                        item.obj.isForeignKey &&
+                        <List.Icon name="key" color="grey" />
+                      }
                     </List.Item>;
-                    }
+                }
               })
             }
           </List>
