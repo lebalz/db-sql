@@ -52,6 +52,13 @@ body {
     overflow-y: hidden;
     display: flex;
     flex-direction: column;
+
+    .table-item {
+      margin-left: 1em;
+    }
+    .column-item {
+      margin-left: 2em;
+    }
   }
 
   #host-port-group {

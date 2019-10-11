@@ -14,12 +14,17 @@ import { DbConnection as DbConnectionProps } from '../api/db_connection';
 import { DbType } from '../models/DbConnection';
 import Database from '../models/Database';
 import DbTable from '../models/DbTable';
+import { computed } from 'mobx';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   dbConnectionStore: DbConnectionStore;
 }
+
+type MenuItemDb = { kind: 'db', obj: Database }
+  | { kind: 'table', obj: DbTable }
+  | { kind: 'column', obj: DbColumn };
 
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
@@ -40,6 +45,32 @@ export default class Connections extends React.Component {
     e.stopPropagation();
   }
 
+  @computed get menuItems(): MenuItemDb[] {
+    const { dbConnectionStore } = this.injected;
+    const { activeConnection } = dbConnectionStore;
+    if (!activeConnection) return [];
+    const dbs = activeConnection.databases.map((db, i) => {
+      const tables = db.show
+        ? db.tables.map((table, ii) => {
+          const cols = table.show
+            ? table.columns.map((col, iii) => {
+              return { kind: 'column', obj: col } as MenuItemDb;
+            })
+            : [];
+          return [
+            { kind: 'table', obj: table } as MenuItemDb,
+            ...cols
+          ];
+        })
+        : [];
+      return [
+        { kind: 'db', obj: db } as MenuItemDb,
+        ..._.flatten<MenuItemDb>(tables)
+      ];
+    });
+    return _.flatten<MenuItemDb>(dbs);
+  }
+
   render() {
     const { dbConnectionStore } = this.injected;
     const { loadedConnections, activeConnection } = dbConnectionStore;
@@ -58,42 +89,41 @@ export default class Connections extends React.Component {
             }}
           >
             {
-              activeConnection && activeConnection.databases.map((db, i) => {
-                return (
-                  <List.Item
+              this.menuItems.map((item, i) => {
+                switch (item.kind) {
+                  case 'db':
+                    return <List.Item
                     as="a"
                     key={`db-${i}`}
-                    onClick={e => this.handleDbClicked(e, db)}
+                      className="db-item"
+                      onClick={e => item.obj.toggleShow()}
                   >
                     <List.Icon name="database" />
                     <List.Content>
-                      {db.name}
+                        {item.obj.name}
                     </List.Content>
-                    {db.show && db.isLoaded &&
-                      <List.List>
-                        {db.tables.map((table, ii) => {
-                          return (
-                            <List.Item
+                    </List.Item>;
+                  case 'table':
+                    return <List.Item
                               as="a"
-                              key={`db-${i}-${ii}`}
-                              onClick={e => this.handleTableClicked(e, table)}
+                      key={`db-${i}`}
+                      className="table-item"
+                      onClick={e => item.obj.toggleShow()}
                             >
                               <List.Icon name="table" />
                               <List.Content>
-                                {table.name}
+                        {item.obj.name}
                               </List.Content>
-                              {table.show && table.isLoaded &&
-                                <List.List>
-                                  {table.columns.map((column, iii) => {
-                                    return (
-                                      <List.Item
+                    </List.Item>;
+                  case 'column':
+                    return <List.Item
                                         as="a"
-                                        key={`db-${i}-${ii}-${iii}`}
-                                        onClick={e => e.stopPropagation()}
+                      key={`db-${i}`}
+                      className="column-item"
                                       >
                                         <List.Icon name="columns" />
                                         <List.Content>
-                                          {column}
+                        {item.obj.name}
                                         </List.Content>
                                       </List.Item>
                                     );
@@ -105,10 +135,8 @@ export default class Connections extends React.Component {
                           );
                         })
                         }
-                      </List.List>
+                    </List.Item>;
                     }
-                  </List.Item>
-                );
               })
             }
           </List>
