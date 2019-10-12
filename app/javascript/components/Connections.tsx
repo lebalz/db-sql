@@ -86,27 +86,18 @@ export default class Connections extends React.Component {
           >
             {
               this.menuItems.map((item, i) => {
+                const highlighted = item.kind === 'db' ? false : item.obj.highlight;
+
                 switch (item.kind) {
+                  case 'table':
                   case 'db':
                     return <List.Item
                       as="a"
                       key={`db-${i}`}
-                      className="db-item"
+                      className={`${item.kind}-item`}
                       onClick={e => item.obj.toggleShow()}
                     >
-                      <List.Icon name="database" />
-                      <List.Content>
-                        {item.obj.name}
-                      </List.Content>
-                    </List.Item>;
-                  case 'table':
-                    return <List.Item
-                      as="a"
-                      key={`db-${i}`}
-                      className="table-item"
-                      onClick={e => item.obj.toggleShow()}
-                    >
-                      <List.Icon name="table" />
+                      <List.Icon name="database" color={highlighted ? 'yellow' : 'grey'} />
                       <List.Content>
                         {item.obj.name}
                       </List.Content>
@@ -116,15 +107,23 @@ export default class Connections extends React.Component {
                       as="a"
                       key={`db-${i}`}
                       className="column-item"
+                      onMouseOver={() => {
+                        if (item.obj.foreignColumn) {
+                          item.obj.foreignColumn.highlight = true;
+                        }
+                      }}
+                      onMouseOut={() => {
+                        if (item.obj.foreignColumn) {
+                          item.obj.foreignColumn.highlight = false;
+                        }
+                      }}
                     >
-                      <List.Icon name="columns" />
-                      <List.Content>
+                      <List.Icon name="columns" color={highlighted ? 'yellow' : 'grey'}/>
+                      <List.Content
+                        className={item.obj.isPrimaryKey ? 'primary-key' : ''}
+                      >
                         {item.obj.name}
                       </List.Content>
-                      {
-                        item.obj.isPrimaryKey &&
-                        <List.Icon name="key" color="yellow" />
-                      }
                       {
                         item.obj.isForeignKey &&
                         <List.Icon name="key" color="grey" />

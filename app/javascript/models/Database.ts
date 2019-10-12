@@ -43,9 +43,14 @@ export default class Database {
         this.tables.replace(data.map(table => new DbTable(this, table)));
         this.isLoaded = true;
       }
+    ).then(() => this.tables.forEach(t => t.load())
     ).catch((e) => {
       this.isLoaded = false;
     });
+  }
+
+  table(name: string): DbTable | undefined {
+    return this.tables.find(t => t.name === name);
   }
 
 }

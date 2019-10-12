@@ -58,6 +58,10 @@ body {
     }
     .column-item {
       margin-left: 2em;
+      .primary-key {
+        text-decoration: underline;
+        font-weight: 600;
+      }
     }
   }
 
