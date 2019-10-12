@@ -37,6 +37,7 @@ export interface ColumnProps {
   default_function: string;
   null: boolean;
   serial: boolean;
+  is_primary: boolean;
   sql_type_metadata: SqlTypeMetadata;
 }
 
@@ -125,12 +126,6 @@ export function tables(id: string, databaseName: string): AxiosPromise<DbTable[]
 export function columns(id: string, databaseName: string, tableName: string): AxiosPromise<ColumnProps[]> {
   return api.get(
     `/db_connections/${id}/${databaseName}/${tableName}/columns`
-  );
-}
-
-export function primaryKeyNames(id: string, databaseName: string, tableName: string): AxiosPromise<string[]> {
-  return api.get(
-    `/db_connections/${id}/${databaseName}/${tableName}/primary_key_names`
   );
 }
 
