@@ -228,6 +228,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
       expect(json.size).to be(2)
       expect(json[0]).to eq(
         "name" => "id",
+        "is_primary" => true,
         "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
         "null" => false,
         "serial" => true,
@@ -239,6 +240,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
       )
       expect(json[1]).to eq(
         "name" => "name",
+        "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
           "sql_type" => "text",
@@ -255,6 +257,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
       expect(json.size).to be(4)
       expect(json[0]).to eq(
         "name" => "id",
+        "is_primary" => true,
         "default_function" => "nextval('fights_id_seq'::regclass)",
         "null" => false,
         "serial" => true,
@@ -266,6 +269,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
       )
       expect(json[1]).to eq(
         "name" => "date",
+        "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
           "sql_type" => "timestamp without time zone",
@@ -274,6 +278,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
       )
       expect(json[2]).to eq(
         "name" => "badass_turtle_id",
+        "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
           "limit" => 4,
@@ -283,6 +288,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
       )
       expect(json[3]).to eq(
         "name" => "kickass_turtle_id",
+        "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
           "limit" => 4,
