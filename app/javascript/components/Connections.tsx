@@ -97,15 +97,14 @@ export default class Connections extends React.Component {
         </header>
         <div id="sidebar">
           <Header as="h3" content="Databases" />
-          <div style={{ overflow: 'auto' }}>
-            <div style={{ width: '0', position: 'absolute', marginLeft: '3px' }}>
+          <div style={{ overflow: 'auto', display: 'flex' }}>
+            <div style={{ width: '0', marginLeft: '3px' }}>
               <ForeignColumnLink menuItems={menuItems} />
             </div>
             <List
               style={{
                 margin: '0 0 0 1em',
                 padding: '0em',
-                overflowY: 'auto',
                 flex: '1'
               }}
             >
