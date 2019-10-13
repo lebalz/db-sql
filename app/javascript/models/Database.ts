@@ -3,6 +3,7 @@ import { Database as DatabaseProps, tables } from '../api/db_connection';
 import _ from 'lodash';
 import DbConnection, { QueryState } from './DbConnection';
 import DbTable from './DbTable';
+import ForeignKey from './ForeignKey';
 
 export default class Database {
   readonly dbConnection: DbConnection;
@@ -31,6 +32,12 @@ export default class Database {
 
   @computed get id() {
     return this.dbConnection.id;
+  }
+
+  @computed get foreignKeyReferences(): ForeignKey[] {
+    return this.tables.reduce((fks, table) => {
+      return [...fks, ...table.foreignKeys.slice()];
+    }, Array<ForeignKey>());
   }
 
   @action load(forceLoad: boolean = false) {

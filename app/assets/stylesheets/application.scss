@@ -53,15 +53,19 @@ body {
     display: flex;
     flex-direction: column;
 
-    .table-item {
-      margin-left: 1em;
-    }
-    .column-item {
-      margin-left: 2em;
-      .primary-key {
-        text-decoration: underline;
-        font-weight: 600;
+    .item {
+      height: 22px;
+      &.table-item {
+        margin-left: 1em;
       }
+      &.column-item {
+        margin-left: 2em;
+        .primary-key {
+          text-decoration: underline;
+          font-weight: 600;
+        }
+      }
+
     }
   }
 

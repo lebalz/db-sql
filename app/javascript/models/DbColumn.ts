@@ -4,6 +4,11 @@ import DbTable from './DbTable';
 import { SqlTypeMetadata, ColumnProps } from '../api/db_connection';
 import ForeignKey from './ForeignKey';
 
+export enum Mark {
+  From = 'from',
+  To = 'to',
+  None = 'none'
+}
 export default class DbColumn {
   readonly table: DbTable;
   readonly name: string;
@@ -14,9 +19,8 @@ export default class DbColumn {
   readonly isSerial: boolean;
   readonly isPrimaryKey: boolean;
   readonly sqlTypeMetadata: SqlTypeMetadata;
-  @observable isPrimary: boolean = false;
   @observable foreignKey?: ForeignKey = undefined;
-  @observable highlight: boolean = false;
+  @observable mark: Mark = Mark.None;
   constructor(table: DbTable, props: ColumnProps) {
     this.table = table;
 
@@ -40,6 +44,12 @@ export default class DbColumn {
 
   @computed get foreignTable(): DbTable | undefined {
     return this.foreignKey && this.foreignKey.toTable;
+  }
+
+  @computed get referencedBy(): DbColumn[] {
+    return this.table.database.foreignKeyReferences
+    .filter(fk => fk.toColumnName === this.name)
+    .map(fk => fk.fromColumn);
   }
 
 }

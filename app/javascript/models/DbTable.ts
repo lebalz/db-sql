@@ -9,7 +9,7 @@ import {
 import _ from 'lodash';
 import { QueryState } from './DbConnection';
 import Database from './Database';
-import DbColumn from './DbColumn';
+import DbColumn, { Mark } from './DbColumn';
 import ForeignKey from './ForeignKey';
 
 export default class DbTable {
@@ -37,8 +37,9 @@ export default class DbTable {
     );
   }
 
-  @computed get highlight() {
-    return this.columns.some(c => c.highlight);
+  @computed get mark(): Mark {
+    const col = this.columns.find(c => c.mark === Mark.To || c.mark === Mark.From);
+    return col ? col.mark : Mark.None;
   }
 
   @action toggleShow() {
