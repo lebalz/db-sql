@@ -8,8 +8,8 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: <%= ENV['DB_SQL_DATABASE_USER'] || Rails.application.credentials[:development][:DB_SQL_DATABASE_USER] %>
-  password: <%= ENV['DB_SQL_DATABASE_PASSWORD'] || Rails.application.credentials[:development][:DB_SQL_DATABASE_PASSWORD] %>
+  username: <%= ENV['DB_SQL_DATABASE_USER'] || Rails.application.credentials[Rails.env.to_sym][:DB_SQL_DATABASE_USER] %>
+  password: <%= ENV['DB_SQL_DATABASE_PASSWORD'] || Rails.application.credentials[Rails.env.to_sym][:DB_SQL_DATABASE_PASSWORD] %>
   host: <%= ENV.fetch("DATABASE_URL") { 'localhost' } %>
 
 development:

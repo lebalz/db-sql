@@ -4,7 +4,7 @@ require_relative '../rails_helper.rb'
 
 RSpec.describe "API::Resources::TempDbConnection" do
   before(:all) do
-    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
+    pw = Rails.configuration.database_configuration[Rails.env]['password']
     sql_path = Rails.root.join(
       'spec',
       'fixtures',
@@ -28,7 +28,7 @@ RSpec.describe "API::Resources::TempDbConnection" do
     }
   end
   after(:all) do
-    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
+    pw = Rails.configuration.database_configuration[Rails.env]['password']
     sql_path = Rails.root.join(
       'spec',
       'fixtures',

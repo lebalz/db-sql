@@ -33,8 +33,8 @@ bundle exec rails db:drop db:setup
 | Key                      | example                | ENV                 |
 |:-------------------------|:-----------------------|:--------------------|
 | RAILS_MASTER_KEY         | `config/master.key`(1) | production, staging |
-| DB_SQL_DATABASE_USER     | postgres               | development         |
-| DB_SQL_DATABASE_PASSWORD | ""                     | development         |
+| DB_SQL_DATABASE_USER     | postgres               | development, test   |
+| DB_SQL_DATABASE_PASSWORD | ""                     | development, test   |
 | SENDGRID_USERNAME        | apikey                 | development         |
 | SENDGRID_API_KEY         |                        | development         |
 | RAILS_SERVE_STATIC_FILES | `true` (2)             | production, staging |
