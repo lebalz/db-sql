@@ -48,7 +48,7 @@ export default class DbColumn {
 
   @computed get referencedBy(): DbColumn[] {
     return this.table.database.foreignKeyReferences
-    .filter(fk => fk.toColumnName === this.name)
+    .filter(fk => fk.toColumn === this)
     .map(fk => fk.fromColumn);
   }
 
