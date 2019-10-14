@@ -67,7 +67,7 @@ export default class DbTable {
     return Object.values(this.requestStates).some(state => state === REST.Requested);
   }
 
-  @computed get isFullyLoaded(): boolean {
+  @computed get isLoaded(): boolean {
     return Object.values(this.requestStates).every(state => state === REST.Success);
   }
 
@@ -78,7 +78,7 @@ export default class DbTable {
   }
 
   @action load(forceLoad: boolean = false) {
-    if (this.isFullyLoaded && !forceLoad) {
+    if (this.isLoaded && !forceLoad) {
       return;
     }
     this.setRequestState(REST.None);

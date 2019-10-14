@@ -16,7 +16,7 @@ class ForeignColumnLink extends React.Component<Props> {
 
   render() {
     const { menuItems } = this.props;
-    const tos = menuItems.filter(col => col.kind !== 'db' && col.obj.mark === Mark.To);
+    const tos = menuItems.filter(col => col.kind !== 'database' && col.obj.mark === Mark.To);
     const svgWidth = 36;
     const svgHeight = menuItems.length * 22;
     if (tos.length < 1) {
@@ -24,7 +24,7 @@ class ForeignColumnLink extends React.Component<Props> {
     }
     const to = tos[tos.length - 1] as (DbColumnItem | DbTableItem);
     const from = menuItems.filter((item) => {
-      if (item.kind === 'db') {
+      if (item.kind === 'database') {
         return false;
       }
       if (item.kind === 'table' && item.obj.show) {

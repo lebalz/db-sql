@@ -4,13 +4,13 @@ import _ from 'lodash';
 import DbConnection, { QueryState } from './DbConnection';
 import DbTable from './DbTable';
 import ForeignKey from './ForeignKey';
+import { REST } from '../declarations/REST';
 
 export default class Database {
   readonly dbConnection: DbConnection;
   readonly name: string;
   tables = observable<DbTable>([]);
-  @observable queryState: QueryState = QueryState.None;
-  @observable isLoaded: boolean | null = false;
+  @observable requestState: REST = REST.None;
   @observable show: boolean = false;
 
   constructor(dbConnection: DbConnection, props: DatabaseProps) {
@@ -40,19 +40,27 @@ export default class Database {
     }, Array<ForeignKey>());
   }
 
+  @computed get isLoaded() {
+    return this.requestState === REST.Success;
+  }
+
+  @computed get hasPendingRequest() {
+    return this.requestState === REST.Requested;
+  }
+
   @action load(forceLoad: boolean = false) {
     if (this.isLoaded && !forceLoad) {
       return;
     }
-    this.isLoaded = null;
+    this.requestState = REST.Requested;
     tables(this.id, this.name).then(
       ({ data }) => {
         this.tables.replace(data.map(table => new DbTable(this, table)));
-        this.isLoaded = true;
+        this.requestState = REST.Success;
       }
     ).then(() => this.tables.forEach(t => t.load())
     ).catch((e) => {
-      this.isLoaded = false;
+      this.requestState = REST.Error;
     });
   }
 

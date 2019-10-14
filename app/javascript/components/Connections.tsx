@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Header, Button, Menu, Icon, List } from 'semantic-ui-react';
+import { Header, Button, Menu, Icon, List, Loader } from 'semantic-ui-react';
 import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
@@ -7,11 +7,11 @@ import { RouterStore } from 'mobx-react-router';
 import DbConnectionStore from '../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import Database from '../models/Database';
 import DbTable from '../models/DbTable';
 import { action, computed } from 'mobx';
 import DbColumn, { Mark } from '../models/DbColumn';
 import ForeignColumnLink from './ForeignColumnLink';
+import Database from '../models/Database';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -19,12 +19,11 @@ interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
 }
 
-export type DbColumnItem = { kind: 'column', obj: DbColumn, pos: number }
-export type DbTableItem = { kind: 'table', obj: DbTable, pos: number }
+export type DbColumnItem = { kind: 'column', obj: DbColumn, pos: number };
+export type DbTableItem = { kind: 'table', obj: DbTable, pos: number };
+export type DbDatabaseItem = { kind: 'database', obj: Database, pos: number };
 
-export type MenuItemDb = { kind: 'db', obj: Database, pos: number }
-  | DbTableItem
-  | DbColumnItem;
+export type MenuItemDb = DbDatabaseItem | DbTableItem | DbColumnItem;
 
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
@@ -59,7 +58,7 @@ export default class Connections extends React.Component {
     if (!activeConnection) return [];
     let pos = 0;
     const dbs = activeConnection.databases.map((db, i) => {
-      const dbItem = { kind: 'db', obj: db, pos: pos } as MenuItemDb;
+      const dbItem = { kind: 'database', obj: db, pos: pos } as MenuItemDb;
       pos += 1;
       const tables = db.show
         ? db.tables.map((table, ii) => {
@@ -97,6 +96,10 @@ export default class Connections extends React.Component {
         </header>
         <div id="sidebar">
           <Header as="h3" content="Databases" />
+          {activeConnection &&
+            !activeConnection.isLoaded &&
+            <Loader active inline="centered" indeterminate>Loading Databases</Loader>
+          }
           <div style={{ overflow: 'auto', display: 'flex' }}>
             <div style={{ width: '0', marginLeft: '3px' }}>
               <ForeignColumnLink menuItems={menuItems} />
@@ -110,18 +113,26 @@ export default class Connections extends React.Component {
             >
               {
                 menuItems.map((item, i) => {
-                  const highlighted = item.kind === 'db' ? false : item.obj.mark !== Mark.None;
+                  const highlighted = item.kind === 'database' ? false : item.obj.mark !== Mark.None;
 
                   switch (item.kind) {
                     case 'table':
-                    case 'db':
+                    case 'database':
                       return <List.Item
                         as="a"
                         key={`db-${i}`}
                         className={`${item.kind}-item`}
                         onClick={e => item.obj.toggleShow()}
                       >
-                        <List.Icon name="database" color={highlighted ? 'yellow' : 'grey'} />
+                        {
+                          item.obj.hasPendingRequest
+                            ? <List.Icon loading verticalAlign="middle" name="circle notch" />
+                            : <List.Icon
+                              fitted
+                              name={item.kind}
+                              color={highlighted ? 'yellow' : 'grey'}
+                            />
+                        }
                         <List.Content>
                           {item.obj.name}
                         </List.Content>
@@ -183,7 +194,7 @@ export default class Connections extends React.Component {
           </Menu>
         </main>
         <Footer />
-      </Fragment>
+      </Fragment >
     );
   }
 

@@ -76,7 +76,7 @@ export default class DbConnection {
       }
     ).catch((e) => {
       this.databases.replace([]);
-        this.dbRequestState = REST.Error;
+      this.dbRequestState = REST.Error;
     });
   }
 
