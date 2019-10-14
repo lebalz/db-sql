@@ -167,7 +167,7 @@ export default class Connections extends React.Component {
                       activeConnection === conn &&
                       <Button
                         icon="close"
-                        onClick={() => conn.isLoaded = false}
+                        onClick={() => conn.close()}
                         floated="right"
                         style={{
                           padding: '2px',
