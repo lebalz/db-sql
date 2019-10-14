@@ -35,6 +35,19 @@ class ForeignColumnLink extends React.Component<Props> {
 
     return (
       <svg height={svgHeight} width={svgWidth} >
+        <defs>
+          <marker
+            id="arrow"
+            markerWidth="10"
+            markerHeight="10"
+            refX="0"
+            refY="3"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path d="M0,0 L0,6 L9,3 z" fill="#f00" />
+          </marker>
+        </defs>
         {from.map((item) => {
           return (
             <Line
@@ -58,7 +71,7 @@ interface LineProps {
 function Line(props: LineProps) {
   const { from, to } = props;
   const fromX = from.kind === 'column' ? 36 : 18;
-  const toX = to.kind === 'column' ? 36 : 18;
+  const toX = to.kind === 'column' ? 30 : 15;
   const fromY = 22 * from.pos + 11;
   const toY = 22 * to.pos + 11;
 
@@ -66,6 +79,7 @@ function Line(props: LineProps) {
     <polyline
       points={`${fromX},${fromY} 8,${fromY} 8,${toY} ${toX},${toY}`}
       style={{ fill: 'none', stroke: 'red', strokeWidth: '1' }}
+      marker-end="url(#arrow)"
     />
   );
 }
