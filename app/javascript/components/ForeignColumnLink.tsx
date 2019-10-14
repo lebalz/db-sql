@@ -74,12 +74,15 @@ function Line(props: LineProps) {
   const toX = to.kind === 'column' ? 30 : 15;
   const fromY = 22 * from.pos + 11;
   const toY = 22 * to.pos + 11;
+  const dY = Math.sign(toY - fromY) * 0;
 
   return (
-    <polyline
-      points={`${fromX},${fromY} 8,${fromY} 8,${toY} ${toX},${toY}`}
-      style={{ fill: 'none', stroke: 'red', strokeWidth: '1' }}
-      marker-end="url(#arrow)"
+    <path
+      d={`M${fromX} ${fromY} C ${fromX - 18} ${fromY + dY}, ${toX - 18} ${toY}, ${toX} ${toY}`}
+      stroke="red"
+      strokeWidth="1"
+      fill="transparent"
+      markerEnd="url(#arrow)"
     />
   );
 }
