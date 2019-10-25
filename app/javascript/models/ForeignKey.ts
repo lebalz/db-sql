@@ -3,32 +3,30 @@ import _ from 'lodash';
 import DbTable from './DbTable';
 import { ForeignKeyProps } from '../api/db_connection';
 import Database from './Database';
+import DbColumn from './DbColumn';
 
 export default class ForeignKey {
   readonly database: Database;
   readonly toColumnName: string;
   readonly fromColumnName: string;
+  readonly toTableName: string;
   readonly name: string;
-  @observable toTable: DbTable;
-  @observable fromTable: DbTable;
+  readonly fromColumn: DbColumn;
 
-  constructor(database: Database, props: ForeignKeyProps) {
+  constructor(database: Database, fromColumn: DbColumn, props: ForeignKeyProps) {
     this.database = database;
-    this.fromTable = this.database.table(props.from_table)!;
-    this.toTable = this.database.table(props.to_table)!;
+    this.toTableName = props.to_table;
     this.fromColumnName = props.options.column;
     this.toColumnName = props.options.primary_key;
     this.name = props.options.name;
-
-    this.fromColumn.foreignKey = this;
+    this.fromColumn = fromColumn;
   }
 
-  @computed get fromColumn() {
-    return this.fromTable.columns.find(c => c.name === this.fromColumnName)!;
+  @computed get toTable(): DbTable | undefined {
+    return this.database.table(this.toTableName);
   }
 
   @computed get toColumn() {
-    console.log(this.toTable.name);
-    return this.toTable.columns.find(c => c.name === this.toColumnName);
+    return this.toTable && this.toTable.column(this.toColumnName);
   }
 }

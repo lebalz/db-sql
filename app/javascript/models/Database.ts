@@ -36,7 +36,12 @@ export default class Database {
 
   @computed get foreignKeyReferences(): ForeignKey[] {
     return this.tables.reduce((fks, table) => {
-      return [...fks, ...table.foreignKeys.slice()];
+      return [
+        ...fks,
+        ...table.columns
+          .filter(col => col.isForeignKey)
+          .map(col => col.foreignKey!)
+      ];
     }, Array<ForeignKey>());
   }
 

@@ -22,7 +22,6 @@ export default class DbTable {
   readonly database: Database;
   readonly name: string;
   columns = observable<DbColumn>([]);
-  foreignKeys = observable<ForeignKey>([]);
   indexex = observable<IndexProps>([]);
   @observable queryState: QueryState = QueryState.None;
   requestStates: RequestState = observable({
@@ -108,7 +107,16 @@ export default class DbTable {
     this.requestStates.foreignKeys = REST.Requested;
     return fetchForeignKeys(this.id, this.database.name, this.name).then(
       ({ data }) => {
-        this.foreignKeys.replace(data.map(fk => new ForeignKey(this.database, fk)));
+        data.forEach((fk) => {
+          const col = this.column(fk.options.column);
+          if (!col) {
+            throw new Error(
+              `No from_column found for foreign key '${fk.options.name}':
+              ${fk.from_table}:${fk.options.column} -> ${fk.to_table}:${fk.options.primary_key}`
+            );
+          }
+          col.foreignKey = new ForeignKey(this.database, col, fk);
+        });
         this.requestStates.foreignKeys = REST.Success;
       }
     ).catch((e) => {
