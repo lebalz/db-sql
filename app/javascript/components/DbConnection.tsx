@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Header, Button, Menu, Icon, List, Loader } from 'semantic-ui-react';
+import { Header, Button, Menu, Icon, List, Loader, Progress } from 'semantic-ui-react';
 import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
@@ -12,6 +12,7 @@ import { action, computed } from 'mobx';
 import DbColumn, { Mark } from '../models/DbColumn';
 import ForeignColumnLink from './ForeignColumnLink';
 import Database from '../models/Database';
+import { REST } from '../declarations/REST';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -27,7 +28,7 @@ export type MenuItemDb = DbDatabaseItem | DbTableItem | DbColumnItem;
 
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
-export default class Connections extends React.Component {
+export default class DbConnection extends React.Component {
 
   get injected() {
     return this.props as InjectedProps;
@@ -114,29 +115,75 @@ export default class Connections extends React.Component {
               {
                 menuItems.map((item, i) => {
                   const highlighted = item.kind === 'database' ? false : item.obj.mark !== Mark.None;
-
                   switch (item.kind) {
                     case 'table':
-                    case 'database':
                       return <List.Item
                         as="a"
                         key={`db-${i}`}
-                        className={`${item.kind}-item`}
+                        className="table-item"
                         onClick={e => item.obj.toggleShow()}
                       >
-                        {
-                          item.obj.hasPendingRequest
-                            ? <List.Icon loading verticalAlign="middle" name="circle notch" />
-                            : <List.Icon
-                              fitted
-                              name={item.kind}
-                              color={highlighted ? 'yellow' : 'grey'}
-                            />
-                        }
                         <List.Content>
-                          {item.obj.name}
+                          <div style={{ display: 'flex' }}>
+                            {
+                              item.obj.hasPendingRequest
+                                ? <Icon
+                                  loading
+                                  name="circle notch"
+                                />
+                                : <Icon
+                                  fitted
+                                  name={item.kind}
+                                  color={highlighted ? 'yellow' : 'grey'}
+                                />
+                            }
+                            <span style={{ marginLeft: '10px' }}>
+                              {item.obj.name}
+                            </span>
+                          </div>
                         </List.Content>
                       </List.Item>;
+                    case 'database':
+                      return <Fragment>
+                        <List.Item
+                          as="a"
+                          key={`db-${i}`}
+                          className="database-item"
+                          onClick={e => item.obj.toggleShow()}
+                        >
+                          <List.Content>
+                            <div style={{ display: 'flex' }}>
+                              {
+                                item.obj.requestState === REST.Requested
+                                  ? <Icon
+                                    loading
+                                    name="circle notch"
+                                  />
+                                  : <Icon
+                                    fitted
+                                    name={item.kind}
+                                    color={item.obj.isLoaded ? 'teal' : 'grey'}
+                                  />
+                              }
+                              <span style={{ marginLeft: '10px' }}>
+                                {item.obj.name}
+                              </span>
+                            </div>
+                          </List.Content>
+                        </List.Item>
+                        {item.obj.hasPendingRequest &&
+                          <List.Item>
+                            <Progress
+                              color="teal"
+                              size="tiny"
+                              active
+                              percent={
+                                100 * item.obj.tables.filter(t => t.isLoaded).length / item.obj.tables.length
+                              }
+                            />
+                          </List.Item>
+                        }
+                      </Fragment>;
                     case 'column':
                       return <List.Item
                         as="a"

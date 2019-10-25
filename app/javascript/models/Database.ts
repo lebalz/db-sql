@@ -46,11 +46,11 @@ export default class Database {
   }
 
   @computed get isLoaded() {
-    return this.requestState === REST.Success;
+    return this.requestState === REST.Success && this.tables.every(t => t.isLoaded);
   }
 
   @computed get hasPendingRequest() {
-    return this.requestState === REST.Requested;
+    return this.requestState === REST.Requested || this.tables.some(t => t.hasPendingRequest);
   }
 
   @action load(forceLoad: boolean = false) {

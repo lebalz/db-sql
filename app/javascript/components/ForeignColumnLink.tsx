@@ -1,7 +1,6 @@
 import React from 'react';
-import { computed } from 'mobx';
 import { observer } from 'mobx-react';
-import { MenuItemDb, DbColumnItem, DbTableItem } from './Connections';
+import { MenuItemDb, DbColumnItem, DbTableItem } from './DbConnection';
 import _ from 'lodash';
 import { Mark } from '../models/DbColumn';
 
