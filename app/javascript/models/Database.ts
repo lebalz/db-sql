@@ -12,6 +12,7 @@ export default class Database {
   tables = observable<DbTable>([]);
   @observable requestState: REST = REST.None;
   @observable show: boolean = false;
+  @observable result: { [key: string]: string | number }[] = [];
 
   constructor(dbConnection: DbConnection, props: DatabaseProps) {
     this.dbConnection = dbConnection;
