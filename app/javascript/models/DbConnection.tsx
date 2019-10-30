@@ -31,6 +31,7 @@ export default class DbConnection {
   @observable initialTable?: string;
   @observable password?: string;
   @observable queryState: QueryState = QueryState.None;
+  @observable activeDatabase?: Database = undefined;
   databases = observable<Database>([]);
 
   @observable dbRequestState: REST = REST.None;

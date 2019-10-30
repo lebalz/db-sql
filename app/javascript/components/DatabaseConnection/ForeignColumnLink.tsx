@@ -1,8 +1,8 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { MenuItemDb, DbColumnItem, DbTableItem } from './DbConnection';
 import _ from 'lodash';
-import { Mark } from '../models/DbColumn';
+import { Mark } from '../../models/DbColumn';
+import { MenuItemDb, DbColumnItem, DbTableItem } from './DatabaseStructure';
 
 type Line = [number, number, number, number];
 
@@ -33,7 +33,7 @@ class ForeignColumnLink extends React.Component<Props> {
     }) as (DbColumnItem | DbTableItem)[];
 
     return (
-      <svg height={svgHeight} width={svgWidth} >
+      <svg height={svgHeight} width={svgWidth}>
         <defs>
           <marker
             id="arrow"
@@ -85,6 +85,5 @@ function Line(props: LineProps) {
     />
   );
 }
-
 
 export default ForeignColumnLink;
