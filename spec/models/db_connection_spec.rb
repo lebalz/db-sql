@@ -13,7 +13,7 @@
 #  password_encrypted    :string
 #  initialization_vector :string
 #  initial_db            :string
-#  initial_schema        :string
+#  initial_table        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  username              :string
@@ -39,7 +39,7 @@ RSpec.describe DbConnection, type: :model do
         password_encrypted: encrypted_password[:encrypted_password],
         initialization_vector: encrypted_password[:initialization_vector],
         initial_db: 'test_db',
-        initial_schema: 'test_schema'
+        initial_table: 'test_schema'
       )
       expect(db_connection.valid?).to be_truthy
       expect(db_connection.password_encrypted).not_to eq('safe-db-password')

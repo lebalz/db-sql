@@ -39,7 +39,7 @@ module Resources
         requires(:username, type: String, desc: 'db user')
         requires(:password, type: String, desc: 'db password')
         optional(:initial_db, type: String, desc: 'initial database')
-        optional(:initial_schema, type: String, desc: 'initial schema')
+        optional(:initial_table, type: String, desc: 'initial table')
       end
       post do
         encrypted_password = DbConnection.encrypt(
@@ -56,7 +56,7 @@ module Resources
           password_encrypted: encrypted_password[:encrypted_password],
           initialization_vector: encrypted_password[:initialization_vector],
           initial_db: params[:initial_db],
-          initial_schema: params[:initial_schema]
+          initial_table: params[:initial_table]
         )
         present db_connection, with: Entities::DbConnection
       end
@@ -93,7 +93,7 @@ module Resources
             optional(:username, type: String, desc: 'db user')
             optional(:password, type: String, desc: 'db password')
             optional(:initial_db, type: String, desc: 'initial database')
-            optional(:initial_schema, type: String, desc: 'initial schema')
+            optional(:initial_table, type: String, desc: 'initial table')
           end
         end
         put do
@@ -116,7 +116,7 @@ module Resources
               :port,
               :username,
               :initial_db,
-              :initial_schema
+              :initial_table
             )
           )
           present db_connection, with: Entities::DbConnection
@@ -128,6 +128,13 @@ module Resources
           status :no_content
         end
 
+        desc 'Get the databases of a db connection'
+        get :databases do
+          present(
+            db_connection.database_names(key: crypto_key).map { |n| { name: n } },
+            with: Entities::Database
+          )
+        end
         desc 'Get the database names of a db connection'
         get :database_names do
           db_connection.database_names(key: crypto_key)
@@ -149,6 +156,17 @@ module Resources
           end
 
           desc "Get the database's tables"
+          get :tables do
+            present(
+              db_connection.table_names(
+                key: crypto_key,
+                database_name: params[:database_name]
+              ).map { |n| { name: n } },
+              with: Entities::Table
+            )
+          end
+
+          desc "Get the names of the database's tables"
           get :table_names do
             db_connection.table_names(
               key: crypto_key,

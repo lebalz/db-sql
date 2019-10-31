@@ -12,7 +12,8 @@ module Entities
     expose :password_encrypted
     expose :initialization_vector
     expose :initial_db
-    expose :initial_schema
+    expose :initial_table
     expose :created_at
+    expose :updated_at
   end
 end

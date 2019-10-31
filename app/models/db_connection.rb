@@ -14,7 +14,7 @@ require Rails.root.join('lib', 'queries', 'query')
 #  password_encrypted    :string
 #  initialization_vector :string
 #  initial_db            :string
-#  initial_schema        :string
+#  initial_table        :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  username              :string
@@ -36,8 +36,8 @@ class DbConnection < ApplicationRecord
 
   DEFAULT_DATABASE_NAME = {
     'psql' => 'postgres',
-    'mysql' => 'mysql',
-    'mariadb' => 'mysql'
+    'mysql' => 'information_schema',
+    'mariadb' => 'information_schema'
   }.freeze
 
   belongs_to :user
@@ -121,6 +121,30 @@ class DbConnection < ApplicationRecord
   end
 
   # @param key [String] base64 encoded crypto key from the user
+  # @return [Hash]
+  #   e.g.
+  #     {
+  #       success: true,
+  #     }
+  #   or
+  #     {
+  #       success: false,
+  #       message: "Could not connect to server: Connection refused..."
+  #     }
+  def test_connection(key:)
+    connect(key: key, database_name: DEFAULT_DATABASE_NAME[db_type]) do |conn|
+      return {
+        success: !!conn
+      }
+    end
+  rescue StandardError => e
+    {
+      success: false,
+      message: e.message
+    }
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
   # @return [ActiveRecord::Result]
   def exec_query(key:, database_name: nil)
     connect(key: key, database_name: database_name) do |connection|
@@ -131,7 +155,7 @@ class DbConnection < ApplicationRecord
   # @param key [String] base64 encoded crypto key from the user
   # @return [Array<String>] all database_name names for a connection
   def database_names(key:)
-    exec_query(key: key) do
+    exec_query(key: key, database_name: DEFAULT_DATABASE_NAME[db_type]) do
       query_for(db_type: db_type, name: :databases)
     end&.rows&.flatten&.sort || []
   end

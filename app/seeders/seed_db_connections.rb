@@ -5,7 +5,7 @@ class SeedDbConnections
     user = User.find_by(email: 'test@user.ch')
     encrypted_password = DbConnection.encrypt(
       key: user.crypto_key('asdfasdf'),
-      db_password: ActiveRecord::Base.connection_config[:database]
+      db_password: ENV.fetch("DB_SQL_DATABASE_PASSWORD")
     )
     DbConnection.create!(
       name: 'dev',
@@ -39,7 +39,7 @@ class SeedDbConnections
         username: connection['db_username'],
         password_encrypted: encrypted_password[:encrypted_password],
         initial_db: connection['db_initial_db'],
-        initial_schema: connection['db_initial_schema'],
+        initial_table: connection['db_initial_table'],
         user: user
       )
     end

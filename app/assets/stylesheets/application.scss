@@ -17,6 +17,14 @@ body {
     overflow-y: hidden;
   }
 
+  .grid {
+    .row {
+      .ribbon.label {
+        left: -1.2em;
+      }
+    }
+  }
+
   .fullscreen {
     grid-column-start: sidebar;
     grid-column-end: main;
@@ -44,7 +52,12 @@ body {
     overflow-y: hidden;
     display: flex;
     flex-direction: column;
+  }
 
+  #host-port-group {
+    .required.field:first-child {
+      width: 100%;
+    }
   }
 
   main {
