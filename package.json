@@ -8,7 +8,7 @@
     "@types/react-router": "^5.0.1",
     "axios": "^0.18.0",
     "immutable": "^4.0.0-rc.12",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "mobx": "^5.9.4",
     "mobx-react": "^5.4.3",
     "mobx-react-router": "^4.0.7",
