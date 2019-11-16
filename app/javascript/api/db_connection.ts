@@ -148,3 +148,16 @@ export function indexes(
     `/db_connections/${id}/${databaseName}/${tableName}/indexes`
   );
 }
+
+export function query(
+  id: string,
+  databaseName: string,
+  queries: string[]
+) {
+  return api.post(
+    `/db_connections/${id}/${databaseName}/multi_query`,
+    {
+      queries: queries
+    }
+  );
+}

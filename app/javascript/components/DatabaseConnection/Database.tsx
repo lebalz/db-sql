@@ -4,9 +4,18 @@ import DbConnectionStore from '../../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import { query as fetchQuery } from '../../api/db_connection';
+import { identify } from 'sql-query-identifier';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
+}
+
+function identifyCommands(queryText: string) {
+  try {
+    return identify(queryText);
+  } catch (err) {
+    return [];
+  }
 }
 
 @inject('dbConnectionStore')
@@ -42,16 +51,18 @@ export default class Database extends React.Component {
                   {conn.name}
                   {
                     activeConnection === conn &&
-                    <Button
-                      icon="close"
-                      onClick={() => conn.close()}
-                      floated="right"
-                      style={{
-                        padding: '2px',
-                        marginLeft: '4px',
-                        marginRight: '-4px'
-                      }}
-                    />
+                    (
+                      <Button
+                        icon="close"
+                        onClick={() => conn.close()}
+                        floated="right"
+                        style={{
+                          padding: '2px',
+                          marginLeft: '4px',
+                          marginRight: '-4px'
+                        }}
+                      />
+                    )
                   }
                 </Menu.Item>
               );
@@ -61,16 +72,21 @@ export default class Database extends React.Component {
         <Segment>
           <Menu attached="top" tabular size="mini">
             {loadedDbs.map((db, i) => {
-              return <Menu.Item
-                name={db.name}
-                active={!!activeConnection && activeConnection.activeDatabase === db}
-                key={i}
-                onClick={() => {
-                  if (activeConnection) {
-                    activeConnection.activeDatabase = db;
+              return (
+                <Menu.Item
+                  name={db.name}
+                  active={
+                    !!activeConnection &&
+                    activeConnection.activeDatabase === db
                   }
-                }}
-              />;
+                  key={`db-${i}`}
+                  onClick={() => {
+                    if (activeConnection) {
+                      activeConnection.activeDatabase = db;
+                    }
+                  }}
+                />
+              );
             })}
           </Menu>
           <Segment attached="bottom">
@@ -85,13 +101,14 @@ export default class Database extends React.Component {
                     return;
                   }
                   const conn = activeConnection.activeDatabase;
-                  const query = (document.getElementById('query') as any).value;
+                  const rawInput = (document.getElementById('query') as any).value;
+                  const queries = identifyCommands(rawInput).map(q => q.text);
                   fetchQuery(
                     activeConnection.id,
                     conn.name,
-                    query
+                    queries
                   ).then(({ data }) => {
-                    conn.result = data;
+                    conn.results = data;
                     console.log(data);
                   });
                 }
@@ -100,39 +117,44 @@ export default class Database extends React.Component {
               Query
             </Button>
             {
-              activeConnection && activeConnection.activeDatabase && activeConnection.activeDatabase.result &&
-              <Table celled>
-                <Table.Header>
-                  <Table.Row>
-                    {Object.keys(activeConnection.activeDatabase.result[0] || []).map((val, i) => {
-                      return (
-                        <Table.HeaderCell key={i}>
-                          {val}
-                        </Table.HeaderCell>
-                      );
-                    })}
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {
-                    activeConnection.activeDatabase.result.map((val, i) => {
-                      return (
-                        <Table.Row key={i}>
-                          {
-                            Object.values(val).map((ds, j) => {
-                              return (
-                                <Table.Cell key={j}>
-                                  {ds}
-                                </Table.Cell>
-                              );
-                            })
-                          }
-                        </Table.Row>
-                      );
-                    })
-                  }
-                </Table.Body>
-              </Table>
+              activeConnection && activeConnection.activeDatabase &&
+              activeConnection.activeDatabase.results &&
+              activeConnection.activeDatabase.results.map((result, idx) => {
+                return (
+                  <Table celled key={`result-${idx}`}>
+                    <Table.Header>
+                      <Table.Row>
+                        {Object.keys(result[0] || []).map((val, i) => {
+                          return (
+                            <Table.HeaderCell key={i}>
+                              {val}
+                            </Table.HeaderCell>
+                          );
+                        })}
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {
+                        result.map((val, i) => {
+                          return (
+                            <Table.Row key={i}>
+                              {
+                                Object.values(val).map((ds, j) => {
+                                  return (
+                                    <Table.Cell key={j}>
+                                      {ds}
+                                    </Table.Cell>
+                                  );
+                                })
+                              }
+                            </Table.Row>
+                          );
+                        })
+                      }
+                    </Table.Body>
+                  </Table>
+                );
+              })
             }
           </Segment>
         </Segment>

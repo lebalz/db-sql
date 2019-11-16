@@ -7911,6 +7911,11 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
 
+sql-query-identifier@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/sql-query-identifier/-/sql-query-identifier-1.1.0.tgz#b5ff7904eb2d179ad71c92c176a827b86749add9"
+  integrity sha1-tf95BOstF5rXHJLBdqgnuGdJrdk=
+
 sshpk@^1.7.0:
   version "1.16.1"
   resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.16.1.tgz#fb661c0bef29b39db40769ee39fa70093d6f6877"

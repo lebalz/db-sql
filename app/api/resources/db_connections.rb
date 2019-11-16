@@ -155,6 +155,23 @@ module Resources
             end.to_a
           end
 
+          desc 'Query the database with mutliple statements'
+          params do
+            requires(:queries, type: Array[String])
+          end
+          post :multi_query do
+            db_name = params[:database_name]
+            results = []
+            db_connection.reuse_connection do |conn|
+              params[:queries].each do |query|
+                results << conn.exec_query(key: crypto_key, database_name: db_name) do
+                  query
+                end.to_a
+              end
+            end
+            results
+          end
+
           desc "Get the database's tables"
           get :tables do
             present(

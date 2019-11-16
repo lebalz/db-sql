@@ -101,23 +101,45 @@ class DbConnection < ApplicationRecord
   # @param database_name [String] name of the database_name
   def connect(key:, database_name:)
     database_name ||= default_database_name
-    connection = ActiveRecord::ConnectionAdapters::ConnectionHandler.new
-    conn_key = connection_key(database_name: database_name)
+    return yield @active_connection if @active_connection&.active?
+
+    @connection ||= ActiveRecord::ConnectionAdapters::ConnectionHandler.new
+    @conn_key ||= connection_key(database_name: database_name)
 
     # don't let a user connect to the servers localhost
     db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
-    connection.establish_connection(
-      adapter: DEFAULT_AR_DB_ADAPTER[db_type],
-      host: db_host,
-      port: port,
-      username: username,
-      password: password(key),
-      database: database_name,
-      name: conn_key
-    )
-    yield(connection.retrieve_connection(conn_key))
+    unless @connection.connected?(@conn_key)
+      @connection.establish_connection(
+        adapter: DEFAULT_AR_DB_ADAPTER[db_type],
+        host: db_host,
+        port: port,
+        username: username,
+        password: password(key),
+        database: database_name,
+        name: @conn_key
+      )
+    end
+    @active_connection = @connection.retrieve_connection(@conn_key)
+    yield(@active_connection)
   ensure
-    connection.remove_connection(conn_key)
+    close_connection unless @keep_connection
+  end
+
+  # use when performing subsequent db-calls to the same database.
+  # @yield [DbConnection] self
+  def reuse_connection
+    @keep_connection = true
+    yield self
+  ensure
+    @keep_connection = false
+    close_connection
+  end
+
+  def close_connection
+    # ActiveRecord::ConnectionAdapters::ConnectionHandler#remove_connection
+    # will close active connection and the defined connection
+    @connection&.remove_connection(@conn_key)
+    @connection = @conn_key = @active_connection = nil
   end
 
   # @param key [String] base64 encoded crypto key from the user
@@ -305,6 +327,6 @@ class DbConnection < ApplicationRecord
   # @return [String] unique key for a db connection
   def connection_key(database_name:)
     database_name ||= default_database_name
-    "#{id}-#{database_name}"
+    "#{id}-#{database_name}-#{DateTime.now.strftime('%Q')}"
   end
 end
