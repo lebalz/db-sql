@@ -20,9 +20,9 @@ interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
 }
 
-export type DbColumnItem = { kind: 'column', obj: DbColumn, pos: number };
-export type DbTableItem = { kind: 'table', obj: DbTable, pos: number };
-export type DbDatabaseItem = { kind: 'database', obj: Database, pos: number };
+export type DbColumnItem = { kind: 'column'; obj: DbColumn; pos: number };
+export type DbTableItem = { kind: 'table'; obj: DbTable; pos: number };
+export type DbDatabaseItem = { kind: 'database'; obj: Database; pos: number };
 
 export type MenuItemDb = DbDatabaseItem | DbTableItem | DbColumnItem;
 
@@ -46,14 +46,23 @@ export default class DatabaseStructure extends React.Component {
         return dbs;
       }
       const tableItems = db.tables.reduce((tables, table) => {
-        const tableItem = { kind: 'table', obj: table, pos: pos } as DbTableItem;
+        const tableItem = {
+          kind: 'table',
+          obj: table,
+          pos: pos,
+          id: table.id
+        } as DbTableItem;
         pos += 1;
         tables.push(tableItem);
         if (!table.show) {
           return tables;
         }
         const cols = table.columns.map((col) => {
-          const colItem = { kind: 'column', obj: col, pos: pos } as DbColumnItem;
+          const colItem = {
+            kind: 'column',
+            obj: col,
+            pos: pos
+          } as DbColumnItem;
           pos += 1;
           return colItem;
         });
@@ -73,15 +82,11 @@ export default class DatabaseStructure extends React.Component {
     return (
       <Fragment>
         <Header as="h3" content="Databases" />
-        {!isLoaded &&
-          <Loader
-            active
-            inline="centered"
-            indeterminate
-          >
+        {!isLoaded && (
+          <Loader active inline="centered" indeterminate>
             Loading Databases
           </Loader>
-        }
+        )}
         <div style={{ overflow: 'auto', display: 'flex' }}>
           <div style={{ width: '0', marginLeft: '3px' }}>
             <ForeignColumnLink menuItems={menuItems} />
@@ -93,18 +98,16 @@ export default class DatabaseStructure extends React.Component {
               flex: '1'
             }}
           >
-            {
-              menuItems.map((item) => {
-                switch (item.kind) {
-                  case 'database':
-                    return <DatabaseItem key={item.pos} database={item.obj} />;
-                  case 'table':
-                    return <TableItem key={item.pos} table={item.obj} />;
-                  case 'column':
-                    return <ColumnItem key={item.pos} column={item.obj} />;
-                }
-              })
-            }
+            {menuItems.map((item) => {
+              switch (item.kind) {
+                case 'database':
+                  return <DatabaseItem key={item.pos} database={item.obj} />;
+                case 'table':
+                  return <TableItem key={item.pos} table={item.obj} />;
+                case 'column':
+                  return <ColumnItem key={item.pos} column={item.obj} />;
+              }
+            })}
           </List>
         </div>
       </Fragment>

@@ -8,18 +8,29 @@ import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Database from './DatabaseConnection/Database';
 import DatabaseStructure from './DatabaseConnection/DatabaseStructure';
+import { RouteComponentProps } from 'react-router';
 
-interface InjectedProps {
+interface MatchParams {
+  id: string;
+}
+
+interface DbConnectionProps extends RouteComponentProps<MatchParams> { }
+
+interface InjectedProps extends DbConnectionProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   dbConnectionStore: DbConnectionStore;
 }
+
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
-export default class DbConnection extends React.Component {
-
+export default class DbConnection extends React.Component<DbConnectionProps> {
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  get id() {
+    return this.props.match.params.id;
   }
 
   render() {

@@ -75,7 +75,13 @@ export default class DbConnection {
         this.databases.replace(data.map(db => new Database(this, db)));
         this.dbRequestState = REST.Success;
       }
-    ).catch((e) => {
+    ).then(() => {
+      const initDb = this.databases.find(db => db.name === this.initialDb);
+      this.activeDatabase = initDb || this.databases[0];
+      if (this.activeDatabase) {
+        this.activeDatabase.show = true;
+      }
+    }).catch((e) => {
       this.databases.replace([]);
       this.dbRequestState = REST.Error;
     });

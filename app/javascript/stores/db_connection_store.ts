@@ -35,7 +35,7 @@ class DbConnectionStore {
   }
 
   @action setActiveConnection(dbConnection: DbConnection) {
-    this.root.routing.push('/connections');
+    this.root.routing.push(`/connections/${dbConnection.id}`);
     Promise.all([
       dbConnection.loadDatabases()
     ]).then(() => {

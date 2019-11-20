@@ -1,7 +1,7 @@
 import { observable, computed, action, reaction } from 'mobx';
 import { Database as DatabaseProps, tables } from '../api/db_connection';
 import _ from 'lodash';
-import DbConnection, { QueryState } from './DbConnection';
+import DbConnection from './DbConnection';
 import DbTable from './DbTable';
 import ForeignKey from './ForeignKey';
 import { REST } from '../declarations/REST';
