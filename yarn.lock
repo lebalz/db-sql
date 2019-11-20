@@ -1307,6 +1307,21 @@ ansi-styles@^3.2.0, ansi-styles@^3.2.1:
   dependencies:
     color-convert "^1.9.0"
 
+antlr4@^4.7.2:
+  version "4.7.2"
+  resolved "https://registry.yarnpkg.com/antlr4/-/antlr4-4.7.2.tgz#9d0b5987bb63660de658055ee9149141b4d9b462"
+  integrity sha512-vZA1xYufXLe3LX+ja9rIVxjRmILb1x3k7KYZHltRbfJtXjJ1DlFIqt+CbPYmghx0EuzY9DajiDw+MdyEt1qAsQ==
+
+antlr4ts-cli@^0.5.0-alpha.3:
+  version "0.5.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/antlr4ts-cli/-/antlr4ts-cli-0.5.0-alpha.3.tgz#1f581b2a3c840d3921a2f3b1e739e48c7e7c18cd"
+  integrity sha512-i6oyxfaXU6qnw4HgyeSIsOLlsvT7zU3vmenoJKFNVFP1QNodtJMZYpnyxc8TmOFpJs7fEoWanLavSSDEmcCZBQ==
+
+antlr4ts@^0.5.0-alpha.3:
+  version "0.5.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/antlr4ts/-/antlr4ts-0.5.0-alpha.3.tgz#fa6d39d88d6b96341a8afef45867af9abcb38766"
+  integrity sha512-La89tKkGcHFIVuruv4Bm1esc3zLmES2NOTEwwNS1pudz+zx/0FNqQeUu9p48i9/QHKPVqjN87LB+q3buTg7oDQ==
+
 anymatch@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/anymatch/-/anymatch-2.0.0.tgz#bcb24b4f37934d9aa7ac17b4adaf89e7c76ef2eb"
@@ -7910,11 +7925,6 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
-
-sql-query-identifier@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/sql-query-identifier/-/sql-query-identifier-1.1.0.tgz#b5ff7904eb2d179ad71c92c176a827b86749add9"
-  integrity sha1-tf95BOstF5rXHJLBdqgnuGdJrdk=
 
 sshpk@^1.7.0:
   version "1.16.1"

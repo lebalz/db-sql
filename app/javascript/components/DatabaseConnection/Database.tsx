@@ -1,21 +1,29 @@
+import 'regenerator-runtime/runtime';
 import React, { Fragment } from 'react';
 import { Button, Menu, Icon, Segment, Table } from 'semantic-ui-react';
 import DbConnectionStore from '../../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import { query as fetchQuery } from '../../api/db_connection';
-import { identify } from 'sql-query-identifier';
+import { QuerySeparationGrammarLexer } from '../../antlr/QuerySeparationGrammarLexer';
+import { QuerySeparationGrammarParser } from '../../antlr/QuerySeparationGrammarParser';
+import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
 }
 
 function identifyCommands(queryText: string) {
-  try {
-    return identify(queryText);
-  } catch (err) {
+  const inputStream = new ANTLRInputStream(queryText);
+  const lexer = new QuerySeparationGrammarLexer(inputStream);
+  const tokenStream = new CommonTokenStream(lexer);
+  const parser = new QuerySeparationGrammarParser(tokenStream);
+  const { children } = parser.queriesText();
+  if (!children) {
     return [];
   }
+
+  return children.map(child => child.text).slice(0, -1);
 }
 
 @inject('dbConnectionStore')
@@ -102,7 +110,7 @@ export default class Database extends React.Component {
                   }
                   const conn = activeConnection.activeDatabase;
                   const rawInput = (document.getElementById('query') as any).value;
-                  const queries = identifyCommands(rawInput).map(q => q.text);
+                  const queries = identifyCommands(rawInput);
                   fetchQuery(
                     activeConnection.id,
                     conn.name,
