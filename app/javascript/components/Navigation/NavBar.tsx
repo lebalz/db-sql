@@ -5,13 +5,15 @@ import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import SessionStore, { RequestState } from '../../stores/session_store';
+import DbConnectionStore from '../../stores/db_connection_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
+  dbConnectionStore: DbConnectionStore;
 }
 
-@inject('sessionStore', 'routerStore')
+@inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
 export default class NavBar extends React.Component {
 
@@ -45,6 +47,8 @@ export default class NavBar extends React.Component {
 
   render() {
     const router = this.injected.routerStore;
+    const connection = this.injected.dbConnectionStore.activeConnection ||
+                       this.injected.dbConnectionStore.dbConnections[0];
     const { resendActivationLinkState } = this.injected.sessionStore;
     return (
       <Fragment>
@@ -77,15 +81,18 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          <Menu.Item
-            style={{ marginLeft: '2em' }}
-            name="Connections"
-            active={router.location.pathname.startsWith('/connections')}
-            onClick={() => router.push('/connections')}
-          >
-            <Icon name="plug" />
-            Connections
-          </Menu.Item>
+          {
+            connection && (
+            <Menu.Item
+              style={{ marginLeft: '2em' }}
+              name="Connections"
+              active={router.location.pathname.startsWith('/connections')}
+              onClick={() => router.push(`/connections/${connection.id}`)}
+            >
+              <Icon name="plug" />
+              Connections
+            </Menu.Item>
+          )}
           {
             !this.injected.sessionStore.currentUser.activated &&
             <Menu.Item style={{ paddingBottom: 0, marginLeft: '4em' }}>
