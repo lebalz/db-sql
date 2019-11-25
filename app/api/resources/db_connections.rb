@@ -164,6 +164,7 @@ module Resources
             results = []
             db_connection.reuse_connection do |conn|
               params[:queries].each do |query|
+                next if query.blank?
                 results << conn.exec_query(key: crypto_key, database_name: db_name) do
                   query
                 end.to_a
