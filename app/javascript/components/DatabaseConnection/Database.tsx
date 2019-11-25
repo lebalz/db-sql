@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import React, { Fragment } from 'react';
-import { Button, Menu, Icon, Segment, Table } from 'semantic-ui-react';
+import { Button, Menu, Icon, Segment, Table, Message, Label, Popup } from 'semantic-ui-react';
 import DbConnectionStore from '../../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
@@ -8,6 +8,7 @@ import { query as fetchQuery } from '../../api/db_connection';
 import { QuerySeparationGrammarLexer } from '../../antlr/QuerySeparationGrammarLexer';
 import { QuerySeparationGrammarParser } from '../../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import { RequestState } from '../../stores/session_store';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -128,11 +129,26 @@ export default class Database extends React.Component {
               activeConnection && activeConnection.activeDatabase &&
               activeConnection.activeDatabase.results &&
               activeConnection.activeDatabase.results.map((result, idx) => {
+                if (result.error) {
+                  return (
+                    <Message negative>
+                      <Message.Header>{`Error in the ${idx + 1}. query`}</Message.Header>
+                      <p>{result.error}</p>
+                    </Message>
+                  );
+                }
+                if (result.result!.length === 0) {
+                  return (
+                    <Message positive>
+                      <Message.Header>{`Successful ${idx + 1}. query`}</Message.Header>
+                    </Message>
+                  );
+                }
                 return (
                   <Table celled key={`result-${idx}`}>
                     <Table.Header>
                       <Table.Row>
-                        {Object.keys(result[0] || []).map((val, i) => {
+                          {Object.keys(result.result![0] || []).map((val, i) => {
                           return (
                             <Table.HeaderCell key={i}>
                               {val}
@@ -143,7 +159,7 @@ export default class Database extends React.Component {
                     </Table.Header>
                     <Table.Body>
                       {
-                        result.map((val, i) => {
+                          result.result!.map((val, i) => {
                           return (
                             <Table.Row key={i}>
                               {

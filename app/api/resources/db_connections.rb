@@ -165,12 +165,23 @@ module Resources
             db_connection.reuse_connection do |conn|
               params[:queries].each do |query|
                 next if query.blank?
-                results << conn.exec_query(key: crypto_key, database_name: db_name) do
-                  query
-                end.to_a
+                t0 = Time.now
+                begin
+                  results << {
+                    result: conn.exec_query(key: crypto_key, database_name: db_name) do
+                      query
+                    end.to_a,
+                    time: Time.now - t0
+                  }
+                rescue StandardError => e
+                  results << {
+                    error: e.message,
+                    time: Time.now - t0
+                  }
+                end
               end
             end
-            results
+            present(results, with: Entities::QueryResult)
           end
 
           desc "Get the database's tables"

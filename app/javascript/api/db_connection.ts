@@ -79,6 +79,20 @@ export interface IndexProps {
   comment?: string;
 }
 
+type ResultTable = { [key: string]: string | number }[];
+interface Result {
+  result: ResultTable | null;
+  error: string | null;
+  time: number;
+}
+interface SuccessQuery extends Result {
+  result: ResultTable;
+}
+interface ErrorQuery extends Result {
+  error: string;
+}
+export type QueryResult = SuccessQuery | ErrorQuery;
+
 export function newDbConnection(dbConnection: CreateProps) {
   return api.post(
     '/db_connections',
@@ -153,7 +167,7 @@ export function query(
   id: string,
   databaseName: string,
   queries: string[]
-) {
+): AxiosPromise<QueryResult[]> {
   return api.post(
     `/db_connections/${id}/${databaseName}/multi_query`,
     {
