@@ -14,6 +14,7 @@ class DbConnectionStore {
 
   @observable tempDbConnection: null | TempDbConnection = null;
   @observable activeConnection: null | DbConnection = null;
+  @observable queryState: RequestState = RequestState.None;
 
   constructor(root: RootStore) {
     this.root = root;

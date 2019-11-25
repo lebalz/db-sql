@@ -1,5 +1,5 @@
 import { observable, computed, action, reaction } from 'mobx';
-import { Database as DatabaseProps, tables } from '../api/db_connection';
+import { Database as DatabaseProps, tables, QueryResult } from '../api/db_connection';
 import _ from 'lodash';
 import DbConnection from './DbConnection';
 import DbTable from './DbTable';
@@ -12,7 +12,7 @@ export default class Database {
   tables = observable<DbTable>([]);
   @observable requestState: REST = REST.None;
   @observable show: boolean = false;
-  @observable results: { [key: string]: string | number }[][] = [];
+  @observable results: QueryResult[] = [];
 
   constructor(dbConnection: DbConnection, props: DatabaseProps) {
     this.dbConnection = dbConnection;

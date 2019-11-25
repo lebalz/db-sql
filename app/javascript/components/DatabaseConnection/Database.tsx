@@ -37,7 +37,7 @@ export default class Database extends React.Component {
 
   render() {
     const { dbConnectionStore } = this.injected;
-    const { loadedConnections, activeConnection } = dbConnectionStore;
+    const { loadedConnections, activeConnection, queryState } = dbConnectionStore;
     const loadedDbs = activeConnection ? activeConnection.databases.filter(db => db.isLoaded) : [];
     return (
       <Fragment>
@@ -104,21 +104,31 @@ export default class Database extends React.Component {
               style={{ width: '100%', height: '200px' }}
             />
             <Button
+              positive
+              disabled={queryState === RequestState.Waiting}
+              loading={queryState === RequestState.Waiting}
               onClick={
                 () => {
                   if (!activeConnection || !activeConnection.activeDatabase) {
                     return;
                   }
+                  this.injected.dbConnectionStore.queryState = RequestState.Waiting;
                   const conn = activeConnection.activeDatabase;
                   const rawInput = (document.getElementById('query') as any).value;
+                  const t0 = Date.now();
                   const queries = identifyCommands(rawInput);
+                  console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
                   fetchQuery(
                     activeConnection.id,
                     conn.name,
                     queries
                   ).then(({ data }) => {
+                    console.log('Got result: ', (Date.now() - t0) / 1000.0);
                     conn.results = data;
                     console.log(data);
+                    this.injected.dbConnectionStore.queryState = RequestState.Success;
+                  }).catch((e) => {
+                    this.injected.dbConnectionStore.queryState = RequestState.Error;
                   });
                 }
               }
@@ -129,9 +139,24 @@ export default class Database extends React.Component {
               activeConnection && activeConnection.activeDatabase &&
               activeConnection.activeDatabase.results &&
               activeConnection.activeDatabase.results.map((result, idx) => {
+                const TimeLabel = (
+                  <Popup
+                    content={`${result.time}s`}
+                    trigger={(
+                      <Label
+                        color="blue"
+                        floating
+                        style={{ left: 'unset', right: '-1em' }}
+                      >
+                        {result.time.toFixed(2)}s
+                      </Label>
+                    )}
+                  />
+                );
                 if (result.error) {
                   return (
                     <Message negative>
+                      {TimeLabel}
                       <Message.Header>{`Error in the ${idx + 1}. query`}</Message.Header>
                       <p>{result.error}</p>
                     </Message>
@@ -140,43 +165,48 @@ export default class Database extends React.Component {
                 if (result.result!.length === 0) {
                   return (
                     <Message positive>
+                      {TimeLabel}
                       <Message.Header>{`Successful ${idx + 1}. query`}</Message.Header>
                     </Message>
                   );
                 }
                 return (
-                  <Table celled key={`result-${idx}`}>
-                    <Table.Header>
-                      <Table.Row>
+                  <div key={`result-${idx}`} style={{ position: 'relative' }}>
+                    {TimeLabel}
+                    <Table celled>
+                      <Table.Header>
+                        <Table.Row>
                           {Object.keys(result.result![0] || []).map((val, i) => {
-                          return (
-                            <Table.HeaderCell key={i}>
-                              {val}
-                            </Table.HeaderCell>
-                          );
-                        })}
-                      </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                      {
+                            return (
+                              <Table.HeaderCell key={i}>
+                                {val}
+                              </Table.HeaderCell>
+                            );
+                          })}
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {
                           result.result!.map((val, i) => {
-                          return (
-                            <Table.Row key={i}>
-                              {
-                                Object.values(val).map((ds, j) => {
-                                  return (
-                                    <Table.Cell key={j}>
-                                      {ds}
-                                    </Table.Cell>
-                                  );
-                                })
-                              }
-                            </Table.Row>
-                          );
-                        })
-                      }
-                    </Table.Body>
-                  </Table>
+                            return (
+                              <Table.Row key={i}>
+                                {
+                                  Object.values(val).map((ds, j) => {
+                                    return (
+                                      <Table.Cell key={j}>
+                                        {ds}
+                                      </Table.Cell>
+                                    );
+                                  })
+                                }
+                              </Table.Row>
+                            );
+                          })
+                        }
+                      </Table.Body>
+                    </Table>
+                  </div>
+
                 );
               })
             }
