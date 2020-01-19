@@ -16,10 +16,16 @@ interface InjectedProps {
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
+  console.time('lexing');
   const lexer = new QuerySeparationGrammarLexer(inputStream);
+  console.timeLog('lexing');
   const tokenStream = new CommonTokenStream(lexer);
+  console.time('parse');
   const parser = new QuerySeparationGrammarParser(tokenStream);
+  console.timeLog('parse');
+  console.time('queryText');
   const { children } = parser.queriesText();
+  console.timeLog('queryText');
   if (!children) {
     return [];
   }
