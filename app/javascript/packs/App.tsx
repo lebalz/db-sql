@@ -8,6 +8,7 @@ import Dashboard from '../components/Dashboard';
 import Profile from '../components/Profile';
 import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
+import DbConnection from '../components/DbConnection';
 
 const AppContent = observer(() => (
   <Provider
@@ -22,6 +23,7 @@ const AppContent = observer(() => (
         <Switch>
           <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/connections" component={DbConnection} />
           <Route path="/profile/:part" component={Profile} />
           <Route path="/users/:id/reset_password" component={ResetPassword} />
           <Route path="/users/:id/activate" component={ActivateAccount} />

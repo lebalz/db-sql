@@ -6,6 +6,7 @@ import DbConnection from './DbConnection';
 import Database from './Database';
 import DbTable from './DbTable';
 import { RequestState } from '../stores/session_store';
+import { REST } from '../declarations/REST';
 
 export enum TempDbConnectionRole {
   Update, Create
@@ -94,15 +95,15 @@ export class TempDbConnection extends DbConnection {
   }
 
   @action loadDatabases() {
-    this.isLoaded = undefined;
+    this.dbRequestState = REST.Requested;
     databases(this.tempDbPorps).then(
       ({ data }) => {
         this.databases.replace(data.map(db => new Database(this, db)));
-        this.isLoaded = true;
+        this.dbRequestState = REST.Success;
       }
     ).catch((e) => {
       this.databases.replace([]);
-      this.isLoaded = false;
+      this.dbRequestState = REST.Error;
     });
   }
 

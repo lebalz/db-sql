@@ -1,9 +1,10 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
-import DbConnection, { DbType } from '../models/DbConnection';
+import DbConnection, { DbType } from '../../models/DbConnection';
 import { Card, Label, Button } from 'semantic-ui-react';
-import DbConnectionStore from '../stores/db_connection_store';
-import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
+import DbConnectionStore from '../../stores/db_connection_store';
+import { TempDbConnection, TempDbConnectionRole } from '../../models/TempDbConnection';
+import { action } from 'mobx';
 
 interface Props {
   dbConnection: DbConnection;
@@ -24,6 +25,10 @@ export default class DbConnectionOverview extends React.Component<Props> {
 
   get dbConnection() {
     return this.props.dbConnection;
+  }
+
+  @action connect() {
+    this.injected.dbConnectionStore.setActiveConnection(this.dbConnection);
   }
 
   render() {
@@ -54,9 +59,10 @@ export default class DbConnectionOverview extends React.Component<Props> {
             basic
             color="green"
             floated="right"
-          >
-            Connect
-          </Button>
+            content="Connect"
+            icon="plug"
+            onClick={() => this.connect()}
+          />
         </Card.Content>
       </Card>
     )

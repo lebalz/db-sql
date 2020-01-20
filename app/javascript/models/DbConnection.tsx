@@ -2,6 +2,7 @@ import { observable, computed, action } from 'mobx';
 import { DbConnection as DbConnectionProps, databases } from '../api/db_connection';
 import _ from 'lodash';
 import Database from './Database';
+import { REST } from '../declarations/REST';
 
 export enum DbType {
   Psql = 'psql',
@@ -32,7 +33,7 @@ export default class DbConnection {
   @observable queryState: QueryState = QueryState.None;
   databases = observable<Database>([]);
 
-  @observable isLoaded?: boolean = false;
+  @observable dbRequestState: REST = REST.None;
 
   constructor(props: DbConnectionProps) {
     this.id = props.id;
@@ -51,16 +52,31 @@ export default class DbConnection {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }
 
-  @action loadDatabases() {
-    this.isLoaded = undefined;
+  @action close() {
+    if (this.dbRequestState === REST.Requested) {
+      return false;
+    }
+    this.dbRequestState = REST.None;
+    this.databases.clear();
+  }
+
+  @computed get isLoaded() {
+    return this.dbRequestState === REST.Success;
+  }
+
+  @action loadDatabases(forceLoad: boolean = false) {
+    if (this.isLoaded && !forceLoad) {
+      return;
+    }
+    this.dbRequestState = REST.Requested;
     databases(this.id).then(
       ({ data }) => {
         this.databases.replace(data.map(db => new Database(this, db)));
-        this.isLoaded = true;
+        this.dbRequestState = REST.Success;
       }
     ).catch((e) => {
       this.databases.replace([]);
-      this.isLoaded = false;
+      this.dbRequestState = REST.Error;
     });
   }
 

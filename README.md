@@ -15,12 +15,11 @@
 
 ### Install
 
-1. `cp .env.example .env`
-2. Update `.env` with your db credentials.
-3. `yarn install`
-4. `bundle`
-5.  (on first time setup, see [configure postgres](#configure-postgres))
-6. `rails db:setup`
+1. `EDITOR=nano rails credentials:edit` and set the [env variables](#env-variables)
+2. `yarn install`
+3. `bundle`
+4.  (on first time setup, see [configure postgres](#configure-postgres))
+5. `rails db:setup`
 
 In development, `rails db:setup` will seed a default user `rails db:seed` with the password `asdfasdf` and some db connections for this user.
 To customize your seeds, see [Custom Seeds](#custom-seeds)
@@ -29,6 +28,19 @@ To reseed, run
 ```sh
 bundle exec rails db:drop db:setup
 ```
+
+### ENV Variables
+| Key                      | example                | ENV                 |
+|:-------------------------|:-----------------------|:--------------------|
+| RAILS_MASTER_KEY         | `config/master.key`(1) | production, staging |
+| DB_SQL_DATABASE_USER     | postgres               | development, test   |
+| DB_SQL_DATABASE_PASSWORD | ""                     | development, test   |
+| SENDGRID_USERNAME        | apikey                 | development         |
+| SENDGRID_API_KEY         |                        | development         |
+| RAILS_SERVE_STATIC_FILES | `true` (2)             | production, staging |
+
+1. `config/master.key` will be created automatically when calling `rails credentials:edit`. It must not be set in development. Copy this value to your deploy server and set the value from your local `master.key`. Make sure you don't version control `master.key`. See [this blog](https://medium.com/cedarcode/rails-5-2-credentials-9b3324851336) for more about rails credentials.
+2. Currently `RAILS_SERVE_STATIC_FILES` is set to `true` on the dokku host to enable serving of static assets. This could lead to bad performance and could be optimized through cdns or volume in the container and serving the assets by nginx.
 
 ## Start Rails
 
@@ -76,8 +88,7 @@ The fields `db_initial_db` and `db_initial_table` ar optional.
 
 ## Mailing
 
-In production [Sendgrid](https://sendgrid.com) is used to send mails. Fill in your credentials
-in the `.env` file to work with sendgrid. (`API Keys > Create API Key > Full Access`).
+In production [Sendgrid](https://sendgrid.com) is used to send mails. Set your credentials with `rails credentials:edit` to work with sendgrid. You find your API Keys in Sendgrid under `API Keys > Create API Key > Full Access`.
 
 # Development
 
@@ -107,3 +118,15 @@ bundle exec rspec
 
 Use the mailcatcher gem to receive emails in development: `bundle exec mailcatcher`.
 Mails sent with `:smtp` to [http://localhost:1025](http://localhost:1025) are catched by mailcatcher and can be seen in the inbox at [http://localhost:1080](http://localhost:1080).
+
+
+## Deploy
+
+The app is deployed with dokku and the [Dockerfile](Dockerfile)
+
+### ENV variables on production
+
+Set the all [ENV variables](#env-variables) through `dokku config:set <app-name> <ENV_VAR_NAME>=<ENV_VAR_VALUE>`
+
+### Letsencrypt
+See [this post](https://github.com/dokku/dokku-letsencrypt#dockerfile-deploys) to see how to configure letsencrypt

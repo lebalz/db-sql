@@ -22,7 +22,26 @@ export interface DbTable {
   name: string;
 }
 
-interface CreateProps {
+export interface SqlTypeMetadata {
+  limit: number;
+  precision?: number;
+  scale?: number;
+  sql_type: string;
+  type: string;
+}
+
+export interface ColumnProps {
+  name: string;
+  collation: string;
+  default: string;
+  default_function: string;
+  null: boolean;
+  serial: boolean;
+  is_primary: boolean;
+  sql_type_metadata: SqlTypeMetadata;
+}
+
+export interface CreateProps {
   name: string;
   db_type: DbType;
   host: string;
@@ -30,6 +49,34 @@ interface CreateProps {
   username: string;
   initial_db?: string;
   initial_table?: string;
+}
+
+export interface ForeignKeyOption {
+  column: string;
+  name: string;
+  primary_key: string;
+  on_update?: string;
+  on_delete?: string;
+}
+
+export interface ForeignKeyProps {
+  from_table: string;
+  to_table: string;
+  options: ForeignKeyOption;
+}
+
+export interface IndexProps {
+  table_name: string;
+  name: string;
+  unique: boolean;
+  columns: string[];
+  lengths: any;
+  orders: any;
+  opclasses: any;
+  where: any;
+  type: any;
+  using: string;
+  comment?: string;
 }
 
 export function newDbConnection(dbConnection: CreateProps) {
@@ -73,5 +120,31 @@ export function databases(id: string): AxiosPromise<Database[]> {
 export function tables(id: string, databaseName: string): AxiosPromise<DbTable[]> {
   return api.get(
     `/db_connections/${id}/${databaseName}/tables`
+  );
+}
+
+export function columns(id: string, databaseName: string, tableName: string): AxiosPromise<ColumnProps[]> {
+  return api.get(
+    `/db_connections/${id}/${databaseName}/${tableName}/columns`
+  );
+}
+
+export function foreignKeys(
+  id: string,
+  databaseName: string,
+  tableName: string
+): AxiosPromise<ForeignKeyProps[]> {
+  return api.get(
+    `/db_connections/${id}/${databaseName}/${tableName}/foreign_keys`
+  );
+}
+
+export function indexes(
+  id: string,
+  databaseName: string,
+  tableName: string
+): AxiosPromise<IndexProps[]> {
+  return api.get(
+    `/db_connections/${id}/${databaseName}/${tableName}/indexes`
   );
 }

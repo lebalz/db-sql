@@ -20,5 +20,8 @@ module Entities
       expose :serial
       expose :sql_type_metadata, using: Entities::ColumnSqlTypeMetadata
     end
+    expose :is_primary do |column, options|
+      options[:primary_keys]&.include?(column[:name])
+    end
   end
 end

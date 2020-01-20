@@ -114,11 +114,16 @@ module Resources
           end
           desc "Get the table's columns"
           post :columns do
+            primary_keys = db_connection.primary_key_names(
+              key: crypto_key,
+              database_name: params[:database_name],
+              table_name: params[:table_name]
+            )
             present db_connection.columns(
               key: crypto_key,
               database_name: params[:database_name],
               table_name: params[:table_name]
-            ), with: Entities::Column
+            ), with: Entities::Column, primary_keys: primary_keys
           end
           desc "Get the table's primary key names"
           post :primary_key_names do

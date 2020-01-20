@@ -4,7 +4,7 @@ require_relative '../rails_helper.rb'
 
 RSpec.describe "API::Resources::DbConnection" do
   before(:all) do
-    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
+    pw = Rails.configuration.database_configuration['test']['password']
     sql_path = Rails.root.join(
       'spec',
       'fixtures',
@@ -23,7 +23,7 @@ RSpec.describe "API::Resources::DbConnection" do
     }
   end
   after(:all) do
-    pw = ENV.fetch("DB_SQL_DATABASE_PASSWORD") { '' }
+    pw = Rails.configuration.database_configuration['test']['password']
     sql_path = Rails.root.join(
       'spec',
       'fixtures',
@@ -413,6 +413,7 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json[0]).to eq(
         "name" => "id",
         "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
+        "is_primary"=>true,
         "null" => false,
         "serial" => true,
         "sql_type_metadata" => {
@@ -422,6 +423,7 @@ RSpec.describe "API::Resources::DbConnection" do
         }
       )
       expect(json[1]).to eq(
+        "is_primary" => false,
         "name" => "name",
         "null" => true,
         "sql_type_metadata" => {
@@ -438,6 +440,7 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json.size).to be(4)
       expect(json[0]).to eq(
         "name" => "id",
+        "is_primary" => true,
         "default_function" => "nextval('fights_id_seq'::regclass)",
         "null" => false,
         "serial" => true,
@@ -449,6 +452,7 @@ RSpec.describe "API::Resources::DbConnection" do
       )
       expect(json[1]).to eq(
         "name" => "date",
+        "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
           "sql_type" => "timestamp without time zone",
@@ -458,6 +462,7 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json[2]).to eq(
         "name" => "badass_turtle_id",
         "null" => true,
+        "is_primary" => false,
         "sql_type_metadata" => {
           "limit" => 4,
           "sql_type" => "integer",
@@ -467,6 +472,7 @@ RSpec.describe "API::Resources::DbConnection" do
       expect(json[3]).to eq(
         "name" => "kickass_turtle_id",
         "null" => true,
+        "is_primary" => false,
         "sql_type_metadata" => {
           "limit" => 4,
           "sql_type" => "integer",
