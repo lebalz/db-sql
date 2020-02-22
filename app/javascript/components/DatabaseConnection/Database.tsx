@@ -9,7 +9,11 @@ import { QuerySeparationGrammarLexer } from '../../antlr/QuerySeparationGrammarL
 import { QuerySeparationGrammarParser } from '../../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { RequestState } from '../../stores/session_store';
+import AceEditor from 'react-ace';
 
+import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/snippets/sql';
+import 'ace-builds/src-noconflict/theme-github';
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
 }
@@ -105,9 +109,19 @@ export default class Database extends React.Component {
             })}
           </Menu>
           <Segment attached="bottom">
-            <textarea
-              id="query"
+            <AceEditor
               style={{ width: '100%', height: '200px' }}
+              mode="sql"
+              theme="github"
+              onChange={(change) => {
+                if (activeConnection?.activeDatabase) {
+                  activeConnection.activeDatabase.query = change as string;
+                }
+              }}
+              value={activeConnection?.activeDatabase?.query}
+              defaultValue={activeConnection?.activeDatabase?.query}
+              name={`db-${activeConnection?.activeDatabase?.name}`}
+              editorProps={{ $blockScrolling: true }}
             />
             <Button
               positive
@@ -120,7 +134,7 @@ export default class Database extends React.Component {
                   }
                   this.injected.dbConnectionStore.queryState = RequestState.Waiting;
                   const conn = activeConnection.activeDatabase;
-                  const rawInput = (document.getElementById('query') as any).value;
+                  const rawInput = conn.query;
                   const t0 = Date.now();
                   const queries = identifyCommands(rawInput);
                   console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
@@ -158,25 +172,25 @@ export default class Database extends React.Component {
                     />
                     {
                       activeConnection.activeDatabase.results.filter(r => !!r.error).length > 0 ?
-                      (
-                        <Popup
-                          content={`Errors: ${activeConnection.activeDatabase.results.filter(r => !!r.error).length}`}
-                          trigger={(
-                            <Label color="orange">
-                              {`${activeConnection.activeDatabase.results.length - activeConnection.activeDatabase.results.filter(r => !!r.error).length}/${activeConnection.activeDatabase.results.length} successful`}
-                          </Label>
-                          )}
-                        />
-                      ) : (
-                        <Popup
-                          content={'Executed all queries successfully'}
-                          trigger={(
-                            <Label color="green">
-                              {`Queries: ${activeConnection.activeDatabase.results.length}`}
-                          </Label>
-                          )}
-                        />
-                      )
+                        (
+                          <Popup
+                            content={`Errors: ${activeConnection.activeDatabase.results.filter(r => !!r.error).length}`}
+                            trigger={(
+                              <Label color="orange">
+                                {`${activeConnection.activeDatabase.results.length - activeConnection.activeDatabase.results.filter(r => !!r.error).length}/${activeConnection.activeDatabase.results.length} successful`}
+                              </Label>
+                            )}
+                          />
+                        ) : (
+                          <Popup
+                            content={'Executed all queries successfully'}
+                            trigger={(
+                              <Label color="green">
+                                {`Queries: ${activeConnection.activeDatabase.results.length}`}
+                              </Label>
+                            )}
+                          />
+                        )
 
                     }
                   </Header>

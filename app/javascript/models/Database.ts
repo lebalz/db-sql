@@ -13,6 +13,7 @@ export default class Database {
   @observable requestState: REST = REST.None;
   @observable show: boolean = false;
   @observable results: QueryResult[] = [];
+  query: string = '';
 
   constructor(dbConnection: DbConnection, props: DatabaseProps) {
     this.dbConnection = dbConnection;
