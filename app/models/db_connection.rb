@@ -62,7 +62,7 @@ class DbConnection < ApplicationRecord
       key: new_crypto_key,
       db_password: db_password
     )
-    update_attributes!(
+    update!(
       initialization_vector: new_crypt[:initialization_vector],
       password_encrypted: new_crypt[:encrypted_password]
     )

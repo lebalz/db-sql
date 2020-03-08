@@ -64,7 +64,7 @@ class User < ApplicationRecord
     password_confirmation:
   )
     ActiveRecord::Base.transaction do
-      update_attributes!(
+      update!(
         password: new_password,
         password_confirmation: password_confirmation
       )
@@ -84,7 +84,7 @@ class User < ApplicationRecord
     return unless password_reset_authenticated?(token: reset_token)
 
     ActiveRecord::Base.transaction do
-      update_attributes!(
+      update!(
         password: password,
         password_confirmation: password_confirmation,
         reset_password_digest: nil,
@@ -120,7 +120,7 @@ class User < ApplicationRecord
 
     return false unless valid
 
-    update_attributes(
+    update!(
       activated: true,
       activated_at: Time.zone.now
     )

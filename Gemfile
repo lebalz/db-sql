@@ -1,10 +1,10 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.6.2'
-
+ruby '2.6.5'
+gem 'sassc-rails'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.0'
+gem 'rails', '~> 6.0.2'
 gem 'pg', '~> 0.18'
 gem 'mysql2', '~>0.5.2'
 
@@ -61,8 +61,8 @@ group :development, :test do
   gem 'solargraph'
 
   # for vscode-development
-  gem 'ruby-debug-ide', '~>0.7.0'
-  gem 'debase', '~>0.2.3.beta5'
+  gem 'ruby-debug-ide', '~>0.7.1.beta3'
+  gem 'debase', '~>0.2.5.beta1'
 
   gem 'factory_bot_rails'
 

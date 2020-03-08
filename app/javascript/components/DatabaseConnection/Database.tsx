@@ -118,6 +118,8 @@ export default class Database extends React.Component {
                   activeConnection.activeDatabase.query = change as string;
                 }
               }}
+              enableBasicAutocompletion
+              enableLiveAutocompletion
               value={activeConnection?.activeDatabase?.query}
               defaultValue={activeConnection?.activeDatabase?.query}
               name={`db-${activeConnection?.activeDatabase?.name}`}
