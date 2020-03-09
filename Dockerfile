@@ -14,7 +14,12 @@ COPY Gemfile* /tmp/
 COPY package.json /tmp/
 COPY yarn.lock /tmp/
 WORKDIR /tmp
-RUN bundle install --jobs 5 --retry 5 --without development test
+
+RUN echo "# Update bundler" && \
+      gem install bundler --no-document
+
+RUN bundle config set without 'development test' && \
+    bundle install --jobs 5 --retry 5
 RUN yarn install
 RUN mkdir /app
 WORKDIR /app
