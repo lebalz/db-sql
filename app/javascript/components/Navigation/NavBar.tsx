@@ -16,7 +16,6 @@ interface InjectedProps {
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
 export default class NavBar extends React.Component {
-
   get injected() {
     return this.props as InjectedProps;
   }
@@ -47,21 +46,19 @@ export default class NavBar extends React.Component {
 
   render() {
     const router = this.injected.routerStore;
-    const connection = this.injected.dbConnectionStore.activeConnection ||
-                       this.injected.dbConnectionStore.dbConnections[0];
+    const { dbConnectionStore } = this.injected;
+    const { activeConnection } = dbConnectionStore;
+    const connection =
+      activeConnection || dbConnectionStore.dbConnections.length > 0
+        ? dbConnectionStore.dbConnections[0]
+        : undefined;
     const { resendActivationLinkState } = this.injected.sessionStore;
     return (
       <Fragment>
         <Menu secondary pointing>
-          <Menu.Item
-            onClick={() => router.push('/dashboard')}
-          >
+          <Menu.Item onClick={() => router.push('/dashboard')}>
             <DbSqlIcon size="large" />
-            <Header
-              as="h2"
-              content="DB SQL"
-              style={{ marginLeft: '0.5rem' }}
-            />
+            <Header as="h2" content="DB SQL" style={{ marginLeft: '0.5rem' }} />
           </Menu.Item>
           <Menu.Item
             style={{ marginLeft: '2em' }}
@@ -81,8 +78,7 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          {
-            connection && (
+          {connection && (
             <Menu.Item
               style={{ marginLeft: '2em' }}
               name="Connections"
@@ -93,8 +89,7 @@ export default class NavBar extends React.Component {
               Connections
             </Menu.Item>
           )}
-          {
-            !this.injected.sessionStore.currentUser.activated &&
+          {!this.injected.sessionStore.currentUser.activated && (
             <Menu.Item style={{ paddingBottom: 0, marginLeft: '4em' }}>
               <Step.Group size="mini" className="activation">
                 <Step completed>
@@ -115,9 +110,7 @@ export default class NavBar extends React.Component {
                   wide
                   on="hover"
                 >
-                  <Popup.Header>
-                    Check your mails
-                  </Popup.Header>
+                  <Popup.Header>Check your mails</Popup.Header>
                   <Popup.Content>
                     An activation link has been sent to you.
                     <br />
@@ -127,14 +120,13 @@ export default class NavBar extends React.Component {
                     >
                       Resend the activation link
                     </a>
-                    {
-                      resendActivationLinkState !== RequestState.None &&
+                    {resendActivationLinkState !== RequestState.None && (
                       <Icon
                         loading={resendActivationLinkState === RequestState.Waiting}
                         name={this.resendIcon}
                         color={this.resendIconColor}
                       />
-                    }
+                    )}
                   </Popup.Content>
                 </Popup>
                 <Step disabled>
@@ -144,7 +136,7 @@ export default class NavBar extends React.Component {
                 </Step>
               </Step.Group>
             </Menu.Item>
-          }
+          )}
           <Menu.Menu position="right">
             <Menu.Item
               name="Logout"
