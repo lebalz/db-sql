@@ -30,7 +30,7 @@
     "react-dom": "^16.8.6",
     "react-router": "^5.0.0",
     "react_ujs": "^2.5.0",
-    "semantic-ui-react": "^0.87.1",
+    "semantic-ui-react": "0.88.2",
     "ts-loader": "^6.0.0",
     "tslint": "^5.16.0",
     "tslint-config-airbnb": "^5.11.1",
