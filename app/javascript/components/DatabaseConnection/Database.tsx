@@ -25,7 +25,7 @@ import 'ace-builds/src-noconflict/mode-sql';
 import 'ace-builds/src-noconflict/snippets/sql';
 import 'ace-builds/src-noconflict/theme-github';
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -78,6 +78,29 @@ export default class Database extends React.Component {
     });
   }
 
+  executeQuery() {
+    const { activeConnection } = this.injected.dbConnectionStore;
+    if (!activeConnection || !activeConnection.activeDatabase) {
+      return;
+    }
+    this.injected.dbConnectionStore.queryState = RequestState.Waiting;
+    const conn = activeConnection.activeDatabase;
+    const rawInput = conn.query;
+    const t0 = Date.now();
+    const queries = identifyCommands(rawInput);
+    console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
+    fetchQuery(activeConnection.id, conn.name, queries)
+      .then(({ data }) => {
+        console.log('Got result: ', (Date.now() - t0) / 1000.0);
+        conn.results = data;
+        console.log(data);
+        this.injected.dbConnectionStore.queryState = RequestState.Success;
+      })
+      .catch(e => {
+        this.injected.dbConnectionStore.queryState = RequestState.Error;
+      });
+  }
+
   @computed
   get completers() {
     const activeDatabase = this.injected.dbConnectionStore?.activeConnection
@@ -108,11 +131,7 @@ export default class Database extends React.Component {
 
   render() {
     const { dbConnectionStore } = this.injected;
-    const {
-      loadedConnections,
-      activeConnection,
-      queryState
-    } = dbConnectionStore;
+    const { loadedConnections, activeConnection, queryState } = dbConnectionStore;
     const loadedDbs = activeConnection
       ? activeConnection.databases.filter(db => db.isLoaded)
       : [];
@@ -150,9 +169,7 @@ export default class Database extends React.Component {
               return (
                 <Menu.Item
                   name={db.name}
-                  active={
-                    !!activeConnection && activeConnection.activeDatabase === db
-                  }
+                  active={!!activeConnection && activeConnection.activeDatabase === db}
                   key={`db-${i}`}
                   onClick={() => {
                     if (activeConnection) {
@@ -168,11 +185,19 @@ export default class Database extends React.Component {
               style={{ width: '100%', height: '200px' }}
               mode="sql"
               theme="github"
-              onChange={(change) => {
+              onChange={change => {
                 if (activeConnection?.activeDatabase) {
                   activeConnection.activeDatabase.query = change as string;
                 }
               }}
+              commands={[
+                {
+                  // commands is array of key bindings.
+                  name: 'Execute Query',
+                  bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+                  exec: () => this.executeQuery()
+                }
+              ]}
               value={activeConnection?.activeDatabase?.query}
               defaultValue={activeConnection?.activeDatabase?.query}
               name={`db-${activeConnection?.activeDatabase?.name}`}
@@ -185,30 +210,7 @@ export default class Database extends React.Component {
               positive
               disabled={queryState === RequestState.Waiting}
               loading={queryState === RequestState.Waiting}
-              onClick={() => {
-                if (!activeConnection || !activeConnection.activeDatabase) {
-                  return;
-                }
-                this.injected.dbConnectionStore.queryState =
-                  RequestState.Waiting;
-                const conn = activeConnection.activeDatabase;
-                const rawInput = conn.query;
-                const t0 = Date.now();
-                const queries = identifyCommands(rawInput);
-                console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-                fetchQuery(activeConnection.id, conn.name, queries)
-                  .then(({ data }) => {
-                    console.log('Got result: ', (Date.now() - t0) / 1000.0);
-                    conn.results = data;
-                    console.log(data);
-                    this.injected.dbConnectionStore.queryState =
-                      RequestState.Success;
-                  })
-                  .catch(e => {
-                    this.injected.dbConnectionStore.queryState =
-                      RequestState.Error;
-                  });
-              }}
+              onClick={() => this.executeQuery()}
             >
               Query
             </Button>
@@ -233,14 +235,12 @@ export default class Database extends React.Component {
                         </Label>
                       }
                     />
-                    {activeConnection.activeDatabase.results.filter(
-                      r => !!r.error
-                    ).length > 0 ? (
+                    {activeConnection.activeDatabase.results.filter(r => !!r.error)
+                      .length > 0 ? (
                       <Popup
                         content={`Errors: ${
-                          activeConnection.activeDatabase.results.filter(
-                            r => !!r.error
-                          ).length
+                          activeConnection.activeDatabase.results.filter(r => !!r.error)
+                            .length
                         }`}
                         trigger={
                           <Label color="orange">
@@ -265,84 +265,71 @@ export default class Database extends React.Component {
                     )}
                   </Header>
                   <Segment attached>
-                    {activeConnection.activeDatabase.results.map(
-                      (result, idx) => {
-                        const TimeLabel = (
-                          <Popup
-                            content={`${
-                              result.result ? `${result.result.length} in ` : ''
-                            }${result.time}s`}
-                            trigger={
-                              <Label
-                                color="blue"
-                                floating
-                                style={{ left: 'unset', right: '-1em' }}
-                              >
-                                {result.result
-                                  ? `${result.result.length} in `
-                                  : ''}
-                                {result.time.toFixed(2)}s
-                              </Label>
-                            }
-                          />
-                        );
-                        if (result.error) {
-                          return (
-                            <Message negative>
-                              {TimeLabel}
-                              <Message.Header>{`Error in the ${idx +
-                                1}. query`}</Message.Header>
-                              <p>{result.error}</p>
-                            </Message>
-                          );
-                        }
-                        if (result.result!.length === 0) {
-                          return (
-                            <Message positive>
-                              {TimeLabel}
-                              <Message.Header>{`Successful ${idx +
-                                1}. query`}</Message.Header>
-                            </Message>
-                          );
-                        }
+                    {activeConnection.activeDatabase.results.map((result, idx) => {
+                      const TimeLabel = (
+                        <Popup
+                          content={`${
+                            result.result ? `${result.result.length} in ` : ''
+                          }${result.time}s`}
+                          trigger={
+                            <Label
+                              color="blue"
+                              floating
+                              style={{ left: 'unset', right: '-1em' }}
+                            >
+                              {result.result ? `${result.result.length} in ` : ''}
+                              {result.time.toFixed(2)}s
+                            </Label>
+                          }
+                        />
+                      );
+                      if (result.error) {
                         return (
-                          <div
-                            key={`result-${idx}`}
-                            style={{ position: 'relative' }}
-                          >
+                          <Message negative>
                             {TimeLabel}
-                            <Table celled>
-                              <Table.Header>
-                                <Table.Row>
-                                  {Object.keys(result.result![0] || []).map(
-                                    (val, i) => {
-                                      return (
-                                        <Table.HeaderCell key={i}>
-                                          {val}
-                                        </Table.HeaderCell>
-                                      );
-                                    }
-                                  )}
-                                </Table.Row>
-                              </Table.Header>
-                              <Table.Body>
-                                {result.result!.map((val, i) => {
-                                  return (
-                                    <Table.Row key={i}>
-                                      {Object.values(val).map((ds, j) => {
-                                        return (
-                                          <Table.Cell key={j}>{ds}</Table.Cell>
-                                        );
-                                      })}
-                                    </Table.Row>
-                                  );
-                                })}
-                              </Table.Body>
-                            </Table>
-                          </div>
+                            <Message.Header>{`Error in the ${idx +
+                              1}. query`}</Message.Header>
+                            <p>{result.error}</p>
+                          </Message>
                         );
                       }
-                    )}
+                      if (result.result!.length === 0) {
+                        return (
+                          <Message positive>
+                            {TimeLabel}
+                            <Message.Header>{`Successful ${idx +
+                              1}. query`}</Message.Header>
+                          </Message>
+                        );
+                      }
+                      return (
+                        <div key={`result-${idx}`} style={{ position: 'relative' }}>
+                          {TimeLabel}
+                          <Table celled>
+                            <Table.Header>
+                              <Table.Row>
+                                {Object.keys(result.result![0] || []).map((val, i) => {
+                                  return (
+                                    <Table.HeaderCell key={i}>{val}</Table.HeaderCell>
+                                  );
+                                })}
+                              </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                              {result.result!.map((val, i) => {
+                                return (
+                                  <Table.Row key={i}>
+                                    {Object.values(val).map((ds, j) => {
+                                      return <Table.Cell key={j}>{ds}</Table.Cell>;
+                                    })}
+                                  </Table.Row>
+                                );
+                              })}
+                            </Table.Body>
+                          </Table>
+                        </div>
+                      );
+                    })}
                   </Segment>
                 </Fragment>
               )}
