@@ -10,7 +10,10 @@ export enum DbType {
 }
 
 export enum QueryState {
-  None, Executing, Success, Error
+  None,
+  Executing,
+  Success,
+  Error
 }
 
 export interface UpdateProps extends Partial<DbConnectionProps> {
@@ -65,26 +68,31 @@ export default class DbConnection {
     return this.dbRequestState === REST.Success;
   }
 
+  @computed get isClosed() {
+    return this.dbRequestState === REST.None;
+  }
+
   @action loadDatabases(forceLoad: boolean = false) {
     if (this.isLoaded && !forceLoad) {
       return;
     }
     this.dbRequestState = REST.Requested;
-    databases(this.id).then(
-      ({ data }) => {
-        this.databases.replace(data.map(db => new Database(this, db)));
+    databases(this.id)
+      .then(({ data }) => {
+        this.databases.replace(data.map((db) => new Database(this, db)));
         this.dbRequestState = REST.Success;
-      }
-    ).then(() => {
-      const initDb = this.databases.find(db => db.name === this.initialDb);
-      this.activeDatabase = initDb || this.databases[0];
-      if (this.activeDatabase) {
-        this.activeDatabase.show = true;
-      }
-    }).catch((e) => {
-      this.databases.replace([]);
-      this.dbRequestState = REST.Error;
-    });
+      })
+      .then(() => {
+        const initDb = this.databases.find((db) => db.name === this.initialDb);
+        this.activeDatabase = initDb || this.databases[0];
+        if (this.activeDatabase) {
+          this.activeDatabase.show = true;
+        }
+      })
+      .catch((e) => {
+        this.databases.replace([]);
+        this.dbRequestState = REST.Error;
+      });
   }
 
   @computed get props(): DbConnectionProps {
@@ -111,7 +119,7 @@ export default class DbConnection {
       port: this.port,
       username: this.username,
       initial_db: this.initialDb,
-      initial_table: this.initialTable,
+      initial_table: this.initialTable
     };
     if (this.password) {
       connection.password = this.password;

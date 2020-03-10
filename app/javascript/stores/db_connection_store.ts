@@ -1,4 +1,4 @@
-import { observable, action, reaction, computed } from 'mobx';
+import { observable, action, reaction, computed, IReactionDisposer } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
 import {
@@ -60,6 +60,17 @@ class DbConnectionStore {
     );
   }
 
+  // closeConnection(connection: DbConnection) {
+  //   if (this.activeConnection === connection) {
+  //     const connectionCount = this.loadedConnections.length;
+  //     if (connectionCount > 0) {
+  //       this.activeConnection = this.loadedConnections[connectionCount - 1];
+  //     } else {
+  //       this.activeConnection = null;
+  //     }
+  //   }
+  // }
+
   @computed get loadedConnections() {
     return this.dbConnections.filter((conn) => !!conn.isLoaded);
   }
@@ -79,7 +90,8 @@ class DbConnectionStore {
     dbConnections()
       .then(({ data }) => {
         const dbConnections = _.sortBy(data, ['name']).map(
-          (dbConnection) => new DbConnection(dbConnection)
+          (dbConnection) =>
+            new DbConnection(dbConnection)
         );
         this.dbConnections.replace(dbConnections);
         this.requestState = RequestState.Success;
@@ -99,7 +111,9 @@ class DbConnectionStore {
         const connection = this.dbConnections.find((db) => db.id === dbConnection.id);
         if (!connection) return;
         this.dbConnections.remove(connection);
-        this.dbConnections.push(new DbConnection(dbConnection.props));
+        this.dbConnections.push(
+          new DbConnection(dbConnection.props)
+        );
         this.saveState = RequestState.Success;
       })
       .catch(() => {

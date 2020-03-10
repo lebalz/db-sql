@@ -73,6 +73,10 @@ export default class SqlEditor extends React.Component {
     const { dbConnectionStore } = this.injected;
     const { activeConnection } = dbConnectionStore;
 
+    if (!activeConnection) {
+      return null;
+    }
+
     return (
       <AceEditor
         style={{ width: '100%', height: '200px' }}

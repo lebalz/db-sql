@@ -21,9 +21,11 @@ export default class Database extends React.Component {
   render() {
     const { dbConnectionStore } = this.injected;
     const { loadedConnections, activeConnection, queryState } = dbConnectionStore;
-    const loadedDbs = activeConnection
-      ? activeConnection.databases.filter((db) => db.isLoaded)
-      : [];
+    if (!activeConnection || activeConnection.isClosed) {
+      return null;
+    }
+
+    const loadedDbs = activeConnection.databases.filter((db) => db.isLoaded);
     return (
       <Fragment>
         <Menu stackable secondary compact size="mini" color="teal">

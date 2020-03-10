@@ -78,7 +78,12 @@ export default class DatabaseStructure extends React.Component {
     const { menuItems, injected } = this;
     const { dbConnectionStore } = injected;
     const { activeConnection } = dbConnectionStore;
-    const isLoaded = activeConnection && activeConnection.isLoaded;
+    if (!activeConnection || activeConnection.isClosed) {
+      return null;
+    }
+
+    const isLoaded = activeConnection.isLoaded;
+
     return (
       <Fragment>
         <Header as="h3" content="Databases" />

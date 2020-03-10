@@ -11,7 +11,11 @@ import {
 } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
-import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
+import {
+  SynchronizedHistory,
+  RouterStore,
+  syncHistoryWithStore
+} from 'mobx-react-router';
 import User from '../models/User';
 import _ from 'lodash';
 
@@ -22,7 +26,10 @@ export enum LocalStorageKey {
 }
 
 export enum RequestState {
-  Waiting, Error, Success, None
+  Waiting,
+  Error,
+  Success,
+  None
 }
 
 interface Route {
@@ -77,9 +84,9 @@ class SessionStore {
 
   isNoLoginRequired(location: Location) {
     return (
-      location.pathname === '/login'
-      || /users\/.*\/reset_password/.test(location.pathname)
-      || /users\/.*\/activate/.test(location.pathname)
+      location.pathname === '/login' ||
+      /users\/.*\/reset_password/.test(location.pathname) ||
+      /users\/.*\/activate/.test(location.pathname)
     );
   }
 
@@ -107,7 +114,7 @@ class SessionStore {
     } else if (this.isNoLoginRequired(location)) {
       this.routeBeforeLogin = this.route;
     }
-  }
+  };
 
   get fetchFromLocalStorage(): ApiLoginUser | null {
     const user = localStorage.getItem(LocalStorageKey.User);
@@ -131,13 +138,15 @@ class SessionStore {
 
   @action login(email: string, password: string) {
     this.passwordState = RequestState.Waiting;
-    login(email, password).then(({ data }) => {
-      this.setCurrentUser(data);
-      this.passwordState = RequestState.Success;
-    }).catch((error) => {
-      console.log('Loginfehler!!');
-      this.passwordState = RequestState.Error;
-    });
+    login(email, password)
+      .then(({ data }) => {
+        this.setCurrentUser(data);
+        this.passwordState = RequestState.Success;
+      })
+      .catch((error) => {
+        console.log('Loginfehler!!');
+        this.passwordState = RequestState.Error;
+      });
   }
 
   @action setNewPassword(
@@ -146,71 +155,70 @@ class SessionStore {
     newPasswordConfirmation: string
   ) {
     this.passwordState = RequestState.Waiting;
-    setNewPasswordCall(
-      oldPassword,
-      newPassword,
-      newPasswordConfirmation
-    ).then(({ data }) => {
-      this.updateLocalUserCredentials(data);
-      this.user = new User(data);
-      this.passwordState = RequestState.Success;
-    }).catch(() => {
-      this.passwordState = RequestState.Error;
-    });
+    setNewPasswordCall(oldPassword, newPassword, newPasswordConfirmation)
+      .then(({ data }) => {
+        this.updateLocalUserCredentials(data);
+        this.user = new User(data);
+        this.passwordState = RequestState.Success;
+      })
+      .catch(() => {
+        this.passwordState = RequestState.Error;
+      });
   }
 
   @action reloadUser() {
-    user().then(({ data }) => {
-      const user = this.fetchFromLocalStorage;
-      const updated = _.merge(
-        user,
-        _.pickBy(data, v => v !== null && v !== undefined)
-      );
-      if (!user) return;
-      localStorage.setItem(
-        LocalStorageKey.User,
-        JSON.stringify(updated)
-      );
-      this.user = new User(data);
-    }).catch(() => {
-      if (this.isNoLoginRequired(this.root.routing.location)) return;
+    user()
+      .then(({ data }) => {
+        const user = this.fetchFromLocalStorage;
+        const updated = _.merge(
+          user,
+          _.pickBy(data, (v) => v !== null && v !== undefined)
+        );
+        if (!user) return;
+        localStorage.setItem(LocalStorageKey.User, JSON.stringify(updated));
+        this.user = new User(data);
+      })
+      .catch(() => {
+        if (this.isNoLoginRequired(this.root.routing.location)) return;
 
-      this.resetAuthorization();
-    });
+        this.resetAuthorization();
+      });
   }
 
   @action logout() {
-    logout().catch(({ error }) => {
-      console.log(error);
-    }).then(() => {
-      this.resetAuthorization();
-    });
+    logout()
+      .catch(({ error }) => {
+        console.log(error);
+      })
+      .then(() => {
+        this.resetAuthorization();
+      });
   }
 
   @action resendActivationLink() {
     this.resendActivationLinkState = RequestState.Waiting;
-    resendActivationLinkCall().then(() => {
-      this.resendActivationLinkState = RequestState.Success;
-    }).catch(() => {
-      this.resendActivationLinkState = RequestState.Error;
-    }).then(
-      result => new Promise(resolve => setTimeout(resolve, 5000, result))
-    ).finally(
-      () => this.resendActivationLinkState = RequestState.None
-    );
+    resendActivationLinkCall()
+      .then(() => {
+        this.resendActivationLinkState = RequestState.Success;
+      })
+      .catch(() => {
+        this.resendActivationLinkState = RequestState.Error;
+      })
+      .then((result) => new Promise((resolve) => setTimeout(resolve, 5000, result)))
+      .finally(() => (this.resendActivationLinkState = RequestState.None));
   }
 
   @action deleteAccount(password: string) {
     this.passwordState = RequestState.Waiting;
-    deleteAccountCall(password).then(
-      () => {
+    deleteAccountCall(password)
+      .then(() => {
         this.resetAuthorization();
         this.passwordState = RequestState.Success;
         this.history.push('/login');
-      }
-    ).catch((e) => {
-      this.passwordState = RequestState.Error;
-    });
+      })
+      .catch((e) => {
+        this.passwordState = RequestState.Error;
+      });
   }
 
   @action resetAuthorization() {
@@ -250,7 +258,6 @@ class SessionStore {
   private updateLocalUserCredentials(user: ApiLoginUser) {
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
   }
-
 }
 
 export default SessionStore;

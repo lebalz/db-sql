@@ -1,6 +1,14 @@
 import { computed, action, reaction, observable } from 'mobx';
-import { DbConnection as DbConnectionProps, dbConnectionPassword } from '../api/db_connection';
-import { DbConnection as TempDbConnectionProps, databases, test, tables } from '../api/temp_db_connection';
+import {
+  DbConnection as DbConnectionProps,
+  dbConnectionPassword
+} from '../api/db_connection';
+import {
+  DbConnection as TempDbConnectionProps,
+  databases,
+  test,
+  tables
+} from '../api/temp_db_connection';
 import _ from 'lodash';
 import DbConnection from './DbConnection';
 import Database from './Database';
@@ -9,7 +17,8 @@ import { RequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
 
 export enum TempDbConnectionRole {
-  Update, Create
+  Update,
+  Create
 }
 
 export class TempDbConnection extends DbConnection {
@@ -23,27 +32,23 @@ export class TempDbConnection extends DbConnection {
   constructor(props: DbConnectionProps, role: TempDbConnectionRole) {
     super(props);
     this.role = role;
-    this.testConnection = _.debounce(
-      this.testConnection,
-      400,
-      { leading: false }
-    );
+    this.testConnection = _.debounce(this.testConnection, 400, { leading: false });
 
     reaction(
-      () => (this.dbConnectionHash),
+      () => this.dbConnectionHash,
       (hash) => {
         this.testConnection();
       }
     );
     reaction(
-      () => (this.validConnection),
+      () => this.validConnection,
       (valid) => {
         if (!valid) return;
         this.loadDatabases();
       }
     );
     reaction(
-      () => (this.isLoaded),
+      () => this.isLoaded,
       (isLoaded) => {
         if (!isLoaded) {
           this.tablesLoaded = false;
@@ -54,7 +59,7 @@ export class TempDbConnection extends DbConnection {
       }
     );
     reaction(
-      () => (this.initialDb),
+      () => this.initialDb,
       (initialDb) => {
         this.loadTables();
       }
@@ -67,11 +72,9 @@ export class TempDbConnection extends DbConnection {
       this.password = '';
       return;
     }
-    dbConnectionPassword(this.id).then(
-      ({ data }) => {
-        this.password = data.password;
-      }
-    );
+    dbConnectionPassword(this.id).then(({ data }) => {
+      this.password = data.password;
+    });
   }
 
   @computed get tempDbPorps(): TempDbConnectionProps {
@@ -96,19 +99,19 @@ export class TempDbConnection extends DbConnection {
 
   @action loadDatabases() {
     this.dbRequestState = REST.Requested;
-    databases(this.tempDbPorps).then(
-      ({ data }) => {
-        this.databases.replace(data.map(db => new Database(this, db)));
+    databases(this.tempDbPorps)
+      .then(({ data }) => {
+        this.databases.replace(data.map((db) => new Database(this, db)));
         this.dbRequestState = REST.Success;
-      }
-    ).catch((e) => {
-      this.databases.replace([]);
-      this.dbRequestState = REST.Error;
-    });
+      })
+      .catch((e) => {
+        this.databases.replace([]);
+        this.dbRequestState = REST.Error;
+      });
   }
 
   @action loadTables() {
-    const db = this.databases.find(db => db.name === this.initialDb);
+    const db = this.databases.find((db) => db.name === this.initialDb);
     if (!db) {
       this.tablesLoaded = false;
       this.initialTable = undefined;
@@ -116,35 +119,35 @@ export class TempDbConnection extends DbConnection {
     }
 
     this.tablesLoaded = undefined;
-    tables(this.tempDbPorps, db.name).then(
-      ({ data }) => {
+    tables(this.tempDbPorps, db.name)
+      .then(({ data }) => {
         this.tablesLoaded = true;
-        this.tables.replace(data.map(table => new DbTable(db, table)));
-        const table = this.tables.find(table => table.name === this.initialTable);
+        this.tables.replace(data.map((table) => new DbTable(db, table)));
+        const table = this.tables.find((table) => table.name === this.initialTable);
         if (!table) {
           this.initialTable = undefined;
         }
-      }
-    ).catch((e) => {
-      this.tablesLoaded = false;
-      this.initialTable = undefined;
-      this.tables.replace([]);
-    });
+      })
+      .catch((e) => {
+        this.tablesLoaded = false;
+        this.initialTable = undefined;
+        this.tables.replace([]);
+      });
   }
 
   @action.bound testConnection() {
     this.testConnectionState = RequestState.Waiting;
     this.validConnection = undefined;
-    test(this.tempDbPorps).then(({ data }) => {
-      this.validConnection = data.success;
-      this.message = data.success
-        ? 'Connection established'
-        : data.message;
-      this.testConnectionState = RequestState.Success;
-    }).catch((e) => {
-      this.validConnection = false;
-      this.message = e.message;
-      this.testConnectionState = RequestState.Error;
-    });
+    test(this.tempDbPorps)
+      .then(({ data }) => {
+        this.validConnection = data.success;
+        this.message = data.success ? 'Connection established' : data.message;
+        this.testConnectionState = RequestState.Success;
+      })
+      .catch((e) => {
+        this.validConnection = false;
+        this.message = e.message;
+        this.testConnectionState = RequestState.Error;
+      });
   }
 }
