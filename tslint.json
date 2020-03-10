@@ -10,14 +10,15 @@
     "indent": false,
     "semicolon": [
       true,
-      "always"
+      "always",
+      "ignore-bound-class-methods"
     ],
     "trailing-comma": false,
     "import-name": false,
     "eofline": false,
     "max-line-length": [
       true,
-      110
+      90
     ],
     "object-literal-key-quotes": false,
     "object-literal-shorthand": false,
@@ -32,6 +33,7 @@
       true,
       "never"
     ],
+    "jsx-wrap-multiline": false,
     "function-name": [
       true,
       {
@@ -39,6 +41,7 @@
         "static-method-regex": "^[a-zA-Z_\\d]+$"
       }
     ],
+    "ter-arrow-parens": [true, "always"],
     "jsx-no-lambda": false,
     "no-this-assignment": false,
     "align": false
