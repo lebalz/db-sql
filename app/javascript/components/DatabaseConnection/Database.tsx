@@ -3,10 +3,12 @@ import { Button, Menu, Icon, Segment } from 'semantic-ui-react';
 import DbConnectionStore from '../../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import { RequestState } from '../../stores/session_store';
 import SqlEditor from './SqlEditor';
 import SqlResult from './SqlResult';
-import { computed } from 'mobx';
+import { action } from 'mobx';
+import { default as DatabaseModel } from '../../models/Database';
+import Query from '../../models/Query';
+import { REST } from '../../declarations/REST';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -19,12 +21,24 @@ export default class Database extends React.Component {
     return this.props as InjectedProps;
   }
 
+  @action
+  changeQueryTab(database: DatabaseModel, query: Query) {
+    const { dbConnectionStore } = this.injected;
+    const { activeConnection } = dbConnectionStore;
+    if (activeConnection === database.dbConnection) {
+      database.dbConnection.activeDatabase = database;
+      query.setActive();
+    }
+  }
+
   render() {
     const { dbConnectionStore } = this.injected;
-    const { loadedConnections, activeConnection, queryState } = dbConnectionStore;
+    const { loadedConnections, activeConnection } = dbConnectionStore;
     if (!activeConnection || activeConnection.isClosed) {
       return null;
     }
+
+    const activeQuery = activeConnection.activeDatabase?.activeQuery;
 
     const loadedDbs = activeConnection.databases.filter((db) => db.isLoaded);
     return (
@@ -57,27 +71,38 @@ export default class Database extends React.Component {
         </Menu>
         <Segment>
           <Menu attached="top" tabular size="mini">
-            {loadedDbs.map((db, i) => {
-              return (
-                <Menu.Item
-                  name={db.name}
-                  active={!!activeConnection && activeConnection.activeDatabase === db}
-                  key={`db-${i}`}
-                  onClick={() => {
-                    if (activeConnection) {
-                      activeConnection.activeDatabase = db;
-                    }
-                  }}
-                />
-              );
+            {loadedDbs.map((db) => {
+              return db.queries.map((query) => {
+                return (
+                  <Menu.Item
+                    active={query.isActive}
+                    key={`db-${query.name}`}
+                    onClick={() => this.changeQueryTab(db, query)}
+                  >
+                    {db.name}
+                    {query.isActive && (
+                      <Button
+                        icon="close"
+                        onClick={() => query.close()}
+                        floated="right"
+                        style={{
+                          padding: '2px',
+                          marginLeft: '4px',
+                          marginRight: '-4px'
+                        }}
+                      />
+                    )}
+                  </Menu.Item>
+                );
+              });
             })}
           </Menu>
           <Segment attached="bottom">
             <SqlEditor />
             <Button
               positive
-              disabled={queryState === RequestState.Waiting}
-              loading={queryState === RequestState.Waiting}
+              disabled={activeQuery?.requestState === REST.Requested}
+              loading={activeQuery?.requestState === REST.Requested}
               onClick={() => this.injected.dbConnectionStore.executeQuery()}
             >
               Query

@@ -64,10 +64,21 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
           as="a"
           data-dbname={database.name}
           className="database-item"
-          onClick={e => {
+          onClick={(e) => {
             database.toggleShow();
             if (activeConnection) {
               activeConnection.activeDatabase = database;
+              const { activeQuery } = database;
+              if (activeQuery) {
+                activeQuery.setActive();
+              } else {
+                const { lastQuery } = database;
+                if (lastQuery) {
+                  lastQuery.setActive();
+                } else {
+                  database.addQuery().setActive();
+                }
+              }
             }
           }}
         >
@@ -90,7 +101,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
                 size="tiny"
                 active
                 percent={
-                  (100 * database.tables.filter(t => t.isLoaded).length) /
+                  (100 * database.tables.filter((t) => t.isLoaded).length) /
                   database.tables.length
                 }
               />

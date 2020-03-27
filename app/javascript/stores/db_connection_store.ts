@@ -15,6 +15,7 @@ import 'regenerator-runtime/runtime';
 import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexer';
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import { REST } from '../declarations/REST';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -90,8 +91,7 @@ class DbConnectionStore {
     dbConnections()
       .then(({ data }) => {
         const dbConnections = _.sortBy(data, ['name']).map(
-          (dbConnection) =>
-            new DbConnection(dbConnection)
+          (dbConnection) => new DbConnection(dbConnection)
         );
         this.dbConnections.replace(dbConnections);
         this.requestState = RequestState.Success;
@@ -111,9 +111,7 @@ class DbConnectionStore {
         const connection = this.dbConnections.find((db) => db.id === dbConnection.id);
         if (!connection) return;
         this.dbConnections.remove(connection);
-        this.dbConnections.push(
-          new DbConnection(dbConnection.props)
-        );
+        this.dbConnections.push(new DbConnection(dbConnection.props));
         this.saveState = RequestState.Success;
       })
       .catch(() => {
@@ -152,24 +150,27 @@ class DbConnectionStore {
   }
 
   executeQuery() {
-    if (!this.activeConnection?.activeDatabase) {
+    const connection = this.activeConnection;
+    const database = connection?.activeDatabase;
+    const activeQuery = database?.activeQuery;
+    if (!connection || !database || !activeQuery) {
       return;
     }
-    this.queryState = RequestState.Waiting;
-    const conn = this.activeConnection.activeDatabase;
-    const rawInput = conn.query;
+
+    activeQuery.requestState = REST.Requested;
+    const rawInput = activeQuery.query;
     const t0 = Date.now();
     const queries = identifyCommands(rawInput);
     console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    fetchQuery(this.activeConnection.id, conn.name, queries)
+    fetchQuery(connection.id, database.name, queries)
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
-        conn.results = data;
+        activeQuery.results = data;
         console.log(data);
-        this.queryState = RequestState.Success;
+        activeQuery.requestState = REST.Success;
       })
       .catch((e) => {
-        this.queryState = RequestState.Error;
+        activeQuery.requestState = REST.Error;
       });
   }
 }

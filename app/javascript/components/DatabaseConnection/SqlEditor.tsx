@@ -77,14 +77,16 @@ export default class SqlEditor extends React.Component {
       return null;
     }
 
+    const database = activeConnection.activeDatabase;
+
     return (
       <AceEditor
         style={{ width: '100%', height: '200px' }}
         mode="sql"
         theme="github"
         onChange={(change) => {
-          if (activeConnection?.activeDatabase) {
-            activeConnection.activeDatabase.query = change as string;
+          if (database && database.activeQuery) {
+            database.activeQuery.query = change as string;
           }
         }}
         commands={[
@@ -95,9 +97,9 @@ export default class SqlEditor extends React.Component {
             exec: () => this.injected.dbConnectionStore.executeQuery()
           }
         ]}
-        value={activeConnection?.activeDatabase?.query}
-        defaultValue={activeConnection?.activeDatabase?.query}
-        name={`db-${activeConnection?.activeDatabase?.name}`}
+        value={database?.activeQuery?.query}
+        defaultValue={database?.activeQuery?.query}
+        name={`db-${database?.name}`}
         editorProps={{ $blockScrolling: true }}
         showPrintMargin={false}
         enableBasicAutocompletion

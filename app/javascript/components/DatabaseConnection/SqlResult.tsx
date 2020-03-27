@@ -1,14 +1,7 @@
 import React, { Fragment } from 'react';
 import { inject, observer } from 'mobx-react';
 import DbConnectionStore from '../../stores/db_connection_store';
-import {
-  Segment,
-  Table,
-  Message,
-  Label,
-  Popup,
-  Header
-} from 'semantic-ui-react';
+import { Segment, Table, Message, Label, Popup, Header } from 'semantic-ui-react';
 import _ from 'lodash';
 
 interface InjectedProps {
@@ -24,7 +17,7 @@ export default class SqlResult extends React.Component {
 
   render() {
     const results = this.injected.dbConnectionStore?.activeConnection?.activeDatabase
-      ?.results;
+      ?.activeQuery?.results;
 
     if (!results) {
       return null;

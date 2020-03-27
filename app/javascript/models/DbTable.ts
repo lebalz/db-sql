@@ -46,7 +46,7 @@ export default class DbTable {
   }
 
   @computed get mark(): Mark {
-    const col = this.columns.find(c => c.mark === Mark.To || c.mark === Mark.From);
+    const col = this.columns.find((c) => c.mark === Mark.To || c.mark === Mark.From);
     return col ? col.mark : Mark.None;
   }
 
@@ -59,15 +59,15 @@ export default class DbTable {
   }
 
   column(name: string): DbColumn | undefined {
-    return this.columns.find(c => c.name === name);
+    return this.columns.find((c) => c.name === name);
   }
 
   @computed get hasPendingRequest(): boolean {
-    return Object.values(this.requestStates).some(state => state === REST.Requested);
+    return Object.values(this.requestStates).some((state) => state === REST.Requested);
   }
 
   @computed get isLoaded(): boolean {
-    return Object.values(this.requestStates).every(state => state === REST.Success);
+    return Object.values(this.requestStates).every((state) => state === REST.Success);
   }
 
   @action setRequestState(state: REST) {
@@ -82,31 +82,26 @@ export default class DbTable {
     }
     this.setRequestState(REST.None);
     return this.loadColumns().then(() => {
-      Promise.resolve([
-        this.loadForeignKeys(),
-        this.loadIndexes()
-      ]);
+      Promise.resolve([this.loadForeignKeys(), this.loadIndexes()]);
     });
   }
 
   @action loadColumns() {
     this.requestStates.columns = REST.Requested;
-    return fetchColumns(this.id, this.database.name, this.name).then(
-      ({ data }) => {
-        this.columns.replace(
-          data.map(col => new DbColumn(this, col))
-        );
+    return fetchColumns(this.id, this.database.name, this.name)
+      .then(({ data }) => {
+        this.columns.replace(data.map((col) => new DbColumn(this, col)));
         this.requestStates.columns = REST.Success;
-      }
-    ).catch((e) => {
-      this.requestStates.columns = REST.Error;
-    });
+      })
+      .catch((e) => {
+        this.requestStates.columns = REST.Error;
+      });
   }
 
   @action loadForeignKeys() {
     this.requestStates.foreignKeys = REST.Requested;
-    return fetchForeignKeys(this.id, this.database.name, this.name).then(
-      ({ data }) => {
+    return fetchForeignKeys(this.id, this.database.name, this.name)
+      .then(({ data }) => {
         data.forEach((fk) => {
           const col = this.column(fk.options.column);
           if (!col) {
@@ -118,23 +113,23 @@ export default class DbTable {
           col.foreignKey = new ForeignKey(this.database, col, fk);
         });
         this.requestStates.foreignKeys = REST.Success;
-      }
-    ).catch((e) => {
-      this.requestStates.foreignKeys = REST.Error;
-      console.log('Could not load foreign keys: ', e);
-    });
+      })
+      .catch((e) => {
+        this.requestStates.foreignKeys = REST.Error;
+        console.log('Could not load foreign keys: ', e);
+      });
   }
 
   @action loadIndexes() {
     this.requestStates.indexes = REST.Requested;
-    return fetchIndexes(this.id, this.database.name, this.name).then(
-      ({ data }) => {
+    return fetchIndexes(this.id, this.database.name, this.name)
+      .then(({ data }) => {
         this.indexex.replace(data);
         this.requestStates.indexes = REST.Success;
-      }
-    ).catch((e) => {
+      })
+      .catch((e) => {
         this.requestStates.indexes = REST.Error;
         console.log('Could not load indexes: ', e);
-    });
+      });
   }
 }
