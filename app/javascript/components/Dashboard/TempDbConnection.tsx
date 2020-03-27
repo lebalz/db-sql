@@ -1,12 +1,25 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import { DbType } from '../../models/DbConnection';
-import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Popup } from 'semantic-ui-react';
+import {
+  Label,
+  Button,
+  Modal,
+  Form,
+  Grid,
+  DropdownProps,
+  Message,
+  Icon,
+  Popup
+} from 'semantic-ui-react';
 import DbConnectionStore from '../../stores/db_connection_store';
 import { computed, reaction, action } from 'mobx';
 import _ from 'lodash';
 import { RequestState } from '../../stores/session_store';
-import { TempDbConnectionRole, TempDbConnection as TempDbConnectionModel } from '../../models/TempDbConnection';
+import {
+  TempDbConnectionRole,
+  TempDbConnection as TempDbConnectionModel
+} from '../../models/TempDbConnection';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;
@@ -15,12 +28,11 @@ interface InjectedProps {
 @inject('dbConnectionStore')
 @observer
 export class TempDbConnection extends React.Component {
-
   constructor(props: any) {
     super(props);
 
     reaction(
-      () => (this.injected.dbConnectionStore.saveState),
+      () => this.injected.dbConnectionStore.saveState,
       (state) => {
         if (state === RequestState.Success) {
           this.onClose();
@@ -49,7 +61,7 @@ export class TempDbConnection extends React.Component {
   @computed get dbNameOptions() {
     return _.uniq([
       undefined,
-      ...this.dbConnection.databases.map(db => db.name),
+      ...this.dbConnection.databases.map((db) => db.name),
       this.dbConnection.initialDb
     ]).map((name) => {
       return { key: `db-${name}`, text: name, value: name };
@@ -59,7 +71,7 @@ export class TempDbConnection extends React.Component {
   @computed get dbTableOptions() {
     return _.uniq([
       undefined,
-      ...this.dbConnection.tables.map(table => table.name),
+      ...this.dbConnection.tables.map((table) => table.name),
       this.dbConnection.initialTable
     ]).map((name) => {
       return { key: `table-${name}`, text: name, value: name };
@@ -71,15 +83,21 @@ export class TempDbConnection extends React.Component {
     this.injected.dbConnectionStore.tempDbConnection = null;
   }
 
-  handleInitDbChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
-    const value = data.value as (string | undefined);
+  handleInitDbChange = (
+    e: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
+    const value = data.value as string | undefined;
     this.dbConnection.initialDb = value;
-  }
+  };
 
-  handleInitTableChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
-    const value = data.value as (string | undefined);
+  handleInitTableChange = (
+    e: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
+    const value = data.value as string | undefined;
     this.dbConnection.initialTable = value;
-  }
+  };
 
   onSave() {
     switch (this.dbConnection.role) {
@@ -93,7 +111,10 @@ export class TempDbConnection extends React.Component {
   }
 
   @action duplicate() {
-    const dup = new TempDbConnectionModel(this.dbConnection.props, TempDbConnectionRole.Create);
+    const dup = new TempDbConnectionModel(
+      this.dbConnection.props,
+      TempDbConnectionRole.Create
+    );
     dup.name = `${dup.name}-copy`;
     dup.password = this.dbConnection.password;
     this.injected.dbConnectionStore.tempDbConnection = dup;
@@ -123,10 +144,10 @@ export class TempDbConnection extends React.Component {
         info={validConnection === undefined}
         error={validConnection === false}
         success={validConnection}
-        onDismiss={() => this.dbConnection.message = undefined}
+        onDismiss={() => (this.dbConnection.message = undefined)}
       >
         <Icon name={icon} loading={validConnection === undefined} />
-        <Message.Content >
+        <Message.Content>
           <Message.Header content={header} />
           {content}
         </Message.Content>
@@ -137,31 +158,19 @@ export class TempDbConnection extends React.Component {
   render() {
     const name = this.dbConnection ? this.dbConnection.name : '';
     return (
-      <Modal
-        open={this.isModalOpen}
-        onClose={() => this.onClose()}
-      >
+      <Modal open={this.isModalOpen} onClose={() => this.onClose()}>
         <Modal.Header content={`Database Connection: ${name}`} />
-        {this.isModalOpen && this.dbConnection.message &&
-          this.message
-        }
-        {this.isModalOpen &&
-          <Modal.Content
-            id="db-connection-modal"
-          >
+        {this.isModalOpen && this.dbConnection.message && this.message}
+        {this.isModalOpen && (
+          <Modal.Content id="db-connection-modal">
             <Grid stackable columns={2}>
               <Grid.Row>
                 <Grid.Column>
-                  <Label
-                    as="a"
-                    color="teal"
-                    ribbon
-                    content="Display Name"
-                  />
+                  <Label as="a" color="teal" ribbon content="Display Name" />
                   <Form.Input
                     fluid
                     value={name}
-                    onChange={e => this.dbConnection.name = e.target.value}
+                    onChange={(e) => (this.dbConnection.name = e.target.value)}
                     type="text"
                   />
                 </Grid.Column>
@@ -173,18 +182,16 @@ export class TempDbConnection extends React.Component {
                     content="Database Type"
                   />
                   <div>
-                    <Button.Group
-                      color="teal"
-                    >
+                    <Button.Group color="teal">
                       <Button
                         content="PostgreSQL"
                         active={this.dbConnection.dbType === DbType.Psql}
-                        onClick={() => this.dbConnection.dbType = DbType.Psql}
+                        onClick={() => (this.dbConnection.dbType = DbType.Psql)}
                       />
                       <Button
                         content="MySql"
                         active={this.dbConnection.dbType === DbType.MySql}
-                        onClick={() => this.dbConnection.dbType = DbType.MySql}
+                        onClick={() => (this.dbConnection.dbType = DbType.MySql)}
                       />
                     </Button.Group>
                   </div>
@@ -192,25 +199,22 @@ export class TempDbConnection extends React.Component {
               </Grid.Row>
               <Grid.Row>
                 <Grid.Column>
-                  <Label
-                    as="a"
-                    color="teal"
-                    ribbon
-                    content="Host: Port"
-                  />
+                  <Label as="a" color="teal" ribbon content="Host: Port" />
                   <Form id="host-port-group">
                     <Form.Group>
                       <Form.Input
                         required
                         value={this.dbConnection.host}
-                        onChange={e => this.dbConnection.host = e.target.value}
+                        onChange={(e) => (this.dbConnection.host = e.target.value)}
                         type="text"
                       />
                       <Form.Input
                         required
                         style={{ width: '6rem' }}
                         value={this.dbConnection.port}
-                        onChange={e => this.dbConnection.port = parseInt(e.target.value, 10)}
+                        onChange={(e) =>
+                          (this.dbConnection.port = parseInt(e.target.value, 10))
+                        }
                         type="number"
                       />
                     </Form.Group>
@@ -219,28 +223,18 @@ export class TempDbConnection extends React.Component {
               </Grid.Row>
               <Grid.Row>
                 <Grid.Column>
-                  <Label
-                    as="a"
-                    color="teal"
-                    ribbon
-                    content="Username"
-                  />
+                  <Label as="a" color="teal" ribbon content="Username" />
                   <Form.Input
                     fluid
                     required
                     placeholder="Username"
                     value={this.dbConnection.username}
-                    onChange={e => this.dbConnection.username = e.target.value}
+                    onChange={(e) => (this.dbConnection.username = e.target.value)}
                     type="text"
                   />
                 </Grid.Column>
                 <Grid.Column>
-                  <Label
-                    as="a"
-                    color="teal"
-                    ribbon
-                    content="Password"
-                  />
+                  <Label as="a" color="teal" ribbon content="Password" />
                   <Form.Input
                     fluid
                     required
@@ -248,26 +242,22 @@ export class TempDbConnection extends React.Component {
                       name: 'eye',
                       circular: true,
                       link: true,
-                      onClick: () => this.setState({
-                        showPassword: !this.state.showPassword
-                      })
+                      onClick: () =>
+                        this.setState({
+                          showPassword: !this.state.showPassword
+                        })
                     }}
                     placeholder="Password"
                     value={this.dbConnection.password || ''}
                     loading={this.dbConnection.password === undefined}
-                    onChange={e => this.dbConnection.password = e.target.value}
+                    onChange={(e) => (this.dbConnection.password = e.target.value)}
                     type={this.state.showPassword ? 'text' : 'password'}
                   />
                 </Grid.Column>
               </Grid.Row>
               <Grid.Row>
                 <Grid.Column>
-                  <Label
-                    as="a"
-                    color="teal"
-                    ribbon
-                    content="Initial DB (optional)"
-                  />
+                  <Label as="a" color="teal" ribbon content="Initial DB (optional)" />
                   <Form.Dropdown
                     options={this.dbNameOptions}
                     placeholder="Initial DB"
@@ -281,12 +271,7 @@ export class TempDbConnection extends React.Component {
                   />
                 </Grid.Column>
                 <Grid.Column>
-                  <Label
-                    as="a"
-                    color="teal"
-                    ribbon
-                    content="Initial Table (optional)"
-                  />
+                  <Label as="a" color="teal" ribbon content="Initial Table (optional)" />
                   <Form.Dropdown
                     options={this.dbTableOptions}
                     placeholder="Initial Table"
@@ -302,8 +287,8 @@ export class TempDbConnection extends React.Component {
               </Grid.Row>
             </Grid>
           </Modal.Content>
-        }
-        {this.dbConnection &&
+        )}
+        {this.dbConnection && (
           <Modal.Actions>
             <Button
               icon="plug"
@@ -324,12 +309,7 @@ export class TempDbConnection extends React.Component {
               on="click"
               position="top right"
               trigger={
-                <Button
-                  icon="trash"
-                  labelPosition="left"
-                  content="Remove"
-                  color="red"
-                />
+                <Button icon="trash" labelPosition="left" content="Remove" color="red" />
               }
               header="Confirm"
               content={
@@ -357,9 +337,8 @@ export class TempDbConnection extends React.Component {
               onClick={() => this.onSave()}
             />
           </Modal.Actions>
-        }
+        )}
       </Modal>
     );
   }
-
 }

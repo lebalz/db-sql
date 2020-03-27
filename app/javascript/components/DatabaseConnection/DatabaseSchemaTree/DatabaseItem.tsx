@@ -1,11 +1,11 @@
 import React, { Fragment } from 'react';
 import { Icon, List, Progress } from 'semantic-ui-react';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbConnectionStore from '../../../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
-import Database from '../../models/Database';
-import { REST } from '../../declarations/REST';
+import Database from '../../../models/Database';
+import { REST } from '../../../declarations/REST';
 
 interface DatabaseItemProps {
   database: Database;

@@ -7,14 +7,14 @@ import DbConnectionStore from '../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Database from './DatabaseConnection/Database';
-import DatabaseStructure from './DatabaseConnection/DatabaseStructure';
+import DatabaseSchemaTree from './DatabaseConnection/DatabaseSchemaTree/DatabaseSchemaTree';
 import { RouteComponentProps } from 'react-router';
 
 interface MatchParams {
   id: string;
 }
 
-interface DbConnectionProps extends RouteComponentProps<MatchParams> { }
+interface DbConnectionProps extends RouteComponentProps<MatchParams> {}
 
 interface InjectedProps extends DbConnectionProps {
   sessionStore: SessionStore;
@@ -40,13 +40,13 @@ export default class DbConnection extends React.Component<DbConnectionProps> {
           <NavBar />
         </header>
         <div id="sidebar">
-          <DatabaseStructure />
+          <DatabaseSchemaTree />
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
           <Database />
         </main>
         <Footer />
-      </Fragment >
+      </Fragment>
     );
   }
 }

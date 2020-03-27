@@ -6,6 +6,7 @@ import _ from 'lodash';
 import { RequestState } from '../../stores/session_store';
 import SqlEditor from './SqlEditor';
 import SqlResult from './SqlResult';
+import { computed } from 'mobx';
 
 interface InjectedProps {
   dbConnectionStore: DbConnectionStore;

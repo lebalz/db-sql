@@ -3,7 +3,7 @@ import { List } from 'semantic-ui-react';
 import { observer } from 'mobx-react';
 import { action } from 'mobx';
 import _ from 'lodash';
-import DbColumn, { Mark } from '../../models/DbColumn';
+import DbColumn, { Mark } from '../../../models/DbColumn';
 
 interface Props {
   column: DbColumn;
@@ -21,7 +21,7 @@ export default class ColumnItem extends React.Component<Props> {
       column.foreignColumn.mark = Mark.To;
     } else if (column.isPrimaryKey) {
       column.mark = Mark.To;
-      column.referencedBy.forEach(ref => ref.mark = Mark.From);
+      column.referencedBy.forEach((ref) => (ref.mark = Mark.From));
     }
   }
 
@@ -31,9 +31,9 @@ export default class ColumnItem extends React.Component<Props> {
       column.foreignColumn.mark = Mark.None;
     } else if (column.isPrimaryKey) {
       column.mark = Mark.None;
-      column.referencedBy.forEach(ref => ref.mark = Mark.None);
+      column.referencedBy.forEach((ref) => (ref.mark = Mark.None));
     }
-  };
+  }
 
   render() {
     const { column } = this.injected;
@@ -46,15 +46,10 @@ export default class ColumnItem extends React.Component<Props> {
         onMouseOut={() => this.onMouseOut(column)}
       >
         <List.Icon name="columns" color={highlighted ? 'yellow' : 'grey'} />
-        <List.Content
-          className={column.isPrimaryKey ? 'primary-key' : ''}
-        >
+        <List.Content className={column.isPrimaryKey ? 'primary-key' : ''}>
           {column.name}
         </List.Content>
-        {
-          column.isForeignKey &&
-          <List.Icon name="key" color="grey" />
-        }
+        {column.isForeignKey && <List.Icon name="key" color="grey" />}
       </List.Item>
     );
   }

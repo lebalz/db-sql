@@ -18,7 +18,6 @@ interface InjectedProps extends Props {
 @inject('dbConnectionStore')
 @observer
 export default class DbConnectionOverview extends React.Component<Props> {
-
   get injected() {
     return this.props as InjectedProps;
   }
@@ -38,22 +37,20 @@ export default class DbConnectionOverview extends React.Component<Props> {
         <Card.Content>
           <Card.Header content={name} />
           <Card.Meta content={`${host}:${port}`} />
-          <Label
-            content={dbType}
-            color={dbType === DbType.MySql ? 'orange' : 'blue'}
-          />
+          <Label content={dbType} color={dbType === DbType.MySql ? 'orange' : 'blue'} />
         </Card.Content>
         <Card.Content extra>
           <Button
             floated="left"
             circular
             icon="settings"
-            onClick={
-              () => {
-                const temp = new TempDbConnection(this.dbConnection.props, TempDbConnectionRole.Update);
-                this.injected.dbConnectionStore.tempDbConnection = temp;
-              }
-            }
+            onClick={() => {
+              const temp = new TempDbConnection(
+                this.dbConnection.props,
+                TempDbConnectionRole.Update
+              );
+              this.injected.dbConnectionStore.tempDbConnection = temp;
+            }}
           />
           <Button
             basic
@@ -65,7 +62,6 @@ export default class DbConnectionOverview extends React.Component<Props> {
           />
         </Card.Content>
       </Card>
-    )
+    );
   }
-
 }
