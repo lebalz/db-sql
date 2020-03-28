@@ -122,7 +122,20 @@ Mails sent with `:smtp` to [http://localhost:1025](http://localhost:1025) are ca
 
 ## Deploy
 
-The app is deployed with dokku and the [Dockerfile](Dockerfile)
+The app can be deployed with dokku (thorough the usage of this [Dockerfile](Dockerfile)).
+
+To deploy db-sql on a dokku-instance, you can run
+
+```sh
+SSH_USER=root IP=<DOKKUS_IP> ./setup_dokku.sh
+```
+
+to easyly
+
+- install needed Plugins (postgres and letsencrypt)
+- setup the needed env variables
+- deploy the app
+- letsencrypt the connection
 
 ### ENV variables on production
 
