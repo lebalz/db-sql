@@ -41,7 +41,7 @@ module Resources
                 :role,
                 type: Symbol,
                 default: :user,
-                values: User::ROLES,
+                values: %i[user admin],
                 desc: 'user roles'
               )
             end

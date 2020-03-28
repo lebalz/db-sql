@@ -31,7 +31,7 @@ module Resources
           :db_type,
           type: Symbol,
           default: :psql,
-          values: DbConnection::DB_TYPES,
+          values: %i[psql mysql mariadb sqlite],
           desc: 'db type'
         )
         requires(:host, type: String, desc: 'host')
