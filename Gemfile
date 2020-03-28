@@ -9,7 +9,7 @@ gem 'pg', '~> 0.18'
 gem 'mysql2', '~>0.5.2'
 
 # Use Puma as the app server
-gem 'puma', '~> 3.12'
+gem 'puma', '~> 4.3'
 
 gem 'redis'
 gem 'hiredis'
@@ -39,7 +39,7 @@ gem 'uglifier', '>=4.1.12'
 gem 'webpacker', '~>4.2.2'
 
 # Reduces boot times through caching; required in config/boot.rb
-gem 'bootsnap', '>= 1.1.0', require: false
+gem 'bootsnap', '>= 1.4.2', require: false
 
 # Character encoding detection
 # gem 'charlock_holmes'
