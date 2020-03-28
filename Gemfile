@@ -35,7 +35,6 @@ gem 'grape-entity'
 gem 'sidekiq'
 
 gem 'semantic-ui-sass'
-gem 'uglifier', '>=4.1.12'
 gem 'webpacker', '~>4.2.2'
 
 # Reduces boot times through caching; required in config/boot.rb
