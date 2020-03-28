@@ -16,7 +16,7 @@ interface MatchParams {
   part: string;
 }
 
-interface ProfileProps extends RouteComponentProps<MatchParams> { }
+interface ProfileProps extends RouteComponentProps<MatchParams> {}
 
 interface InjectedProps extends ProfileProps {
   sessionStore: SessionStore;
@@ -58,8 +58,7 @@ export default class Profile extends React.Component<ProfileProps> {
             active={part === 'delete_account'}
             onClick={() => router.push('./delete_account')}
           />
-          {
-            this.injected.sessionStore.currentUser.isAdmin &&
+          {this.injected.sessionStore.currentUser.isAdmin && (
             <Fragment>
               <Divider horizontal content="Admin" />
               <Menu.Item
@@ -69,7 +68,7 @@ export default class Profile extends React.Component<ProfileProps> {
                 onClick={() => router.push('./users')}
               />
             </Fragment>
-          }
+          )}
         </Menu>
         <main style={{ alignItems: 'center' }}>
           {(() => {
@@ -91,5 +90,4 @@ export default class Profile extends React.Component<ProfileProps> {
       </Fragment>
     );
   }
-
 }

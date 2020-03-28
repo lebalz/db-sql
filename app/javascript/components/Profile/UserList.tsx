@@ -55,11 +55,11 @@ export default class UserList extends React.Component {
     const { users, reloadState } = this.injected.userStore;
     const { currentUser } = this.injected.sessionStore;
     return (
-      <Fragment>
+      <div>
         <Button
           icon={this.reloadIcon}
           color={this.reloadIconColor}
-          label="Refresh users"
+          label="Refresh Users"
           labelPosition="left"
           onClick={() => this.injected.userStore.loadUsers()}
           floated="left"
@@ -123,7 +123,7 @@ export default class UserList extends React.Component {
             }
           </Table.Body>
         </Table>
-      </Fragment>
+      </div>
     );
   }
 }
