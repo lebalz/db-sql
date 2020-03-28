@@ -4,7 +4,7 @@ import DbConnectionStore from '../../stores/db_connection_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import SqlEditor from './SqlEditor';
-import SqlResult from './SqlResult';
+import SqlResults from './SqlResults';
 import { action } from 'mobx';
 import { default as DatabaseModel } from '../../models/Database';
 import Query from '../../models/Query';
@@ -97,9 +97,13 @@ export default class Database extends React.Component {
               });
             })}
           </Menu>
-          <Segment attached="bottom">
+          <Segment
+            attached="bottom"
+            style={{ padding: '0.5em 0 0 0', marginBottom: '3em' }}
+          >
             <SqlEditor />
             <Button
+              floated="right"
               positive
               disabled={activeQuery?.requestState === REST.Requested}
               loading={activeQuery?.requestState === REST.Requested}
@@ -107,8 +111,8 @@ export default class Database extends React.Component {
             >
               Query
             </Button>
-            <SqlResult />
           </Segment>
+          <SqlResults />
         </Segment>
       </Fragment>
     );

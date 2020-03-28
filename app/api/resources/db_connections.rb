@@ -171,11 +171,13 @@ module Resources
                     result: conn.exec_query(key: crypto_key, database_name: db_name) do
                       query
                     end.to_a,
+                    type: 'success',
                     time: Time.now - t0
                   }
                 rescue StandardError => e
                   results << {
                     error: e.message,
+                    type: 'error',
                     time: Time.now - t0
                   }
                 end

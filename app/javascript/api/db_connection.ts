@@ -79,25 +79,31 @@ export interface IndexProps {
   comment?: string;
 }
 
-type ResultTable = { [key: string]: string | number }[];
+export type ResultRow = { [key: string]: string | number };
+
+export type ResultTable = ResultRow[];
+
+export enum ResultType {
+  Success = 'success',
+  Error = 'error'
+}
 interface Result {
-  result: ResultTable | null;
-  error: string | null;
   time: number;
+  type: ResultType;
 }
-interface SuccessQuery extends Result {
+export interface SuccessQuery extends Result {
   result: ResultTable;
+  type: ResultType.Success;
 }
-interface ErrorQuery extends Result {
+export interface ErrorQuery extends Result {
   error: string;
+  type: ResultType.Error;
 }
+
 export type QueryResult = SuccessQuery | ErrorQuery;
 
 export function newDbConnection(dbConnection: CreateProps) {
-  return api.post(
-    '/db_connections',
-    dbConnection
-  );
+  return api.post('/db_connections', dbConnection);
 }
 
 export function dbConnections(): AxiosPromise<DbConnection[]> {
@@ -113,18 +119,12 @@ export function dbConnectionPassword(id: string): AxiosPromise<{ password: strin
 }
 
 export function updateConnection(connection: UpdateProps) {
-  return api.put(
-    `/db_connections/${connection.id}`,
-    {
-      data: connection
-    }
-  );
+  return api.put(`/db_connections/${connection.id}`, {
+    data: connection
+  });
 }
 export function createConnection(connection: CreateProps): AxiosPromise<DbConnection> {
-  return api.post(
-    '/db_connections',
-    connection
-  );
+  return api.post('/db_connections', connection);
 }
 
 export function databases(id: string): AxiosPromise<Database[]> {
@@ -132,15 +132,15 @@ export function databases(id: string): AxiosPromise<Database[]> {
 }
 
 export function tables(id: string, databaseName: string): AxiosPromise<DbTable[]> {
-  return api.get(
-    `/db_connections/${id}/${databaseName}/tables`
-  );
+  return api.get(`/db_connections/${id}/${databaseName}/tables`);
 }
 
-export function columns(id: string, databaseName: string, tableName: string): AxiosPromise<ColumnProps[]> {
-  return api.get(
-    `/db_connections/${id}/${databaseName}/${tableName}/columns`
-  );
+export function columns(
+  id: string,
+  databaseName: string,
+  tableName: string
+): AxiosPromise<ColumnProps[]> {
+  return api.get(`/db_connections/${id}/${databaseName}/${tableName}/columns`);
 }
 
 export function foreignKeys(
@@ -148,9 +148,7 @@ export function foreignKeys(
   databaseName: string,
   tableName: string
 ): AxiosPromise<ForeignKeyProps[]> {
-  return api.get(
-    `/db_connections/${id}/${databaseName}/${tableName}/foreign_keys`
-  );
+  return api.get(`/db_connections/${id}/${databaseName}/${tableName}/foreign_keys`);
 }
 
 export function indexes(
@@ -158,9 +156,7 @@ export function indexes(
   databaseName: string,
   tableName: string
 ): AxiosPromise<IndexProps[]> {
-  return api.get(
-    `/db_connections/${id}/${databaseName}/${tableName}/indexes`
-  );
+  return api.get(`/db_connections/${id}/${databaseName}/${tableName}/indexes`);
 }
 
 export function query(
@@ -168,10 +164,7 @@ export function query(
   databaseName: string,
   queries: string[]
 ): AxiosPromise<QueryResult[]> {
-  return api.post(
-    `/db_connections/${id}/${databaseName}/multi_query`,
-    {
-      queries: queries
-    }
-  );
+  return api.post(`/db_connections/${id}/${databaseName}/multi_query`, {
+    queries: queries
+  });
 }
