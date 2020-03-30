@@ -46,12 +46,6 @@ export default class NavBar extends React.Component {
 
   render() {
     const router = this.injected.routerStore;
-    const { dbConnectionStore } = this.injected;
-    const { activeConnection } = dbConnectionStore;
-    const connection =
-      activeConnection || dbConnectionStore.dbConnections.length > 0
-        ? dbConnectionStore.dbConnections[0]
-        : undefined;
     const { resendActivationLinkState } = this.injected.sessionStore;
     return (
       <Fragment>
@@ -78,12 +72,18 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          {connection && (
+          {this.injected.dbConnectionStore.activeConnection && (
             <Menu.Item
               style={{ marginLeft: '2em' }}
               name="Connections"
               active={router.location.pathname.startsWith('/connections')}
-              onClick={() => router.push(`/connections/${connection.id}`)}
+              onClick={() => {
+                const { activeConnection } = this.injected.dbConnectionStore;
+                if (!activeConnection) {
+                  return;
+                }
+                router.push(`/connections/${activeConnection.id}`);
+              }}
             >
               <Icon name="plug" />
               Connections

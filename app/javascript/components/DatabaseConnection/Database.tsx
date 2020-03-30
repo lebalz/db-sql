@@ -9,14 +9,18 @@ import { action } from 'mobx';
 import { default as DatabaseModel } from '../../models/Database';
 import Query from '../../models/Query';
 import { REST } from '../../declarations/REST';
+import { RouterStore } from 'mobx-react-router';
 
-interface InjectedProps {
+interface Props {}
+
+interface InjectedProps extends Props {
   dbConnectionStore: DbConnectionStore;
+  routerStore: RouterStore;
 }
 
-@inject('dbConnectionStore')
+@inject('dbConnectionStore', 'routerStore')
 @observer
-export default class Database extends React.Component {
+export default class Database extends React.Component<Props> {
   get injected() {
     return this.props as InjectedProps;
   }
@@ -33,6 +37,7 @@ export default class Database extends React.Component {
 
   render() {
     const { dbConnectionStore } = this.injected;
+    // const activeConnection = dbConnectionStore.findDbConnection(this.props.id);
     const { loadedConnections, activeConnection } = dbConnectionStore;
     if (!activeConnection || activeConnection.isClosed) {
       return null;
@@ -48,7 +53,7 @@ export default class Database extends React.Component {
             return (
               <Menu.Item
                 key={i}
-                onClick={() => (dbConnectionStore.activeConnection = conn)}
+                onClick={() => this.injected.routerStore.push(`./${conn.id}`)}
                 active={activeConnection === conn}
               >
                 <Icon name="plug" />

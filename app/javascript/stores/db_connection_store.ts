@@ -8,7 +8,6 @@ import {
   remove as removeApi,
   query as fetchQuery
 } from '../api/db_connection';
-import { RequestState } from './session_store';
 import DbConnection from '../models/DbConnection';
 import { TempDbConnection } from '../models/TempDbConnection';
 import 'regenerator-runtime/runtime';
@@ -16,6 +15,7 @@ import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexe
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { REST } from '../declarations/REST';
+import { RequestState } from './session_store';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -36,20 +36,30 @@ function identifyCommands(queryText: string) {
   return children.map((child) => child.text).slice(0, -1);
 }
 
+enum LoadState {
+  Loading,
+  Error,
+  Success,
+  None
+}
+
 class DbConnectionStore {
   private readonly root: RootStore;
   dbConnections = observable<DbConnection>([]);
-  @observable requestState: RequestState = RequestState.None;
+  @observable loadState: LoadState = LoadState.None;
   @observable saveState: RequestState = RequestState.None;
 
   @observable tempDbConnection: null | TempDbConnection = null;
-  @observable activeConnection: null | DbConnection = null;
+  @observable activeConnectionId?: string = undefined;
   @observable queryState: RequestState = RequestState.None;
+
+  loginDisposer: IReactionDisposer;
+  loadDisposer: IReactionDisposer;
 
   constructor(root: RootStore) {
     this.root = root;
 
-    reaction(
+    this.loginDisposer = reaction(
       () => this.root.session.isLoggedIn,
       (loggedIn) => {
         if (loggedIn) {
@@ -59,6 +69,28 @@ class DbConnectionStore {
         }
       }
     );
+
+    this.loadDisposer = reaction(
+      () => this.isLoaded,
+      (isLoaded) => {
+        if (isLoaded && this.activeConnection) {
+          this.activeConnection.loadDatabases();
+        }
+      }
+    );
+  }
+
+  componentWillUnmount() {
+    this.loginDisposer();
+    this.loadDisposer();
+  }
+
+  @computed
+  get activeConnection(): DbConnection | undefined {
+    if (!this.activeConnectionId) {
+      return;
+    }
+    return this.findDbConnection(this.activeConnectionId);
   }
 
   // closeConnection(connection: DbConnection) {
@@ -76,17 +108,29 @@ class DbConnectionStore {
     return this.dbConnections.filter((conn) => !!conn.isLoaded);
   }
 
-  @action setActiveConnection(dbConnection: DbConnection) {
-    this.root.routing.push(`/connections/${dbConnection.id}`);
-    Promise.all([dbConnection.loadDatabases()]).then(() => {
-      this.activeConnection = dbConnection;
-    });
+  findDbConnection(id: string): DbConnection | undefined {
+    return this.dbConnections.find((c) => c.id === id);
+  }
+
+  setActiveConnection(id: string) {
+    this.activeConnectionId = id;
+    if (!this.isLoaded) {
+      return;
+    }
+    return Promise.all([this.activeConnection?.loadDatabases()]);
+  }
+
+  @computed
+  get isLoaded() {
+    return this.loadState === LoadState.Success;
   }
 
   @action loadDbConnections(forceReload: boolean = false) {
-    if (!forceReload && this.dbConnections.length > 0) return;
+    if ((this.isLoaded && !forceReload) || this.loadState === LoadState.Loading) {
+      return;
+    }
 
-    this.requestState = RequestState.Waiting;
+    this.loadState = LoadState.Loading;
 
     dbConnections()
       .then(({ data }) => {
@@ -94,14 +138,12 @@ class DbConnectionStore {
           (dbConnection) => new DbConnection(dbConnection)
         );
         this.dbConnections.replace(dbConnections);
-        this.requestState = RequestState.Success;
+        this.loadState = LoadState.Success;
       })
       .catch(() => {
         console.log('Could not fetch db connections');
-        this.requestState = RequestState.Error;
-      })
-      .then((result) => new Promise((resolve) => setTimeout(resolve, 2000, result)))
-      .finally(() => (this.requestState = RequestState.None));
+        this.loadState = LoadState.Error;
+      });
   }
 
   @action updateDbConnection(dbConnection: TempDbConnection) {

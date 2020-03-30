@@ -19,18 +19,16 @@ const AppContent = observer(() => (
     dbConnectionStore={rootStore.dbConnection}
   >
     <Router history={rootStore.session.history}>
-      <Fragment>
-        <Switch>
-          <Route path="/login" component={Login} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/connections/:id/:db_id?" component={DbConnection} />
-          <Route path="/profile/:part" component={Profile} />
-          <Route path="/users/:id/reset_password" component={ResetPassword} />
-          <Route path="/users/:id/activate" component={ActivateAccount} />
-          <Redirect from="/" exact to="/dashboard" />
-          <Redirect to="/dashboard" />
-        </Switch>
-      </Fragment>
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/connections/:id/:db_id?" component={DbConnection} />
+        <Route path="/profile/:part" component={Profile} />
+        <Route path="/users/:id/reset_password" component={ResetPassword} />
+        <Route path="/users/:id/activate" component={ActivateAccount} />
+        <Redirect from="/" exact to="/dashboard" />
+        <Redirect to="/dashboard" />
+      </Switch>
     </Router>
   </Provider>
 ));

@@ -20,8 +20,8 @@ interface InjectedProps {
 }
 
 const DEFAULT_DB_CONNECTION: DbConnectionProps = {
-  created_at: (new Date()).toISOString(),
-  updated_at: (new Date()).toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   db_type: DbType.Psql,
   host: '',
   id: '',
@@ -33,7 +33,6 @@ const DEFAULT_DB_CONNECTION: DbConnectionProps = {
 @inject('sessionStore', 'routerStore', 'dbConnectionStore')
 @observer
 export default class Dashboard extends React.Component {
-
   get injected() {
     return this.props as InjectedProps;
   }
@@ -58,27 +57,28 @@ export default class Dashboard extends React.Component {
               flexWrap: 'wrap'
             }}
           >
-            {
-              _.sortBy(dbConnections, ['name']).map((dbConnection) => {
-                return (
-                  <DbConnectionOverview
-                    key={dbConnection.id}
-                    dbConnection={dbConnection}
-                    style={{
-                      flexBasis: '250px',
-                      marginRight: '14px',
-                      flexShrink: 0
-                    }}
-                  />
-                );
-              })
-            }
+            {_.sortBy(dbConnections, ['name']).map((dbConnection) => {
+              return (
+                <DbConnectionOverview
+                  key={dbConnection.id}
+                  dbConnection={dbConnection}
+                  style={{
+                    flexBasis: '250px',
+                    marginRight: '14px',
+                    flexShrink: 0
+                  }}
+                />
+              );
+            })}
           </div>
           <Button
             icon="add"
             size="big"
             onClick={() => {
-              const temp = new TempDbConnection(DEFAULT_DB_CONNECTION, TempDbConnectionRole.Create)
+              const temp = new TempDbConnection(
+                DEFAULT_DB_CONNECTION,
+                TempDbConnectionRole.Create
+              );
               this.injected.dbConnectionStore.tempDbConnection = temp;
             }}
           />
@@ -87,5 +87,4 @@ export default class Dashboard extends React.Component {
       </Fragment>
     );
   }
-
 }

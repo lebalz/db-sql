@@ -111,7 +111,7 @@ class SessionStore {
         pathname: routeBeforeLogin.path || '/dashboard',
         search: routeBeforeLogin.query || ''
       });
-    } else if (this.isNoLoginRequired(location)) {
+    } else if (this.isNoLoginRequired(location) && !this.routeBeforeLogin.path) {
       this.routeBeforeLogin = this.route;
     }
   };
@@ -248,7 +248,9 @@ class SessionStore {
     if (this.user.isAdmin) {
       this.root.user.loadUsers();
     }
-    if (this.routeBeforeLogin.path === '/login') this.routeBeforeLogin = {};
+    if (this.routeBeforeLogin.path === '/login') {
+      this.routeBeforeLogin = {};
+    }
     this.history.push({
       pathname: this.routeBeforeLogin.path || '/dashboard',
       search: this.routeBeforeLogin.query || ''
