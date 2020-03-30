@@ -8,7 +8,7 @@ interface Props {
 
 export const EmptyResult = ({ queryIndex }: Props) => {
   return (
-    <Message negative>
+    <Message positive>
       <Message.Header>{`Successfully executed query ${queryIndex + 1}.`}</Message.Header>
     </Message>
   );
