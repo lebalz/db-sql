@@ -44,7 +44,7 @@ export default class SqlResults extends React.Component {
           <Fragment>
             <Label
               size="large"
-              content={`Query #${idx}`}
+              content={`Query #${idx + 1}`}
               style={{ marginRight: '1em', color: 'black' }}
             />
             <TimeLabel result={result} />
@@ -66,7 +66,11 @@ export default class SqlResults extends React.Component {
 
     return (
       <Fragment>
-        <Header as="h5" attached="top">
+        <Header
+          as="h5"
+          attached="top"
+          className="results-header"
+        >
           Result
           <Popup
             content={`${totalTime}s`}
@@ -88,12 +92,13 @@ export default class SqlResults extends React.Component {
             />
           )}
         </Header>
-        <Segment attached style={{ padding: 0 }}>
+        <Segment attached style={{ padding: 0.  }}>
           <Accordion
             styled
             fluid
             exclusive={false}
             panels={this.resultPanels}
+            className="sql-results"
             defaultActiveIndex={this.results.map((_, idx) => idx)}
           />
         </Segment>
