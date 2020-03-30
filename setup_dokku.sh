@@ -1,72 +1,84 @@
 #!/usr/bin/env bash
 
+set -e
+
 # This sets up db-sql on a blank dokku instance (http://dokku.viewdocs.io/dokku/)
 
-# USAGE: SSH_USER=root IP=192.168.145.123 ./setup_dokku.sh
-# optional: provide ssh key to the setup process:
-#   SSH_USER=root IP=192.168.145.123 SSH_KEY="~/.ssh/other_key.pub" ./setup_dokku.sh
+# USAGE: ./setup_dokku.sh -i 192.168.145.123 -d domain.ch
 
-if [ -z "$SSH_KEY" ]; then
-  SSH_KEY="~/.ssh/id_rsa.pub"
+usage="usage: setup_dokku.ssh -i ip of dokku
+                       -d dokku-domain
+                       [-u dokku root user (default: root)]
+                       [-n app name on dokku (default: db-sql)]
+                       [-g name of git remote (default: db-sql)]
+                       [-h help]"
+
+while getopts "i:d:g:k:u:n:h" option; do
+  case "${option}" in
+    k) RAILS_MASTER_KEY=${OPTARG};;
+    i) IP=${OPTARG};;
+    d) DOMAIN=${OPTARG};;
+    u) SSH_USER=${OPTARG};;
+    n) APP_NAME=${OPTARG};;
+    g) GIT_REMOTE_NAME=${OPTARG};;
+    h) echo "$usage"
+      exit 0
+      ;;
+  esac
+done
+
+if [[ -z "$SSH_USER" ]]; then
+  SSH_USER="root"
+else
+  echo "SSH_USER=$SSH_USER"
 fi
 
-ssh -i ${SSH_KEY} -T ${SSH_USER}@${IP} 'bash -s' < setup_dokku_plugins.sh
 
-APP_NAME='db-sql'
-DOKKU_REMOTE_NAME='dokku'
+if [[ -z "$RAILS_MASTER_KEY" ]]; then
+  RAILS_MASTER_KEY=$(cat ./config/master.key)
+else
+  echo "use custom rails master key"
+fi
 
-echo "# ---------------------------------------------------------------------------- #"
-echo "# ----------------------- create dokku app and services ---------------------- #"
-echo "# ---------------------------------------------------------------------------- #"
-{
-ssh -i ${SSH_KEY} -T ${SSH_USER}@${IP} << EOF
-  if [[ \$(ls /home/dokku/${APP_NAME}) ]]; then
-    echo "${APP_NAME} exists"
-  else
-    dokku apps:create ${APP_NAME}
-    dokku postgres:create ${APP_NAME}
-    dokku postgres:link ${APP_NAME} ${APP_NAME}
-  fi
+if [[ -z "$APP_NAME" ]]; then
+  APP_NAME="db-sql"
+else
+  echo "APP_NAME=$APP_NAME"
+fi
 
-  # db connection url - since executed from within the postgres container, change host to localhost
-  DB_URL=\$(dokku config:get db-sql DATABASE_URL | sed 's/@.*:/@localhost:/')
+if [[ -z "$GIT_REMOTE_NAME" ]]; then
+  GIT_REMOTE_NAME="dokku"
+else
+  echo "GIT_REMOTE_NAME=$GIT_REMOTE_NAME"
+fi
 
-  # ensure postgres extension 'pgcrypto' is installed
-  dokku postgres:enter ${APP_NAME} psql \${DB_URL} -c 'CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA public;'
+# install postgres dokku plugin if not already installed
+ssh -T ${SSH_USER}@${IP} 'curl -s https://gist.githubusercontent.com/lebalz/0877cc16ead689a5c785e4bf6626f9ed/raw/install_postgres.sh | bash'
 
-  # configure the rails app
-  dokku config:set ${APP_NAME} RAILS_MASTER_KEY=$(cat config/master.key)
-  dokku config:set ${APP_NAME} RAILS_SERVE_STATIC_FILES="1" RAILS_ENV="production" DOKKU_PROXY_PORT_MAP="http:80:3000" NO_VHOST="0" DOKKU_DOCKERFILE_PORTS="3000"
-
-  # if you need special env's within the buildstep, add those as follows (e.g. the rails master key)
-  # dokku docker-options:add ${APP_NAME} build "--build-arg RAILS_MASTER_KEY=$(cat config/master.key)"
-EOF
-}
+# create and configure db-sql app
+ssh -T ${SSH_USER}@${IP} "curl -s https://gist.githubusercontent.com/lebalz/0877cc16ead689a5c785e4bf6626f9ed/raw/db-sql-setup.sh | bash -s -- -k ${RAILS_MASTER_KEY} -n ${APP_NAME}"
 
 # check if a dokku remote was already added
-if [[ -z $(git remote show | grep ${DOKKU_REMOTE_NAME}) ]]; then
-  echo "# ---------------------------------------------------------------------------- #"
-  echo "# ------------------------------ add git remote ------------------------------ #"
-  echo "# ---------------------------------------------------------------------------- #"
-  git remote add ${DOKKU_REMOTE_NAME} dokku@${IP}:${APP_NAME}
+if [[ -z $(git remote show | grep ${GIT_REMOTE_NAME}) ]]; then
+  echo "# ---- add git remote"
+  git remote add ${GIT_REMOTE_NAME} dokku@${IP}:${APP_NAME}
 fi
 
-echo "# ---------------------------------------------------------------------------- #"
-echo "# ----------------------- deploying ${APP_NAME} ------------------------------ #"
-echo "# ---------------------------------------------------------------------------- #"
-git push ${DOKKU_REMOTE_NAME} $(basename $(git symbolic-ref HEAD)):master
+echo "# ---- deploying ${APP_NAME}"
+git push ${GIT_REMOTE_NAME} $(basename $(git symbolic-ref HEAD)):master
 
-echo "# ---------------------------------------------------------------------------- #"
-echo "# ----------------------- configure letsencrypt ------------------------------ #"
-echo "# ---------------------------------------------------------------------------- #"
+# install plugin letsencrypt for dokku if not present
+ssh -T ${SSH_USER}@${IP} 'curl -s https://gist.githubusercontent.com/lebalz/0877cc16ead689a5c785e4bf6626f9ed/raw/install_letsencrypt.sh | bash'
+
+echo "# ---- configure letsencrypt"
 {
-ssh -i ${SSH_KEY} -T ${SSH_USER}@${IP} << EOF
+ssh -T ${SSH_USER}@${IP} << EOF
+if [[ -z \$(dokku letsencrypt:ls | grep ${APP_NAME}) ]]; then
+  dokku domains:add ${APP_NAME} "${APP_NAME}.${DOMAIN}"
   dokku config:set --no-restart ${APP_NAME} DOKKU_LETSENCRYPT_EMAIL=$(git config user.email)
   dokku letsencrypt ${APP_NAME}
+fi
 EOF
 }
 
-
-echo "# ---------------------------------------------------------------------------- #"
-echo "# ------------------------------------ DONE ---------------------------------- #"
-echo "# ---------------------------------------------------------------------------- #"
+echo "# ---- DONE"
