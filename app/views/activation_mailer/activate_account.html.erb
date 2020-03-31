@@ -1,13 +1,18 @@
 <h1>Welcome to DB SQL</h1>
 
-Please verify your email address <%= @user.email %> to complete your registration.
+Thank you for joining DB SQL.
 
-<a
-  id="activation-link"
-  href="<%= "#{root_url}users/#{@user.id}/activate?activation_token=#{@user.activation_token}" %>"
-  target="_blank"
->
-  Activate your Account
-</a>
+Please verify your email address <%= @user.email %> to complete your registration.
+<br />
+<br />
+
+For activation, navigate to the following activation link:
+<br />
+
+<%= "#{root_url}users/#{@user.id}/activate?activation_token=#{@user.activation_token}" %>
+<br />
+<br />
+
+Best regards,
 
 Your DB-SQL Team
