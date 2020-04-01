@@ -1,17 +1,28 @@
+<div class="mail">
 <h1>Reset your DB SQL password</h1>
-
+<p>
 You receive this mail because there was request to reset your DB SQL password. Please ignore this mail when you didn't request a new password.
 <br />
-
-To reset your password, navigate to the following link:
 <br />
-<br />
-
-<%= "#{root_url}users/#{@user.id}/activate?activation_token=#{@user.activation_token}" %>
-
-<br />
-<br />
-
+To reset your password, click here:
+<div class="link">
+<a
+  id="reset-link"
+  href="<%= "#{root_url}users/#{@user.id}/reset_password?reset_token=#{@user.reset_password_token}" %>"
+  target="_blank"
+  class="button"
+>
+  Reset here
+</a>
+</div>
 Best regards,
-
+<br>
 Your DB-SQL Team
+</p>
+
+<p class="plain-link">
+if the link does not work, navigate to the following url:
+<br>
+<br>
+<%= "#{root_url}users/#{@user.id}/reset_password?reset_token=#{@user.reset_password_token}" %>
+</p>
