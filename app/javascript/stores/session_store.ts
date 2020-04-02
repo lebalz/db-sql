@@ -32,16 +32,49 @@ export enum RequestState {
   None
 }
 
-interface Route {
-  path?: string;
-  query?: string;
-}
+const isAccountActivationPath = (location: Partial<Location>) => {
+  if (!location.pathname) {
+    return false;
+  }
+
+  // /users/id/activate
+  return /^\/users\/.*\/activate$/.test(location.pathname);
+};
+
+const isResetPasswordPath = (location: Partial<Location>) => {
+  if (!location.pathname) {
+    return false;
+  }
+
+  // /users/id/reset_password
+  return    /^\/users\/.*\/reset_password$/.test(location.pathname)
+};
+
+const isLoginPath = (location: Partial<Location>) => {
+  if (!location.pathname) {
+    return false;
+  }
+
+  // '/login'
+  return /^\/login$/.test(location.pathname);
+};
+
+const isNoLoginRequired = (location: Partial<Location>) => {
+  if (!location.pathname) {
+    return false;
+  }
+  return (
+    isLoginPath(location) ||
+    isAccountActivationPath(location) ||
+    isResetPasswordPath(location)
+  );
+};
 
 class SessionStore {
   @observable private user: User | null = null;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
-  routeBeforeLogin: Route = {};
+  routeBeforeLogin: Partial<Location> = {};
   @observable passwordState: RequestState = RequestState.None;
   @observable resendActivationLinkState: RequestState = RequestState.None;
   private readonly root: RootStore;
@@ -82,36 +115,49 @@ class SessionStore {
     );
   }
 
-  isNoLoginRequired(location: Location) {
-    return (
-      location.pathname === '/login' ||
-      /users\/.*\/reset_password/.test(location.pathname) ||
-      /users\/.*\/activate/.test(location.pathname)
-    );
-  }
-
-  get route(): Route {
+  get route(): Partial<Location> {
     const { location } = this.history;
     return {
-      path: location.pathname,
-      query: location.search
+      pathname: location.pathname,
+      search: location.search
     };
   }
 
+  @computed
+  get defaultLocation(): Partial<Location> {
+    const hasPath = !!this.routeBeforeLogin.pathname;
+    return {
+      pathname: this.routeBeforeLogin.pathname ?? '/dashboard',
+      search: (hasPath && this.routeBeforeLogin.search) ? this.routeBeforeLogin.search : ''
+    };
+  }
+
+  authorize(location: Partial<Location>) {
+    if (this.isLoggedIn) {
+      return true;
+    }
+    if (isNoLoginRequired(location)) {
+      return true;
+    }
+    return false;
+  }
+
   onRouteChange = (location: Location, action: Action) => {
-    if (!this.isLoggedIn && !this.isNoLoginRequired(location)) {
+    if (!this.authorize(location)) {
       this.routeBeforeLogin = this.route;
-      this.history.replace('/login');
-    } else if (this.isLoggedIn && location.pathname === '/login') {
-      let { routeBeforeLogin } = this;
-      if (routeBeforeLogin.path === '/login') {
-        routeBeforeLogin = {};
+      return this.history.replace('/login');
+    }
+
+    if (this.isLoggedIn && isLoginPath(location)) {
+      if (isNoLoginRequired(this.routeBeforeLogin)) {
+        this.routeBeforeLogin = {};
       }
-      this.history.replace({
-        pathname: routeBeforeLogin.path || '/dashboard',
-        search: routeBeforeLogin.query || ''
-      });
-    } else if (this.isNoLoginRequired(location) && !this.routeBeforeLogin.path) {
+
+      this.history.replace(this.defaultLocation);
+      return;
+    }
+
+    if (isNoLoginRequired(location) && !this.routeBeforeLogin.pathname) {
       this.routeBeforeLogin = this.route;
     }
   };
@@ -179,7 +225,9 @@ class SessionStore {
         this.user = new User(data);
       })
       .catch(() => {
-        if (this.isNoLoginRequired(this.root.routing.location)) return;
+        if (isNoLoginRequired(this.root.routing.location)) {
+          return;
+        }
 
         this.resetAuthorization();
       });
@@ -248,13 +296,15 @@ class SessionStore {
     if (this.user.isAdmin) {
       this.root.user.loadUsers();
     }
-    if (this.routeBeforeLogin.path === '/login') {
+
+    if (isNoLoginRequired(this.routeBeforeLogin)) {
+      if (!this.user.activated && isAccountActivationPath(this.routeBeforeLogin)) {
+        return;
+      }
       this.routeBeforeLogin = {};
     }
-    this.history.push({
-      pathname: this.routeBeforeLogin.path || '/dashboard',
-      search: this.routeBeforeLogin.query || ''
-    });
+
+    this.history.push(this.defaultLocation);
   }
 
   private updateLocalUserCredentials(user: ApiLoginUser) {
