@@ -1,5 +1,5 @@
-import { observable, reaction, computed, action } from 'mobx';
-import { RootStore } from './root_store';
+import { observable, reaction, computed, action, toJS } from 'mobx';
+import { RootStore, Store } from './root_store';
 import {
   login,
   LoginUser as ApiLoginUser,
@@ -17,6 +17,7 @@ import {
   syncHistoryWithStore
 } from 'mobx-react-router';
 import User from '../models/User';
+import { pathToRegexp, match, parse, compile } from 'path-to-regexp';
 import _ from 'lodash';
 
 export enum LocalStorageKey {
@@ -32,52 +33,30 @@ export enum RequestState {
   None
 }
 
-const isAccountActivationPath = (location: Partial<Location>) => {
-  if (!location.pathname) {
-    return false;
-  }
+const LOGIN_PATH = pathToRegexp('/login');
 
-  // /users/id/activate
-  return /^\/users\/.*\/activate$/.test(location.pathname);
-};
+const USER_PATH_REGEXP = pathToRegexp('/users/:id/(.*)');
 
-const isResetPasswordPath = (location: Partial<Location>) => {
-  if (!location.pathname) {
-    return false;
-  }
+const ACCOUNT_ACTIVATION_REGEXP = pathToRegexp('/users/:id/activate');
 
-  // /users/id/reset_password
-  return    /^\/users\/.*\/reset_password$/.test(location.pathname)
-};
+const RESET_PASSWORD_REGEXP = pathToRegexp('/users/:id/reset_password');
 
-const isLoginPath = (location: Partial<Location>) => {
-  if (!location.pathname) {
-    return false;
-  }
-
-  // '/login'
-  return /^\/login$/.test(location.pathname);
-};
-
-const isNoLoginRequired = (location: Partial<Location>) => {
-  if (!location.pathname) {
-    return false;
-  }
+const isNoLoginRequired = (pathname: string) => {
   return (
-    isLoginPath(location) ||
-    isAccountActivationPath(location) ||
-    isResetPasswordPath(location)
+    LOGIN_PATH.test(pathname) ||
+    ACCOUNT_ACTIVATION_REGEXP.test(pathname) ||
+    RESET_PASSWORD_REGEXP.test(pathname)
   );
 };
 
-class SessionStore {
+class SessionStore implements Store {
   @observable private user: User | null = null;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
-  routeBeforeLogin: Partial<Location> = {};
   @observable passwordState: RequestState = RequestState.None;
   @observable resendActivationLinkState: RequestState = RequestState.None;
   private readonly root: RootStore;
+  private locationHistory: Location[] = [];
 
   constructor(root: RootStore, routerStore: RouterStore) {
     this.root = root;
@@ -115,51 +94,86 @@ class SessionStore {
     );
   }
 
-  get route(): Partial<Location> {
+  get route(): Location {
     const { location } = this.history;
-    return {
-      pathname: location.pathname,
-      search: location.search
-    };
+    return location;
   }
 
-  @computed
-  get defaultLocation(): Partial<Location> {
-    const hasPath = !!this.routeBeforeLogin.pathname;
-    return {
-      pathname: this.routeBeforeLogin.pathname ?? '/dashboard',
-      search: (hasPath && this.routeBeforeLogin.search) ? this.routeBeforeLogin.search : ''
-    };
-  }
-
-  authorize(location: Partial<Location>) {
+  authorize(pathname: string) {
     if (this.isLoggedIn) {
+      // no login required and not on the login page => a user specific
+      // account activation/reset page
+      if (ACCOUNT_ACTIVATION_REGEXP.test(pathname || '')) {
+        const [_, id] = ACCOUNT_ACTIVATION_REGEXP.exec(pathname)!;
+        if (id !== this.currentUser.id) {
+          return false;
+        }
+      } else if (RESET_PASSWORD_REGEXP.test(pathname)) {
+        const [_, id] = RESET_PASSWORD_REGEXP.exec(pathname)!;
+        if (id !== this.currentUser.id) {
+          return false;
+        }
+      }
       return true;
     }
-    if (isNoLoginRequired(location)) {
+    if (isNoLoginRequired(pathname)) {
       return true;
     }
     return false;
   }
 
   onRouteChange = (location: Location, action: Action) => {
-    if (!this.authorize(location)) {
-      this.routeBeforeLogin = this.route;
-      return this.history.replace('/login');
+    this.pushToHistory(location, action);
+    if (!this.authorize(location.pathname)) {
+      if (this.isLoggedIn) {
+        this.cleanLocalStorage();
+        return this.logout(false);
+      }
+      return this.history.push('/login');
     }
 
-    if (this.isLoggedIn && isLoginPath(location)) {
-      if (isNoLoginRequired(this.routeBeforeLogin)) {
-        this.routeBeforeLogin = {};
-      }
+    this.navigateToNextOrDefaultPage();
+  };
 
-      this.history.replace(this.defaultLocation);
+  @action navigateToNextOrDefaultPage() {
+    const { route } = this;
+    let proceed = true;
+    if (this.isLoggedIn) {
+      if (LOGIN_PATH.test(route.pathname)) {
+        proceed = false;
+      }
+      if (
+        ACCOUNT_ACTIVATION_REGEXP.test(route.pathname) &&
+        !this.currentUser.activated
+      ) {
+        proceed = false;
+      }
+      if (
+        RESET_PASSWORD_REGEXP.test(route.pathname) &&
+        !this.currentUser.passwordResetRequested
+      ) {
+        proceed = false;
+      }
+    }
+    if (proceed) {
       return;
     }
+    this.history.push('/dashboard');
+  }
 
-    if (isNoLoginRequired(location) && !this.routeBeforeLogin.pathname) {
-      this.routeBeforeLogin = this.route;
+  pushToHistory = (location: Location, action: Action) => {
+    switch (action) {
+      case 'POP':
+        this.locationHistory = [];
+      case 'PUSH':
+        break;
+      case 'REPLACE':
+        if (this.locationHistory.length > 0) {
+          this.locationHistory.pop();
+        }
+        break;
     }
+    this.locationHistory.push(toJS(location));
   };
 
   get fetchFromLocalStorage(): ApiLoginUser | null {
@@ -225,21 +239,18 @@ class SessionStore {
         this.user = new User(data);
       })
       .catch(() => {
-        if (isNoLoginRequired(this.root.routing.location)) {
-          return;
-        }
-
-        this.resetAuthorization();
+        this.resetAuthorization(false);
       });
   }
 
-  @action logout() {
-    logout()
+  @action logout(redirect: boolean = true) {
+    return logout()
       .catch(({ error }) => {
         console.log(error);
       })
       .then(() => {
-        this.resetAuthorization();
+        this.resetAuthorization(redirect);
+        this.root.cleanup();
       });
   }
 
@@ -269,13 +280,18 @@ class SessionStore {
       });
   }
 
-  @action resetAuthorization() {
+  @action resetAuthorization(redirect: boolean = true) {
     this.user = null;
     delete api.defaults.headers[LocalStorageKey.Authorization];
     delete api.defaults.headers[LocalStorageKey.CryptoKey];
+    this.cleanLocalStorage();
+    if (redirect) {
+      this.history.push('/login');
+    }
+  }
+
+  @action cleanLocalStorage() {
     localStorage.removeItem(LocalStorageKey.User);
-    this.routeBeforeLogin = {};
-    this.history.replace('/login');
   }
 
   @action setCurrentUser(user: ApiLoginUser | null) {
@@ -285,9 +301,12 @@ class SessionStore {
     }
 
     this.user = new User(user);
-
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
     api.defaults.headers[LocalStorageKey.CryptoKey] = user.crypto_key;
+    if (!this.authorize(this.route.pathname)) {
+      return this.logout(false);
+    }
+
     localStorage.setItem(LocalStorageKey.User, JSON.stringify(user));
 
     // when the user came from the local storage, we must update the user
@@ -295,17 +314,14 @@ class SessionStore {
     this.reloadUser();
     if (this.user.isAdmin) {
       this.root.user.loadUsers();
+    } else {
+      this.root.user.cleanup();
     }
 
-    if (isNoLoginRequired(this.routeBeforeLogin)) {
-      if (!this.user.activated && isAccountActivationPath(this.routeBeforeLogin)) {
-        return;
-      }
-      this.routeBeforeLogin = {};
-    }
-
-    this.history.push(this.defaultLocation);
+    this.navigateToNextOrDefaultPage();
   }
+
+  @action cleanup() {}
 
   private updateLocalUserCredentials(user: ApiLoginUser) {
     api.defaults.headers[LocalStorageKey.Authorization] = user.token;
