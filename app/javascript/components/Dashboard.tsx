@@ -77,9 +77,10 @@ export default class Dashboard extends React.Component {
             onClick={() => {
               const temp = new TempDbConnection(
                 DEFAULT_DB_CONNECTION,
-                TempDbConnectionRole.Create
+                TempDbConnectionRole.Create,
+                this.injected.dbConnectionStore.cancelToken
               );
-              this.injected.dbConnectionStore.tempDbConnection = temp;
+              this.injected.dbConnectionStore.setTempDbConnection(temp);
             }}
           />
         </main>

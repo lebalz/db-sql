@@ -15,6 +15,7 @@ import Database from './Database';
 import DbTable from './DbTable';
 import { RequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
+import { CancelTokenSource } from 'axios';
 
 export enum TempDbConnectionRole {
   Update,
@@ -29,8 +30,12 @@ export class TempDbConnection extends DbConnection {
   @observable tablesLoaded?: boolean = false;
 
   tables = observable<DbTable>([]);
-  constructor(props: DbConnectionProps, role: TempDbConnectionRole) {
-    super(props);
+  constructor(
+    props: DbConnectionProps,
+    role: TempDbConnectionRole,
+    cancelToken: CancelTokenSource
+  ) {
+    super(props, cancelToken);
     this.role = role;
     this.testConnection = _.debounce(this.testConnection, 400, { leading: false });
 
@@ -72,7 +77,7 @@ export class TempDbConnection extends DbConnection {
       this.password = '';
       return;
     }
-    dbConnectionPassword(this.id).then(({ data }) => {
+    dbConnectionPassword(this.id, this.cancelToken).then(({ data }) => {
       this.password = data.password;
     });
   }
@@ -99,7 +104,7 @@ export class TempDbConnection extends DbConnection {
 
   @action loadDatabases() {
     this.dbRequestState = REST.Requested;
-    databases(this.tempDbPorps)
+    databases(this.tempDbPorps, this.cancelToken)
       .then(({ data }) => {
         this.databases.replace(data.map((db) => new Database(this, db)));
         this.dbRequestState = REST.Success;
@@ -119,7 +124,7 @@ export class TempDbConnection extends DbConnection {
     }
 
     this.tablesLoaded = undefined;
-    tables(this.tempDbPorps, db.name)
+    tables(this.tempDbPorps, db.name, this.cancelToken)
       .then(({ data }) => {
         this.tablesLoaded = true;
         this.tables.replace(data.map((table) => new DbTable(db, table)));
@@ -138,7 +143,7 @@ export class TempDbConnection extends DbConnection {
   @action.bound testConnection() {
     this.testConnectionState = RequestState.Waiting;
     this.validConnection = undefined;
-    test(this.tempDbPorps)
+    test(this.tempDbPorps, this.cancelToken)
       .then(({ data }) => {
         this.validConnection = data.success;
         this.message = data.success ? 'Connection established' : data.message;

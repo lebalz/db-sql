@@ -1,5 +1,5 @@
 import { observable, action, reaction, computed, IReactionDisposer } from 'mobx';
-import { RootStore } from './root_store';
+import { RootStore, Store } from './root_store';
 import _ from 'lodash';
 import {
   dbConnections,
@@ -43,15 +43,20 @@ enum LoadState {
   None
 }
 
-class DbConnectionStore {
-  private readonly root: RootStore;
+class State {
   dbConnections = observable<DbConnection>([]);
   @observable loadState: LoadState = LoadState.None;
   @observable saveState: RequestState = RequestState.None;
 
-  @observable tempDbConnection: null | TempDbConnection = null;
+  @observable tempDbConnection?: TempDbConnection = undefined;
   @observable activeConnectionId?: string = undefined;
   @observable queryState: RequestState = RequestState.None;
+}
+
+class DbConnectionStore implements Store {
+  private readonly root: RootStore;
+  @observable.ref
+  private state = new State();
 
   loginDisposer: IReactionDisposer;
   loadDisposer: IReactionDisposer;
@@ -87,10 +92,10 @@ class DbConnectionStore {
 
   @computed
   get activeConnection(): DbConnection | undefined {
-    if (!this.activeConnectionId) {
+    if (!this.state.activeConnectionId) {
       return;
     }
-    return this.findDbConnection(this.activeConnectionId);
+    return this.findDbConnection(this.state.activeConnectionId);
   }
 
   // closeConnection(connection: DbConnection) {
@@ -104,16 +109,39 @@ class DbConnectionStore {
   //   }
   // }
 
+  setTempDbConnection(dbConnection?: TempDbConnection) {
+    this.state.tempDbConnection = dbConnection;
+  }
+
+  get cancelToken() {
+    return this.root.cancelToken;
+  }
+
+  @computed
+  get tempDbConnection(): TempDbConnection | undefined {
+    return this.state.tempDbConnection;
+  }
+
+  @computed
+  get dbConnections() {
+    return this.state.dbConnections;
+  }
+
+  @computed
+  get saveState() {
+    return this.state.saveState;
+  }
+
   @computed get loadedConnections() {
-    return this.dbConnections.filter((conn) => !!conn.isLoaded);
+    return this.state.dbConnections.filter((conn) => !!conn.isLoaded);
   }
 
   findDbConnection(id: string): DbConnection | undefined {
-    return this.dbConnections.find((c) => c.id === id);
+    return this.state.dbConnections.find((c) => c.id === id);
   }
 
   setActiveConnection(id: string) {
-    this.activeConnectionId = id;
+    this.state.activeConnectionId = id;
     if (!this.isLoaded) {
       return;
     }
@@ -122,69 +150,75 @@ class DbConnectionStore {
 
   @computed
   get isLoaded() {
-    return this.loadState === LoadState.Success;
+    return this.state.loadState === LoadState.Success;
   }
 
   @action loadDbConnections(forceReload: boolean = false) {
-    if ((this.isLoaded && !forceReload) || this.loadState === LoadState.Loading) {
+    if ((this.isLoaded && !forceReload) || this.state.loadState === LoadState.Loading) {
       return;
     }
 
-    this.loadState = LoadState.Loading;
+    this.state.loadState = LoadState.Loading;
 
-    dbConnections()
+    dbConnections(this.root.cancelToken)
       .then(({ data }) => {
         const dbConnections = _.sortBy(data, ['name']).map(
-          (dbConnection) => new DbConnection(dbConnection)
+          (dbConnection) => new DbConnection(dbConnection, this.root.cancelToken)
         );
-        this.dbConnections.replace(dbConnections);
-        this.loadState = LoadState.Success;
+        this.state.dbConnections.replace(dbConnections);
+        this.state.loadState = LoadState.Success;
       })
       .catch(() => {
         console.log('Could not fetch db connections');
-        this.loadState = LoadState.Error;
+        this.state.loadState = LoadState.Error;
       });
   }
 
   @action updateDbConnection(dbConnection: TempDbConnection) {
-    this.saveState = RequestState.Waiting;
-    updateConnection(dbConnection.params)
+    this.state.saveState = RequestState.Waiting;
+    updateConnection(dbConnection.params, this.root.cancelToken)
       .then(() => {
-        const connection = this.dbConnections.find((db) => db.id === dbConnection.id);
+        const connection = this.state.dbConnections.find(
+          (db) => db.id === dbConnection.id
+        );
         if (!connection) return;
-        this.dbConnections.remove(connection);
-        this.dbConnections.push(new DbConnection(dbConnection.props));
-        this.saveState = RequestState.Success;
+        this.state.dbConnections.remove(connection);
+        this.state.dbConnections.push(
+          new DbConnection(dbConnection.props, this.root.cancelToken)
+        );
+        this.state.saveState = RequestState.Success;
       })
       .catch(() => {
-        this.saveState = RequestState.Error;
+        this.state.saveState = RequestState.Error;
       });
   }
 
   @action createDbConnection(dbConnection: TempDbConnection) {
-    this.saveState = RequestState.Waiting;
-    createConnection(dbConnection.tempDbPorps)
+    this.state.saveState = RequestState.Waiting;
+    createConnection(dbConnection.tempDbPorps, this.root.cancelToken)
       .then(({ data }) => {
-        this.dbConnections.push(new DbConnection(data));
-        this.saveState = RequestState.Success;
+        this.state.dbConnections.push(new DbConnection(data, this.root.cancelToken));
+        this.state.saveState = RequestState.Success;
       })
       .catch(() => {
-        this.saveState = RequestState.Error;
+        this.state.saveState = RequestState.Error;
       });
   }
 
   @action clearStore() {
-    this.dbConnections.clear();
+    this.state.dbConnections.clear();
   }
 
   @action remove(dbConnection: TempDbConnection) {
-    removeApi(dbConnection.id)
+    removeApi(dbConnection.id, this.root.cancelToken)
       .then(() => {
-        const connection = this.dbConnections.find((con) => con.id === dbConnection.id);
+        const connection = this.state.dbConnections.find(
+          (con) => con.id === dbConnection.id
+        );
         if (!connection) {
           return;
         }
-        this.dbConnections.remove(connection);
+        this.state.dbConnections.remove(connection);
       })
       .catch((e) => {
         console.log(e);
@@ -204,7 +238,7 @@ class DbConnectionStore {
     const t0 = Date.now();
     const queries = identifyCommands(rawInput);
     console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    fetchQuery(connection.id, database.name, queries)
+    fetchQuery(connection.id, database.name, queries, this.root.cancelToken)
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
         activeQuery.results = data;
@@ -214,6 +248,10 @@ class DbConnectionStore {
       .catch((e) => {
         activeQuery.requestState = REST.Error;
       });
+  }
+
+  @action cleanup() {
+    this.state = new State();
   }
 }
 

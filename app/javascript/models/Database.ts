@@ -28,6 +28,10 @@ export default class Database {
     );
   }
 
+  get cancelToken() {
+    return this.dbConnection.cancelToken;
+  }
+
   @computed
   get isActive() {
     return this.dbConnection.activeDatabase === this;
@@ -88,7 +92,7 @@ export default class Database {
     this.requestState = REST.Requested;
     const query = this.addQuery();
     query.setActive();
-    tables(this.id, this.name)
+    tables(this.id, this.name, this.cancelToken)
       .then(({ data }) => {
         this.tables.replace(data.map((table) => new DbTable(this, table)));
         this.requestState = REST.Success;

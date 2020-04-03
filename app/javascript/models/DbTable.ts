@@ -45,6 +45,10 @@ export default class DbTable {
     );
   }
 
+  get cancelToken() {
+    return this.database.cancelToken;
+  }
+
   @computed get mark(): Mark {
     const col = this.columns.find((c) => c.mark === Mark.To || c.mark === Mark.From);
     return col ? col.mark : Mark.None;
@@ -88,7 +92,7 @@ export default class DbTable {
 
   @action loadColumns() {
     this.requestStates.columns = REST.Requested;
-    return fetchColumns(this.id, this.database.name, this.name)
+    return fetchColumns(this.id, this.database.name, this.name, this.cancelToken)
       .then(({ data }) => {
         this.columns.replace(data.map((col) => new DbColumn(this, col)));
         this.requestStates.columns = REST.Success;
@@ -100,7 +104,7 @@ export default class DbTable {
 
   @action loadForeignKeys() {
     this.requestStates.foreignKeys = REST.Requested;
-    return fetchForeignKeys(this.id, this.database.name, this.name)
+    return fetchForeignKeys(this.id, this.database.name, this.name, this.cancelToken)
       .then(({ data }) => {
         data.forEach((fk) => {
           const col = this.column(fk.options.column);
@@ -122,7 +126,7 @@ export default class DbTable {
 
   @action loadIndexes() {
     this.requestStates.indexes = REST.Requested;
-    return fetchIndexes(this.id, this.database.name, this.name)
+    return fetchIndexes(this.id, this.database.name, this.name, this.cancelToken)
       .then(({ data }) => {
         this.indexex.replace(data);
         this.requestStates.indexes = REST.Success;

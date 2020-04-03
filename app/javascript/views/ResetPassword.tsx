@@ -50,6 +50,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
   resetPassword() {
     if (!this.validatePassword()) return;
 
+    this.injected.sessionStore.cleanLocalStorage();
     this.setState({ requestState: RequestState.Waiting });
     resetPasswordCall(
       this.id,

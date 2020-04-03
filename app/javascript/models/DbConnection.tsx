@@ -3,6 +3,7 @@ import { DbConnection as DbConnectionProps, databases } from '../api/db_connecti
 import _ from 'lodash';
 import Database from './Database';
 import { REST } from '../declarations/REST';
+import { CancelTokenSource } from 'axios';
 
 export enum DbType {
   Psql = 'psql',
@@ -38,8 +39,9 @@ export default class DbConnection {
   databases = observable<Database>([]);
 
   @observable dbRequestState: REST = REST.None;
+  cancelToken: CancelTokenSource;
 
-  constructor(props: DbConnectionProps) {
+  constructor(props: DbConnectionProps, cancelToken: CancelTokenSource) {
     this.id = props.id;
     this.name = props.name;
     this.dbType = props.db_type;
@@ -50,6 +52,7 @@ export default class DbConnection {
     this.initialTable = props.initial_table;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
+    this.cancelToken = cancelToken;
   }
 
   static formatDate(date: Date) {
@@ -77,7 +80,7 @@ export default class DbConnection {
       return;
     }
     this.dbRequestState = REST.Requested;
-    databases(this.id)
+    databases(this.id, this.cancelToken)
       .then(({ data }) => {
         this.databases.replace(data.map((db) => new Database(this, db)));
         this.dbRequestState = REST.Success;

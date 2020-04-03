@@ -49,9 +49,10 @@ export default class DbConnectionOverview extends React.Component<Props> {
             onClick={() => {
               const temp = new TempDbConnection(
                 this.dbConnection.props,
-                TempDbConnectionRole.Update
+                TempDbConnectionRole.Update,
+                this.dbConnection.cancelToken
               );
-              this.injected.dbConnectionStore.tempDbConnection = temp;
+              this.injected.dbConnectionStore.setTempDbConnection(temp);
             }}
           />
           <Button

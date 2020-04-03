@@ -80,7 +80,7 @@ export class TempDbConnection extends React.Component {
 
   onClose() {
     this.setState({ showPassword: false });
-    this.injected.dbConnectionStore.tempDbConnection = null;
+    this.injected.dbConnectionStore.setTempDbConnection();
   }
 
   handleInitDbChange = (
@@ -113,11 +113,12 @@ export class TempDbConnection extends React.Component {
   @action duplicate() {
     const dup = new TempDbConnectionModel(
       this.dbConnection.props,
-      TempDbConnectionRole.Create
+      TempDbConnectionRole.Create,
+      this.dbConnection.cancelToken
     );
     dup.name = `${dup.name}-copy`;
     dup.password = this.dbConnection.password;
-    this.injected.dbConnectionStore.tempDbConnection = dup;
+    this.injected.dbConnectionStore.setTempDbConnection(dup);
   }
 
   delete() {
