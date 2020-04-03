@@ -21,5 +21,8 @@ module Entities
     end
     expose :role
     expose :activated
+    expose :password_reset_requested do |user|
+      user.password_reset_requested?
+    end
   end
 end

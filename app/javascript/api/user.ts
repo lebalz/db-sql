@@ -10,6 +10,7 @@ export interface User {
   activated: boolean;
   created_at: string;
   updated_at: string;
+  password_reset_requested: boolean;
 }
 
 export interface LoginUser extends User {
