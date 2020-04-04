@@ -7,46 +7,46 @@ import {
   newPassword as setNewPasswordCall,
   user,
   deleteAccount as deleteAccountCall,
-  resendActivationLink as resendActivationLinkCall
+  resendActivationLink as resendActivationLinkCall,
 } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
 import {
   SynchronizedHistory,
   RouterStore,
-  syncHistoryWithStore
+  syncHistoryWithStore,
 } from 'mobx-react-router';
+import { matchPath } from 'react-router';
 import User from '../models/User';
-import { pathToRegexp, match, parse, compile } from 'path-to-regexp';
 import _ from 'lodash';
 
 export enum LocalStorageKey {
   User = 'db-sql-current-user',
   Authorization = 'Authorization',
-  CryptoKey = 'Crypto-Key'
+  CryptoKey = 'Crypto-Key',
 }
 
 export enum RequestState {
   Waiting,
   Error,
   Success,
-  None
+  None,
 }
 
-const LOGIN_PATH = pathToRegexp('/login');
+const LOGIN_PATH = '/login';
 
-const USER_PATH_REGEXP = pathToRegexp('/users/:id/(.*)');
+const USER_PATH_REGEXP = '/users/:id/(.*)';
 
-const ACCOUNT_ACTIVATION_REGEXP = pathToRegexp('/users/:id/activate');
+const ACCOUNT_ACTIVATION_REGEXP = '/users/:id/activate';
 
-const RESET_PASSWORD_REGEXP = pathToRegexp('/users/:id/reset_password');
+const RESET_PASSWORD_REGEXP = '/users/:id/reset_password';
 
 const isNoLoginRequired = (pathname: string) => {
-  return (
-    LOGIN_PATH.test(pathname) ||
-    ACCOUNT_ACTIVATION_REGEXP.test(pathname) ||
-    RESET_PASSWORD_REGEXP.test(pathname)
-  );
+  return !!matchPath(pathname, [
+    LOGIN_PATH,
+    ACCOUNT_ACTIVATION_REGEXP,
+    RESET_PASSWORD_REGEXP,
+  ]);
 };
 
 class SessionStore implements Store {
@@ -101,18 +101,9 @@ class SessionStore implements Store {
 
   authorize(pathname: string) {
     if (this.isLoggedIn) {
-      // no login required and not on the login page => a user specific
-      // account activation/reset page
-      if (ACCOUNT_ACTIVATION_REGEXP.test(pathname || '')) {
-        const [_, id] = ACCOUNT_ACTIVATION_REGEXP.exec(pathname)!;
-        if (id !== this.currentUser.id) {
-          return false;
-        }
-      } else if (RESET_PASSWORD_REGEXP.test(pathname)) {
-        const [_, id] = RESET_PASSWORD_REGEXP.exec(pathname)!;
-        if (id !== this.currentUser.id) {
-          return false;
-        }
+      const match = matchPath<{ id: string }>(pathname, [USER_PATH_REGEXP]);
+      if (match && match.params.id !== this.currentUser.id) {
+        return false;
       }
       return true;
     }
@@ -139,17 +130,17 @@ class SessionStore implements Store {
     const { route } = this;
     let proceed = true;
     if (this.isLoggedIn) {
-      if (LOGIN_PATH.test(route.pathname)) {
+      if (matchPath(route.pathname, LOGIN_PATH)) {
         proceed = false;
       }
       if (
-        ACCOUNT_ACTIVATION_REGEXP.test(route.pathname) &&
+        matchPath(route.pathname, ACCOUNT_ACTIVATION_REGEXP) &&
         !this.currentUser.activated
       ) {
         proceed = false;
       }
       if (
-        RESET_PASSWORD_REGEXP.test(route.pathname) &&
+        matchPath(route.pathname, RESET_PASSWORD_REGEXP) &&
         !this.currentUser.passwordResetRequested
       ) {
         proceed = false;
