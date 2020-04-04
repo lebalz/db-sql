@@ -1,9 +1,9 @@
 import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
-import { DbType, UpdateProps } from '../models/DbConnection';
-import { Database, DbTable } from './db_connection';
+import { DbType, UpdateProps } from '../models/DbServer';
+import { Database, DbTable } from './db_server';
 
-export interface DbConnection {
+export interface DbServer {
   name: string;
   db_type: DbType;
   host: string;
@@ -20,29 +20,29 @@ export interface TestResult {
 }
 
 export function databases(
-  dbConnection: DbConnection,
+  dbServer: DbServer,
   cancelToken: CancelTokenSource
 ): AxiosPromise<Database[]> {
-  return api.post('/temp_db_connection/databases', dbConnection, {
+  return api.post('/temp_db_server/databases', dbServer, {
     cancelToken: cancelToken.token
   });
 }
 
 export function tables(
-  dbConnection: DbConnection,
+  dbServer: DbServer,
   databaseName: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<DbTable[]> {
-  return api.post(`/temp_db_connection/${databaseName}/tables`, dbConnection, {
+  return api.post(`/temp_db_server/${databaseName}/tables`, dbServer, {
     cancelToken: cancelToken.token
   });
 }
 
 export function test(
-  dbConnection: DbConnection,
+  dbServer: DbServer,
   cancelToken: CancelTokenSource
 ): AxiosPromise<TestResult> {
-  return api.post('/temp_db_connection/test', dbConnection, {
+  return api.post('/temp_db_server/test', dbServer, {
     cancelToken: cancelToken.token
   });
 }

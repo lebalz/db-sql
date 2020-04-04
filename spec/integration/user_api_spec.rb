@@ -16,8 +16,8 @@ RSpec.describe "API::Resources::User" do
       'Authorization' => @login_token.token,
       'Crypto-Key' => @crypto_key
     }
-    FactoryBot.create(:db_connection, user: @user)
-    FactoryBot.create(:db_connection, user: @user)
+    FactoryBot.create(:db_server, user: @user)
+    FactoryBot.create(:db_server, user: @user)
   end
 
   describe 'GET /api/users/current' do
@@ -34,6 +34,7 @@ RSpec.describe "API::Resources::User" do
         "token" => nil,
         "role" => "user",
         "login_count" => @user.login_count,
+        "password_reset_requested" => false,
         "activated" => @user.activated
       )
     end
@@ -77,8 +78,8 @@ RSpec.describe "API::Resources::User" do
         'Authorization' => login_token.token,
         'Crypto-Key' => crypto_key
       }
-      FactoryBot.create(:db_connection, user: user)
-      FactoryBot.create(:db_connection, user: user)
+      FactoryBot.create(:db_server, user: user)
+      FactoryBot.create(:db_server, user: user)
 
       put(
         '/api/users/current/password',
@@ -92,8 +93,8 @@ RSpec.describe "API::Resources::User" do
       expect(user.authenticate('superPW111')).to be_truthy
       expect(json['token']).to eq(user.login_tokens.order(:updated_at).last.token)
       expect(user.login_tokens.order(:updated_at).last.token).not_to eq(headers['Authorization'])
-      user.db_connections.each do |db_connection|
-        expect(db_connection.password(json['crypto_key'])).to eq('safe-db-password')
+      user.db_servers.each do |db_server|
+        expect(db_server.password(json['crypto_key'])).to eq('safe-db-password')
       end
     end
     context 'not valid old password' do

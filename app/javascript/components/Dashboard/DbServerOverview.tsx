@@ -1,14 +1,14 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
-import DbConnection, { DbType } from '../../models/DbConnection';
+import DbServer, { DbType } from '../../models/DbServer';
 import { Card, Label, Button } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
-import { TempDbConnection, TempDbConnectionRole } from '../../models/TempDbConnection';
+import { TempDbServer, TempDbServerRole } from '../../models/TempDbServer';
 import { action } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 
 interface Props {
-  dbConnection: DbConnection;
+  dbConnection: DbServer;
   style?: React.CSSProperties;
 }
 
@@ -19,7 +19,7 @@ interface InjectedProps extends Props {
 
 @inject('dbServerStore', 'routerStore')
 @observer
-export default class DbConnectionOverview extends React.Component<Props> {
+export default class DbServerOverview extends React.Component<Props> {
   get injected() {
     return this.props as InjectedProps;
   }
@@ -47,12 +47,12 @@ export default class DbConnectionOverview extends React.Component<Props> {
             circular
             icon="settings"
             onClick={() => {
-              const temp = new TempDbConnection(
+              const temp = new TempDbServer(
                 this.dbConnection.props,
-                TempDbConnectionRole.Update,
+                TempDbServerRole.Update,
                 this.dbConnection.cancelToken
               );
-              this.injected.dbServerStore.setTempDbConnection(temp);
+              this.injected.dbServerStore.setTempDbServer(temp);
             }}
           />
           <Button

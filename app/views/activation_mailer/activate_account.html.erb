@@ -8,7 +8,7 @@ Thank you for joining DB SQL.
 Please verify your email address <%= @user.email %> to complete your registration.
 <div class="link">
 <a
-  id="reset-link"
+  id="activation-link"
   href="<%= "#{root_url}users/#{@user.id}/activate?activation_token=#{@user.activation_token}" %>"
   target="_blank"
   class="button"

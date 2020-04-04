@@ -45,8 +45,8 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
 
   @computed get color() {
     const { database } = this.injected;
-    const { activeDbServer } = this.injected.dbServerStore;
-    if (activeDbServer && activeDbServer.activeDatabase === database) {
+    const { activeDbServer: activeConnection } = this.injected.dbServerStore;
+    if (activeConnection && activeConnection.activeDatabase === database) {
       return 'yellow';
     }
     if (database.isLoaded) {
@@ -57,7 +57,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
 
   render() {
     const { database } = this.injected;
-    const { activeDbServer } = this.injected.dbServerStore;
+    const { activeDbServer: activeConnection } = this.injected.dbServerStore;
     return (
       <Fragment>
         <List.Item
@@ -66,8 +66,8 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
           className="database-item"
           onClick={(e) => {
             database.toggleShow();
-            if (activeDbServer) {
-              activeDbServer.activeDatabase = database;
+            if (activeConnection) {
+              activeConnection.activeDatabase = database;
               const { activeQuery } = database;
               if (activeQuery) {
                 activeQuery.setActive();

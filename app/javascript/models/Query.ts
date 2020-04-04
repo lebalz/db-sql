@@ -1,6 +1,6 @@
 import { observable, computed, action } from 'mobx';
 import { REST } from '../declarations/REST';
-import { QueryResult } from '../api/db_connection';
+import { QueryResult } from '../api/db_server';
 import Database from './Database';
 
 export default class Query {

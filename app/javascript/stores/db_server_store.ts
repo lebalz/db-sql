@@ -2,14 +2,14 @@ import { observable, action, reaction, computed, IReactionDisposer } from 'mobx'
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
 import {
-  dbConnections,
-  updateConnection,
-  createConnection,
+  dbServers,
+  updateDbServer,
+  createDbServer,
   remove as removeApi,
   query as fetchQuery
-} from '../api/db_connection';
-import DbConnection from '../models/DbConnection';
-import { TempDbConnection } from '../models/TempDbConnection';
+} from '../api/db_server';
+import DbServer from '../models/DbServer';
+import { TempDbServer } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
 import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexer';
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
@@ -44,12 +44,12 @@ enum LoadState {
 }
 
 class State {
-  dbConnections = observable<DbConnection>([]);
+  dbServers = observable<DbServer>([]);
   @observable loadState: LoadState = LoadState.None;
   @observable saveState: RequestState = RequestState.None;
 
-  @observable tempDbConnection?: TempDbConnection = undefined;
-  @observable activeConnectionId?: string = undefined;
+  @observable tempDbServer?: TempDbServer = undefined;
+  @observable activeDbServerId?: string = undefined;
   @observable queryState: RequestState = RequestState.None;
 }
 
@@ -68,7 +68,7 @@ class DbServerStore implements Store {
       () => this.root.session.isLoggedIn,
       (loggedIn) => {
         if (loggedIn) {
-          this.loadDbConnections(true);
+          this.loadDbServers(true);
         } else {
           this.clearStore();
         }
@@ -78,8 +78,8 @@ class DbServerStore implements Store {
     this.loadDisposer = reaction(
       () => this.isLoaded,
       (isLoaded) => {
-        if (isLoaded && this.activeConnection) {
-          this.activeConnection.loadDatabases();
+        if (isLoaded && this.activeDbServer) {
+          this.activeDbServer.loadDatabases();
         }
       }
     );
@@ -91,14 +91,14 @@ class DbServerStore implements Store {
   }
 
   @computed
-  get activeConnection(): DbConnection | undefined {
-    if (!this.state.activeConnectionId) {
+  get activeDbServer(): DbServer | undefined {
+    if (!this.state.activeDbServerId) {
       return;
     }
-    return this.findDbConnection(this.state.activeConnectionId);
+    return this.findDbServer(this.state.activeDbServerId);
   }
 
-  // closeConnection(connection: DbConnection) {
+  // closeConnection(connection: DbServer) {
   //   if (this.activeConnection === connection) {
   //     const connectionCount = this.loadedConnections.length;
   //     if (connectionCount > 0) {
@@ -109,8 +109,8 @@ class DbServerStore implements Store {
   //   }
   // }
 
-  setTempDbConnection(dbConnection?: TempDbConnection) {
-    this.state.tempDbConnection = dbConnection;
+  setTempDbServer(dbServer?: TempDbServer) {
+    this.state.tempDbServer = dbServer;
   }
 
   get cancelToken() {
@@ -118,13 +118,13 @@ class DbServerStore implements Store {
   }
 
   @computed
-  get tempDbConnection(): TempDbConnection | undefined {
-    return this.state.tempDbConnection;
+  get tempDbServer(): TempDbServer | undefined {
+    return this.state.tempDbServer;
   }
 
   @computed
-  get dbConnections() {
-    return this.state.dbConnections;
+  get dbServers() {
+    return this.state.dbServers;
   }
 
   @computed
@@ -132,20 +132,20 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
-  @computed get loadedConnections() {
-    return this.state.dbConnections.filter((conn) => !!conn.isLoaded);
+  @computed get loadedDbServers() {
+    return this.state.dbServers.filter((conn) => !!conn.isLoaded);
   }
 
-  findDbConnection(id: string): DbConnection | undefined {
-    return this.state.dbConnections.find((c) => c.id === id);
+  findDbServer(id: string): DbServer | undefined {
+    return this.state.dbServers.find((c) => c.id === id);
   }
 
-  setActiveConnection(id: string) {
-    this.state.activeConnectionId = id;
+  setActiveDbServer(id: string) {
+    this.state.activeDbServerId = id;
     if (!this.isLoaded) {
       return;
     }
-    return Promise.all([this.activeConnection?.loadDatabases()]);
+    return Promise.all([this.activeDbServer?.loadDatabases()]);
   }
 
   @computed
@@ -153,19 +153,19 @@ class DbServerStore implements Store {
     return this.state.loadState === LoadState.Success;
   }
 
-  @action loadDbConnections(forceReload: boolean = false) {
+  @action loadDbServers(forceReload: boolean = false) {
     if ((this.isLoaded && !forceReload) || this.state.loadState === LoadState.Loading) {
       return;
     }
 
     this.state.loadState = LoadState.Loading;
 
-    dbConnections(this.root.cancelToken)
+    dbServers(this.root.cancelToken)
       .then(({ data }) => {
-        const dbConnections = _.sortBy(data, ['name']).map(
-          (dbConnection) => new DbConnection(dbConnection, this.root.cancelToken)
+        const dbServers = _.sortBy(data, ['name']).map(
+          (dbConnection) => new DbServer(dbConnection, this.root.cancelToken)
         );
-        this.state.dbConnections.replace(dbConnections);
+        this.state.dbServers.replace(dbServers);
         this.state.loadState = LoadState.Success;
       })
       .catch(() => {
@@ -174,17 +174,17 @@ class DbServerStore implements Store {
       });
   }
 
-  @action updateDbConnection(dbConnection: TempDbConnection) {
+  @action updateDbServer(dbConnection: TempDbServer) {
     this.state.saveState = RequestState.Waiting;
-    updateConnection(dbConnection.params, this.root.cancelToken)
+    updateDbServer(dbConnection.params, this.root.cancelToken)
       .then(() => {
-        const connection = this.state.dbConnections.find(
+        const connection = this.state.dbServers.find(
           (db) => db.id === dbConnection.id
         );
         if (!connection) return;
-        this.state.dbConnections.remove(connection);
-        this.state.dbConnections.push(
-          new DbConnection(dbConnection.props, this.root.cancelToken)
+        this.state.dbServers.remove(connection);
+        this.state.dbServers.push(
+          new DbServer(dbConnection.props, this.root.cancelToken)
         );
         this.state.saveState = RequestState.Success;
       })
@@ -193,11 +193,11 @@ class DbServerStore implements Store {
       });
   }
 
-  @action createDbConnection(dbConnection: TempDbConnection) {
+  @action createDbServer(dbConnection: TempDbServer) {
     this.state.saveState = RequestState.Waiting;
-    createConnection(dbConnection.tempDbPorps, this.root.cancelToken)
+    createDbServer(dbConnection.tempDbPorps, this.root.cancelToken)
       .then(({ data }) => {
-        this.state.dbConnections.push(new DbConnection(data, this.root.cancelToken));
+        this.state.dbServers.push(new DbServer(data, this.root.cancelToken));
         this.state.saveState = RequestState.Success;
       })
       .catch(() => {
@@ -206,19 +206,19 @@ class DbServerStore implements Store {
   }
 
   @action clearStore() {
-    this.state.dbConnections.clear();
+    this.state.dbServers.clear();
   }
 
-  @action remove(dbConnection: TempDbConnection) {
-    removeApi(dbConnection.id, this.root.cancelToken)
+  @action remove(dbServer: TempDbServer) {
+    removeApi(dbServer.id, this.root.cancelToken)
       .then(() => {
-        const connection = this.state.dbConnections.find(
-          (con) => con.id === dbConnection.id
+        const connection = this.state.dbServers.find(
+          (con) => con.id === dbServer.id
         );
         if (!connection) {
           return;
         }
-        this.state.dbConnections.remove(connection);
+        this.state.dbServers.remove(connection);
       })
       .catch((e) => {
         console.log(e);
@@ -226,10 +226,10 @@ class DbServerStore implements Store {
   }
 
   executeQuery() {
-    const connection = this.activeConnection;
-    const database = connection?.activeDatabase;
+    const dbServer = this.activeDbServer;
+    const database = dbServer?.activeDatabase;
     const activeQuery = database?.activeQuery;
-    if (!connection || !database || !activeQuery) {
+    if (!dbServer || !database || !activeQuery) {
       return;
     }
 
@@ -238,7 +238,7 @@ class DbServerStore implements Store {
     const t0 = Date.now();
     const queries = identifyCommands(rawInput);
     console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    fetchQuery(connection.id, database.name, queries, this.root.cancelToken)
+    fetchQuery(dbServer.id, database.name, queries, this.root.cancelToken)
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
         activeQuery.results = data;

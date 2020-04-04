@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-class SeedDbConnections
+class SeedDbServers
   def self.perform
     user = User.find_by(email: 'test@user.ch')
-    encrypted_password = DbConnection.encrypt(
+    encrypted_password = DbServer.encrypt(
       key: user.crypto_key('asdfasdf'),
       db_password: Rails.configuration.database_configuration[Rails.env]['password']
     )
-    DbConnection.create!(
+    DbServer.create!(
       name: 'dev',
       db_type: :psql,
       host: ActiveRecord::Base.connection_config[:host],
@@ -18,28 +18,28 @@ class SeedDbConnections
       initial_db: ActiveRecord::Base.connection_config[:database],
       user: user
     )
-    return unless File.exist? Rails.root.join('db_connections.yaml')
+    return unless File.exist? Rails.root.join('db_servers.yaml')
 
-    connections = YAML.load_file(Rails.root.join('db_connections.yaml'))
-    connections.each do |name, connection|
-      user = User.find_by(email: connection['app_user'])
-      user_password = connection['app_user_password']
+    db_servers = YAML.load_file(Rails.root.join('db_servers.yaml'))
+    db_servers.each do |name, db_server|
+      user = User.find_by(email: db_server['app_user'])
+      user_password = db_server['app_user_password']
       next unless user && user_password
 
-      encrypted_password = DbConnection.encrypt(
+      encrypted_password = DbServer.encrypt(
         key: user.crypto_key(user_password),
-        db_password: connection['db_password']
+        db_password: db_server['db_password']
       )
-      DbConnection.create!(
+      DbServer.create!(
         name: name,
-        db_type: connection['db_type'],
-        host: connection['db_host'],
-        port: connection['db_port'],
+        db_type: db_server['db_type'],
+        host: db_server['db_host'],
+        port: db_server['db_port'],
         initialization_vector: encrypted_password[:initialization_vector],
-        username: connection['db_username'],
+        username: db_server['db_username'],
         password_encrypted: encrypted_password[:encrypted_password],
-        initial_db: connection['db_initial_db'],
-        initial_table: connection['db_initial_table'],
+        initial_db: db_server['db_initial_db'],
+        initial_table: db_server['db_initial_table'],
         user: user
       )
     end

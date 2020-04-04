@@ -1,8 +1,8 @@
 import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
-import { DbType, UpdateProps } from '../models/DbConnection';
+import { DbType, UpdateProps } from '../models/DbServer';
 
-export interface DbConnection {
+export interface DbServer {
   id: string;
   name: string;
   db_type: DbType;
@@ -102,54 +102,54 @@ export interface ErrorQuery extends Result {
 
 export type QueryResult = SuccessQuery | ErrorQuery;
 
-export function newDbConnection(
-  dbConnection: CreateProps,
+export function newDbServer(
+  dbServer: CreateProps,
   cancelToken: CancelTokenSource
 ) {
-  return api.post('/db_connections', dbConnection, { cancelToken: cancelToken.token });
+  return api.post('/db_servers', dbServer, { cancelToken: cancelToken.token });
 }
 
-export function dbConnections(
+export function dbServers(
   cancelToken: CancelTokenSource
-): AxiosPromise<DbConnection[]> {
-  return api.get('/db_connections', { cancelToken: cancelToken.token });
+): AxiosPromise<DbServer[]> {
+  return api.get('/db_servers', { cancelToken: cancelToken.token });
 }
 
 export function remove(id: string, cancelToken: CancelTokenSource) {
-  return api.delete(`/db_connections/${id}`, { cancelToken: cancelToken.token });
+  return api.delete(`/db_servers/${id}`, { cancelToken: cancelToken.token });
 }
 
-export function dbConnectionPassword(
+export function dbServerPassword(
   id: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<{ password: string }> {
-  return api.get(`/db_connections/${id}/password`, { cancelToken: cancelToken.token });
+  return api.get(`/db_servers/${id}/password`, { cancelToken: cancelToken.token });
 }
 
-export function updateConnection(
+export function updateDbServer(
   connection: UpdateProps,
   cancelToken: CancelTokenSource
 ) {
   return api.put(
-    `/db_connections/${connection.id}`,
+    `/db_servers/${connection.id}`,
     {
       data: connection
     },
     { cancelToken: cancelToken.token }
   );
 }
-export function createConnection(
+export function createDbServer(
   connection: CreateProps,
   cancelToken: CancelTokenSource
-): AxiosPromise<DbConnection> {
-  return api.post('/db_connections', connection, { cancelToken: cancelToken.token });
+): AxiosPromise<DbServer> {
+  return api.post('/db_servers', connection, { cancelToken: cancelToken.token });
 }
 
 export function databases(
   id: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<Database[]> {
-  return api.get(`/db_connections/${id}/databases`, { cancelToken: cancelToken.token });
+  return api.get(`/db_servers/${id}/databases`, { cancelToken: cancelToken.token });
 }
 
 export function tables(
@@ -157,7 +157,7 @@ export function tables(
   databaseName: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<DbTable[]> {
-  return api.get(`/db_connections/${id}/${databaseName}/tables`, {
+  return api.get(`/db_servers/${id}/${databaseName}/tables`, {
     cancelToken: cancelToken.token
   });
 }
@@ -168,7 +168,7 @@ export function columns(
   tableName: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<ColumnProps[]> {
-  return api.get(`/db_connections/${id}/${databaseName}/${tableName}/columns`, {
+  return api.get(`/db_servers/${id}/${databaseName}/${tableName}/columns`, {
     cancelToken: cancelToken.token
   });
 }
@@ -179,7 +179,7 @@ export function foreignKeys(
   tableName: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<ForeignKeyProps[]> {
-  return api.get(`/db_connections/${id}/${databaseName}/${tableName}/foreign_keys`, {
+  return api.get(`/db_servers/${id}/${databaseName}/${tableName}/foreign_keys`, {
     cancelToken: cancelToken.token
   });
 }
@@ -190,7 +190,7 @@ export function indexes(
   tableName: string,
   cancelToken: CancelTokenSource
 ): AxiosPromise<IndexProps[]> {
-  return api.get(`/db_connections/${id}/${databaseName}/${tableName}/indexes`, {
+  return api.get(`/db_servers/${id}/${databaseName}/${tableName}/indexes`, {
     cancelToken: cancelToken.token
   });
 }
@@ -202,7 +202,7 @@ export function query(
   cancelToken: CancelTokenSource
 ): AxiosPromise<QueryResult[]> {
   return api.post(
-    `/db_connections/${id}/${databaseName}/multi_query`,
+    `/db_servers/${id}/${databaseName}/multi_query`,
     {
       queries: queries
     },

@@ -10,13 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_06_30_115233) do
+ActiveRecord::Schema.define(version: 2020_04_04_090911) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
-  create_table "db_connections", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "db_servers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id"
     t.string "name"
     t.integer "db_type"
@@ -29,7 +29,7 @@ ActiveRecord::Schema.define(version: 2019_06_30_115233) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "username"
-    t.index ["user_id"], name: "index_db_connections_on_user_id"
+    t.index ["user_id"], name: "index_db_servers_on_user_id"
   end
 
   create_table "login_tokens", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

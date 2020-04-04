@@ -18,7 +18,7 @@
 
 require_relative '../rails_helper'
 
-RSpec.describe DbConnection, type: :model do
+RSpec.describe DbServer, type: :model do
   describe 'db connection' do
     it 'can create a valid user' do
       user = User.new(
@@ -76,27 +76,27 @@ RSpec.describe DbConnection, type: :model do
       user = FactoryBot.create(:user, password: 'unsafe_pw')
 
       connection1 = FactoryBot.create(
-        :db_connection,
+        :db_server,
         db_password: 'foobar',
         user_password: 'unsafe_pw',
         user: user
       )
       connection2 = FactoryBot.create(
-        :db_connection,
+        :db_server,
         db_password: 'blabla',
         user_password: 'unsafe_pw',
         user: user
       )
 
-      expect(user.db_connections.size).to be(2)
+      expect(user.db_servers.size).to be(2)
       user.change_password!(
         old_password: 'unsafe_pw',
         new_password: 'safe_password',
         password_confirmation: 'safe_password'
       )
 
-      db_connections = user.db_connections
-      expect(db_connections.size).to be(2)
+      db_servers = user.db_servers
+      expect(db_servers.size).to be(2)
       connection1.reload
       expect(connection1.password(user.crypto_key('safe_password'))).to eq('foobar')
       connection2.reload

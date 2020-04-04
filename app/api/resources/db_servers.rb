@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 module Resources
-  class DbConnections < Grape::API
+  class DbServers < Grape::API
     helpers do
-      def db_connection
-        connection = DbConnection.find(params[:id])
-        error!('Db connection not found', 302) unless connection
+      def db_server
+        db_server = DbServer.find(params[:id])
+        error!('Db server not found', 302) unless db_server
 
-        connection
+        db_server
       end
 
       def crypto_key
@@ -18,15 +18,15 @@ module Resources
       end
     end
 
-    resource :db_connections do
-      desc 'Get all connections'
+    resource :db_servers do
+      desc 'Get all database servers'
       get do
-        present current_user.db_connections, with: Entities::DbConnection
+        present current_user.db_servers, with: Entities::DbServer
       end
 
-      desc 'Create db connection'
+      desc 'Create a database server'
       params do
-        requires(:name, type: String, desc: 'Display text for this connection')
+        requires(:name, type: String, desc: 'Display text for this server')
         requires(
           :db_type,
           type: Symbol,
@@ -42,14 +42,14 @@ module Resources
         optional(:initial_table, type: String, desc: 'initial table')
       end
       post do
-        encrypted_password = DbConnection.encrypt(
+        encrypted_password = DbServer.encrypt(
           key: request.headers['Crypto-Key'],
           db_password: params[:password]
         )
-        db_connection = DbConnection.create!(
+        db_server = DbServer.create!(
           user: current_user,
           name: params[:name],
-          db_type: DbConnection.db_types[params[:db_type]],
+          db_type: DbServer.db_types[params[:db_type]],
           host: params[:host],
           port: params[:port],
           username: params[:username],
@@ -58,29 +58,29 @@ module Resources
           initial_db: params[:initial_db],
           initial_table: params[:initial_table]
         )
-        present db_connection, with: Entities::DbConnection
+        present db_server, with: Entities::DbServer
       end
 
-      route_param :id, type: String, desc: 'DB Connection ID' do
-        desc 'Get a specific db connection'
+      route_param :id, type: String, desc: 'Database server ID' do
+        desc 'Get a specific database server'
         get do
-          present db_connection, with: Entities::DbConnection
+          present db_server, with: Entities::DbServer
         end
 
         desc 'Get cleartext password'
         get :password do
           {
-            password: db_connection.password(crypto_key)
+            password: db_server.password(crypto_key)
           }
         end
 
-        desc 'Update a connection'
+        desc 'Update a database server'
         params do
           requires :data, type: Hash do
             optional(
               :name,
               type: String,
-              desc: 'Display text for this connection'
+              desc: 'Display text for this database server connection'
             )
             optional(
               :db_type,
@@ -98,17 +98,17 @@ module Resources
         end
         put do
           if params[:data].key?('password')
-            encrypted_password = DbConnection.encrypt(
+            encrypted_password = DbServer.encrypt(
               key: crypto_key,
               db_password: params[:data]['password']
             )
-            db_connection.update!(
+            db_server.update!(
               password_encrypted: encrypted_password[:encrypted_password],
               initialization_vector: encrypted_password[:initialization_vector]
             )
           end
           change = ActionController::Parameters.new(params[:data])
-          db_connection.update!(
+          db_server.update!(
             change.permit(
               :name,
               :db_type,
@@ -119,25 +119,25 @@ module Resources
               :initial_table
             )
           )
-          present db_connection, with: Entities::DbConnection
+          present db_server, with: Entities::DbServer
         end
 
-        desc 'Delete a connection'
+        desc 'Delete a database server connection'
         delete do
-          db_connection.destroy!
+          db_server.destroy!
           status :no_content
         end
 
-        desc 'Get the databases of a db connection'
+        desc 'Get the databases of a database server connection'
         get :databases do
           present(
-            db_connection.database_names(key: crypto_key).map { |n| { name: n } },
+            db_server.database_names(key: crypto_key).map { |n| { name: n } },
             with: Entities::Database
           )
         end
-        desc 'Get the database names of a db connection'
+        desc 'Get the database names of a database server connection'
         get :database_names do
-          db_connection.database_names(key: crypto_key)
+          db_server.database_names(key: crypto_key)
         end
         route_param :database_name, type: String, desc: 'Database name' do
           desc 'Query the database'
@@ -150,7 +150,7 @@ module Resources
           end
           post :query do
             db_name = params[:database_name]
-            db_connection.exec_query(key: crypto_key, database_name: db_name) do
+            db_server.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
             end.to_a
           end
@@ -162,7 +162,7 @@ module Resources
           post :multi_query do
             db_name = params[:database_name]
             results = []
-            db_connection.reuse_connection do |conn|
+            db_server.reuse_connection do |conn|
               params[:queries].each do |query|
                 next if query.blank?
                 t0 = Time.now
@@ -189,7 +189,7 @@ module Resources
           desc "Get the database's tables"
           get :tables do
             present(
-              db_connection.table_names(
+              db_server.table_names(
                 key: crypto_key,
                 database_name: params[:database_name]
               ).map { |n| { name: n } },
@@ -199,7 +199,7 @@ module Resources
 
           desc "Get the names of the database's tables"
           get :table_names do
-            db_connection.table_names(
+            db_server.table_names(
               key: crypto_key,
               database_name: params[:database_name]
             )
@@ -207,7 +207,7 @@ module Resources
           route_param :table_name, type: String, desc: 'Table name' do
             desc "Get the table's column names"
             get :column_names do
-              db_connection.column_names(
+              db_server.column_names(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
@@ -216,12 +216,12 @@ module Resources
 
             desc "Get the table's columns"
             get :columns do
-              primary_keys = db_connection.primary_key_names(
+              primary_keys = db_server.primary_key_names(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
               )
-              present db_connection.columns(
+              present db_server.columns(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
@@ -230,7 +230,7 @@ module Resources
 
             desc "Get the table's primary key names"
             get :primary_key_names do
-              db_connection.primary_key_names(
+              db_server.primary_key_names(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
@@ -239,7 +239,7 @@ module Resources
 
             desc "Get the table's foreign keys"
             get :foreign_keys do
-              present db_connection.foreign_keys(
+              present db_server.foreign_keys(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
@@ -248,7 +248,7 @@ module Resources
 
             desc "Get the table's indexes"
             get :indexes do
-              present db_connection.indexes(
+              present db_server.indexes(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]

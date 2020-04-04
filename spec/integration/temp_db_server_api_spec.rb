@@ -2,7 +2,7 @@
 
 require_relative '../rails_helper.rb'
 
-RSpec.describe "API::Resources::TempDbConnection" do
+RSpec.describe "API::Resources::TempDbServer" do
   before(:all) do
     pw = Rails.configuration.database_configuration[Rails.env]['password']
     sql_path = Rails.root.join(
@@ -12,10 +12,10 @@ RSpec.describe "API::Resources::TempDbConnection" do
       'ninja_turtles_create.sql'
     )
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
-    @temp_db_connection = {
+    @temp_db_server = {
       db_type: 'psql',
       host: 'localhost',
-      port: DbConnection::DEFAULT_PORT_PSQL,
+      port: DbServer::DEFAULT_PORT_PSQL,
       username: 'foo',
       password: 'safe-db-password'
     }
@@ -38,24 +38,24 @@ RSpec.describe "API::Resources::TempDbConnection" do
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
   end
 
-  describe 'POST /api/temp_db_connection/test' do
-    it 'returns true for a successful connection test' do
+  describe 'POST /api/temp_db_server/test' do
+    it 'returns true for a successful server test' do
       post(
-        "/api/temp_db_connection/test",
+        "/api/temp_db_server/test",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json).to eq('success' => true)
     end
-    it 'returns false and the errormessage for a failed connection test' do
+    it 'returns false and the errormessage for a failed server test' do
       post(
-        "/api/temp_db_connection/test",
+        "/api/temp_db_server/test",
         headers: @headers,
         params: {
           db_type: 'mysql',
           host: 'localhost',
-          port: DbConnection::DEFAULT_PORT_PSQL,
+          port: DbServer::DEFAULT_PORT_PSQL,
           username: 'foo',
           password: 'safe-db-password'
         }
@@ -65,40 +65,40 @@ RSpec.describe "API::Resources::TempDbConnection" do
     end
   end
 
-  describe 'POST /api/temp_db_connection/database_names' do
-    it 'can list database names of a temporary db connection' do
+  describe 'POST /api/temp_db_server/database_names' do
+    it 'can list database names of a temporary db server' do
       post(
-        "/api/temp_db_connection/database_names",
+        "/api/temp_db_server/database_names",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json).to include("ninja_turtles_db")
     end
   end
 
-  describe 'POST /api/temp_db_connection/databases' do
-    it 'can list database names of a temporary db connection' do
+  describe 'POST /api/temp_db_server/databases' do
+    it 'can list database names of a temporary db server' do
       post(
-        "/api/temp_db_connection/databases",
+        "/api/temp_db_server/databases",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json).to include("name" => "ninja_turtles_db")
     end
   end
 
-  describe 'POST /api/temp_db_connection/:database_name/query' do
+  describe 'POST /api/temp_db_server/:database_name/query' do
     let(:params) do
       {
         query: "SELECT * FROM ninja_turtles",
-        **@temp_db_connection
+        **@temp_db_server
       }
     end
     it 'can query a temp database' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/query",
+        "/api/temp_db_server/ninja_turtles_db/query",
         headers: @headers,
         params: params
       )
@@ -110,12 +110,12 @@ RSpec.describe "API::Resources::TempDbConnection" do
     end
   end
 
-  describe 'POST /api/temp_db_connection/:database_name/table_names' do
+  describe 'POST /api/temp_db_server/:database_name/table_names' do
     it 'can get table names of a database' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/table_names",
+        "/api/temp_db_server/ninja_turtles_db/table_names",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
@@ -124,12 +124,12 @@ RSpec.describe "API::Resources::TempDbConnection" do
     end
   end
 
-  describe 'POST /api/temp_db_connection/:database_name/table_names' do
+  describe 'POST /api/temp_db_server/:database_name/table_names' do
     it 'can get table names of a database' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/tables",
+        "/api/temp_db_server/ninja_turtles_db/tables",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
@@ -138,20 +138,20 @@ RSpec.describe "API::Resources::TempDbConnection" do
     end
   end
 
-  describe 'POST /api/temp_db_connection/:database_name/:table_name/indexes' do
+  describe 'POST /api/temp_db_server/:database_name/:table_name/indexes' do
     it 'can get indexes of a table' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/ninja_turtles/indexes",
+        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/indexes",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(0)
 
       post(
-        "/api/temp_db_connection/ninja_turtles_db/fights/indexes",
+        "/api/temp_db_server/ninja_turtles_db/fights/indexes",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
@@ -163,20 +163,20 @@ RSpec.describe "API::Resources::TempDbConnection" do
     end
   end
 
-  describe 'POST /api/temp_db_connection/:database_name/:table_name/foreign_keys' do
+  describe 'POST /api/temp_db_server/:database_name/:table_name/foreign_keys' do
     it 'can get indexes of a table' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/ninja_turtles/foreign_keys",
+        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/foreign_keys",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(0)
 
       post(
-        "/api/temp_db_connection/ninja_turtles_db/fights/foreign_keys",
+        "/api/temp_db_server/ninja_turtles_db/fights/foreign_keys",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
@@ -196,33 +196,33 @@ RSpec.describe "API::Resources::TempDbConnection" do
     end
   end
 
-  describe 'POST /api/temp_db_connection/:database_name/:table_name/primary_key_names' do
+  describe 'POST /api/temp_db_server/:database_name/:table_name/primary_key_names' do
     it 'can get indexes of a table' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/ninja_turtles/primary_key_names",
+        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/primary_key_names",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
       expect(json.first).to eq('id')
 
       post(
-        "/api/temp_db_connection/ninja_turtles_db/fights/primary_key_names",
+        "/api/temp_db_server/ninja_turtles_db/fights/primary_key_names",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
       expect(json.first).to eq('id')
     end
   end
-  describe 'POST /api/temp_db_connection/:database_name/:table_name/columns' do
+  describe 'POST /api/temp_db_server/:database_name/:table_name/columns' do
     it 'can get columns of a table' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/ninja_turtles/columns",
+        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/columns",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
@@ -249,9 +249,9 @@ RSpec.describe "API::Resources::TempDbConnection" do
       )
 
       post(
-        "/api/temp_db_connection/ninja_turtles_db/fights/columns",
+        "/api/temp_db_server/ninja_turtles_db/fights/columns",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(4)
@@ -298,12 +298,12 @@ RSpec.describe "API::Resources::TempDbConnection" do
       )
     end
   end
-  describe 'POST /api/temp_db_connection/:database_name/:table_name/column_names' do
+  describe 'POST /api/temp_db_server/:database_name/:table_name/column_names' do
     it 'can get column names of a table' do
       post(
-        "/api/temp_db_connection/ninja_turtles_db/ninja_turtles/column_names",
+        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/column_names",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
@@ -311,9 +311,9 @@ RSpec.describe "API::Resources::TempDbConnection" do
       expect(json[1]).to eq('name')
 
       post(
-        "/api/temp_db_connection/ninja_turtles_db/fights/column_names",
+        "/api/temp_db_server/ninja_turtles_db/fights/column_names",
         headers: @headers,
-        params: @temp_db_connection
+        params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(4)

@@ -75,10 +75,10 @@ postgres=# CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA public;
 
 ### Custom Seeds
 
-If you need for development custom seeds of DbConnections with confidential credentials, then create a new File `seed_db_connections.yaml` in root:
+If you need for development custom seeds of DbServers with confidential credentials, then create a new File `seed_db_servers.yaml` in root:
 
 ```sh
-cp seed_db_connections.example.yaml seed_db_connections.yaml
+cp seed_db_servers.example.yaml seed_db_servers.yaml
 ```
 edit it to your needs and reseed.
 

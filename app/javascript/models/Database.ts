@@ -1,21 +1,21 @@
 import { observable, computed, action, reaction } from 'mobx';
-import { Database as DatabaseProps, tables, QueryResult } from '../api/db_connection';
+import { Database as DatabaseProps, tables, QueryResult } from '../api/db_server';
 import _ from 'lodash';
-import DbConnection from './DbConnection';
+import DbServer from './DbServer';
 import DbTable from './DbTable';
 import ForeignKey from './ForeignKey';
 import { REST } from '../declarations/REST';
 import Query from './Query';
 
 export default class Database {
-  readonly dbConnection: DbConnection;
+  readonly dbConnection: DbServer;
   readonly name: string;
   tables = observable<DbTable>([]);
   @observable requestState: REST = REST.None;
   @observable show: boolean = false;
   queries = observable<Query>([]);
 
-  constructor(dbConnection: DbConnection, props: DatabaseProps) {
+  constructor(dbConnection: DbServer, props: DatabaseProps) {
     this.dbConnection = dbConnection;
     this.name = props.name;
     reaction(

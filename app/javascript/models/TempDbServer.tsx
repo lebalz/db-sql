@@ -1,29 +1,29 @@
 import { computed, action, reaction, observable } from 'mobx';
 import {
-  DbConnection as DbConnectionProps,
-  dbConnectionPassword
-} from '../api/db_connection';
+  DbServer as DbServerProps,
+  dbServerPassword
+} from '../api/db_server';
 import {
-  DbConnection as TempDbConnectionProps,
+  DbServer as TempDbConnectionProps,
   databases,
   test,
   tables
-} from '../api/temp_db_connection';
+} from '../api/temp_db_server';
 import _ from 'lodash';
-import DbConnection from './DbConnection';
+import DbServer from './DbServer';
 import Database from './Database';
 import DbTable from './DbTable';
 import { RequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 
-export enum TempDbConnectionRole {
+export enum TempDbServerRole {
   Update,
   Create
 }
 
-export class TempDbConnection extends DbConnection {
-  readonly role: TempDbConnectionRole;
+export class TempDbServer extends DbServer {
+  readonly role: TempDbServerRole;
   @observable testConnectionState: RequestState = RequestState.None;
   @observable message?: String = undefined;
   @observable validConnection?: boolean = false;
@@ -31,8 +31,8 @@ export class TempDbConnection extends DbConnection {
 
   tables = observable<DbTable>([]);
   constructor(
-    props: DbConnectionProps,
-    role: TempDbConnectionRole,
+    props: DbServerProps,
+    role: TempDbServerRole,
     cancelToken: CancelTokenSource
   ) {
     super(props, cancelToken);
@@ -73,11 +73,11 @@ export class TempDbConnection extends DbConnection {
   }
 
   @action loadPassword() {
-    if (this.role === TempDbConnectionRole.Create) {
+    if (this.role === TempDbServerRole.Create) {
       this.password = '';
       return;
     }
-    dbConnectionPassword(this.id, this.cancelToken).then(({ data }) => {
+    dbServerPassword(this.id, this.cancelToken).then(({ data }) => {
       this.password = data.password;
     });
   }

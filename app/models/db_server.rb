@@ -3,7 +3,7 @@
 require Rails.root.join('lib', 'queries', 'query')
 # == Schema Information
 #
-# Table name: db_connections
+# Table name: db_servers
 #
 #  id                    :uuid             not null, primary key
 #  user_id               :uuid
@@ -20,9 +20,9 @@ require Rails.root.join('lib', 'queries', 'query')
 #  username              :string
 #
 
-class DbConnection < ApplicationRecord
+class DbServer < ApplicationRecord
   DB_TYPES = %i[psql mysql mariadb sqlite].freeze
-  enum db_type: DbConnection::DB_TYPES
+  enum db_type: DbServer::DB_TYPES
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
@@ -58,7 +58,7 @@ class DbConnection < ApplicationRecord
   end
 
   def reset_crypto_key(new_crypto_key:, db_password: '-')
-    new_crypt = DbConnection.encrypt(
+    new_crypt = DbServer.encrypt(
       key: new_crypto_key,
       db_password: db_password
     )
@@ -126,7 +126,7 @@ class DbConnection < ApplicationRecord
   end
 
   # use when performing subsequent db-calls to the same database.
-  # @yield [DbConnection] self
+  # @yield [DbServer] self
   def reuse_connection
     @keep_connection = true
     yield self

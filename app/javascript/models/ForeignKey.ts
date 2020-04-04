@@ -1,7 +1,7 @@
 import { computed, observable } from 'mobx';
 import _ from 'lodash';
 import DbTable from './DbTable';
-import { ForeignKeyProps } from '../api/db_connection';
+import { ForeignKeyProps } from '../api/db_server';
 import Database from './Database';
 import DbColumn from './DbColumn';
 

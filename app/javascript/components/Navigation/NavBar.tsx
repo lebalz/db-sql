@@ -72,13 +72,13 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          {this.injected.dbServerStore.activeConnection && (
+          {this.injected.dbServerStore.activeDbServer && (
             <Menu.Item
               style={{ marginLeft: '2em' }}
               name="Connections"
               active={router.location.pathname.startsWith('/connections')}
               onClick={() => {
-                const { activeConnection } = this.injected.dbServerStore;
+                const { activeDbServer: activeConnection } = this.injected.dbServerStore;
                 if (!activeConnection) {
                   return;
                 }

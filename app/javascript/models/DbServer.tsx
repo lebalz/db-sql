@@ -1,5 +1,5 @@
 import { observable, computed, action } from 'mobx';
-import { DbConnection as DbConnectionProps, databases } from '../api/db_connection';
+import { DbServer as DbServerProps, databases } from '../api/db_server';
 import _ from 'lodash';
 import Database from './Database';
 import { REST } from '../declarations/REST';
@@ -17,12 +17,12 @@ export enum QueryState {
   Error
 }
 
-export interface UpdateProps extends Partial<DbConnectionProps> {
+export interface UpdateProps extends Partial<DbServerProps> {
   id: string;
   password?: string;
 }
 
-export default class DbConnection {
+export default class DbServer {
   readonly id: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -41,7 +41,7 @@ export default class DbConnection {
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
 
-  constructor(props: DbConnectionProps, cancelToken: CancelTokenSource) {
+  constructor(props: DbServerProps, cancelToken: CancelTokenSource) {
     this.id = props.id;
     this.name = props.name;
     this.dbType = props.db_type;
@@ -98,7 +98,7 @@ export default class DbConnection {
       });
   }
 
-  @computed get props(): DbConnectionProps {
+  @computed get props(): DbServerProps {
     return {
       id: this.id,
       name: this.name,

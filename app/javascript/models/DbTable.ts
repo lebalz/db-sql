@@ -5,9 +5,9 @@ import {
   foreignKeys as fetchForeignKeys,
   indexes as fetchIndexes,
   IndexProps
-} from '../api/db_connection';
+} from '../api/db_server';
 import _ from 'lodash';
-import { QueryState } from './DbConnection';
+import { QueryState } from './DbServer';
 import Database from './Database';
 import DbColumn, { Mark } from './DbColumn';
 import ForeignKey from './ForeignKey';

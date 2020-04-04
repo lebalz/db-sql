@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Entities
-  class DbConnection < Grape::Entity
+  class DbServer < Grape::Entity
     expose :id
     expose :user_id
     expose :name

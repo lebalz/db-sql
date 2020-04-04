@@ -6,8 +6,8 @@ import { RouterStore } from 'mobx-react-router';
 import DbServerStore from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import Database from './DatabaseConnection/Database';
-import DatabaseSchemaTree from './DatabaseConnection/DatabaseSchemaTree/DatabaseSchemaTree';
+import Database from './DatabaseServer/Database';
+import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSchemaTree';
 import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
 
@@ -25,14 +25,14 @@ interface InjectedProps extends DbConnectionProps {
 
 @inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
-export default class DbConnection extends React.Component<DbConnectionProps> {
+export default class DbServer extends React.Component<DbConnectionProps> {
   loadDisposer: IReactionDisposer;
   constructor(props: DbConnectionProps) {
     super(props);
     this.loadDisposer = reaction(
       () => this.id,
       (id) => {
-        this.injected.dbServerStore.setActiveConnection(id);
+        this.injected.dbServerStore.setActiveDbServer(id);
       }
     );
   }
@@ -41,7 +41,7 @@ export default class DbConnection extends React.Component<DbConnectionProps> {
   }
 
   componentDidMount() {
-    this.injected.dbServerStore.setActiveConnection(this.id);
+    this.injected.dbServerStore.setActiveDbServer(this.id);
   }
   componentWillUnmount() {
     this.loadDisposer();

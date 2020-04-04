@@ -6,12 +6,12 @@ import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbServerStore from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
-import DbConnectionOverview from './Dashboard/DbConnectionOverview';
-import { TempDbConnection as TempDbConnectionComponent } from './Dashboard/TempDbConnection';
+import DbServerOverview from './Dashboard/DbServerOverview';
+import { TempDbServer as TempDbServerComponent } from './Dashboard/TempDbServer';
 import _ from 'lodash';
-import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
-import { DbConnection as DbConnectionProps } from '../api/db_connection';
-import { DbType } from '../models/DbConnection';
+import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
+import { DbServer } from '../api/db_server';
+import { DbType } from '../models/DbServer';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -19,7 +19,7 @@ interface InjectedProps {
   dbServerStore: DbServerStore;
 }
 
-const DEFAULT_DB_CONNECTION: DbConnectionProps = {
+const DEFAULT_DB_SERVER: DbServer = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   db_type: DbType.Psql,
@@ -38,14 +38,14 @@ export default class Dashboard extends React.Component {
   }
 
   render() {
-    const { dbConnections } = this.injected.dbServerStore;
+    const { dbServers } = this.injected.dbServerStore;
     return (
       <Fragment>
         <header>
           <NavBar />
         </header>
         <main className="no-sidebar">
-          <TempDbConnectionComponent />
+          <TempDbServerComponent />
           <Header as="h1" content="Welcome to DB SQL" />
           <div
             style={{
@@ -57,9 +57,9 @@ export default class Dashboard extends React.Component {
               flexWrap: 'wrap'
             }}
           >
-            {_.sortBy(dbConnections, ['name']).map((dbConnection) => {
+            {_.sortBy(dbServers, ['name']).map((dbConnection) => {
               return (
-                <DbConnectionOverview
+                <DbServerOverview
                   key={dbConnection.id}
                   dbConnection={dbConnection}
                   style={{
@@ -75,12 +75,12 @@ export default class Dashboard extends React.Component {
             icon="add"
             size="big"
             onClick={() => {
-              const temp = new TempDbConnection(
-                DEFAULT_DB_CONNECTION,
-                TempDbConnectionRole.Create,
+              const temp = new TempDbServer(
+                DEFAULT_DB_SERVER,
+                TempDbServerRole.Create,
                 this.injected.dbServerStore.cancelToken
               );
-              this.injected.dbServerStore.setTempDbConnection(temp);
+              this.injected.dbServerStore.setTempDbServer(temp);
             }}
           />
         </main>

@@ -1,7 +1,7 @@
 import { computed, observable, action } from 'mobx';
 import _ from 'lodash';
 import DbTable from './DbTable';
-import { SqlTypeMetadata, ColumnProps } from '../api/db_connection';
+import { SqlTypeMetadata, ColumnProps } from '../api/db_server';
 import ForeignKey from './ForeignKey';
 
 export enum Mark {
