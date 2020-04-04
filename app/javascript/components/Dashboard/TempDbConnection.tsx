@@ -12,7 +12,7 @@ import {
   Icon,
   Popup
 } from 'semantic-ui-react';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbServerStore from '../../stores/db_server_store';
 import { computed, reaction, action } from 'mobx';
 import _ from 'lodash';
 import { RequestState } from '../../stores/session_store';
@@ -22,17 +22,17 @@ import {
 } from '../../models/TempDbConnection';
 
 interface InjectedProps {
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
-@inject('dbConnectionStore')
+@inject('dbServerStore')
 @observer
 export class TempDbConnection extends React.Component {
   constructor(props: any) {
     super(props);
 
     reaction(
-      () => this.injected.dbConnectionStore.saveState,
+      () => this.injected.dbServerStore.saveState,
       (state) => {
         if (state === RequestState.Success) {
           this.onClose();
@@ -51,11 +51,11 @@ export class TempDbConnection extends React.Component {
   };
 
   @computed get dbConnection() {
-    return this.injected.dbConnectionStore.tempDbConnection!;
+    return this.injected.dbServerStore.tempDbConnection!;
   }
 
   @computed get isModalOpen() {
-    return !!this.injected.dbConnectionStore.tempDbConnection;
+    return !!this.injected.dbServerStore.tempDbConnection;
   }
 
   @computed get dbNameOptions() {
@@ -80,7 +80,7 @@ export class TempDbConnection extends React.Component {
 
   onClose() {
     this.setState({ showPassword: false });
-    this.injected.dbConnectionStore.setTempDbConnection();
+    this.injected.dbServerStore.setTempDbConnection();
   }
 
   handleInitDbChange = (
@@ -102,10 +102,10 @@ export class TempDbConnection extends React.Component {
   onSave() {
     switch (this.dbConnection.role) {
       case TempDbConnectionRole.Create:
-        this.injected.dbConnectionStore.createDbConnection(this.dbConnection);
+        this.injected.dbServerStore.createDbConnection(this.dbConnection);
         break;
       case TempDbConnectionRole.Update:
-        this.injected.dbConnectionStore.updateDbConnection(this.dbConnection);
+        this.injected.dbServerStore.updateDbConnection(this.dbConnection);
         break;
     }
   }
@@ -118,11 +118,11 @@ export class TempDbConnection extends React.Component {
     );
     dup.name = `${dup.name}-copy`;
     dup.password = this.dbConnection.password;
-    this.injected.dbConnectionStore.setTempDbConnection(dup);
+    this.injected.dbServerStore.setTempDbConnection(dup);
   }
 
   delete() {
-    this.injected.dbConnectionStore.remove(this.dbConnection);
+    this.injected.dbServerStore.remove(this.dbConnection);
     this.onClose();
   }
 

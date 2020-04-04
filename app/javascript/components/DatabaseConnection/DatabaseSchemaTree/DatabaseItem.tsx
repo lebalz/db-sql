@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { Icon, List, Progress } from 'semantic-ui-react';
-import DbConnectionStore from '../../../stores/db_connection_store';
+import DbServerStore from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
@@ -12,10 +12,10 @@ interface DatabaseItemProps {
 }
 
 interface InjectedDbItemPorps extends DatabaseItemProps {
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
-@inject('dbConnectionStore')
+@inject('dbServerStore')
 @observer
 export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   itemRef = React.createRef<HTMLDivElement>();
@@ -26,8 +26,8 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   componentDidMount() {
     this.scrollReaction = reaction(
       () =>
-        this.injected.dbConnectionStore.activeConnection &&
-        this.injected.dbConnectionStore.activeConnection.activeDatabase,
+        this.injected.dbServerStore.activeConnection &&
+        this.injected.dbServerStore.activeConnection.activeDatabase,
       (database) => {
         if (database === this.injected.database) {
           this.itemRef.current!.scrollIntoView({
@@ -45,7 +45,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
 
   @computed get color() {
     const { database } = this.injected;
-    const { activeConnection } = this.injected.dbConnectionStore;
+    const { activeConnection } = this.injected.dbServerStore;
     if (activeConnection && activeConnection.activeDatabase === database) {
       return 'yellow';
     }
@@ -57,7 +57,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
 
   render() {
     const { database } = this.injected;
-    const { activeConnection } = this.injected.dbConnectionStore;
+    const { activeConnection } = this.injected.dbServerStore;
     return (
       <Fragment>
         <List.Item

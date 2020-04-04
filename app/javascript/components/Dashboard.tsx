@@ -4,7 +4,7 @@ import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
-import DbConnectionStore from '../stores/db_connection_store';
+import DbServerStore from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import DbConnectionOverview from './Dashboard/DbConnectionOverview';
 import { TempDbConnection as TempDbConnectionComponent } from './Dashboard/TempDbConnection';
@@ -16,7 +16,7 @@ import { DbType } from '../models/DbConnection';
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
 const DEFAULT_DB_CONNECTION: DbConnectionProps = {
@@ -30,7 +30,7 @@ const DEFAULT_DB_CONNECTION: DbConnectionProps = {
   username: ''
 };
 
-@inject('sessionStore', 'routerStore', 'dbConnectionStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class Dashboard extends React.Component {
   get injected() {
@@ -38,7 +38,7 @@ export default class Dashboard extends React.Component {
   }
 
   render() {
-    const { dbConnections } = this.injected.dbConnectionStore;
+    const { dbConnections } = this.injected.dbServerStore;
     return (
       <Fragment>
         <header>
@@ -78,9 +78,9 @@ export default class Dashboard extends React.Component {
               const temp = new TempDbConnection(
                 DEFAULT_DB_CONNECTION,
                 TempDbConnectionRole.Create,
-                this.injected.dbConnectionStore.cancelToken
+                this.injected.dbServerStore.cancelToken
               );
-              this.injected.dbConnectionStore.setTempDbConnection(temp);
+              this.injected.dbServerStore.setTempDbConnection(temp);
             }}
           />
         </main>

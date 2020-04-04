@@ -5,15 +5,15 @@ import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import SessionStore, { RequestState } from '../../stores/session_store';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbServerStore from '../../stores/db_server_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
-@inject('sessionStore', 'routerStore', 'dbConnectionStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class NavBar extends React.Component {
   get injected() {
@@ -72,13 +72,13 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          {this.injected.dbConnectionStore.activeConnection && (
+          {this.injected.dbServerStore.activeConnection && (
             <Menu.Item
               style={{ marginLeft: '2em' }}
               name="Connections"
               active={router.location.pathname.startsWith('/connections')}
               onClick={() => {
-                const { activeConnection } = this.injected.dbConnectionStore;
+                const { activeConnection } = this.injected.dbServerStore;
                 if (!activeConnection) {
                   return;
                 }

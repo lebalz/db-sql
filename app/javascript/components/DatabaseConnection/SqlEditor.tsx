@@ -1,6 +1,6 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbServerStore from '../../stores/db_server_store';
 import AceEditor from 'react-ace';
 
 import 'ace-builds/src-noconflict/mode-sql';
@@ -10,7 +10,7 @@ import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
 import { computed } from 'mobx';
 
 interface InjectedProps {
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
 interface Completion {
@@ -20,7 +20,7 @@ interface Completion {
   score: number;
 }
 
-@inject('dbConnectionStore')
+@inject('dbServerStore')
 @observer
 export default class SqlEditor extends React.Component {
   get injected() {
@@ -43,7 +43,7 @@ export default class SqlEditor extends React.Component {
 
   @computed
   get completers() {
-    const activeDatabase = this.injected.dbConnectionStore?.activeConnection
+    const activeDatabase = this.injected.dbServerStore?.activeConnection
       ?.activeDatabase;
     if (!activeDatabase) {
       return [];
@@ -70,8 +70,8 @@ export default class SqlEditor extends React.Component {
   }
 
   render() {
-    const { dbConnectionStore } = this.injected;
-    const { activeConnection } = dbConnectionStore;
+    const { dbServerStore } = this.injected;
+    const { activeConnection } = dbServerStore;
 
     if (!activeConnection) {
       return null;
@@ -94,7 +94,7 @@ export default class SqlEditor extends React.Component {
             // commands is array of key bindings.
             name: 'Execute Query',
             bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-            exec: () => this.injected.dbConnectionStore.executeQuery()
+            exec: () => this.injected.dbServerStore.executeQuery()
           }
         ]}
         value={database?.activeQuery?.query}

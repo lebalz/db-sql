@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import { Header, List, Loader } from 'semantic-ui-react';
 import SessionStore from '../../../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
-import DbConnectionStore from '../../../stores/db_connection_store';
+import DbServerStore from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import DbTable from '../../../models/DbTable';
@@ -17,7 +17,7 @@ import ColumnItem from './ColumnItem';
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
 export enum ItemKind {
@@ -77,7 +77,7 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
   };
 };
 
-@inject('sessionStore', 'routerStore', 'dbConnectionStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class DatabaseSchemaTree extends React.Component {
   get injected() {
@@ -85,8 +85,8 @@ export default class DatabaseSchemaTree extends React.Component {
   }
 
   @computed get menuItems(): TreeItem[] {
-    const { dbConnectionStore } = this.injected;
-    const { activeConnection } = dbConnectionStore;
+    const { dbServerStore } = this.injected;
+    const { activeConnection } = dbServerStore;
     if (!activeConnection) {
       return [];
     }
@@ -118,8 +118,8 @@ export default class DatabaseSchemaTree extends React.Component {
 
   render() {
     const { menuItems, injected } = this;
-    const { dbConnectionStore } = injected;
-    const { activeConnection } = dbConnectionStore;
+    const { dbServerStore } = injected;
+    const { activeConnection } = dbServerStore;
     if (!activeConnection || activeConnection.isClosed) {
       return null;
     }

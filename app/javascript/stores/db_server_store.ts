@@ -53,7 +53,7 @@ class State {
   @observable queryState: RequestState = RequestState.None;
 }
 
-class DbConnectionStore implements Store {
+class DbServerStore implements Store {
   private readonly root: RootStore;
   @observable.ref
   private state = new State();
@@ -255,4 +255,4 @@ class DbConnectionStore implements Store {
   }
 }
 
-export default DbConnectionStore;
+export default DbServerStore;

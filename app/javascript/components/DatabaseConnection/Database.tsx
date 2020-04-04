@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { Button, Menu, Icon, Segment } from 'semantic-ui-react';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbServerStore from '../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import SqlEditor from './SqlEditor';
@@ -14,11 +14,11 @@ import { RouterStore } from 'mobx-react-router';
 interface Props {}
 
 interface InjectedProps extends Props {
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
   routerStore: RouterStore;
 }
 
-@inject('dbConnectionStore', 'routerStore')
+@inject('dbServerStore', 'routerStore')
 @observer
 export default class Database extends React.Component<Props> {
   get injected() {
@@ -27,8 +27,8 @@ export default class Database extends React.Component<Props> {
 
   @action
   changeQueryTab(database: DatabaseModel, query: Query) {
-    const { dbConnectionStore } = this.injected;
-    const { activeConnection } = dbConnectionStore;
+    const { dbServerStore } = this.injected;
+    const { activeConnection } = dbServerStore;
     if (activeConnection === database.dbConnection) {
       database.dbConnection.activeDatabase = database;
       query.setActive();
@@ -36,9 +36,9 @@ export default class Database extends React.Component<Props> {
   }
 
   render() {
-    const { dbConnectionStore } = this.injected;
-    // const activeConnection = dbConnectionStore.findDbConnection(this.props.id);
-    const { loadedConnections, activeConnection } = dbConnectionStore;
+    const { dbServerStore } = this.injected;
+    // const activeConnection = dbServerStore.findDbConnection(this.props.id);
+    const { loadedConnections, activeConnection } = dbServerStore;
     if (!activeConnection || activeConnection.isClosed) {
       return null;
     }
@@ -112,7 +112,7 @@ export default class Database extends React.Component<Props> {
               positive
               disabled={activeQuery?.requestState === REST.Requested}
               loading={activeQuery?.requestState === REST.Requested}
-              onClick={() => this.injected.dbConnectionStore.executeQuery()}
+              onClick={() => this.injected.dbServerStore.executeQuery()}
             >
               Query
             </Button>

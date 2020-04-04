@@ -1,7 +1,7 @@
 import { observable, action } from 'mobx';
 import SessionStore from './session_store';
 import UserStore from './user_store';
-import DbConnectionStore from './db_connection_store';
+import DbServerStore from './db_server_store';
 import axios, { CancelTokenSource } from 'axios';
 import RouterStore from './router_store';
 
@@ -16,7 +16,7 @@ export class RootStore implements Store {
   session: SessionStore;
   routing: RouterStore;
   user: UserStore;
-  dbConnection: DbConnectionStore;
+  dbConnection: DbServerStore;
 
   @observable initialized = false;
 
@@ -30,7 +30,7 @@ export class RootStore implements Store {
     this.user = new UserStore(this);
     this.stores.push(this.user);
 
-    this.dbConnection = new DbConnectionStore(this);
+    this.dbConnection = new DbServerStore(this);
     this.stores.push(this.dbConnection);
 
     this.initialized = true;

@@ -2,7 +2,7 @@ import React from 'react';
 import { observer, inject } from 'mobx-react';
 import DbConnection, { DbType } from '../../models/DbConnection';
 import { Card, Label, Button } from 'semantic-ui-react';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbServerStore from '../../stores/db_server_store';
 import { TempDbConnection, TempDbConnectionRole } from '../../models/TempDbConnection';
 import { action } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
@@ -13,11 +13,11 @@ interface Props {
 }
 
 interface InjectedProps extends Props {
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
   routerStore: RouterStore;
 }
 
-@inject('dbConnectionStore', 'routerStore')
+@inject('dbServerStore', 'routerStore')
 @observer
 export default class DbConnectionOverview extends React.Component<Props> {
   get injected() {
@@ -52,7 +52,7 @@ export default class DbConnectionOverview extends React.Component<Props> {
                 TempDbConnectionRole.Update,
                 this.dbConnection.cancelToken
               );
-              this.injected.dbConnectionStore.setTempDbConnection(temp);
+              this.injected.dbServerStore.setTempDbConnection(temp);
             }}
           />
           <Button

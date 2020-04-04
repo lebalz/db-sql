@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { inject, observer } from 'mobx-react';
-import DbConnectionStore from '../../stores/db_connection_store';
+import DbServerStore from '../../stores/db_server_store';
 import { Segment, Label, Popup, Header, Accordion, Icon } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultType, QueryResult } from '../../api/db_connection';
@@ -8,10 +8,10 @@ import { computed } from 'mobx';
 import { SqlResult } from './SqlResult';
 
 interface InjectedProps {
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
-@inject('dbConnectionStore')
+@inject('dbServerStore')
 @observer
 export default class SqlResults extends React.Component {
   get injected() {
@@ -21,7 +21,7 @@ export default class SqlResults extends React.Component {
   @computed
   get results(): QueryResult[] {
     return (
-      this.injected.dbConnectionStore?.activeConnection?.activeDatabase?.activeQuery
+      this.injected.dbServerStore?.activeConnection?.activeDatabase?.activeQuery
         ?.results || []
     );
   }
