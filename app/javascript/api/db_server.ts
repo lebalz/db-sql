@@ -17,12 +17,9 @@ export interface DbServer {
 
 export interface Database {
   name: string;
-  db_server_id: string;
 }
 export interface DbTable {
   name: string;
-  database_name: string;
-  db_server_id: string;
 }
 
 export interface SqlTypeMetadata {
@@ -33,7 +30,7 @@ export interface SqlTypeMetadata {
   type: string;
 }
 
-export interface Column {
+export interface ColumnProps {
   name: string;
   collation: string;
   default: string;
@@ -42,9 +39,6 @@ export interface Column {
   serial: boolean;
   is_primary: boolean;
   sql_type_metadata: SqlTypeMetadata;
-  table_name: string;
-  database_name: string;
-  db_server_id: string;
 }
 
 export interface CreateProps {
@@ -65,15 +59,14 @@ export interface ForeignKeyOption {
   on_delete?: string;
 }
 
-export interface ForeignKey {
+export interface ForeignKeyProps {
   from_table: string;
   to_table: string;
   options: ForeignKeyOption;
-  database_name: string;
-  db_server_id: string;
 }
 
-export interface Index {
+export interface IndexProps {
+  table_name: string;
   name: string;
   unique: boolean;
   columns: string[];
@@ -84,9 +77,6 @@ export interface Index {
   type: any;
   using: string;
   comment?: string;
-  table_name: string;
-  database_name: string;
-  db_server_id: string;
 }
 
 export type ResultRow = { [key: string]: string | number };
@@ -177,7 +167,7 @@ export function columns(
   databaseName: string,
   tableName: string,
   cancelToken: CancelTokenSource
-): AxiosPromise<Column[]> {
+): AxiosPromise<ColumnProps[]> {
   return api.get(`/db_servers/${id}/${databaseName}/${tableName}/columns`, {
     cancelToken: cancelToken.token
   });
@@ -188,7 +178,7 @@ export function foreignKeys(
   databaseName: string,
   tableName: string,
   cancelToken: CancelTokenSource
-): AxiosPromise<ForeignKey[]> {
+): AxiosPromise<ForeignKeyProps[]> {
   return api.get(`/db_servers/${id}/${databaseName}/${tableName}/foreign_keys`, {
     cancelToken: cancelToken.token
   });
@@ -199,7 +189,7 @@ export function indexes(
   databaseName: string,
   tableName: string,
   cancelToken: CancelTokenSource
-): AxiosPromise<Index[]> {
+): AxiosPromise<IndexProps[]> {
   return api.get(`/db_servers/${id}/${databaseName}/${tableName}/indexes`, {
     cancelToken: cancelToken.token
   });
