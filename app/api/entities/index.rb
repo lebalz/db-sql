@@ -2,7 +2,9 @@
 
 module Entities
   class Index < Grape::Entity
-    expose :table
+    expose :table_name do |obj|
+      obj[:table]
+    end
     expose :name
     expose :unique
     expose :columns
