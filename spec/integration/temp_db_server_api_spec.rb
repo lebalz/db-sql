@@ -133,18 +133,8 @@ RSpec.describe "API::Resources::TempDbServer" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]).to include(
-        {
-          'name' => 'fights',
-          'database_name' => 'ninja_turtles_db'
-        }
-      )
-      expect(json[1]).to include(
-        {
-          'name' => 'ninja_turtles',
-          'database_name' => 'ninja_turtles_db'
-        }
-      )
+      expect(json[0]).to eq('name' => 'fights')
+      expect(json[1]).to eq('name' => 'ninja_turtles')
     end
   end
 
@@ -206,33 +196,25 @@ RSpec.describe "API::Resources::TempDbServer" do
     end
   end
 
-  describe 'POST /api/temp_db_server/:database_name/:table_name/primary_keys' do
+  describe 'POST /api/temp_db_server/:database_name/:table_name/primary_key_names' do
     it 'can get indexes of a table' do
       post(
-        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/primary_keys",
+        "/api/temp_db_server/ninja_turtles_db/ninja_turtles/primary_key_names",
         headers: @headers,
         params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json.first).to include(
-        'database_name' => 'ninja_turtles_db',
-        'primary_key' => 'id',
-        'table_name' => 'ninja_turtles'
-      )
+      expect(json.first).to eq('id')
 
       post(
-        "/api/temp_db_server/ninja_turtles_db/fights/primary_keys",
+        "/api/temp_db_server/ninja_turtles_db/fights/primary_key_names",
         headers: @headers,
         params: @temp_db_server
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json.first).to include(
-        'database_name' => 'ninja_turtles_db',
-        'primary_key' => 'id',
-        'table_name' => 'fights'
-      )
+      expect(json.first).to eq('id')
     end
   end
   describe 'POST /api/temp_db_server/:database_name/:table_name/columns' do
@@ -244,10 +226,9 @@ RSpec.describe "API::Resources::TempDbServer" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]).to include(
+      expect(json[0]).to eq(
         "name" => "id",
         "is_primary" => true,
-        "database_name" => "ninja_turtles_db",
         "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
         "null" => false,
         "serial" => true,
@@ -257,9 +238,8 @@ RSpec.describe "API::Resources::TempDbServer" do
           "type" => "integer"
         }
       )
-      expect(json[1]).to include(
+      expect(json[1]).to eq(
         "name" => "name",
-        "database_name" => "ninja_turtles_db",
         "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
@@ -275,10 +255,9 @@ RSpec.describe "API::Resources::TempDbServer" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(4)
-      expect(json[0]).to include(
+      expect(json[0]).to eq(
         "name" => "id",
         "is_primary" => true,
-        "database_name" => "ninja_turtles_db",
         "default_function" => "nextval('fights_id_seq'::regclass)",
         "null" => false,
         "serial" => true,
@@ -288,9 +267,8 @@ RSpec.describe "API::Resources::TempDbServer" do
           "type" => "integer"
         }
       )
-      expect(json[1]).to include(
+      expect(json[1]).to eq(
         "name" => "date",
-        "database_name" => "ninja_turtles_db",
         "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
@@ -298,9 +276,8 @@ RSpec.describe "API::Resources::TempDbServer" do
           "type" => "datetime"
         }
       )
-      expect(json[2]).to include(
+      expect(json[2]).to eq(
         "name" => "badass_turtle_id",
-        "database_name" => "ninja_turtles_db",
         "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {
@@ -309,9 +286,8 @@ RSpec.describe "API::Resources::TempDbServer" do
           "type" => "integer"
         }
       )
-      expect(json[3]).to include(
+      expect(json[3]).to eq(
         "name" => "kickass_turtle_id",
-        "database_name" => "ninja_turtles_db",
         "is_primary" => false,
         "null" => true,
         "sql_type_metadata" => {

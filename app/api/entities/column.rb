@@ -19,8 +19,6 @@ module Entities
       expose :null
       expose :serial
       expose :sql_type_metadata, using: Entities::ColumnSqlTypeMetadata
-      expose :db_server_id
-      expose :database_name
     end
     expose :is_primary do |column, options|
       options[:primary_keys]&.include?(column[:name])

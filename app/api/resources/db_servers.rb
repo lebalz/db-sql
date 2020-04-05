@@ -131,11 +131,10 @@ module Resources
         desc 'Get the databases of a database server connection'
         get :databases do
           present(
-            db_server.databases(key: crypto_key),
+            db_server.database_names(key: crypto_key).map { |n| { name: n } },
             with: Entities::Database
           )
         end
-
         desc 'Get the database names of a database server connection'
         get :database_names do
           db_server.database_names(key: crypto_key)
@@ -166,7 +165,6 @@ module Resources
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
                 next if query.blank?
-
                 t0 = Time.now
                 begin
                   results << {
@@ -191,10 +189,10 @@ module Resources
           desc "Get the database's tables"
           get :tables do
             present(
-              db_server.tables(
+              db_server.table_names(
                 key: crypto_key,
                 database_name: params[:database_name]
-              ),
+              ).map { |n| { name: n } },
               with: Entities::Table
             )
           end
@@ -223,51 +221,38 @@ module Resources
                 database_name: params[:database_name],
                 table_name: params[:table_name]
               )
-              present(
-                db_server.columns(
-                  key: crypto_key,
-                  database_name: params[:database_name],
-                  table_name: params[:table_name]
-                ),
-                with: Entities::Column,
-                primary_keys: primary_keys
-              )
+              present db_server.columns(
+                key: crypto_key,
+                database_name: params[:database_name],
+                table_name: params[:table_name]
+              ), with: Entities::Column, primary_keys: primary_keys
             end
 
             desc "Get the table's primary key names"
-            get :primary_keys do
-              present(
-                db_server.primary_keys(
-                  key: crypto_key,
-                  database_name: params[:database_name],
-                  table_name: params[:table_name]
-                ),
-                with: Entities::PrimaryKey
+            get :primary_key_names do
+              db_server.primary_key_names(
+                key: crypto_key,
+                database_name: params[:database_name],
+                table_name: params[:table_name]
               )
             end
 
             desc "Get the table's foreign keys"
             get :foreign_keys do
-              present(
-                db_server.foreign_keys(
-                  key: crypto_key,
-                  database_name: params[:database_name],
-                  table_name: params[:table_name]
-                ),
-                with: Entities::ForeignKey
-              )
+              present db_server.foreign_keys(
+                key: crypto_key,
+                database_name: params[:database_name],
+                table_name: params[:table_name]
+              ), with: Entities::ForeignKey
             end
 
             desc "Get the table's indexes"
             get :indexes do
-              present(
-                db_server.indexes(
-                  key: crypto_key,
-                  database_name: params[:database_name],
-                  table_name: params[:table_name]
-                ),
-                with: Entities::Index
-              )
+              present db_server.indexes(
+                key: crypto_key,
+                database_name: params[:database_name],
+                table_name: params[:table_name]
+              ), with: Entities::Index
             end
           end
         end
