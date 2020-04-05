@@ -10,15 +10,17 @@ import { default as DatabaseModel } from '../../models/Database';
 import Query from '../../models/Query';
 import { REST } from '../../declarations/REST';
 import { RouterStore } from 'mobx-react-router';
+import DatabaseStore from '../../stores/database_store';
 
 interface Props {}
 
 interface InjectedProps extends Props {
   dbServerStore: DbServerStore;
   routerStore: RouterStore;
+  databaseStore: DatabaseStore;
 }
 
-@inject('dbServerStore', 'routerStore')
+@inject('dbServerStore', 'routerStore', 'databaseStore')
 @observer
 export default class Database extends React.Component<Props> {
   get injected() {
@@ -28,40 +30,40 @@ export default class Database extends React.Component<Props> {
   @action
   changeQueryTab(database: DatabaseModel, query: Query) {
     const { dbServerStore } = this.injected;
-    const { activeDbServer: activeConnection } = dbServerStore;
-    if (activeConnection === database.dbConnection) {
-      database.dbConnection.activeDatabase = database;
-      query.setActive();
+    const { activeDbServerId } = dbServerStore;
+    if (activeDbServerId === database.dbServerId) {
+      // database.dbConnection.activeDatabase = database;
+      // query.setActive();
     }
   }
 
   render() {
-    const { dbServerStore } = this.injected;
+    const { dbServerStore, databaseStore } = this.injected;
     // const activeConnection = dbServerStore.findDbConnection(this.props.id);
-    const { loadedDbServers: loadedConnections, activeDbServer: activeConnection } = dbServerStore;
-    if (!activeConnection || activeConnection.isClosed) {
+    const { loadedDbServers, activeDbServer } = dbServerStore;
+    if (!activeDbServer) {
       return null;
     }
 
-    const activeQuery = activeConnection.activeDatabase?.activeQuery;
+    const activeQuery = activeDbServer.activeDatabase?.activeQuery;
 
-    const loadedDbs = activeConnection.databases.filter((db) => db.isLoaded);
+    const loadedDbs = databaseStore.loadedDatabases(activeDbServer.id);
     return (
       <Fragment>
         <Menu stackable secondary compact size="mini" color="teal">
-          {loadedConnections.map((conn, i) => {
+          {loadedDbServers.map((conn, i) => {
             return (
               <Menu.Item
                 key={i}
                 onClick={() => this.injected.routerStore.push(`./${conn.id}`)}
-                active={activeConnection === conn}
+                active={activeDbServer === conn}
               >
                 <Icon name="plug" />
                 {conn.name}
-                {activeConnection === conn && (
+                {activeDbServer === conn && (
                   <Button
                     icon="close"
-                    onClick={() => conn.close()}
+                    onClick={() => console.log('close me, haha')}
                     floated="right"
                     style={{
                       padding: '2px',
@@ -77,7 +79,7 @@ export default class Database extends React.Component<Props> {
         <Segment>
           <Menu attached="top" tabular size="mini">
             {loadedDbs.map((db) => {
-              return db.queries.map((query) => {
+              return [db.activeQuery].map((query) => {
                 return (
                   <Menu.Item
                     active={query.isActive}

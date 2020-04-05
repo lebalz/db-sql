@@ -1,25 +1,22 @@
 import { computed, action, reaction, observable } from 'mobx';
-import {
-  DbServer as DbServerProps,
-  dbServerPassword
-} from '../api/db_server';
+import { DbServer as DbServerProps, dbServerPassword } from '../api/db_server';
 import {
   DbServer as TempDbConnectionProps,
   databases,
   test,
-  tables
+  tables,
+  DatabaseName,
+  DbTableName
 } from '../api/temp_db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
-import Database from './Database';
-import DbTable from './DbTable';
 import { RequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 
 export enum TempDbServerRole {
   Update,
-  Create
+  Create,
 }
 
 export class TempDbServer extends DbServer {
@@ -28,8 +25,11 @@ export class TempDbServer extends DbServer {
   @observable message?: String = undefined;
   @observable validConnection?: boolean = false;
   @observable tablesLoaded?: boolean = false;
+  @observable isLoaded: boolean = false;
 
-  tables = observable<DbTable>([]);
+  databases = observable<DatabaseName>([]);
+  tables = observable<DbTableName>([]);
+
   constructor(
     props: DbServerProps,
     role: TempDbServerRole,
@@ -48,7 +48,9 @@ export class TempDbServer extends DbServer {
     reaction(
       () => this.validConnection,
       (valid) => {
-        if (!valid) return;
+        if (!valid) {
+          return;
+        }
         this.loadDatabases();
       }
     );
@@ -91,7 +93,7 @@ export class TempDbServer extends DbServer {
       username: this.username,
       initial_db: this.isLoaded ? this.initialDb : undefined,
       initial_table: this.tablesLoaded ? this.initialTable : undefined,
-      password: this.password || ''
+      password: this.password || '',
     };
   }
 
@@ -106,7 +108,7 @@ export class TempDbServer extends DbServer {
     this.dbRequestState = REST.Requested;
     databases(this.tempDbPorps, this.cancelToken)
       .then(({ data }) => {
-        this.databases.replace(data.map((db) => new Database(this, db)));
+        this.databases.replace(data);
         this.dbRequestState = REST.Success;
       })
       .catch((e) => {
@@ -127,7 +129,7 @@ export class TempDbServer extends DbServer {
     tables(this.tempDbPorps, db.name, this.cancelToken)
       .then(({ data }) => {
         this.tablesLoaded = true;
-        this.tables.replace(data.map((table) => new DbTable(db, table)));
+        this.tables.replace(data);
         const table = this.tables.find((table) => table.name === this.initialTable);
         if (!table) {
           this.initialTable = undefined;

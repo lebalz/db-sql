@@ -131,7 +131,12 @@ module Resources
         desc 'Get the databases of a database server connection'
         get :databases do
           present(
-            db_server.database_names(key: crypto_key).map { |n| { name: n } },
+            db_server.database_names(key: crypto_key).map do |n|
+              {
+                name: n,
+                db_server_id: db_server.id
+              }
+            end,
             with: Entities::Database
           )
         end
@@ -140,6 +145,15 @@ module Resources
           db_server.database_names(key: crypto_key)
         end
         route_param :database_name, type: String, desc: 'Database name' do
+
+          desc 'Get full database structure'
+          get do
+            present(
+              db_server.full_database(key: crypto_key, database_name: params[:database_name]),
+              with: Entities::FullDatabase
+            )
+          end
+
           desc 'Query the database'
           params do
             requires(

@@ -1,8 +1,8 @@
 import { computed, observable, action } from 'mobx';
 import _ from 'lodash';
 import DbTable from './DbTable';
-import { SqlTypeMetadata, ColumnProps } from '../api/db_server';
-import ForeignKey from './ForeignKey';
+import { SqlTypeMetadata, Column as ColumnProps } from '../api/db_server';
+import Database from './Database';
 
 export enum Mark {
   From = 'from',
@@ -19,11 +19,13 @@ export default class DbColumn {
   readonly isSerial: boolean;
   readonly isPrimaryKey: boolean;
   readonly sqlTypeMetadata: SqlTypeMetadata;
-  @observable foreignKey?: ForeignKey = undefined;
+  references?: DbColumn = undefined;
+  referencedBy: DbColumn[] = [];
+
   @observable mark: Mark = Mark.None;
+
   constructor(table: DbTable, props: ColumnProps) {
     this.table = table;
-
     this.name = props.name;
     this.collation = props.collation;
     this.default = props.default;
@@ -34,22 +36,22 @@ export default class DbColumn {
     this.isPrimaryKey = props.is_primary;
   }
 
-  @computed get isForeignKey() {
-    return !!this.foreignKey;
+  get isForeignKey() {
+    return !!this.references;
   }
 
-  @computed get foreignColumn(): DbColumn | undefined {
-    return this.foreignKey && this.foreignKey.toColumn;
+  get foreignColumn(): DbColumn | undefined {
+    return this.references;
   }
 
-  @computed get foreignTable(): DbTable | undefined {
-    return this.foreignKey && this.foreignKey.toTable;
+  get foreignTable(): DbTable | undefined {
+    return this.references?.table;
   }
 
-  @computed get referencedBy(): DbColumn[] {
-    return this.table.database.foreignKeyReferences
-    .filter(fk => fk.toColumn === this)
-    .map(fk => fk.fromColumn);
-  }
+  // get referencedBy(): DbColumn[] {
+  //   return this.table.database.foreignKeyReferences
+  //   .filter(fk => fk.toColumn === this)
+  //   .map(fk => fk.fromColumn);
+  // }
 
 }

@@ -6,7 +6,7 @@ import {
   updateDbServer,
   createDbServer,
   remove as removeApi,
-  query as fetchQuery,
+  query as fetchQuery
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
@@ -40,18 +40,16 @@ enum LoadState {
   Loading,
   Error,
   Success,
-  None,
+  None
 }
 
 class State {
   dbServers = observable<DbServer>([]);
-  @observable activeDbServerId: string = '';
-
-  @observable tempDbServer?: TempDbServer = undefined;
-
   @observable loadState: LoadState = LoadState.None;
   @observable saveState: RequestState = RequestState.None;
 
+  @observable tempDbServer?: TempDbServer = undefined;
+  @observable activeDbServerId?: string = undefined;
   @observable queryState: RequestState = RequestState.None;
 }
 
@@ -61,6 +59,7 @@ class DbServerStore implements Store {
   private state = new State();
 
   loginDisposer: IReactionDisposer;
+  loadDisposer: IReactionDisposer;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -75,15 +74,20 @@ class DbServerStore implements Store {
         }
       }
     );
+
+    this.loadDisposer = reaction(
+      () => this.isLoaded,
+      (isLoaded) => {
+        if (isLoaded && this.activeDbServer) {
+          this.activeDbServer.loadDatabases();
+        }
+      }
+    );
   }
 
   componentWillUnmount() {
     this.loginDisposer();
-  }
-
-  @computed
-  get activeDbServerId(): string {
-    return this.state.activeDbServerId;
+    this.loadDisposer();
   }
 
   @computed
@@ -94,23 +98,17 @@ class DbServerStore implements Store {
     return this.findDbServer(this.state.activeDbServerId);
   }
 
-  setActiveDbServer(id: string) {
-    this.state.activeDbServerId = id;
+  setTempDbServer(dbServer?: TempDbServer) {
+    this.state.tempDbServer = dbServer;
   }
-
-  // closeConnection(connection: DbServer) {
-  //   if (this.activeConnection === connection) {
-  //     const connectionCount = this.loadedConnections.length;
-  //     if (connectionCount > 0) {
-  //       this.activeConnection = this.loadedConnections[connectionCount - 1];
-  //     } else {
-  //       this.activeConnection = null;
-  //     }
-  //   }
-  // }
 
   get cancelToken() {
     return this.root.cancelToken;
+  }
+
+  @computed
+  get tempDbServer(): TempDbServer | undefined {
+    return this.state.tempDbServer;
   }
 
   @computed
@@ -123,14 +121,20 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
-  @computed get loadedDbServers(): DbServer[] {
-    return this.root.databases.dbServerIdsWithLoadedDatabases.map(
-      (id) => this.findDbServer(id)!
-    );
+  @computed get loadedDbServers() {
+    return this.state.dbServers.filter((conn) => !!conn.isLoaded);
   }
 
   findDbServer(id: string): DbServer | undefined {
     return this.state.dbServers.find((c) => c.id === id);
+  }
+
+  setActiveDbServer(id: string) {
+    this.state.activeDbServerId = id;
+    if (!this.isLoaded) {
+      return;
+    }
+    return Promise.all([this.activeDbServer?.loadDatabases()]);
   }
 
   @computed
@@ -163,7 +167,9 @@ class DbServerStore implements Store {
     this.state.saveState = RequestState.Waiting;
     updateDbServer(dbConnection.params, this.root.cancelToken)
       .then(() => {
-        const connection = this.state.dbServers.find((db) => db.id === dbConnection.id);
+        const connection = this.state.dbServers.find(
+          (db) => db.id === dbConnection.id
+        );
         if (!connection) return;
         this.state.dbServers.remove(connection);
         this.state.dbServers.push(
@@ -195,7 +201,9 @@ class DbServerStore implements Store {
   @action remove(dbServer: TempDbServer) {
     removeApi(dbServer.id, this.root.cancelToken)
       .then(() => {
-        const connection = this.state.dbServers.find((con) => con.id === dbServer.id);
+        const connection = this.state.dbServers.find(
+          (con) => con.id === dbServer.id
+        );
         if (!connection) {
           return;
         }
@@ -233,16 +241,6 @@ class DbServerStore implements Store {
 
   @action cleanup() {
     this.state = new State();
-  }
-
-  @computed
-  get tempDbServer(): TempDbServer | undefined {
-    return this.state.tempDbServer;
-  }
-
-  @action
-  setTempDbServer(tempDbServer?: TempDbServer) {
-    this.state.tempDbServer = tempDbServer;
   }
 }
 

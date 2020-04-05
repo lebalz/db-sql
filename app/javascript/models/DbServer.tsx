@@ -36,7 +36,6 @@ export default class DbServer {
   @observable password?: string;
   @observable queryState: QueryState = QueryState.None;
   @observable activeDatabase?: Database = undefined;
-  databases = observable<Database>([]);
 
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
@@ -57,45 +56,6 @@ export default class DbServer {
 
   static formatDate(date: Date) {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-  }
-
-  @action close() {
-    if (this.dbRequestState === REST.Requested) {
-      return false;
-    }
-    this.dbRequestState = REST.None;
-    this.databases.clear();
-  }
-
-  @computed get isLoaded() {
-    return this.dbRequestState === REST.Success;
-  }
-
-  @computed get isClosed() {
-    return this.dbRequestState === REST.None;
-  }
-
-  @action loadDatabases(forceLoad: boolean = false) {
-    if (this.isLoaded && !forceLoad) {
-      return;
-    }
-    this.dbRequestState = REST.Requested;
-    databases(this.id, this.cancelToken)
-      .then(({ data }) => {
-        this.databases.replace(data.map((db) => new Database(this, db)));
-        this.dbRequestState = REST.Success;
-      })
-      .then(() => {
-        const initDb = this.databases.find((db) => db.name === this.initialDb);
-        this.activeDatabase = initDb || this.databases[0];
-        if (this.activeDatabase) {
-          this.activeDatabase.show = true;
-        }
-      })
-      .catch((e) => {
-        this.databases.replace([]);
-        this.dbRequestState = REST.Error;
-      });
   }
 
   @computed get props(): DbServerProps {

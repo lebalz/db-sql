@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Header, List, Loader } from 'semantic-ui-react';
+import { Header, List, Loader, PlaceholderImage } from 'semantic-ui-react';
 import SessionStore from '../../../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbServerStore from '../../../stores/db_server_store';
@@ -13,15 +13,19 @@ import Database from '../../../models/Database';
 import DatabaseItem from './DatabaseItem';
 import TableItem from './TableItem';
 import ColumnItem from './ColumnItem';
+import DatabaseStore from '../../../stores/database_store';
+import PlaceholderItem from './PlaceholderItem';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   dbServerStore: DbServerStore;
+  databaseStore: DatabaseStore;
 }
 
 export enum ItemKind {
   Database = 'database',
+  Placeholder = 'placeholder',
   Table = 'table',
   Column = 'column'
 }
@@ -29,7 +33,7 @@ export enum ItemKind {
 interface DbTreeItem {
   treePosition: number;
   kind: ItemKind;
-  value: Database | DbColumn | DbTable;
+  value: Database | DbColumn | DbTable | string;
   draw: () => JSX.Element;
 }
 
@@ -48,7 +52,12 @@ export interface DbDatabaseItem extends DbTreeItem {
   value: Database;
 }
 
-export type TreeItem = DbDatabaseItem | DbTableItem | DbColumnItem;
+export interface DbPlaceholderItem extends DbTreeItem {
+  kind: ItemKind.Placeholder;
+  value: string;
+}
+
+export type TreeItem = DbDatabaseItem | DbTableItem | DbColumnItem | DbPlaceholderItem;
 
 const getDatabaseItem = (db: Database, treePosition: number): DbDatabaseItem => {
   return {
@@ -56,6 +65,15 @@ const getDatabaseItem = (db: Database, treePosition: number): DbDatabaseItem => 
     value: db,
     treePosition: treePosition,
     draw: () => <DatabaseItem key={treePosition} database={db} />
+  };
+};
+
+const getPlaceholderItem = (dbName: string, treePosition: number): DbPlaceholderItem => {
+  return {
+    kind: ItemKind.Placeholder,
+    value: dbName,
+    treePosition: treePosition,
+    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} />
   };
 };
 
@@ -77,7 +95,7 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
   };
 };
 
-@inject('sessionStore', 'routerStore', 'dbServerStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore', 'databaseStore')
 @observer
 export default class DatabaseSchemaTree extends React.Component {
   get injected() {
@@ -85,14 +103,23 @@ export default class DatabaseSchemaTree extends React.Component {
   }
 
   @computed get menuItems(): TreeItem[] {
-    const { dbServerStore } = this.injected;
-    const { activeDbServer: activeConnection } = dbServerStore;
-    if (!activeConnection) {
+    const { databaseStore, dbServerStore } = this.injected;
+    const { activeDbServerId } = dbServerStore;
+    if (!activeDbServerId) {
       return [];
     }
+    const databaseNames = databaseStore.databaseNames(activeDbServerId);
+    const loadedDatabases = databaseStore.loadedDatabaseMap(activeDbServerId);
 
     let pos = 0;
-    return activeConnection.databases.reduce((dbs, db) => {
+
+    return databaseNames.reduce((dbs, dbName) => {
+      if (!loadedDatabases.has(dbName)) {
+        dbs.push(getPlaceholderItem(dbName, pos));
+        pos += 1;
+        return dbs;
+      }
+      const db = loadedDatabases.get(dbName)!;
       const dbItem = getDatabaseItem(db, pos);
       pos += 1;
       dbs.push(dbItem);
@@ -119,12 +146,12 @@ export default class DatabaseSchemaTree extends React.Component {
   render() {
     const { menuItems, injected } = this;
     const { dbServerStore } = injected;
-    const { activeDbServer: activeConnection } = dbServerStore;
-    if (!activeConnection || activeConnection.isClosed) {
+    const { activeDbServer } = dbServerStore;
+    if (!activeDbServer) {
       return null;
     }
 
-    const isLoaded = activeConnection.isLoaded;
+    const isLoaded = true;
 
     return (
       <Fragment>

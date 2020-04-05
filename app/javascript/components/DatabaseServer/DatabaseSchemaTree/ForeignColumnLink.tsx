@@ -1,8 +1,10 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
-import { Mark } from '../../../models/DbColumn';
+import DbColumn, { Mark } from '../../../models/DbColumn';
 import { ItemKind, TreeItem, DbColumnItem, DbTableItem } from './DatabaseSchemaTree';
+import DbTable from '../../../models/DbTable';
+import { computed } from 'mobx';
 
 type Line = [number, number, number, number];
 
@@ -12,21 +14,21 @@ interface Props {
 
 @observer
 class ForeignColumnLink extends React.Component<Props> {
+  @computed
+  get linkableItems(): (DbTableItem | DbColumnItem)[] {
+    return this.props.menuItems.filter(
+      (item) => item.kind === ItemKind.Column || item.kind === ItemKind.Table
+    ) as (DbTableItem | DbColumnItem)[];
+  }
   render() {
-    const { menuItems } = this.props;
-    const tos = menuItems.filter(
-      (col) => col.kind !== ItemKind.Database && col.value.mark === Mark.To
-    );
+    const tos = this.linkableItems.filter((col) => col.value.mark === Mark.To);
     const svgWidth = 36;
-    const svgHeight = menuItems.length * 22;
+    const svgHeight = this.props.menuItems.length * 22;
     if (tos.length < 1) {
       return <svg height={svgHeight} width={svgWidth} />;
     }
     const to = tos[tos.length - 1] as DbColumnItem | DbTableItem;
-    const from = menuItems.filter((item) => {
-      if (item.kind === ItemKind.Database) {
-        return false;
-      }
+    const from = this.linkableItems.filter((item) => {
       if (item.kind === ItemKind.Table && item.value.show) {
         return false;
       }
@@ -77,8 +79,9 @@ const Line = (props: LineProps) => {
 
   return (
     <path
-      d={`M${fromX} ${fromY} C ${fromX - FROM_X_SHIFT} ${fromY + dY}, ${toX -
-        FROM_X_SHIFT} ${toY}, ${toX} ${toY}`}
+      d={`M${fromX} ${fromY} C ${fromX - FROM_X_SHIFT} ${fromY + dY}, ${
+        toX - FROM_X_SHIFT
+      } ${toY}, ${toX} ${toY}`}
       stroke="red"
       strokeWidth="1"
       fill="transparent"

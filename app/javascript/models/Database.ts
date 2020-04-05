@@ -1,109 +1,58 @@
 import { observable, computed, action, reaction } from 'mobx';
-import { Database as DatabaseProps, tables, QueryResult } from '../api/db_server';
+import { Database as DatabaseProps, QueryResult } from '../api/db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
 import DbTable from './DbTable';
-import ForeignKey from './ForeignKey';
 import { REST } from '../declarations/REST';
 import Query from './Query';
+import DatabaseStore from '../stores/database_store';
 
 export default class Database {
-  readonly dbConnection: DbServer;
+  readonly databaseStore: DatabaseStore;
   readonly name: string;
-  tables = observable<DbTable>([]);
-  @observable requestState: REST = REST.None;
+  readonly dbServerId: string;
+  readonly tables: DbTable[];
+  @observable activeQuery: Query = new Query(this, 1);
   @observable show: boolean = false;
-  queries = observable<Query>([]);
 
-  constructor(dbConnection: DbServer, props: DatabaseProps) {
-    this.dbConnection = dbConnection;
+  constructor(databaseStore: DatabaseStore, props: DatabaseProps) {
+    this.databaseStore = databaseStore;
     this.name = props.name;
-    reaction(
-      () => this.show,
-      (show: boolean) => {
-        if (show) {
-          this.load();
-        }
-      }
-    );
-  }
-
-  get cancelToken() {
-    return this.dbConnection.cancelToken;
-  }
-
-  @computed
-  get isActive() {
-    return this.dbConnection.activeDatabase === this;
-  }
-
-  @computed
-  get lastQuery(): Query | undefined {
-    return this.query(this.queries.length - 1);
-  }
-
-  @computed
-  get activeQuery(): Query | undefined {
-    return this.queries.find((query) => query.isActive);
-  }
-
-  query(id: number): Query | undefined {
-    return this.queries[id];
-  }
-
-  @action addQuery(): Query {
-    const query = new Query(this, this.queries.length + 1);
-    this.queries.push(query);
-    return query;
-  }
-
-  @action toggleShow() {
-    this.show = !this.show;
-  }
-
-  @computed get id() {
-    return this.dbConnection.id;
-  }
-
-  @computed get foreignKeyReferences(): ForeignKey[] {
-    return this.tables.reduce((fks, table) => {
-      return [
-        ...fks,
-        ...table.columns.filter((col) => col.isForeignKey).map((col) => col.foreignKey!)
-      ];
-    }, Array<ForeignKey>());
-  }
-
-  @computed get isLoaded() {
-    return this.requestState === REST.Success && this.tables.every((t) => t.isLoaded);
-  }
-
-  @computed get hasPendingRequest() {
-    return (
-      this.requestState === REST.Requested || this.tables.some((t) => t.hasPendingRequest)
-    );
-  }
-
-  @action load(forceLoad: boolean = false) {
-    if (this.isLoaded && !forceLoad) {
-      return;
-    }
-    this.queries.replace([]);
-    this.requestState = REST.Requested;
-    const query = this.addQuery();
-    query.setActive();
-    tables(this.id, this.name, this.cancelToken)
-      .then(({ data }) => {
-        this.tables.replace(data.map((table) => new DbTable(this, table)));
-        this.requestState = REST.Success;
-      })
-      .then(() => this.tables.forEach((t) => t.load()))
-      .catch((e) => {
-        this.requestState = REST.Error;
-      });
+    this.dbServerId = props.db_server_id;
+    this.tables = props.tables.map((table) => new DbTable(this, table));
+    this.connectForeignKeys();
   }
 
   table(name: string): DbTable | undefined {
-    return this.tables.find((t) => t.name === name);
+    return this.tables.find((table) => table.name === name);
+  }
+
+  // @computed get foreignKeyReferences(): ForeignKey[] {
+  //   return this.tables.reduce((fkeys, table) => {
+  //     return [
+  //       ...fkeys,
+  //       ...table.columns.filter((col) => col.isForeignKey).map((col) => col.foreignKey!),
+  //     ];
+  //   }, Array<ForeignKey>());
+  // }
+
+  @action
+  toggleShow() {
+    this.show = !this.show;
+  }
+
+  private connectForeignKeys() {
+    this.tables.forEach((table) => {
+      table.foreignKeys.forEach((fkey) => {
+        const fromColumn = table.column(fkey.options.column);
+        const toTable = this.table(fkey.to_table);
+        const toColumn = toTable?.column(fkey.options.primary_key);
+        if (!toColumn || !toTable || !fromColumn) {
+          return;
+        }
+        fromColumn.references = toColumn;
+        toColumn.referencedBy.push(fromColumn);
+      });
+    });
   }
 }

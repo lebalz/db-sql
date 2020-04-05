@@ -184,6 +184,78 @@ class DbServer < ApplicationRecord
 
   # @param key [String] base64 encoded crypto key from the user
   # @param database_name [String] name of the database_name
+  # @return [Hash] full table structure
+  # @example
+  # {
+  #   name: "swissski",
+  #   db_server_id: "fd878c8a-0953-4165-add8-c37283e98900",
+  #   tables: [
+  #     {
+  #       "name": "athletes",
+  #       "columns": [
+  #         {
+  #           "name": "id",
+  #           "null": false,
+  #           "serial": false,
+  #           "sql_type_metadata": {
+  #             "limit": 4,
+  #             "sql_type": "int(11)",
+  #             "type": "integer"
+  #           },
+  #           "is_primary": true
+  #         },
+  #         ...
+  #       ],
+  #       "indices": [],
+  #       "foreign_keys": []
+  #     }
+  #   ]
+  # }
+  def full_database(key:, database_name:)
+    reuse_connection do
+      table_names = table_names(key: key, database_name: database_name)
+      tables = table_names.map do |table_name|
+        pkeys = primary_key_names(
+          key: key,
+          database_name: database_name,
+          table_name: table_name
+        )
+        cols = columns(
+          key: key,
+          database_name: database_name,
+          table_name: table_name
+        ).map do |column|
+          column.merge(
+            is_primary: pkeys.include?(column[:name])
+          )
+        end
+        fkeys = foreign_keys(
+          key: key,
+          database_name: database_name,
+          table_name: table_name
+        )
+        indices = indexes(
+          key: key,
+          database_name: database_name,
+          table_name: table_name
+        )
+        {
+          name: table_name,
+          columns: cols,
+          indices: indices,
+          foreign_keys: fkeys
+        }
+      end
+      {
+        name: database_name,
+        db_server_id: id,
+        tables: tables
+      }
+    end
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @param database_name [String] name of the database_name
   # @return [Array<String>] all table_name names in the database_name
   def table_names(key:, database_name:)
     connect(key: key, database_name: database_name) do |connection|
@@ -297,7 +369,7 @@ class DbServer < ApplicationRecord
   # @example indexes of a table_name
   #   [
   #     {
-  #       table_name: "teams",
+  #       table: "teams",
   #       name: "id",
   #       unique: true,
   #       columns: ["id"],

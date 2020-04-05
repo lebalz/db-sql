@@ -6,6 +6,7 @@ import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import Database from '../../../models/Database';
 import { REST } from '../../../declarations/REST';
+import DatabaseStore from '../../../stores/database_store';
 
 interface DatabaseItemProps {
   database: Database;
@@ -13,9 +14,10 @@ interface DatabaseItemProps {
 
 interface InjectedDbItemPorps extends DatabaseItemProps {
   dbServerStore: DbServerStore;
+  databaseStore: DatabaseStore;
 }
 
-@inject('dbServerStore')
+@inject('dbServerStore', 'databaseStore')
 @observer
 export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   itemRef = React.createRef<HTMLDivElement>();
@@ -32,7 +34,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
         if (database === this.injected.database) {
           this.itemRef.current!.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'start',
           });
         }
       }
@@ -44,12 +46,15 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   }
 
   @computed get color() {
-    const { database } = this.injected;
-    const { activeDbServer: activeConnection } = this.injected.dbServerStore;
-    if (activeConnection && activeConnection.activeDatabase === database) {
+    const { database } = this.props;
+    const { activeDatabaseName } = this.injected.databaseStore;
+
+    if (activeDatabaseName === database.name) {
       return 'yellow';
     }
-    if (database.isLoaded) {
+    if (
+      this.injected.databaseStore.isLoadedDatabase(database.dbServerId, database.name)
+    ) {
       return 'teal';
     }
     return 'grey';
@@ -57,7 +62,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
 
   render() {
     const { database } = this.injected;
-    const { activeDbServer: activeConnection } = this.injected.dbServerStore;
+    const { activeDbServer } = this.injected.dbServerStore;
     return (
       <Fragment>
         <List.Item
@@ -66,34 +71,34 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
           className="database-item"
           onClick={(e) => {
             database.toggleShow();
-            if (activeConnection) {
-              activeConnection.activeDatabase = database;
+            if (activeDbServer) {
+              activeDbServer.activeDatabase = database;
               const { activeQuery } = database;
               if (activeQuery) {
                 activeQuery.setActive();
               } else {
-                const { lastQuery } = database;
-                if (lastQuery) {
-                  lastQuery.setActive();
-                } else {
-                  database.addQuery().setActive();
-                }
+                // const { lastQuery } = database;
+                // if (lastQuery) {
+                //   lastQuery.setActive();
+                // } else {
+                //   database.addQuery().setActive();
+                // }
               }
             }
           }}
         >
           <List.Content>
             <div style={{ display: 'flex' }} ref={this.itemRef}>
-              {database.requestState === REST.Requested ? (
+              {/* {database.requestState === REST.Requested ? (
                 <Icon loading name="circle notch" />
-              ) : (
+              ) : ( */}
                 <Icon fitted name="database" color={this.color} />
-              )}
+              {/* )} */}
               <span style={{ marginLeft: '10px' }}>{database.name}</span>
             </div>
           </List.Content>
         </List.Item>
-        {database.hasPendingRequest && (
+        {/* {database.hasPendingRequest && (
           <List.Item>
             <List.Content>
               <Progress
@@ -107,7 +112,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
               />
             </List.Content>
           </List.Item>
-        )}
+        )} */}
       </Fragment>
     );
   }

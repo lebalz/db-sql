@@ -26,17 +26,17 @@ export default class Query {
 
   @computed
   get isActive() {
-    if (!this.database.isActive) {
-      return false;
-    }
+    // if (!this.database.isActive) {
+    //   return false;
+    // }
 
     return this.active;
   }
 
   @action
   close() {
-    this.database.queries.remove(this);
-    this.database.lastQuery?.setActive();
+    // this.database.queries.remove(this);
+    // this.database.lastQuery?.setActive();
   }
 
   @action

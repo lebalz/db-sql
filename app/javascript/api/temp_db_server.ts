@@ -14,6 +14,14 @@ export interface DbServer {
   password: string;
 }
 
+export interface DatabaseName {
+  name: string;
+}
+
+export interface DbTableName {
+  name: string;
+}
+
 export interface TestResult {
   success: boolean;
   message?: string;
@@ -22,7 +30,7 @@ export interface TestResult {
 export function databases(
   dbServer: DbServer,
   cancelToken: CancelTokenSource
-): AxiosPromise<Database[]> {
+): AxiosPromise<DatabaseName[]> {
   return api.post('/temp_db_server/databases', dbServer, {
     cancelToken: cancelToken.token
   });
@@ -32,7 +40,7 @@ export function tables(
   dbServer: DbServer,
   databaseName: string,
   cancelToken: CancelTokenSource
-): AxiosPromise<DbTable[]> {
+): AxiosPromise<DbTableName[]> {
   return api.post(`/temp_db_server/${databaseName}/tables`, dbServer, {
     cancelToken: cancelToken.token
   });

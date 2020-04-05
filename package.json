@@ -24,6 +24,7 @@
     "mobx": "5.15.4",
     "mobx-react": "6.1.8",
     "mobx-react-router": "4.1.0",
+    "mobx-utils": "^5.5.6",
     "morgan": "^1.9.1",
     "prop-types": "^15.7.2",
     "react": "^16.13.0",

@@ -14,14 +14,6 @@ export interface DbServer {
   created_at: string;
   updated_at: string;
 }
-
-export interface Database {
-  name: string;
-}
-export interface DbTable {
-  name: string;
-}
-
 export interface SqlTypeMetadata {
   limit: number;
   precision?: number;
@@ -30,7 +22,7 @@ export interface SqlTypeMetadata {
   type: string;
 }
 
-export interface ColumnProps {
+export interface Column {
   name: string;
   collation: string;
   default: string;
@@ -41,16 +33,6 @@ export interface ColumnProps {
   sql_type_metadata: SqlTypeMetadata;
 }
 
-export interface CreateProps {
-  name: string;
-  db_type: DbType;
-  host: string;
-  port: number;
-  username: string;
-  initial_db?: string;
-  initial_table?: string;
-}
-
 export interface ForeignKeyOption {
   column: string;
   name: string;
@@ -59,13 +41,13 @@ export interface ForeignKeyOption {
   on_delete?: string;
 }
 
-export interface ForeignKeyProps {
+export interface ForeignKey {
   from_table: string;
   to_table: string;
   options: ForeignKeyOption;
 }
 
-export interface IndexProps {
+export interface Index {
   table_name: string;
   name: string;
   unique: boolean;
@@ -79,13 +61,41 @@ export interface IndexProps {
   comment?: string;
 }
 
+export interface DbTable {
+  name: string;
+  columns: Column[];
+  indices: Index[];
+  foreign_keys: ForeignKey[];
+}
+
+export interface Database {
+  name: string;
+  db_server_id: string;
+  tables: DbTable[];
+}
+
+export interface DatabaseName {
+  name: string;
+  db_server_id: string;
+}
+
+export interface CreateProps {
+  name: string;
+  db_type: DbType;
+  host: string;
+  port: number;
+  username: string;
+  initial_db?: string;
+  initial_table?: string;
+}
+
 export type ResultRow = { [key: string]: string | number };
 
 export type ResultTable = ResultRow[];
 
 export enum ResultType {
   Success = 'success',
-  Error = 'error'
+  Error = 'error',
 }
 interface Result {
   time: number;
@@ -102,16 +112,11 @@ export interface ErrorQuery extends Result {
 
 export type QueryResult = SuccessQuery | ErrorQuery;
 
-export function newDbServer(
-  dbServer: CreateProps,
-  cancelToken: CancelTokenSource
-) {
+export function newDbServer(dbServer: CreateProps, cancelToken: CancelTokenSource) {
   return api.post('/db_servers', dbServer, { cancelToken: cancelToken.token });
 }
 
-export function dbServers(
-  cancelToken: CancelTokenSource
-): AxiosPromise<DbServer[]> {
+export function dbServers(cancelToken: CancelTokenSource): AxiosPromise<DbServer[]> {
   return api.get('/db_servers', { cancelToken: cancelToken.token });
 }
 
@@ -126,14 +131,11 @@ export function dbServerPassword(
   return api.get(`/db_servers/${id}/password`, { cancelToken: cancelToken.token });
 }
 
-export function updateDbServer(
-  connection: UpdateProps,
-  cancelToken: CancelTokenSource
-) {
+export function updateDbServer(connection: UpdateProps, cancelToken: CancelTokenSource) {
   return api.put(
     `/db_servers/${connection.id}`,
     {
-      data: connection
+      data: connection,
     },
     { cancelToken: cancelToken.token }
   );
@@ -148,51 +150,16 @@ export function createDbServer(
 export function databases(
   id: string,
   cancelToken: CancelTokenSource
-): AxiosPromise<Database[]> {
+): AxiosPromise<DatabaseName[]> {
   return api.get(`/db_servers/${id}/databases`, { cancelToken: cancelToken.token });
 }
 
-export function tables(
+export function database(
   id: string,
-  databaseName: string,
+  dbName: string,
   cancelToken: CancelTokenSource
-): AxiosPromise<DbTable[]> {
-  return api.get(`/db_servers/${id}/${databaseName}/tables`, {
-    cancelToken: cancelToken.token
-  });
-}
-
-export function columns(
-  id: string,
-  databaseName: string,
-  tableName: string,
-  cancelToken: CancelTokenSource
-): AxiosPromise<ColumnProps[]> {
-  return api.get(`/db_servers/${id}/${databaseName}/${tableName}/columns`, {
-    cancelToken: cancelToken.token
-  });
-}
-
-export function foreignKeys(
-  id: string,
-  databaseName: string,
-  tableName: string,
-  cancelToken: CancelTokenSource
-): AxiosPromise<ForeignKeyProps[]> {
-  return api.get(`/db_servers/${id}/${databaseName}/${tableName}/foreign_keys`, {
-    cancelToken: cancelToken.token
-  });
-}
-
-export function indexes(
-  id: string,
-  databaseName: string,
-  tableName: string,
-  cancelToken: CancelTokenSource
-): AxiosPromise<IndexProps[]> {
-  return api.get(`/db_servers/${id}/${databaseName}/${tableName}/indexes`, {
-    cancelToken: cancelToken.token
-  });
+): AxiosPromise<Database> {
+  return api.get(`/db_servers/${id}/${dbName}`, { cancelToken: cancelToken.token });
 }
 
 export function query(
@@ -204,7 +171,7 @@ export function query(
   return api.post(
     `/db_servers/${id}/${databaseName}/multi_query`,
     {
-      queries: queries
+      queries: queries,
     },
     { cancelToken: cancelToken.token }
   );
