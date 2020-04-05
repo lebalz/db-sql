@@ -65,7 +65,7 @@ module Resources
       desc 'Get the databases of a database server connection'
       post :databases do
         present(
-          db_server.database_names(key: crypto_key).map { |n| { name: n } },
+          db_server.databases(key: crypto_key),
           with: Entities::Database
         )
       end
@@ -88,10 +88,10 @@ module Resources
         desc "Get the database's tables"
         post :tables do
           present(
-            db_server.table_names(
+            db_server.tables(
               key: crypto_key,
               database_name: params[:database_name]
-            ).map { |n| { name: n } },
+            ),
             with: Entities::Table
           )
         end
@@ -126,11 +126,14 @@ module Resources
             ), with: Entities::Column, primary_keys: primary_keys
           end
           desc "Get the table's primary key names"
-          post :primary_key_names do
-            db_server.primary_key_names(
-              key: crypto_key,
-              database_name: params[:database_name],
-              table_name: params[:table_name]
+          post :primary_keys do
+            present(
+              db_server.primary_keys(
+                key: crypto_key,
+                database_name: params[:database_name],
+                table_name: params[:table_name]
+              ),
+              with: Entities::PrimaryKey
             )
           end
           desc "Get the table's foreign keys"

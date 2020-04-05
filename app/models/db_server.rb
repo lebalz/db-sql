@@ -175,11 +175,50 @@ class DbServer < ApplicationRecord
   end
 
   # @param key [String] base64 encoded crypto key from the user
+  # @return [Array<Hash>] all database_name names for a connection
+  # @example databases
+  #   [
+  #     {
+  #       name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
+  #     }
+  #   ]
+  def databases(key:)
+    database_names(key: key).map do |db|
+      {
+        name: db,
+        db_server_id: id
+      }
+    end
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
   # @return [Array<String>] all database_name names for a connection
   def database_names(key:)
     exec_query(key: key, database_name: DEFAULT_DATABASE_NAME[db_type]) do
       query_for(db_type: db_type, name: :databases)
     end&.rows&.flatten&.sort || []
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @param database_name [String] name of the database_name
+  # @return [Array<Hash>] all tables in the database_name
+  # @example tables
+  #   [
+  #     {
+  #       name: 'ninjas',
+  #       database_name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
+  #     }
+  #   ]
+  def tables(key:, database_name:)
+    table_names(key: key, database_name: database_name).map do |table|
+      {
+        name: table,
+        database_name: database_name,
+        db_server_id: id
+      }
+    end
   end
 
   # @param key [String] base64 encoded crypto key from the user
@@ -220,7 +259,9 @@ class DbServer < ApplicationRecord
   #         scale: nil,
   #         sql_type: 'integer',
   #         type: :integer
-  #       }
+  #       },
+  #       database_name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
   #     }
   #   ]
   def columns(key:, database_name:, table_name:)
@@ -239,9 +280,39 @@ class DbServer < ApplicationRecord
             scale: column.sql_type_metadata.scale,
             sql_type: column.sql_type_metadata.sql_type,
             type: column.sql_type_metadata.type
-          }
+          },
+          database_name: database_name,
+          db_server_id: id
         }
       end
+    end
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @param database_name [String] name of the database_name
+  # @param table_name [String] name of the table_name
+  # @return [Array<Hash>] primary keys of a table_name
+  # @example primary keys of a table_name
+  #   [
+  #     {
+  #       primary_key: "id",
+  #       table_name: 'ninjas',
+  #       database_name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
+  #     },
+  #   ]
+  def primary_keys(key:, database_name:, table_name:)
+    primary_key_names(
+      key: key,
+      database_name: database_name,
+      table_name: table_name
+    ).map do |pkey|
+      {
+        primary_key: pkey,
+        table_name: table_name,
+        database_name: database_name,
+        db_server_id: id
+      }
     end
   end
 
@@ -270,7 +341,9 @@ class DbServer < ApplicationRecord
   #         primary_key: "id",
   #         on_update: nil,
   #         on_delete: nil
-  #       }
+  #       },
+  #       database_name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
   #     },
   #     {
   #       from_table: "tore",
@@ -281,12 +354,21 @@ class DbServer < ApplicationRecord
   #         primary_key: "id",
   #         on_update: nil,
   #         on_delete: nil
-  #       }
+  #       },
+  #       database_name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
   #     }
   #   ]
   def foreign_keys(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
-      connection.foreign_keys(table_name).map(&:to_h)
+      connection.foreign_keys(table_name).map do |fkey|
+        fkey.to_h.merge(
+          {
+            database_name: database_name,
+            db_server_id: id
+          }
+        )
+      end
     end
   end
 
@@ -307,13 +389,20 @@ class DbServer < ApplicationRecord
   #       where: nil,
   #       type: nil,
   #       using: :btree,
-  #       comment: nil
+  #       comment: nil,
+  #       database_name: 'ninja_turtles',
+  #       db_server_id: '123456-432134-12345-GFDS',
   #     }
   #   ]
   def indexes(key:, database_name:, table_name:)
     connect(key: key, database_name: database_name) do |connection|
       connection.indexes(table_name).map do |index_def|
-        index_def.instance_values.symbolize_keys
+        index_def.instance_values.symbolize_keys.merge(
+          {
+            database_name: database_name,
+            db_server_id: id
+          }
+        )
       end
     end
   end

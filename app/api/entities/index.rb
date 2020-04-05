@@ -14,6 +14,8 @@ module Entities
       expose :where
       expose :type
       expose :comment
+      expose :db_server_id
+      expose :database_name
     end
   end
 end

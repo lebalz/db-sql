@@ -257,7 +257,12 @@ RSpec.describe "API::Resources::DbServer" do
         headers: @headers
       )
       expect(response.successful?).to be_truthy
-      expect(json).to include("name" => "ninja_turtles_db")
+      expect(json).to include(
+        {
+          "name" => "ninja_turtles_db",
+          "db_server_id" => @db_server.id.to_s
+        }
+      )
     end
   end
 
@@ -324,8 +329,22 @@ RSpec.describe "API::Resources::DbServer" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]).to eq('name' => 'fights')
-      expect(json[1]).to eq('name' => 'ninja_turtles')
+      expect(json[0]).to include(
+        {
+          'name' => 'fights',
+          'database_name' => 'ninja_turtles_db',
+          'db_server_id' => @db_server.id.to_s
+
+        }
+      )
+      expect(json[1]).to include(
+        {
+          'name' => 'ninja_turtles',
+          'database_name' => 'ninja_turtles_db',
+          'db_server_id' => @db_server.id.to_s
+
+        }
+      )
     end
   end
 
@@ -383,23 +402,31 @@ RSpec.describe "API::Resources::DbServer" do
     end
   end
 
-  describe 'GET /api/db_servers/:id/:database_name/:table_name/primary_key_names' do
+  describe 'GET /api/db_servers/:id/:database_name/:table_name/primary_keys' do
     it 'can get indexes of a table' do
       get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/primary_key_names",
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/primary_keys",
         headers: @headers
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json.first).to eq('id')
+      expect(json.first).to include(
+        'database_name' => 'ninja_turtles_db',
+        'primary_key' => 'id',
+        'table_name' => 'ninja_turtles'
+      )
 
       get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/primary_key_names",
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/primary_keys",
         headers: @headers
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json.first).to eq('id')
+      expect(json.first).to include(
+        'database_name' => 'ninja_turtles_db',
+        'primary_key' => 'id',
+        'table_name' => 'fights'
+      )
     end
   end
   describe 'GET /api/db_servers/:id/:database_name/:table_name/columns' do
@@ -420,7 +447,9 @@ RSpec.describe "API::Resources::DbServer" do
           "limit" => 4,
           "sql_type" => "integer",
           "type" => "integer"
-        }
+        },
+        "database_name" => "ninja_turtles_db",
+        "db_server_id" => @db_server.id.to_s
       )
       expect(json[1]).to eq(
         "is_primary" => false,
@@ -429,7 +458,9 @@ RSpec.describe "API::Resources::DbServer" do
         "sql_type_metadata" => {
           "sql_type" => "text",
           "type" => "text"
-        }
+        },
+        "database_name" => "ninja_turtles_db",
+        "db_server_id" => @db_server.id.to_s
       )
 
       get(
@@ -448,7 +479,9 @@ RSpec.describe "API::Resources::DbServer" do
           "limit" => 4,
           "sql_type" => "integer",
           "type" => "integer"
-        }
+        },
+        "database_name" => "ninja_turtles_db",
+        "db_server_id" => @db_server.id.to_s
       )
       expect(json[1]).to eq(
         "name" => "date",
@@ -457,7 +490,9 @@ RSpec.describe "API::Resources::DbServer" do
         "sql_type_metadata" => {
           "sql_type" => "timestamp without time zone",
           "type" => "datetime"
-        }
+        },
+        "database_name" => "ninja_turtles_db",
+        "db_server_id" => @db_server.id.to_s
       )
       expect(json[2]).to eq(
         "name" => "badass_turtle_id",
@@ -467,7 +502,9 @@ RSpec.describe "API::Resources::DbServer" do
           "limit" => 4,
           "sql_type" => "integer",
           "type" => "integer"
-        }
+        },
+        "database_name" => "ninja_turtles_db",
+        "db_server_id" => @db_server.id.to_s
       )
       expect(json[3]).to eq(
         "name" => "kickass_turtle_id",
@@ -477,7 +514,9 @@ RSpec.describe "API::Resources::DbServer" do
           "limit" => 4,
           "sql_type" => "integer",
           "type" => "integer"
-        }
+        },
+        "database_name" => "ninja_turtles_db",
+        "db_server_id" => @db_server.id.to_s
       )
     end
   end
