@@ -18,7 +18,7 @@
     "eofline": false,
     "max-line-length": [
       true,
-      90
+      110
     ],
     "object-literal-key-quotes": false,
     "object-literal-shorthand": false,
