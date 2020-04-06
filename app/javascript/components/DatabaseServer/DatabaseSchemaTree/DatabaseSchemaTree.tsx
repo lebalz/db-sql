@@ -88,13 +88,6 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
   };
 };
 
-// interface MatchParams {
-//   id: string;
-//   db_name: string;
-// }
-
-// interface Props extends RouteComponentProps<MatchParams> {}
-
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
