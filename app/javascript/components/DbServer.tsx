@@ -6,13 +6,15 @@ import { RouterStore } from 'mobx-react-router';
 import DbServerStore, { LoadState } from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import Database from './DatabaseServer/Database';
 import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSchemaTree';
-import { RouteComponentProps, Switch } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
 import DbServerIndex from './DatabaseServer/DbServerIndex';
 import { Route } from 'react-router-dom';
-import { Dimmer, Loader } from 'semantic-ui-react';
+import { Dimmer, Loader, Segment } from 'semantic-ui-react';
+import QueryIndex from './DatabaseServer/QueryIndex';
+import Query from './DatabaseServer/Query';
+
 
 interface MatchParams {
   id: string;
@@ -41,7 +43,7 @@ export default class DbServer extends React.Component<DbConnectionProps> {
       }
     );
     this.tableDisposer = reaction(
-      () => this.db_name,
+      () => this.dbName,
       (db_name) => {
         if (db_name) {
           this.injected.dbServerStore.activeDbServer?.setActiveDatabase(db_name);
@@ -55,9 +57,10 @@ export default class DbServer extends React.Component<DbConnectionProps> {
 
   componentDidMount() {
     this.injected.dbServerStore.setActiveDbServer(this.id);
-    if (this.db_name) {
-      this.injected.dbServerStore.setActiveDatabase(this.id, this.db_name);
+    if (this.dbName) {
+      this.injected.dbServerStore.setActiveDatabase(this.id, this.dbName);
     }
+    console.log('DbServer component did mount');
   }
 
   componentWillUnmount() {
@@ -71,11 +74,12 @@ export default class DbServer extends React.Component<DbConnectionProps> {
   }
 
   @computed
-  get db_name() {
+  get dbName() {
     return this.props.match.params.db_name;
   }
 
   render() {
+    const query = this.injected.dbServerStore.activeDbServer?.activeDatabase?.activeQuery;
     return (
       <Fragment>
         <header>
@@ -86,7 +90,12 @@ export default class DbServer extends React.Component<DbConnectionProps> {
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
           <DbServerIndex />
-          <Database />
+          <Segment>
+            <QueryIndex
+              queries={this.injected.dbServerStore.activeDbServer?.queries ?? []}
+            />
+            {query && <Query query={query} />}
+          </Segment>
         </main>
         <Dimmer
           active={this.injected.dbServerStore.dbIndexLoadState === LoadState.Loading}

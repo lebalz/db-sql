@@ -1,14 +1,8 @@
-import React, { Fragment } from 'react';
-import { Button, Menu, Icon, Segment } from 'semantic-ui-react';
+import React from 'react';
+import { Button, Menu, Icon } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import SqlEditor from './SqlEditor';
-import SqlResults from './SqlResults';
-import { action } from 'mobx';
-import { default as DatabaseModel } from '../../models/Database';
-import Query from '../../models/Query';
-import { REST } from '../../declarations/REST';
 import { RouterStore } from 'mobx-react-router';
 
 interface Props {}

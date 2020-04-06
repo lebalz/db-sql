@@ -1,29 +1,21 @@
 import React, { Fragment } from 'react';
-import { inject, observer } from 'mobx-react';
-import DbServerStore from '../../stores/db_server_store';
-import { Segment, Label, Popup, Header, Accordion, Icon } from 'semantic-ui-react';
+import { Segment, Label, Popup, Header, Accordion } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultType, QueryResult } from '../../api/db_server';
 import { computed } from 'mobx';
 import { SqlResult } from './SqlResult';
+import Query from '../../models/Query';
 
-interface InjectedProps {
-  dbServerStore: DbServerStore;
+
+interface Props {
+  query: Query;
 }
 
-@inject('dbServerStore')
-@observer
-export default class SqlResults extends React.Component {
-  get injected() {
-    return this.props as InjectedProps;
-  }
+export default class SqlResults extends React.Component<Props> {
 
   @computed
-  get results(): QueryResult[] {
-    return (
-      this.injected.dbServerStore?.activeDbServer?.activeDatabase?.activeQuery
-        ?.results || []
-    );
+  get results() {
+    return this.props.query.results;
   }
 
   @computed

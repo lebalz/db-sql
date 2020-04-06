@@ -16,6 +16,7 @@ import 'regenerator-runtime/runtime';
 import { REST } from '../declarations/REST';
 import { RequestState } from './session_store';
 import Database from '../models/Database';
+import Query from '../models/Query';
 
 export enum LoadState {
   Loading,
@@ -103,7 +104,10 @@ class DbServerStore implements Store {
     this.state.dbIndexLoadState = LoadState.Loading;
     databases(dbServerId, this.cancelToken)
       .then(({ data }) => {
-        this.state.databaseIndex.set(dbServerId, data.map((db) => db.name));
+        this.state.databaseIndex.set(
+          dbServerId,
+          data.map((db) => db.name)
+        );
       })
       .then(() => {
         const initialDb = this.initialDb(dbServerId);
@@ -124,16 +128,18 @@ class DbServerStore implements Store {
     if (!dbServer) {
       return;
     }
-    database(dbServerId, dbName, this.cancelToken).then(({ data }) => {
-      const db = new Database(dbServer, data);
-      this.state.databases.get(dbServerId)!.set(dbName, db);
-      db.toggleShow();
-      this.setActiveDatabase(dbServerId, dbName);
-      this.setActiveDbServer(dbServerId);
-    }).catch((e) => {
-      this.state.databases.delete(dbServerId);
-      this.state.activeDatabase.delete(dbServerId);
-    });
+    database(dbServerId, dbName, this.cancelToken)
+      .then(({ data }) => {
+        const db = new Database(dbServer, data);
+        this.state.databases.get(dbServerId)!.set(dbName, db);
+        db.toggleShow();
+        this.setActiveDatabase(dbServerId, dbName);
+        this.setActiveDbServer(dbServerId);
+      })
+      .catch((e) => {
+        this.state.databases.delete(dbServerId);
+        this.state.activeDatabase.delete(dbServerId);
+      });
   }
 
   loadedDatabases(dbServerId: string): Database[] {
@@ -142,6 +148,11 @@ class DbServerStore implements Store {
 
   loadedDatabaseMap(dbServerId: string): Map<string, Database> {
     return this.state.databases.get(dbServerId) ?? new Map();
+  }
+
+  queries(dbServerId: string): Query[] {
+    const dbMap = this.loadedDatabaseMap(dbServerId);
+    return  _.flatten(Array.from(dbMap, ([_, value]) => value.queries));
   }
 
   database(dbServerId: string, dbName: string): Database | undefined {

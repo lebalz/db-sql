@@ -27,7 +27,7 @@ function identifyCommands(queryText: string) {
 }
 
 export default class Query {
-  private readonly database: Database;
+  readonly database: Database;
   readonly id: number;
   @observable requestState: REST = REST.None;
   @observable query: string = '';
@@ -49,13 +49,23 @@ export default class Query {
   }
 
   @action
+  setActive() {
+    this.database.setActiveQuery(this.id);
+  }
+
+  @action
   close() {
     this.database.removeQuery(this);
   }
 
   @computed
+  get link() {
+    return this.database.link;
+  }
+
+  @computed
   get isActive() {
-    return this.id === this.database.activeQueryId;
+    return this.database.isActive && this.id === this.database.activeQueryId;
   }
 
   run() {

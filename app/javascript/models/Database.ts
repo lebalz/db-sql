@@ -31,6 +31,11 @@ export default class Database {
   }
 
   @computed
+  get link() {
+    return `${this.dbServer.link}/${this.name}`;
+  }
+
+  @computed
   get activeQuery() {
     return this.queries.find((query) => query.id === this.activeQueryId);
   }
@@ -52,14 +57,6 @@ export default class Database {
   @computed
   get isActive(): boolean {
     return this.name === this.dbServer.activeDatabaseName && this.dbServer.isActive;
-  }
-
-  executeQuery() {
-    const activeQuery = this.activeQuery;
-    if (!activeQuery) {
-      return;
-    }
-    activeQuery.run();
   }
 
   @action

@@ -5,6 +5,7 @@ import Database from './Database';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
+import Query from './Query';
 
 export enum DbType {
   Psql = 'psql',
@@ -70,6 +71,11 @@ export default class DbServer {
   }
 
   @computed
+  get link() {
+    return `/connections/${this.id}`;
+  }
+
+  @computed
   get props(): DbServerProps {
     return {
       id: this.id,
@@ -115,6 +121,11 @@ export default class DbServer {
 
   database(dbName: string): Database | undefined {
     return this.dbServerStore.database(this.id, dbName);
+  }
+
+  @computed
+  get queries(): Query[] {
+    return this.dbServerStore.queries(this.id);
   }
 
   @computed
