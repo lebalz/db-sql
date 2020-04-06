@@ -17,7 +17,7 @@ import { REST } from '../declarations/REST';
 import { RequestState } from './session_store';
 import Database from '../models/Database';
 
-enum LoadState {
+export enum LoadState {
   Loading,
   Error,
   Success,
@@ -34,6 +34,7 @@ class State {
   @observable tempDbServer?: TempDbServer = undefined;
 
   @observable loadState: LoadState = LoadState.None;
+  @observable dbIndexLoadState: LoadState = LoadState.None;
   @observable saveState: RequestState = RequestState.None;
 
   @observable queryState: RequestState = RequestState.None;
@@ -89,11 +90,17 @@ class DbServerStore implements Store {
     this.currentDbLoader();
   }
 
+  @computed
+  get dbIndexLoadState() {
+    return this.state.dbIndexLoadState;
+  }
+
   @action
   loadDatabaseIndex(dbServerId: string, force: boolean = false) {
     if (this.state.databaseIndex.has(dbServerId) && !force) {
       return;
     }
+    this.state.dbIndexLoadState = LoadState.Loading;
     databases(dbServerId, this.cancelToken)
       .then(({ data }) => {
         this.state.databaseIndex.set(dbServerId, data.map((db) => db.name));
@@ -103,10 +110,12 @@ class DbServerStore implements Store {
         if (!this.activeDatabaseName(dbServerId) && initialDb) {
           this.setActiveDatabase(dbServerId, initialDb);
         }
+        this.state.dbIndexLoadState = LoadState.Success;
       })
       .catch((e) => {
         this.state.databaseIndex.delete(dbServerId);
         this.state.activeDbServerId = '';
+        this.state.dbIndexLoadState = LoadState.Error;
       });
   }
 

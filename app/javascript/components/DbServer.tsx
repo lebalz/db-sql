@@ -3,7 +3,7 @@ import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
-import DbServerStore from '../stores/db_server_store';
+import DbServerStore, { LoadState } from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Database from './DatabaseServer/Database';
@@ -12,6 +12,7 @@ import { RouteComponentProps, Switch } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
 import DbServerIndex from './DatabaseServer/DbServerIndex';
 import { Route } from 'react-router-dom';
+import { Dimmer, Loader } from 'semantic-ui-react';
 
 interface MatchParams {
   id: string;
@@ -87,6 +88,11 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           <DbServerIndex />
           <Database />
         </main>
+        <Dimmer
+          active={this.injected.dbServerStore.dbIndexLoadState === LoadState.Loading}
+        >
+          <Loader indeterminate content="Loading Databases" />
+        </Dimmer>
         <Footer />
       </Fragment>
     );
