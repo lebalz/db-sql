@@ -14,12 +14,7 @@ import DatabaseItem from './DatabaseItem';
 import TableItem from './TableItem';
 import ColumnItem from './ColumnItem';
 import PlaceholderItem from './PlaceholderItem';
-
-interface InjectedProps {
-  sessionStore: SessionStore;
-  routerStore: RouterStore;
-  dbServerStore: DbServerStore;
-}
+import { RouteComponentProps } from 'react-router';
 
 export enum ItemKind {
   Database = 'database',
@@ -66,12 +61,12 @@ const getDatabaseItem = (db: Database, treePosition: number): DbDatabaseItem => 
   };
 };
 
-const getPlaceholderItem = (dbName: string, treePosition: number): DbPlaceholderItem => {
+const getPlaceholderItem = (dbServerId: string, dbName: string, treePosition: number): DbPlaceholderItem => {
   return {
     kind: ItemKind.Placeholder,
     value: dbName,
     treePosition: treePosition,
-    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} />
+    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} />
   };
 };
 
@@ -93,12 +88,36 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
   };
 };
 
+// interface MatchParams {
+//   id: string;
+//   db_name: string;
+// }
+
+// interface Props extends RouteComponentProps<MatchParams> {}
+
+interface InjectedProps {
+  sessionStore: SessionStore;
+  routerStore: RouterStore;
+  dbServerStore: DbServerStore;
+}
+
 @inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class DatabaseSchemaTree extends React.Component {
   get injected() {
     return this.props as InjectedProps;
   }
+
+  // componentDidMount() {
+  //   if (!this.props.match.params.db_name) {
+  //     const dbName = this.injected.dbServerStore.activeDbServer?.defaultDatabaseName;
+  //     if (dbName) {
+  //       this.injected.routerStore.replace(`./${dbName}`);
+  //     }
+  //   } else {
+  //     this.injected.dbServerStore.activeDbServer?.setActiveDatabase(this.props.match.params.db_name);
+  //   }
+  // }
 
   @computed get menuItems(): TreeItem[] {
     const { dbServerStore } = this.injected;
@@ -113,7 +132,7 @@ export default class DatabaseSchemaTree extends React.Component {
 
     return databaseNames.reduce((dbs, dbName) => {
       if (!loadedDatabases.has(dbName)) {
-        dbs.push(getPlaceholderItem(dbName, pos));
+        dbs.push(getPlaceholderItem(activeDbServerId, dbName, pos));
         pos += 1;
         return dbs;
       }

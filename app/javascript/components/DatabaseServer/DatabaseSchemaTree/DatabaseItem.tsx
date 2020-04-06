@@ -6,6 +6,8 @@ import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import Database from '../../../models/Database';
 import { REST } from '../../../declarations/REST';
+import { RouteComponentProps } from 'react-router';
+import RouterStore from '../../../stores/router_store';
 
 interface DatabaseItemProps {
   database: Database;
@@ -13,9 +15,10 @@ interface DatabaseItemProps {
 
 interface InjectedDbItemPorps extends DatabaseItemProps {
   dbServerStore: DbServerStore;
+  routerStore: RouterStore;
 }
 
-@inject('dbServerStore')
+@inject('dbServerStore', 'routerStore')
 @observer
 export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   itemRef = React.createRef<HTMLDivElement>();
@@ -23,20 +26,24 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
     return this.props as InjectedDbItemPorps;
   }
   scrollReaction?: IReactionDisposer;
+
   componentDidMount() {
-    if (
-      this.injected.dbServerStore.activeDbServer?.activeDatabase === this.props.database
-    ) {
+    if (this.props.database.isActive) {
       this.scrollIntoView();
     }
     this.scrollReaction = reaction(
-      () => this.injected.dbServerStore.activeDbServer?.activeDatabase,
-      (database) => {
-        if (database === this.props.database) {
+      () => this.props.database.isActive,
+      (isActive) => {
+        if (isActive) {
           this.scrollIntoView();
         }
       }
     );
+  }
+
+  get link() {
+    const { database } = this.props;
+    return `/connections/${database.dbServerId}/${database.name}`;
   }
 
   componentWillUnmount() {
@@ -46,28 +53,21 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   scrollIntoView() {
     this.itemRef.current?.scrollIntoView({
       behavior: 'smooth',
-      block: 'start',
+      block: 'center'
     });
   }
 
   @computed get color() {
     const { database } = this.props;
-    const { activeDbServer } = this.injected.dbServerStore;
 
-    if (activeDbServer?.activeDatabaseName === database.name) {
+    if (database.isActive) {
       return 'yellow';
     }
-    if (
-      this.injected.dbServerStore.isDatabaseLoaded(database.dbServerId, database.name)
-    ) {
-      return 'teal';
-    }
-    return 'grey';
+    return 'teal';
   }
 
   render() {
     const { database } = this.injected;
-    const { activeDbServer } = this.injected.dbServerStore;
     return (
       <Fragment>
         <List.Item
@@ -75,44 +75,21 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
           data-dbname={database.name}
           className="database-item"
           onClick={(e) => {
-            database.toggleShow();
-            if (activeDbServer) {
-              activeDbServer.setActiveDatabase(database.name);
-              const { activeQuery } = database;
-              if (activeQuery) {
-                database.setActiveQuery(activeQuery.id);
-              } else {
-                database.setDefaultQueryActive();
-              }
+            if (database.isActive) {
+              database.toggleShow();
+            } else {
+              database.setShow(true);
             }
+            this.injected.routerStore.push(this.link);
           }}
         >
           <List.Content>
             <div style={{ display: 'flex' }} ref={this.itemRef}>
-              {/* {database.requestState === REST.Requested ? (
-                <Icon loading name="circle notch" />
-              ) : ( */}
               <Icon fitted name="database" color={this.color} />
-              {/* )} */}
               <span style={{ marginLeft: '10px' }}>{database.name}</span>
             </div>
           </List.Content>
         </List.Item>
-        {/* {database.hasPendingRequest && (
-          <List.Item>
-            <List.Content>
-              <Progress
-                color="teal"
-                size="tiny"
-                active
-                percent={
-                  (100 * database.tables.filter((t) => t.isLoaded).length) /
-                  database.tables.length
-                }
-              />
-            </List.Content>
-          </List.Item>
-        )} */}
       </Fragment>
     );
   }

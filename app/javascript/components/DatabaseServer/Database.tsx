@@ -48,32 +48,6 @@ export default class Database extends React.Component<Props> {
     const loadedDbs = dbServerStore.loadedDatabases(activeDbServer.id);
     return (
       <Fragment>
-        <Menu stackable secondary compact size="mini" color="teal">
-          {loadedDbServers.map((conn, i) => {
-            return (
-              <Menu.Item
-                key={i}
-                onClick={() => this.injected.routerStore.push(`./${conn.id}`)}
-                active={activeDbServer === conn}
-              >
-                <Icon name="plug" />
-                {conn.name}
-                {activeDbServer === conn && (
-                  <Button
-                    icon="close"
-                    onClick={() => console.log('close me, haha')}
-                    floated="right"
-                    style={{
-                      padding: '2px',
-                      marginLeft: '4px',
-                      marginRight: '-4px'
-                    }}
-                  />
-                )}
-              </Menu.Item>
-            );
-          })}
-        </Menu>
         <Segment>
           <Menu attached="top" tabular size="mini">
             {loadedDbs.map((db) => {

@@ -11,12 +11,9 @@ interface DatabaseItemProps {
 
 @observer
 export default class TableItem extends React.Component<DatabaseItemProps> {
-  get injected() {
-    return this.props as DatabaseItemProps;
-  }
 
   render() {
-    const { table } = this.injected;
+    const { table } = this.props;
     const highlighted = table.mark !== Mark.None;
 
     return (

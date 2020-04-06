@@ -8,11 +8,14 @@ import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Database from './DatabaseServer/Database';
 import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSchemaTree';
-import { RouteComponentProps } from 'react-router';
+import { RouteComponentProps, Switch } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
+import DbServerIndex from './DatabaseServer/DbServerIndex';
+import { Route } from 'react-router-dom';
 
 interface MatchParams {
   id: string;
+  db_name?: string;
 }
 
 interface DbConnectionProps extends RouteComponentProps<MatchParams> {}
@@ -27,12 +30,21 @@ interface InjectedProps extends DbConnectionProps {
 @observer
 export default class DbServer extends React.Component<DbConnectionProps> {
   loadDisposer: IReactionDisposer;
+  tableDisposer: IReactionDisposer;
   constructor(props: DbConnectionProps) {
     super(props);
     this.loadDisposer = reaction(
       () => this.id,
       (id) => {
         this.injected.dbServerStore.setActiveDbServer(id);
+      }
+    );
+    this.tableDisposer = reaction(
+      () => this.db_name,
+      (db_name) => {
+        if (db_name) {
+          this.injected.dbServerStore.activeDbServer?.setActiveDatabase(db_name);
+        }
       }
     );
   }
@@ -42,14 +54,24 @@ export default class DbServer extends React.Component<DbConnectionProps> {
 
   componentDidMount() {
     this.injected.dbServerStore.setActiveDbServer(this.id);
+    if (this.db_name) {
+      this.injected.dbServerStore.setActiveDatabase(this.id, this.db_name);
+    }
   }
+
   componentWillUnmount() {
     this.loadDisposer();
+    this.tableDisposer();
   }
 
   @computed
   get id() {
     return this.props.match.params.id;
+  }
+
+  @computed
+  get db_name() {
+    return this.props.match.params.db_name;
   }
 
   render() {
@@ -59,9 +81,10 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           <NavBar />
         </header>
         <div id="sidebar">
-          <DatabaseSchemaTree />
+          <Route path="/connections/:id/:db_name?" component={DatabaseSchemaTree} />
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
+          <DbServerIndex />
           <Database />
         </main>
         <Footer />

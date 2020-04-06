@@ -17,7 +17,6 @@ import { REST } from '../declarations/REST';
 import { RequestState } from './session_store';
 import Database from '../models/Database';
 
-
 enum LoadState {
   Loading,
   Error,
@@ -25,15 +24,11 @@ enum LoadState {
   None,
 }
 
-interface DatabaseIndex {
-  names: string[];
-  activeDatabase?: string;
-}
-
 class State {
   dbServers = observable<DbServer>([]);
   @observable activeDbServerId: string = '';
-  databaseIndex = observable(new Map<string, DatabaseIndex>());
+  databaseIndex = observable(new Map<string, string[]>());
+  activeDatabase = observable(new Map<string, string>());
   databases = observable(new Map<string, Map<string, Database>>());
 
   @observable tempDbServer?: TempDbServer = undefined;
@@ -80,7 +75,7 @@ class DbServerStore implements Store {
       () => this.activeDbServer?.activeDatabaseName,
       (activeDatabaseName) => {
         if (activeDatabaseName) {
-          if (!this.activeDbServer?.activeDatabase) {
+          if (!this.activeDatabase(this.state.activeDbServerId)) {
             this.loadDatabase(this.activeDbServerId, activeDatabaseName);
           }
         }
@@ -101,17 +96,17 @@ class DbServerStore implements Store {
     }
     databases(dbServerId, this.cancelToken)
       .then(({ data }) => {
-        this.state.databaseIndex.set(dbServerId, { names: data.map((db) => db.name) });
-        this.state.databases.set(dbServerId, new Map<string, Database>());
+        this.state.databaseIndex.set(dbServerId, data.map((db) => db.name));
       })
       .then(() => {
-        const dbIndex = this.state.databaseIndex.get(dbServerId)!;
         const initialDb = this.initialDb(dbServerId);
-        const initDb = dbIndex.names.find((name) => name === initialDb);
-        dbIndex.activeDatabase = initDb || dbIndex.names[0];
+        if (!this.activeDatabaseName(dbServerId) && initialDb) {
+          this.setActiveDatabase(dbServerId, initialDb);
+        }
       })
       .catch((e) => {
-        this.state.databaseIndex.set(dbServerId, { names: [] });
+        this.state.databaseIndex.delete(dbServerId);
+        this.state.activeDbServerId = '';
       });
   }
 
@@ -124,8 +119,11 @@ class DbServerStore implements Store {
       const db = new Database(dbServer, data);
       this.state.databases.get(dbServerId)!.set(dbName, db);
       db.toggleShow();
-      this.state.databaseIndex.get(dbServerId)!.activeDatabase = dbName;
+      this.setActiveDatabase(dbServerId, dbName);
       this.setActiveDbServer(dbServerId);
+    }).catch((e) => {
+      this.state.databases.delete(dbServerId);
+      this.state.activeDatabase.delete(dbServerId);
     });
   }
 
@@ -148,11 +146,11 @@ class DbServerStore implements Store {
     if (!this.state.databaseIndex.has(dbServerId)) {
       return [];
     }
-    return this.state.databaseIndex.get(dbServerId)!.names;
+    return this.state.databaseIndex.get(dbServerId) ?? [];
   }
 
   activeDatabaseName(dbServerId: string): string | undefined {
-    return this.state.databaseIndex.get(dbServerId)?.activeDatabase;
+    return this.state.activeDatabase.get(dbServerId);
   }
 
   isDatabaseLoaded(dbServerId: string, dbName: string): boolean {
@@ -165,16 +163,14 @@ class DbServerStore implements Store {
 
   @action
   setActiveDatabase(dbServerId: string, dbName: string) {
-    const dbIndex = this.state.databaseIndex.get(dbServerId);
-    if (!dbIndex) {
-      return;
+    if (!this.state.databases.has(dbServerId)) {
+      this.state.databases.set(dbServerId, new Map<string, Database>());
     }
-
-    dbIndex.activeDatabase = dbName;
+    this.state.activeDatabase.set(dbServerId, dbName);
   }
 
   initialDb(dbServerId: string): string | undefined {
-    return this.dbServer(dbServerId)?.initialDb;
+    return this.dbServer(dbServerId)?.defaultDatabaseName;
   }
 
   @computed
@@ -230,7 +226,7 @@ class DbServerStore implements Store {
 
   @computed
   get loadedDbServers(): DbServer[] {
-    return Array.from(this.state.databases.keys()).map((id) => this.dbServer(id)!);
+    return Array.from(this.state.databaseIndex.keys()).map((id) => this.dbServer(id)!);
   }
 
   dbServer(id: string): DbServer | undefined {

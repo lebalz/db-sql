@@ -22,7 +22,7 @@ const AppContent = observer(() => (
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/dashboard" component={Dashboard} />
-        <Route path="/connections/:id/:db_id?" component={DbServer} />
+        <Route path="/connections/:id/:db_name?" component={DbServer} />
         <Route path="/profile/:part" component={Profile} />
         <Route path="/users/:id/reset_password" component={ResetPassword} />
         <Route path="/users/:id/activate" component={ActivateAccount} />

@@ -1,21 +1,23 @@
 import React, { Fragment } from 'react';
-import { Icon, List, Progress } from 'semantic-ui-react';
+import { Icon, List, Progress, Dimmer, Loader } from 'semantic-ui-react';
 import DbServerStore from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import Database from '../../../models/Database';
 import { REST } from '../../../declarations/REST';
+import RouterStore from '../../../stores/router_store';
 
 interface PlaceholderItemProps {
   dbName: string;
+  dbServerId: string;
 }
 
 interface InjectedDbItemPorps extends PlaceholderItemProps {
-  dbServerStore: DbServerStore;
+  routerStore: RouterStore;
 }
 
-@inject('dbServerStore')
+@inject('routerStore')
 @observer
 export default class PlaceholderItem extends React.Component<PlaceholderItemProps> {
   state = { loading: false };
@@ -23,9 +25,13 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
     return this.props as InjectedDbItemPorps;
   }
 
+  get link() {
+    const { dbName, dbServerId } = this.props;
+    return `/connections/${dbServerId}/${dbName}`;
+  }
+
   render() {
     const { dbName } = this.props;
-    const { activeDbServerId } = this.injected.dbServerStore;
     return (
       <Fragment>
         <List.Item
@@ -33,10 +39,8 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
           data-dbname={dbName}
           className="database-item"
           onClick={(e) => {
-            if (activeDbServerId) {
-              this.setState({ loading: true });
-              this.injected.dbServerStore.loadDatabase(activeDbServerId, dbName);
-            }
+            this.setState({ loading: true });
+            this.injected.routerStore.push(this.link);
           }}
         >
           <List.Content>
@@ -47,9 +51,16 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
           </List.Content>
         </List.Item>
         {this.state.loading && (
-          <List.Item>
+          <List.Item style={{ height: '4em' }}>
             <List.Content>
-              <Progress color="teal" size="tiny" active />
+              <Loader
+                style={{ marginLeft: '2em' }}
+                size="small"
+                indeterminate
+                active
+                inline
+                content="Loading"
+              />
             </List.Content>
           </List.Item>
         )}

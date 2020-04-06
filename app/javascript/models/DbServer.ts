@@ -135,6 +135,19 @@ export default class DbServer {
     this.dbServerStore.setActiveDatabase(this.id, dbName);
   }
 
+  // @return [string] the initial database or the first database of the index
+  @computed
+  get defaultDatabaseName(): string | undefined {
+    if (this.initialDb) {
+      return this.initialDb;
+    }
+
+    const dbNames = this.databaseNames;
+    if (dbNames.length > 0) {
+      return dbNames[dbNames.length - 1];
+    }
+  }
+
   @action
   close() {
     this.dbServerStore.closeDbServer(this.id);

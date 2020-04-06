@@ -44,9 +44,14 @@ export default class Database {
     this.show = !this.show;
   }
 
+  @action
+  setShow(show: boolean) {
+    this.show = show;
+  }
+
   @computed
   get isActive(): boolean {
-    return this.show && this.dbServer.isActive;
+    return this.name === this.dbServer.activeDatabaseName && this.dbServer.isActive;
   }
 
   executeQuery() {
