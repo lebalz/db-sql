@@ -77,6 +77,7 @@ export default class Dashboard extends React.Component {
             onClick={() => {
               const temp = new TempDbServer(
                 DEFAULT_DB_SERVER,
+                this.injected.dbServerStore,
                 TempDbServerRole.Create,
                 this.injected.dbServerStore.cancelToken
               );

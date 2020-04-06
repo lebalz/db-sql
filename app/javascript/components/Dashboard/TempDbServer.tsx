@@ -115,6 +115,7 @@ export class TempDbServer extends React.Component {
   @action duplicate() {
     const dup = new TempDbServerModel(
       this.dbServer.props,
+      this.injected.dbServerStore,
       TempDbServerRole.Create,
       this.dbServer.cancelToken
     );

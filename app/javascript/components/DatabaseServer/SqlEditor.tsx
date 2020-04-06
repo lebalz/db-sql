@@ -37,14 +37,13 @@ export default class SqlEditor extends React.Component {
         callback: (error: null | string, res: Completion[]) => void
       ) => {
         callback(null, this.completers);
-      }
+      },
     });
   }
 
   @computed
   get completers() {
-    const activeDatabase = this.injected.dbServerStore?.activeDbServer
-      ?.activeDatabase;
+    const activeDatabase = this.injected.dbServerStore?.activeDbServer?.activeDatabase;
     if (!activeDatabase) {
       return [];
     }
@@ -52,7 +51,7 @@ export default class SqlEditor extends React.Component {
       name: table.name,
       value: table.name,
       meta: 'TABLE',
-      score: 1
+      score: 1,
     }));
     const columns = activeDatabase.tables.reduce((res, table) => {
       const cols = table.columns.map(
@@ -61,7 +60,7 @@ export default class SqlEditor extends React.Component {
             name: col.name,
             value: col.name,
             meta: 'COLUMN',
-            score: 1
+            score: 1,
           } as Completion)
       );
       return [...res, ...cols];
@@ -94,8 +93,9 @@ export default class SqlEditor extends React.Component {
             // commands is array of key bindings.
             name: 'Execute Query',
             bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-            exec: () => this.injected.dbServerStore.executeQuery()
-          }
+            exec: () =>
+              this.injected.dbServerStore.activeDbServer?.activeDatabase?.executeQuery(),
+          },
         ]}
         value={database?.activeQuery?.query}
         defaultValue={database?.activeQuery?.query}

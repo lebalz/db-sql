@@ -1,44 +1,76 @@
 import { observable, computed, action, reaction } from 'mobx';
-import { Database as DatabaseProps, QueryResult } from '../api/db_server';
+import { Database as DatabaseProps, query as fetchQuery } from '../api/db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
 import DbTable from './DbTable';
 import { REST } from '../declarations/REST';
 import Query from './Query';
-import DatabaseStore from '../stores/database_store';
+import DbServerStore from '../stores/db_server_store';
 
 export default class Database {
-  readonly databaseStore: DatabaseStore;
+  readonly dbServer: DbServer;
   readonly name: string;
   readonly dbServerId: string;
   readonly tables: DbTable[];
-  @observable activeQuery: Query = new Query(this, 1);
+  queries = observable<Query>([new Query(this, 1)]);
+  @observable activeQueryId: number = 1;
+
   @observable show: boolean = false;
 
-  constructor(databaseStore: DatabaseStore, props: DatabaseProps) {
-    this.databaseStore = databaseStore;
+  constructor(dbServer: DbServer, props: DatabaseProps) {
+    this.dbServer = dbServer;
     this.name = props.name;
     this.dbServerId = props.db_server_id;
     this.tables = props.tables.map((table) => new DbTable(this, table));
     this.connectForeignKeys();
   }
 
+  @action
+  setActiveQuery(id: number) {
+    this.activeQueryId = id;
+  }
+
+  @computed
+  get activeQuery() {
+    return this.queries.find((query) => query.id === this.activeQueryId);
+  }
+
   table(name: string): DbTable | undefined {
     return this.tables.find((table) => table.name === name);
   }
 
-  // @computed get foreignKeyReferences(): ForeignKey[] {
-  //   return this.tables.reduce((fkeys, table) => {
-  //     return [
-  //       ...fkeys,
-  //       ...table.columns.filter((col) => col.isForeignKey).map((col) => col.foreignKey!),
-  //     ];
-  //   }, Array<ForeignKey>());
-  // }
-
   @action
   toggleShow() {
     this.show = !this.show;
+  }
+
+  @computed
+  get isActive(): boolean {
+    return this.show && this.dbServer.isActive;
+  }
+
+  executeQuery() {
+    const activeQuery = this.activeQuery;
+    if (!activeQuery) {
+      return;
+    }
+    activeQuery.run();
+  }
+
+  @action
+  setDefaultQueryActive() {
+    if (this.queries.length > 0) {
+      const lastQuery = this.queries[this.queries.length - 1];
+      this.setActiveQuery(lastQuery.id);
+    }
+  }
+
+  @action
+  removeQuery(query: Query) {
+    if (this.queries.remove(query)) {
+      query.cancel();
+      this.setDefaultQueryActive();
+    }
   }
 
   private connectForeignKeys() {

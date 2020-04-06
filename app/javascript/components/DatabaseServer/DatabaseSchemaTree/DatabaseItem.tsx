@@ -6,7 +6,6 @@ import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import Database from '../../../models/Database';
 import { REST } from '../../../declarations/REST';
-import DatabaseStore from '../../../stores/database_store';
 
 interface DatabaseItemProps {
   database: Database;
@@ -14,10 +13,9 @@ interface DatabaseItemProps {
 
 interface InjectedDbItemPorps extends DatabaseItemProps {
   dbServerStore: DbServerStore;
-  databaseStore: DatabaseStore;
 }
 
-@inject('dbServerStore', 'databaseStore')
+@inject('dbServerStore')
 @observer
 export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   itemRef = React.createRef<HTMLDivElement>();
@@ -26,16 +24,16 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   }
   scrollReaction?: IReactionDisposer;
   componentDidMount() {
+    if (
+      this.injected.dbServerStore.activeDbServer?.activeDatabase === this.props.database
+    ) {
+      this.scrollIntoView();
+    }
     this.scrollReaction = reaction(
-      () =>
-        this.injected.dbServerStore.activeDbServer &&
-        this.injected.dbServerStore.activeDbServer.activeDatabase,
+      () => this.injected.dbServerStore.activeDbServer?.activeDatabase,
       (database) => {
-        if (database === this.injected.database) {
-          this.itemRef.current!.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
+        if (database === this.props.database) {
+          this.scrollIntoView();
         }
       }
     );
@@ -45,15 +43,22 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
     this.scrollReaction!();
   }
 
+  scrollIntoView() {
+    this.itemRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
+
   @computed get color() {
     const { database } = this.props;
-    const { activeDatabaseName } = this.injected.databaseStore;
+    const { activeDbServer } = this.injected.dbServerStore;
 
-    if (activeDatabaseName === database.name) {
+    if (activeDbServer?.activeDatabaseName === database.name) {
       return 'yellow';
     }
     if (
-      this.injected.databaseStore.isLoadedDatabase(database.dbServerId, database.name)
+      this.injected.dbServerStore.isDatabaseLoaded(database.dbServerId, database.name)
     ) {
       return 'teal';
     }
@@ -72,17 +77,12 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
           onClick={(e) => {
             database.toggleShow();
             if (activeDbServer) {
-              activeDbServer.activeDatabase = database;
+              activeDbServer.setActiveDatabase(database.name);
               const { activeQuery } = database;
               if (activeQuery) {
-                activeQuery.setActive();
+                database.setActiveQuery(activeQuery.id);
               } else {
-                // const { lastQuery } = database;
-                // if (lastQuery) {
-                //   lastQuery.setActive();
-                // } else {
-                //   database.addQuery().setActive();
-                // }
+                database.setDefaultQueryActive();
               }
             }
           }}
@@ -92,7 +92,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
               {/* {database.requestState === REST.Requested ? (
                 <Icon loading name="circle notch" />
               ) : ( */}
-                <Icon fitted name="database" color={this.color} />
+              <Icon fitted name="database" color={this.color} />
               {/* )} */}
               <span style={{ marginLeft: '10px' }}>{database.name}</span>
             </div>

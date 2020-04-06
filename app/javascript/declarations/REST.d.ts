@@ -2,5 +2,6 @@ export const enum REST {
   None = 'none',
   Requested = 'requested',
   Success = 'success',
-  Error = 'error'
+  Error = 'error',
+  Canceled = 'canceled'
 }

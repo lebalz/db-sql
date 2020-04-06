@@ -13,6 +13,7 @@ import DbServer from './DbServer';
 import { RequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
+import DbServerStore from '../stores/db_server_store';
 
 export enum TempDbServerRole {
   Update,
@@ -32,10 +33,11 @@ export class TempDbServer extends DbServer {
 
   constructor(
     props: DbServerProps,
+    dbServerStore: DbServerStore,
     role: TempDbServerRole,
     cancelToken: CancelTokenSource
   ) {
-    super(props, cancelToken);
+    super(props, dbServerStore, cancelToken);
     this.role = role;
     this.testConnection = _.debounce(this.testConnection, 400, { leading: false });
 

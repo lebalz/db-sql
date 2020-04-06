@@ -49,6 +49,7 @@ export default class DbServerOverview extends React.Component<Props> {
             onClick={() => {
               const temp = new TempDbServer(
                 this.dbConnection.props,
+                this.injected.dbServerStore,
                 TempDbServerRole.Update,
                 this.dbConnection.cancelToken
               );

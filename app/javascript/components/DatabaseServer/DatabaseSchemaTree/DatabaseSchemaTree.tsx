@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Header, List, Loader, PlaceholderImage } from 'semantic-ui-react';
+import { Header, List, Loader } from 'semantic-ui-react';
 import SessionStore from '../../../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbServerStore from '../../../stores/db_server_store';
@@ -13,14 +13,12 @@ import Database from '../../../models/Database';
 import DatabaseItem from './DatabaseItem';
 import TableItem from './TableItem';
 import ColumnItem from './ColumnItem';
-import DatabaseStore from '../../../stores/database_store';
 import PlaceholderItem from './PlaceholderItem';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   dbServerStore: DbServerStore;
-  databaseStore: DatabaseStore;
 }
 
 export enum ItemKind {
@@ -95,7 +93,7 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
   };
 };
 
-@inject('sessionStore', 'routerStore', 'dbServerStore', 'databaseStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class DatabaseSchemaTree extends React.Component {
   get injected() {
@@ -103,13 +101,13 @@ export default class DatabaseSchemaTree extends React.Component {
   }
 
   @computed get menuItems(): TreeItem[] {
-    const { databaseStore, dbServerStore } = this.injected;
+    const { dbServerStore } = this.injected;
     const { activeDbServerId } = dbServerStore;
     if (!activeDbServerId) {
       return [];
     }
-    const databaseNames = databaseStore.databaseNames(activeDbServerId);
-    const loadedDatabases = databaseStore.loadedDatabaseMap(activeDbServerId);
+    const databaseNames = dbServerStore.databaseNames(activeDbServerId);
+    const loadedDatabases = dbServerStore.loadedDatabaseMap(activeDbServerId);
 
     let pos = 0;
 

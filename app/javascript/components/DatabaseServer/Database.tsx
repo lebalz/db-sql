@@ -10,17 +10,15 @@ import { default as DatabaseModel } from '../../models/Database';
 import Query from '../../models/Query';
 import { REST } from '../../declarations/REST';
 import { RouterStore } from 'mobx-react-router';
-import DatabaseStore from '../../stores/database_store';
 
 interface Props {}
 
 interface InjectedProps extends Props {
   dbServerStore: DbServerStore;
   routerStore: RouterStore;
-  databaseStore: DatabaseStore;
 }
 
-@inject('dbServerStore', 'routerStore', 'databaseStore')
+@inject('dbServerStore', 'routerStore')
 @observer
 export default class Database extends React.Component<Props> {
   get injected() {
@@ -38,7 +36,7 @@ export default class Database extends React.Component<Props> {
   }
 
   render() {
-    const { dbServerStore, databaseStore } = this.injected;
+    const { dbServerStore } = this.injected;
     // const activeConnection = dbServerStore.findDbConnection(this.props.id);
     const { loadedDbServers, activeDbServer } = dbServerStore;
     if (!activeDbServer) {
@@ -47,7 +45,7 @@ export default class Database extends React.Component<Props> {
 
     const activeQuery = activeDbServer.activeDatabase?.activeQuery;
 
-    const loadedDbs = databaseStore.loadedDatabases(activeDbServer.id);
+    const loadedDbs = dbServerStore.loadedDatabases(activeDbServer.id);
     return (
       <Fragment>
         <Menu stackable secondary compact size="mini" color="teal">
@@ -82,15 +80,15 @@ export default class Database extends React.Component<Props> {
               return [db.activeQuery].map((query) => {
                 return (
                   <Menu.Item
-                    active={query.isActive}
-                    key={`db-${query.name}`}
-                    onClick={() => this.changeQueryTab(db, query)}
+                    active={query?.isActive}
+                    key={`db-${query?.name}`}
+                    onClick={() => this.changeQueryTab(db, query!)}
                   >
                     {db.name}
-                    {query.isActive && (
+                    {query?.isActive && (
                       <Button
                         icon="close"
-                        onClick={() => query.close()}
+                        onClick={() => query?.close()}
                         floated="right"
                         style={{
                           padding: '2px',
@@ -114,7 +112,7 @@ export default class Database extends React.Component<Props> {
               positive
               disabled={activeQuery?.requestState === REST.Requested}
               loading={activeQuery?.requestState === REST.Requested}
-              onClick={() => this.injected.dbServerStore.executeQuery()}
+              onClick={() => activeQuery?.run()}
             >
               Query
             </Button>

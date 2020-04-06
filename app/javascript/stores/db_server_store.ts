@@ -7,34 +7,16 @@ import {
   createDbServer,
   remove as removeApi,
   query as fetchQuery,
+  databases,
+  database,
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
-import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexer';
-import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { REST } from '../declarations/REST';
 import { RequestState } from './session_store';
+import Database from '../models/Database';
 
-function identifyCommands(queryText: string) {
-  const inputStream = new ANTLRInputStream(queryText);
-  console.time('lexing');
-  const lexer = new QuerySeparationGrammarLexer(inputStream);
-  console.timeLog('lexing');
-  const tokenStream = new CommonTokenStream(lexer);
-  console.time('parse');
-  const parser = new QuerySeparationGrammarParser(tokenStream);
-  console.timeLog('parse');
-  console.time('queryText');
-  const { children } = parser.queriesText();
-  console.timeLog('queryText');
-  if (!children) {
-    return [];
-  }
-
-  return children.map((child) => child.text).slice(0, -1);
-}
 
 enum LoadState {
   Loading,
@@ -43,9 +25,16 @@ enum LoadState {
   None,
 }
 
+interface DatabaseIndex {
+  names: string[];
+  activeDatabase?: string;
+}
+
 class State {
   dbServers = observable<DbServer>([]);
   @observable activeDbServerId: string = '';
+  databaseIndex = observable(new Map<string, DatabaseIndex>());
+  databases = observable(new Map<string, Map<string, Database>>());
 
   @observable tempDbServer?: TempDbServer = undefined;
 
@@ -61,6 +50,8 @@ class DbServerStore implements Store {
   private state = new State();
 
   loginDisposer: IReactionDisposer;
+  dbIndexLoader: IReactionDisposer;
+  currentDbLoader: IReactionDisposer;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -70,8 +61,28 @@ class DbServerStore implements Store {
       (loggedIn) => {
         if (loggedIn) {
           this.loadDbServers(true);
-        } else {
-          this.clearStore();
+        }
+      }
+    );
+
+    // load the database index if it is not loaded
+    this.dbIndexLoader = reaction(
+      () => this.state.activeDbServerId,
+      (activeDbServerId) => {
+        if (activeDbServerId) {
+          this.loadDatabaseIndex(activeDbServerId);
+        }
+      }
+    );
+
+    // load the current database if it is not loaded
+    this.currentDbLoader = reaction(
+      () => this.activeDbServer?.activeDatabaseName,
+      (activeDatabaseName) => {
+        if (activeDatabaseName) {
+          if (!this.activeDbServer?.activeDatabase) {
+            this.loadDatabase(this.activeDbServerId, activeDatabaseName);
+          }
         }
       }
     );
@@ -79,6 +90,91 @@ class DbServerStore implements Store {
 
   componentWillUnmount() {
     this.loginDisposer();
+    this.dbIndexLoader();
+    this.currentDbLoader();
+  }
+
+  @action
+  loadDatabaseIndex(dbServerId: string, force: boolean = false) {
+    if (this.state.databaseIndex.has(dbServerId) && !force) {
+      return;
+    }
+    databases(dbServerId, this.cancelToken)
+      .then(({ data }) => {
+        this.state.databaseIndex.set(dbServerId, { names: data.map((db) => db.name) });
+        this.state.databases.set(dbServerId, new Map<string, Database>());
+      })
+      .then(() => {
+        const dbIndex = this.state.databaseIndex.get(dbServerId)!;
+        const initialDb = this.initialDb(dbServerId);
+        const initDb = dbIndex.names.find((name) => name === initialDb);
+        dbIndex.activeDatabase = initDb || dbIndex.names[0];
+      })
+      .catch((e) => {
+        this.state.databaseIndex.set(dbServerId, { names: [] });
+      });
+  }
+
+  @action loadDatabase(dbServerId: string, dbName: string) {
+    const dbServer = this.dbServer(dbServerId);
+    if (!dbServer) {
+      return;
+    }
+    database(dbServerId, dbName, this.cancelToken).then(({ data }) => {
+      const db = new Database(dbServer, data);
+      this.state.databases.get(dbServerId)!.set(dbName, db);
+      db.toggleShow();
+      this.state.databaseIndex.get(dbServerId)!.activeDatabase = dbName;
+      this.setActiveDbServer(dbServerId);
+    });
+  }
+
+  loadedDatabases(dbServerId: string): Database[] {
+    return Array.from(this.state.databases.get(dbServerId)?.values() ?? []);
+  }
+
+  loadedDatabaseMap(dbServerId: string): Map<string, Database> {
+    return this.state.databases.get(dbServerId) ?? new Map();
+  }
+
+  database(dbServerId: string, dbName: string): Database | undefined {
+    if (!this.state.databases.has(dbServerId)) {
+      return;
+    }
+    return this.state.databases.get(dbServerId)!.get(dbName);
+  }
+
+  databaseNames(dbServerId: string): string[] {
+    if (!this.state.databaseIndex.has(dbServerId)) {
+      return [];
+    }
+    return this.state.databaseIndex.get(dbServerId)!.names;
+  }
+
+  activeDatabaseName(dbServerId: string): string | undefined {
+    return this.state.databaseIndex.get(dbServerId)?.activeDatabase;
+  }
+
+  isDatabaseLoaded(dbServerId: string, dbName: string): boolean {
+    return this.state.databases.get(dbServerId)?.has(dbName) ?? false;
+  }
+
+  activeDatabase(dbServerId: string): Database | undefined {
+    return this.database(dbServerId, this.activeDatabaseName(dbServerId) ?? '');
+  }
+
+  @action
+  setActiveDatabase(dbServerId: string, dbName: string) {
+    const dbIndex = this.state.databaseIndex.get(dbServerId);
+    if (!dbIndex) {
+      return;
+    }
+
+    dbIndex.activeDatabase = dbName;
+  }
+
+  initialDb(dbServerId: string): string | undefined {
+    return this.dbServer(dbServerId)?.initialDb;
   }
 
   @computed
@@ -88,26 +184,35 @@ class DbServerStore implements Store {
 
   @computed
   get activeDbServer(): DbServer | undefined {
-    if (!this.state.activeDbServerId) {
+    if (!this.activeDbServerId) {
       return;
     }
-    return this.findDbServer(this.state.activeDbServerId);
+    return this.dbServer(this.activeDbServerId);
   }
 
   setActiveDbServer(id: string) {
     this.state.activeDbServerId = id;
   }
 
-  // closeConnection(connection: DbServer) {
-  //   if (this.activeConnection === connection) {
-  //     const connectionCount = this.loadedConnections.length;
-  //     if (connectionCount > 0) {
-  //       this.activeConnection = this.loadedConnections[connectionCount - 1];
-  //     } else {
-  //       this.activeConnection = null;
-  //     }
-  //   }
-  // }
+  @action
+  closeDbServer(dbServerId: string) {
+    const dbServer = this.dbServer(dbServerId);
+    if (!dbServer) {
+      return;
+    }
+
+    this.state.dbServers.remove(dbServer);
+    this.state.databaseIndex.delete(dbServerId);
+    this.state.databases.delete(dbServerId);
+    if (this.activeDbServerId === dbServer.id) {
+      const dbServerCount = this.state.dbServers.length;
+      if (dbServerCount > 0) {
+        this.setActiveDbServer(this.state.dbServers[dbServerCount - 1].id);
+      } else {
+        this.setActiveDbServer('');
+      }
+    }
+  }
 
   get cancelToken() {
     return this.root.cancelToken;
@@ -123,13 +228,12 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
-  @computed get loadedDbServers(): DbServer[] {
-    return this.root.databases.dbServerIdsWithLoadedDatabases.map(
-      (id) => this.findDbServer(id)!
-    );
+  @computed
+  get loadedDbServers(): DbServer[] {
+    return Array.from(this.state.databases.keys()).map((id) => this.dbServer(id)!);
   }
 
-  findDbServer(id: string): DbServer | undefined {
+  dbServer(id: string): DbServer | undefined {
     return this.state.dbServers.find((c) => c.id === id);
   }
 
@@ -148,7 +252,7 @@ class DbServerStore implements Store {
     dbServers(this.root.cancelToken)
       .then(({ data }) => {
         const dbServers = _.sortBy(data, ['name']).map(
-          (dbConnection) => new DbServer(dbConnection, this.root.cancelToken)
+          (dbConnection) => new DbServer(dbConnection, this, this.root.cancelToken)
         );
         this.state.dbServers.replace(dbServers);
         this.state.loadState = LoadState.Success;
@@ -167,7 +271,7 @@ class DbServerStore implements Store {
         if (!connection) return;
         this.state.dbServers.remove(connection);
         this.state.dbServers.push(
-          new DbServer(dbConnection.props, this.root.cancelToken)
+          new DbServer(dbConnection.props, this, this.root.cancelToken)
         );
         this.state.saveState = RequestState.Success;
       })
@@ -180,16 +284,12 @@ class DbServerStore implements Store {
     this.state.saveState = RequestState.Waiting;
     createDbServer(dbConnection.tempDbPorps, this.root.cancelToken)
       .then(({ data }) => {
-        this.state.dbServers.push(new DbServer(data, this.root.cancelToken));
+        this.state.dbServers.push(new DbServer(data, this, this.root.cancelToken));
         this.state.saveState = RequestState.Success;
       })
       .catch(() => {
         this.state.saveState = RequestState.Error;
       });
-  }
-
-  @action clearStore() {
-    this.state.dbServers.clear();
   }
 
   @action remove(dbServer: TempDbServer) {
@@ -203,31 +303,6 @@ class DbServerStore implements Store {
       })
       .catch((e) => {
         console.log(e);
-      });
-  }
-
-  executeQuery() {
-    const dbServer = this.activeDbServer;
-    const database = dbServer?.activeDatabase;
-    const activeQuery = database?.activeQuery;
-    if (!dbServer || !database || !activeQuery) {
-      return;
-    }
-
-    activeQuery.requestState = REST.Requested;
-    const rawInput = activeQuery.query;
-    const t0 = Date.now();
-    const queries = identifyCommands(rawInput);
-    console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    fetchQuery(dbServer.id, database.name, queries, this.root.cancelToken)
-      .then(({ data }) => {
-        console.log('Got result: ', (Date.now() - t0) / 1000.0);
-        activeQuery.results = data;
-        console.log(data);
-        activeQuery.requestState = REST.Success;
-      })
-      .catch((e) => {
-        activeQuery.requestState = REST.Error;
       });
   }
 

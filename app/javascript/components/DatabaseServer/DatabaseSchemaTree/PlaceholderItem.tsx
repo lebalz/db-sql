@@ -6,7 +6,6 @@ import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import Database from '../../../models/Database';
 import { REST } from '../../../declarations/REST';
-import DatabaseStore from '../../../stores/database_store';
 
 interface PlaceholderItemProps {
   dbName: string;
@@ -14,10 +13,9 @@ interface PlaceholderItemProps {
 
 interface InjectedDbItemPorps extends PlaceholderItemProps {
   dbServerStore: DbServerStore;
-  databaseStore: DatabaseStore;
 }
 
-@inject('dbServerStore', 'databaseStore')
+@inject('dbServerStore')
 @observer
 export default class PlaceholderItem extends React.Component<PlaceholderItemProps> {
   state = { loading: false };
@@ -37,7 +35,7 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
           onClick={(e) => {
             if (activeDbServerId) {
               this.setState({ loading: true });
-              this.injected.databaseStore.loadDatabase(activeDbServerId, dbName);
+              this.injected.dbServerStore.loadDatabase(activeDbServerId, dbName);
             }
           }}
         >
