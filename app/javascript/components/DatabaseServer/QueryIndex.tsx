@@ -4,6 +4,7 @@ import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Query from '../../models/Query';
 import { RouterStore } from 'mobx-react-router';
+import { action } from 'mobx';
 
 interface Props {
   queries: Query[];
@@ -18,6 +19,20 @@ interface InjectedProps extends Props {
 export default class QueryIndex extends React.Component<Props> {
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  close(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, query: Query) {
+    e.stopPropagation();
+
+    const idx = this.props.queries.indexOf(query);
+    query.close();
+
+    const numQueries = this.props.queries.length;
+    if (numQueries > 1) {
+      const nextQuery = this.props.queries[idx > 0 ? idx - 1 : 1];
+      this.injected.routerStore.push(nextQuery.link);
+      nextQuery.setActive();
+    }
   }
 
   render() {
@@ -37,7 +52,7 @@ export default class QueryIndex extends React.Component<Props> {
               {query.isActive && (
                 <Button
                   icon="close"
-                  onClick={() => query.close()}
+                  onClick={(e) => this.close(e, query)}
                   floated="right"
                   style={{
                     padding: '2px',

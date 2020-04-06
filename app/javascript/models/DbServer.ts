@@ -163,29 +163,4 @@ export default class DbServer {
   close() {
     this.dbServerStore.closeDbServer(this.id);
   }
-
-  // executeQuery() {
-  //   const database = dbServer?.activeDatabase;
-  //   const activeQuery = database?.activeQuery;
-  //   if (!dbServer || !database || !activeQuery) {
-  //     return;
-  //   }
-
-  //   activeQuery.requestState = REST.Requested;
-  //   const rawInput = activeQuery.query;
-  //   const t0 = Date.now();
-  //   const queries = identifyCommands(rawInput);
-  //   console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-  //   fetchQuery(dbServer.id, database.name, queries, this.root.cancelToken)
-  //     .then(({ data }) => {
-  //       console.log('Got result: ', (Date.now() - t0) / 1000.0);
-  //       activeQuery.results = data;
-  //       console.log(data);
-  //       activeQuery.requestState = REST.Success;
-  //     })
-  //     .catch((e) => {
-  //       activeQuery.requestState = REST.Error;
-  //     });
-  // }
-
 }

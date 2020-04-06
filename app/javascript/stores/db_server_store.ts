@@ -217,17 +217,16 @@ class DbServerStore implements Store {
       return;
     }
 
-    this.state.dbServers.remove(dbServer);
     this.state.databaseIndex.delete(dbServerId);
     this.state.databases.delete(dbServerId);
-    if (this.activeDbServerId === dbServer.id) {
-      const dbServerCount = this.state.dbServers.length;
-      if (dbServerCount > 0) {
-        this.setActiveDbServer(this.state.dbServers[dbServerCount - 1].id);
-      } else {
-        this.setActiveDbServer('');
-      }
-    }
+    // if (this.activeDbServerId === dbServer.id) {
+    //   const dbServerCount = this.state.dbServers.length;
+    //   if (dbServerCount > 0) {
+    //     this.setActiveDbServer(this.state.dbServers[dbServerCount - 1].id);
+    //   } else {
+    //     this.setActiveDbServer('');
+    //   }
+    // }
   }
 
   get cancelToken() {

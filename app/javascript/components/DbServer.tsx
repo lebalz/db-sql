@@ -60,7 +60,6 @@ export default class DbServer extends React.Component<DbConnectionProps> {
     if (this.dbName) {
       this.injected.dbServerStore.setActiveDatabase(this.id, this.dbName);
     }
-    console.log('DbServer component did mount');
   }
 
   componentWillUnmount() {

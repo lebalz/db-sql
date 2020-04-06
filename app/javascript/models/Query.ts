@@ -33,6 +33,7 @@ export default class Query {
   @observable query: string = '';
   @observable results: QueryResult[] = [];
   @observable active: boolean = false;
+  @observable isClosed: boolean = false;
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
   constructor(database: Database, id: number) {
@@ -56,6 +57,7 @@ export default class Query {
   @action
   close() {
     this.database.removeQuery(this);
+    this.isClosed = true;
   }
 
   @computed
@@ -65,7 +67,9 @@ export default class Query {
 
   @computed
   get isActive() {
-    return this.database.isActive && this.id === this.database.activeQueryId;
+    return (
+      this.database.isActive && !this.isClosed && this.id === this.database.activeQueryId
+    );
   }
 
   run() {

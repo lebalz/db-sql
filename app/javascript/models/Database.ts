@@ -40,18 +40,28 @@ export default class Database {
     return this.queries.find((query) => query.id === this.activeQueryId);
   }
 
+  @action
+  addQuery() {
+    const query = new Query(this, this.nextQueryId);
+    this.queries.push(query);
+    this.setActiveQuery(query.id);
+  }
+
   table(name: string): DbTable | undefined {
     return this.tables.find((table) => table.name === name);
   }
 
   @action
   toggleShow() {
-    this.show = !this.show;
+    this.setShow(!this.show);
   }
 
   @action
   setShow(show: boolean) {
     this.show = show;
+    if (this.show && this.queries.length === 0) {
+      this.addQuery();
+    }
   }
 
   @computed
@@ -69,9 +79,13 @@ export default class Database {
 
   @action
   removeQuery(query: Query) {
-    if (this.queries.remove(query)) {
+    const idx = this.queries.indexOf(query);
+    if (idx >= 0) {
+      this.queries.remove(query);
       query.cancel();
-      this.setDefaultQueryActive();
+      if (idx > 0) {
+        this.setActiveQuery(idx - 1);
+      }
     }
   }
 
@@ -88,5 +102,10 @@ export default class Database {
         toColumn.referencedBy.push(fromColumn);
       });
     });
+  }
+
+  @computed
+  private get nextQueryId(): number {
+    return this.queries.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
   }
 }

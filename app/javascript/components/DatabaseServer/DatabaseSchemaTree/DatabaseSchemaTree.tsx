@@ -108,17 +108,6 @@ export default class DatabaseSchemaTree extends React.Component {
     return this.props as InjectedProps;
   }
 
-  // componentDidMount() {
-  //   if (!this.props.match.params.db_name) {
-  //     const dbName = this.injected.dbServerStore.activeDbServer?.defaultDatabaseName;
-  //     if (dbName) {
-  //       this.injected.routerStore.replace(`./${dbName}`);
-  //     }
-  //   } else {
-  //     this.injected.dbServerStore.activeDbServer?.setActiveDatabase(this.props.match.params.db_name);
-  //   }
-  // }
-
   @computed get menuItems(): TreeItem[] {
     const { dbServerStore } = this.injected;
     const { activeDbServerId } = dbServerStore;

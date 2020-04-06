@@ -27,7 +27,6 @@ export default class SqlEditor extends React.Component<Props> {
   componentDidMount() {
     const editor = this.editorRef.current?.editor;
     this.editorId = editor?.id;
-    console.log('EdiId: ', this.editorId);
     addCompleter({
       getCompletions: (
         editor: AceEditor,
