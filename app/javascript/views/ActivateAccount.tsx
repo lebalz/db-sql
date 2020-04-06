@@ -7,6 +7,7 @@ import DbSqlIcon from '../shared/DbSqlIcon';
 import { RouteComponentProps } from 'react-router';
 import { resetPassword as resetPasswordCall, activateAccount } from '../api/user';
 import { Link } from 'react-router-dom';
+import { computed } from 'mobx';
 
 interface MatchParams {
   id: string;
@@ -31,6 +32,11 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
     activateAccount(this.id, this.activationToken)
       .then(() => {
         this.setState({ requestState: RequestState.Success });
+        if (this.injected.sessionStore.isLoggedIn) {
+          if (this.injected.sessionStore.authorize(this.props.location.pathname)) {
+            this.injected.sessionStore.reloadUser();
+          }
+        }
       })
       .catch((error) => {
         this.setState({
@@ -56,6 +62,14 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
     return new URLSearchParams(this.props.location.search);
   }
 
+  @computed
+  get backLink() {
+    if (this.injected.sessionStore.isLoggedIn) {
+      return '/dashboard';
+    }
+    return '/login';
+  }
+
   render() {
     return (
       <main
@@ -75,13 +89,13 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
           {this.state.requestState === RequestState.Success && (
             <Fragment>
               <Message success content="Account successfully activated." />
-              <Link to="/login">Back to DB-SQL</Link>
+              <Link to={this.backLink}>Back to DB-SQL</Link>
             </Fragment>
           )}
           {this.state.requestState === RequestState.Error && (
             <Fragment>
               <Message error content={this.state.errorMsg} />
-              <Link to="/login">Back to DB-SQL</Link>
+              <Link to={this.backLink}>Back to DB-SQL</Link>
             </Fragment>
           )}
         </div>

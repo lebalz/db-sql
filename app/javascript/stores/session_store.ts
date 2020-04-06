@@ -1,4 +1,4 @@
-import { observable, reaction, computed, action, toJS } from 'mobx';
+import { observable, reaction, computed, action, toJS, $mobx } from 'mobx';
 import { RootStore, Store } from './root_store';
 import {
   login,
@@ -47,6 +47,10 @@ const isNoLoginRequired = (pathname: string) => {
     ACCOUNT_ACTIVATION_REGEXP,
     RESET_PASSWORD_REGEXP,
   ]);
+};
+
+const isLoginRequired = (pathname: string) => {
+  return !isNoLoginRequired(pathname);
 };
 
 class SessionStore implements Store {
@@ -107,9 +111,11 @@ class SessionStore implements Store {
       }
       return true;
     }
+
     if (isNoLoginRequired(pathname)) {
       return true;
     }
+
     return false;
   }
 
@@ -131,15 +137,27 @@ class SessionStore implements Store {
     let proceed = true;
     if (this.isLoggedIn) {
       if (matchPath(route.pathname, LOGIN_PATH)) {
+        const historyLength = this.locationHistory.length;
+        if (historyLength > 1) {
+          const lastLocation = this.locationHistory[historyLength - 2];
+          if (
+            this.authorize(lastLocation.pathname) &&
+            isLoginRequired(lastLocation.pathname)
+          ) {
+            return this.history.push(lastLocation);
+          }
+        }
         proceed = false;
       }
       if (
+        // dont proceed on activation request for activated users
         matchPath(route.pathname, ACCOUNT_ACTIVATION_REGEXP) &&
-        !this.currentUser.activated
+        this.currentUser.activated
       ) {
         proceed = false;
       }
       if (
+        // dont proceed on reset requests for users without a requested password reset
         matchPath(route.pathname, RESET_PASSWORD_REGEXP) &&
         !this.currentUser.passwordResetRequested
       ) {
