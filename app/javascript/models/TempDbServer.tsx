@@ -6,7 +6,7 @@ import {
   test,
   tables,
   DatabaseName,
-  DbTableName
+  DbTableName,
 } from '../api/temp_db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
@@ -27,6 +27,7 @@ export class TempDbServer extends DbServer {
   @observable validConnection?: boolean = false;
   @observable tablesLoaded?: boolean = false;
   @observable isLoaded: boolean = false;
+  @observable tableRequestState: REST = REST.None;
 
   databases = observable<DatabaseName>([]);
   tables = observable<DbTableName>([]);
@@ -57,10 +58,10 @@ export class TempDbServer extends DbServer {
       }
     );
     reaction(
-      () => this.isLoaded,
-      (isLoaded) => {
-        if (!isLoaded) {
-          this.tablesLoaded = false;
+      () => this.dbRequestState,
+      (requestState) => {
+        if (requestState !== REST.Success) {
+          this.tableRequestState = REST.None;
           return;
         }
 
@@ -128,11 +129,13 @@ export class TempDbServer extends DbServer {
     }
 
     this.tablesLoaded = undefined;
+    this.tableRequestState = REST.Requested;
     tables(this.tempDbPorps, db.name, this.cancelToken)
       .then(({ data }) => {
         this.tablesLoaded = true;
         this.tables.replace(data);
         const table = this.tables.find((table) => table.name === this.initialTable);
+        this.tableRequestState = REST.Success;
         if (!table) {
           this.initialTable = undefined;
         }
@@ -141,6 +144,7 @@ export class TempDbServer extends DbServer {
         this.tablesLoaded = false;
         this.initialTable = undefined;
         this.tables.replace([]);
+        this.tableRequestState = REST.Error;
       });
   }
 

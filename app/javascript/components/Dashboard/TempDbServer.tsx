@@ -10,7 +10,7 @@ import {
   DropdownProps,
   Message,
   Icon,
-  Popup
+  Popup,
 } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { computed, reaction, action } from 'mobx';
@@ -18,8 +18,9 @@ import _ from 'lodash';
 import { RequestState } from '../../stores/session_store';
 import {
   TempDbServerRole,
-  TempDbServer as TempDbServerModel
+  TempDbServer as TempDbServerModel,
 } from '../../models/TempDbServer';
+import { REST } from '../../declarations/REST';
 
 interface InjectedProps {
   dbServerStore: DbServerStore;
@@ -31,7 +32,7 @@ export class TempDbServer extends React.Component {
   state = {
     showPassword: false,
     showDeleteConfirm: true,
-    isOpen: false
+    isOpen: false,
   };
 
   constructor(props: any) {
@@ -60,11 +61,10 @@ export class TempDbServer extends React.Component {
   }
 
   @computed get dbNameOptions() {
-    const {} = this.injected.dbServerStore;
     return _.uniq([
       undefined,
       ...this.dbServer.databases.map((db) => db.name),
-      this.dbServer.initialDb
+      this.dbServer.initialDb,
     ]).map((name) => {
       return { key: `db-${name}`, text: name, value: name };
     });
@@ -74,7 +74,7 @@ export class TempDbServer extends React.Component {
     return _.uniq([
       undefined,
       ...this.dbServer.tables.map((table) => table.name),
-      this.dbServer.initialTable
+      this.dbServer.initialTable,
     ]).map((name) => {
       return { key: `table-${name}`, text: name, value: name };
     });
@@ -248,8 +248,8 @@ export class TempDbServer extends React.Component {
                       link: true,
                       onClick: () =>
                         this.setState({
-                          showPassword: !this.state.showPassword
-                        })
+                          showPassword: !this.state.showPassword,
+                        }),
                     }}
                     placeholder="Password"
                     value={this.dbServer.password || ''}
@@ -268,8 +268,8 @@ export class TempDbServer extends React.Component {
                     search
                     selection
                     fluid
-                    disabled={!this.dbServer.isLoaded}
-                    loading={this.dbServer.isLoaded === undefined}
+                    disabled={this.dbServer.dbRequestState !== REST.Success}
+                    loading={this.dbServer.dbRequestState === REST.Requested}
                     value={this.dbServer.initialDb || ''}
                     onChange={this.handleInitDbChange}
                   />
@@ -282,8 +282,8 @@ export class TempDbServer extends React.Component {
                     search
                     selection
                     fluid
-                    disabled={!this.dbServer.tablesLoaded}
-                    loading={this.dbServer.tablesLoaded === undefined}
+                    disabled={this.dbServer.tableRequestState === REST.None}
+                    loading={this.dbServer.tableRequestState === REST.Requested}
                     value={this.dbServer.initialTable || ''}
                     onChange={this.handleInitTableChange}
                   />

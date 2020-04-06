@@ -29,7 +29,7 @@ export default class DbServerOverview extends React.Component<Props> {
   }
 
   @action connect() {
-    this.injected.routerStore.push(`/connections/${this.dbConnection.id}`);
+    this.injected.routerStore.push(this.dbConnection.link);
   }
 
   render() {
