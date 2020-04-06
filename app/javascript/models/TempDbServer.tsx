@@ -69,7 +69,7 @@ export class TempDbServer extends DbServer {
       }
     );
     reaction(
-      () => this.initialDb,
+      () => this.initDb,
       (initialDb) => {
         this.loadTables();
       }
@@ -94,8 +94,8 @@ export class TempDbServer extends DbServer {
       host: this.host,
       port: this.port,
       username: this.username,
-      initial_db: this.isLoaded ? this.initialDb : undefined,
-      initial_table: this.tablesLoaded ? this.initialTable : undefined,
+      initial_db: this.isLoaded ? this.initDb : undefined,
+      initial_table: this.tablesLoaded ? this.initTable : undefined,
       password: this.password || '',
     };
   }
@@ -121,10 +121,10 @@ export class TempDbServer extends DbServer {
   }
 
   @action loadTables() {
-    const db = this.databases.find((db) => db.name === this.initialDb);
+    const db = this.databases.find((db) => db.name === this.initDb);
     if (!db) {
       this.tablesLoaded = false;
-      this.initialTable = undefined;
+      this.initTable = undefined;
       return;
     }
 
@@ -134,15 +134,15 @@ export class TempDbServer extends DbServer {
       .then(({ data }) => {
         this.tablesLoaded = true;
         this.tables.replace(data);
-        const table = this.tables.find((table) => table.name === this.initialTable);
+        const table = this.tables.find((table) => table.name === this.initTable);
         this.tableRequestState = REST.Success;
         if (!table) {
-          this.initialTable = undefined;
+          this.initTable = undefined;
         }
       })
       .catch((e) => {
         this.tablesLoaded = false;
-        this.initialTable = undefined;
+        this.initTable = undefined;
         this.tables.replace([]);
         this.tableRequestState = REST.Error;
       });

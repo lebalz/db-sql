@@ -136,8 +136,7 @@ class DbServerStore implements Store {
         this.setActiveDatabase(dbServerId, dbName);
         this.setActiveDbServer(dbServerId);
         if (this.dbServer(dbServerId)?.initialTable) {
-          const table = this.dbServer(dbServerId)?.initialTable;
-          const initTable = this.database(dbServerId, dbName)?.tables?.find((t) => t.name === table);
+          const initTable = this.dbServer(dbServerId)!.initialTable;
           if (initTable) {
             initTable.toggleShow();
           }

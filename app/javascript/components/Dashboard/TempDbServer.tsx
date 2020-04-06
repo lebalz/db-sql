@@ -64,7 +64,7 @@ export class TempDbServer extends React.Component {
     return _.uniq([
       undefined,
       ...this.dbServer.databases.map((db) => db.name),
-      this.dbServer.initialDb,
+      this.dbServer.initDb,
     ]).map((name) => {
       return { key: `db-${name}`, text: name, value: name };
     });
@@ -74,7 +74,7 @@ export class TempDbServer extends React.Component {
     return _.uniq([
       undefined,
       ...this.dbServer.tables.map((table) => table.name),
-      this.dbServer.initialTable,
+      this.dbServer.initTable,
     ]).map((name) => {
       return { key: `table-${name}`, text: name, value: name };
     });
@@ -90,7 +90,7 @@ export class TempDbServer extends React.Component {
     data: DropdownProps
   ) => {
     const value = data.value as string | undefined;
-    this.dbServer.initialDb = value;
+    this.dbServer.initDb = value;
   };
 
   handleInitTableChange = (
@@ -98,7 +98,7 @@ export class TempDbServer extends React.Component {
     data: DropdownProps
   ) => {
     const value = data.value as string | undefined;
-    this.dbServer.initialTable = value;
+    this.dbServer.initTable = value;
   };
 
   onSave() {
@@ -270,7 +270,7 @@ export class TempDbServer extends React.Component {
                     fluid
                     disabled={this.dbServer.dbRequestState !== REST.Success}
                     loading={this.dbServer.dbRequestState === REST.Requested}
-                    value={this.dbServer.initialDb || ''}
+                    value={this.dbServer.initDb ?? ''}
                     onChange={this.handleInitDbChange}
                   />
                 </Grid.Column>
@@ -284,7 +284,7 @@ export class TempDbServer extends React.Component {
                     fluid
                     disabled={this.dbServer.tableRequestState === REST.None}
                     loading={this.dbServer.tableRequestState === REST.Requested}
-                    value={this.dbServer.initialTable || ''}
+                    value={this.dbServer.initTable ?? ''}
                     onChange={this.handleInitTableChange}
                   />
                 </Grid.Column>

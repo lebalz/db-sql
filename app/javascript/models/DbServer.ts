@@ -6,6 +6,7 @@ import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
 import Query from './Query';
+import DbTable from './DbTable';
 
 export enum DbType {
   Psql = 'psql',
@@ -34,8 +35,8 @@ export default class DbServer {
   @observable host: string;
   @observable port: number;
   @observable username: string;
-  @observable initialDb?: string;
-  @observable initialTable?: string;
+  @observable initDb?: string;
+  @observable initTable?: string;
   @observable password?: string;
   @observable queryState: QueryState = QueryState.None;
 
@@ -54,8 +55,8 @@ export default class DbServer {
     this.host = props.host;
     this.port = props.port;
     this.username = props.username;
-    this.initialDb = props.initial_db;
-    this.initialTable = props.initial_table;
+    this.initDb = props.initial_db;
+    this.initTable = props.initial_table;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.cancelToken = cancelToken;
@@ -84,8 +85,8 @@ export default class DbServer {
       host: this.host,
       port: this.port,
       username: this.username,
-      initial_db: this.initialDb,
-      initial_table: this.initialTable,
+      initial_db: this.initDb,
+      initial_table: this.initTable,
       created_at: this.createdAt.toISOString(),
       updated_at: this.updatedAt.toISOString(),
     };
@@ -100,8 +101,8 @@ export default class DbServer {
       host: this.host,
       port: this.port,
       username: this.username,
-      initial_db: this.initialDb,
-      initial_table: this.initialTable,
+      initial_db: this.initDb,
+      initial_table: this.initTable,
     };
     if (this.password) {
       connection.password = this.password;
@@ -121,6 +122,14 @@ export default class DbServer {
 
   database(dbName: string): Database | undefined {
     return this.dbServerStore.database(this.id, dbName);
+  }
+
+  @computed
+  get initialTable(): DbTable | undefined {
+    if (!this.initDb || !this.initTable) {
+      return;
+    }
+    return this.database(this.initDb)?.tables?.find((t) => t.name === this.initTable);
   }
 
   @computed
@@ -149,8 +158,8 @@ export default class DbServer {
   // @return [string] the initial database or the first database of the index
   @computed
   get defaultDatabaseName(): string | undefined {
-    if (this.initialDb) {
-      return this.initialDb;
+    if (this.initDb) {
+      return this.initDb;
     }
 
     const dbNames = this.databaseNames;
