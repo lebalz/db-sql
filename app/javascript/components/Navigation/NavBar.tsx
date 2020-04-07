@@ -72,7 +72,7 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          {this.injected.dbServerStore.activeDbServer && (
+          {this.injected.dbServerStore.loadedDbServers.length > 0 && (
             <Menu.Item
               style={{ marginLeft: '2em' }}
               name="Connections"

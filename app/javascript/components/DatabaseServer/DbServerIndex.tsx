@@ -31,6 +31,9 @@ export default class DbServerIndex extends React.Component<Props> {
     if (numQueries > 1) {
       const nextDbServer = loadedDbServers[idx > 0 ? idx - 1 : 1];
       this.injected.routerStore.push(nextDbServer.link);
+    } else {
+      this.injected.dbServerStore.setActiveDbServer('');
+      this.injected.routerStore.replace('/dashboard');
     }
 
   }
