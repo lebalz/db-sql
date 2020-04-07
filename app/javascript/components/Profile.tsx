@@ -86,7 +86,6 @@ export default class Profile extends React.Component<ProfileProps> {
             }
           })()}
         </main>
-        <Footer />
       </Fragment>
     );
   }

@@ -101,7 +101,6 @@ export default class DbServer extends React.Component<DbConnectionProps> {
         >
           <Loader indeterminate content="Loading Databases" />
         </Dimmer>
-        <Footer />
       </Fragment>
     );
   }

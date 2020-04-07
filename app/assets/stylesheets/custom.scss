@@ -6,11 +6,10 @@ body {
   #app {
     display: grid;
     grid-template-columns: 280px auto;
-    grid-template-rows: 82px auto 28px;
+    grid-template-rows: 82px auto;
     grid-template-areas:
       "header header"
-      "sidebar main"
-      "footer footer";
+      "sidebar main";
     justify-items: stretch;
     width: 100vw;
     height: 100vh;
