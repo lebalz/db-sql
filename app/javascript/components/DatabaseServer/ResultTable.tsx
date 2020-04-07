@@ -23,7 +23,7 @@ export default class ResultTable extends React.Component<Props> {
 
   render() {
     return (
-      <div style={{ position: 'relative' }}>
+      <div className="sql-result-table">
         <Table celled style={{ paddingLeft: 0, paddingRight: 0 }}>
           <Table.Header>
             <Table.Row>

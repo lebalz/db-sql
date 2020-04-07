@@ -13,3 +13,15 @@
     background: rgba(255, 255, 255, 0.8) !important;
   }
 }
+
+.sql-result-table {
+  position: relative;
+  max-height: 66vh;
+  overflow-y: auto;
+  table {
+    thead th {
+      position: sticky;
+      top: 0;
+    }
+  }
+}
