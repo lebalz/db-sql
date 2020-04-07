@@ -88,7 +88,6 @@ export default class Query {
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
         this.results = data;
-        console.log(data);
         this.requestState = REST.Success;
       })
       .catch((e) => {
