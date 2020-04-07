@@ -16,7 +16,7 @@ import 'regenerator-runtime/runtime';
 import { REST } from '../declarations/REST';
 import { RequestState } from './session_store';
 import Database from '../models/Database';
-import Query from '../models/Query';
+import Query, { PlaceholderQuery } from '../models/Query';
 
 export enum LoadState {
   Loading,
@@ -128,6 +128,12 @@ class DbServerStore implements Store {
     if (!dbServer) {
       return;
     }
+    // const dummyDb = new Database(dbServer, {
+    //   name: dbName,
+    //   db_server_id: dbServerId,
+    //   tables: [],
+    // });
+    // this.state.databases.get(dbServerId)!.set(dbName, dummyDb);
     database(dbServerId, dbName, this.cancelToken)
       .then(({ data }) => {
         const db = new Database(dbServer, data);
@@ -158,7 +164,12 @@ class DbServerStore implements Store {
 
   queries(dbServerId: string): Query[] {
     const dbMap = this.loadedDatabaseMap(dbServerId);
-    return  _.flatten(Array.from(dbMap, ([_, value]) => value.queries));
+    const queries = _.flatten(Array.from(dbMap, ([_, value]) => value.queries));
+    const activeDbName = this.activeDatabaseName(dbServerId);
+    if (activeDbName && !queries.find((q) => q.database.name === activeDbName)) {
+      queries.push(PlaceholderQuery(activeDbName));
+    }
+    return queries;
   }
 
   database(dbServerId: string, dbName: string): Database | undefined {

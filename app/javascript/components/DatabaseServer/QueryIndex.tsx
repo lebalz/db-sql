@@ -1,10 +1,11 @@
 import React from 'react';
-import { Button, Menu } from 'semantic-ui-react';
+import { Button, Menu, Icon } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Query from '../../models/Query';
 import { RouterStore } from 'mobx-react-router';
 import { action } from 'mobx';
+import { REST } from '../../declarations/REST';
 
 interface Props {
   queries: Query[];
@@ -48,6 +49,9 @@ export default class QueryIndex extends React.Component<Props> {
                 query.setActive();
               }}
             >
+              {query.requestState === REST.Requested && (
+                <Icon name="circle notch" loading color="grey" style={{ height: '1.02em' }} />
+              )}
               {query.name}
               {query.isActive && (
                 <Button

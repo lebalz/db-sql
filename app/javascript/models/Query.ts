@@ -26,6 +26,12 @@ function identifyCommands(queryText: string) {
   return children.map((child) => child.text).slice(0, -1);
 }
 
+export const PlaceholderQuery = (dbName: string) => {
+  const query = new Query({ name: dbName } as Database, -1);
+  query.requestState = REST.Requested;
+  return query;
+};
+
 export default class Query {
   readonly database: Database;
   readonly id: number;
@@ -36,17 +42,17 @@ export default class Query {
   @observable isClosed: boolean = false;
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
-  constructor(database: Database, id: number) {
+  constructor(database: Database, id: number, loading: boolean = false) {
     this.database = database;
     this.id = id;
   }
 
   @computed
   get name() {
-    if (this.id === 1) {
+    if (this.id <= 1) {
       return this.database.name;
     }
-    return `${this.database}#${this.id}`;
+    return `${this.database.name}#${this.id}`;
   }
 
   @action
