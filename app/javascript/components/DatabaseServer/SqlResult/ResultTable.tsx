@@ -8,7 +8,6 @@ interface Props {
   table: ResulTableType;
 }
 
-const DEFAULT_HEIGHT = 46;
 /**
  * show 200 rows at a time
  * e.g. for 20 rows per page:
@@ -40,7 +39,9 @@ const DEFAULT_HEIGHT = 46;
  * The reloading flicks a bit since the scrollposition changes and must
  * be reset to the current position.
  */
-const LOADED_ROWS = 400;
+
+ const DEFAULT_HEIGHT = 46;
+const LOADED_ROWS = 200;
 const THRESHOLD = 10;
 
 export default class ResultTable extends React.Component<Props> {
@@ -56,20 +57,17 @@ export default class ResultTable extends React.Component<Props> {
   };
 
   componentDidMount() {
-    if (!this.tableWrapper.current) {
-      return;
-    }
-    const firstRow = this.tableWrapper.current.querySelector('table tbody tr');
-    if (firstRow) {
-      this.setState({
-        rowHeight: firstRow.clientHeight,
-        wrapperHeight: this.tableWrapper.current.clientHeight,
-      });
-    }
+    this.setInitialState();
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (prevProps.table !== this.props.table && this.tableWrapper.current) {
+    if (prevProps.table !== this.props.table) {
+      this.setInitialState();
+    }
+  }
+
+  setInitialState() {
+    if (this.tableWrapper.current) {
       this.tableWrapper.current.scrollTo(0, 0);
       const firstRow = this.tableWrapper.current.querySelector('table tbody tr');
       if (firstRow) {
@@ -125,6 +123,7 @@ export default class ResultTable extends React.Component<Props> {
     return this.state.row * this.state.rowHeight;
   }
 
+  @computed
   get rowHeights(): number[] {
     if (!this.tableWrapper.current) {
       return [];
