@@ -3,7 +3,6 @@ import { Divider, Menu } from 'semantic-ui-react';
 import NavBar from './Navigation/NavBar';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
-import Footer from './Navigation/Footer';
 import { RouteComponentProps } from 'react-router';
 import Account from './Profile/Account';
 import ChangePassword from './Profile/ChangePassword';

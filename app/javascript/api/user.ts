@@ -19,19 +19,14 @@ export interface LoginUser extends User {
 }
 
 export function login(email: string, password: string): AxiosPromise<LoginUser> {
-  return api.post(
-    'login',
-    {
-      email: email,
-      password: password
-    }
-  );
+  return api.post('login', {
+    email: email,
+    password: password
+  });
 }
 
 export function logout() {
-  return api.post(
-    'logout'
-  );
+  return api.post('logout');
 }
 
 export function user(): AxiosPromise<User> {
@@ -43,59 +38,42 @@ export function newPassword(
   newPassword: string,
   newPasswordConfirmation: string
 ): AxiosPromise<LoginUser> {
-  return api.put(
-    'users/current/password',
-    {
-      old_password: oldPassword,
-      new_password: newPassword,
-      password_confirmation: newPasswordConfirmation
-    }
-  );
+  return api.put('users/current/password', {
+    old_password: oldPassword,
+    new_password: newPassword,
+    password_confirmation: newPasswordConfirmation
+  });
 }
 
 export function resendActivationLink() {
-  return api.post(
-    'users/current/resend_activation_link'
-  );
+  return api.post('users/current/resend_activation_link');
 }
 
 export function deleteAccount(password: string) {
-  return api.delete(
-    'users/current',
-    {
-      data: {
-        password: password
-      }
+  return api.delete('users/current', {
+    data: {
+      password: password
     }
-  );
+  });
 }
 
 export function signup(email: string, password: string): AxiosPromise<LoginUser> {
-  return api.post(
-    'users',
-    {
-      email: email,
-      password: password
-    }
-  );
+  return api.post('users', {
+    email: email,
+    password: password
+  });
 }
 
 export function requestPasswordReset(email: string) {
-  return api.post(
-    'users/reset_password',
-    {
-      email: email
-    }
-  );
+  return api.post('users/reset_password', {
+    email: email
+  });
 }
 
 export function activateAccount(id: string, activationToken: string) {
-  return api.put(
-    `users/${id}/activate`,
-    {
-      activation_token: activationToken
-    }
-  );
+  return api.put(`users/${id}/activate`, {
+    activation_token: activationToken
+  });
 }
 
 export function resetPassword(
@@ -104,12 +82,9 @@ export function resetPassword(
   password: string,
   passwordConfirmation: string
 ) {
-  return api.post(
-    `users/${id}/reset_password`,
-    {
-      reset_token: resetToken,
-      password: password,
-      password_confirmation: passwordConfirmation
-    }
-  );
+  return api.post(`users/${id}/reset_password`, {
+    reset_token: resetToken,
+    password: password,
+    password_confirmation: passwordConfirmation
+  });
 }

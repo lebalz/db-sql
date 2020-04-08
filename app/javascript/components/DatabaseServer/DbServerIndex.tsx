@@ -48,7 +48,7 @@ export default class DbServerIndex extends React.Component<Props> {
                   style={{
                     padding: '2px',
                     marginLeft: '4px',
-                    marginRight: '-4px',
+                    marginRight: '-4px'
                   }}
                 />
               )}

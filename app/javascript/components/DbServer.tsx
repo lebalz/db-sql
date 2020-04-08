@@ -1,5 +1,4 @@
 import React, { Fragment } from 'react';
-import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
@@ -10,7 +9,6 @@ import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSche
 import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
 import DbServerIndex from './DatabaseServer/DbServerIndex';
-import { Route } from 'react-router-dom';
 import { Dimmer, Loader, Segment } from 'semantic-ui-react';
 import QueryIndex from './DatabaseServer/QueryIndex';
 import Query from './DatabaseServer/Query/Query';

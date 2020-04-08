@@ -24,7 +24,7 @@ interface InjectedProps extends ResetPasswordProps {
 export default class ActivateAccount extends React.Component<ResetPasswordProps> {
   state = {
     requestState: RequestState.None,
-    errorMsg: '',
+    errorMsg: ''
   };
 
   componentDidMount() {
@@ -41,7 +41,7 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
       .catch((error) => {
         this.setState({
           requestState: RequestState.Error,
-          errorMsg: error.response.data.error || 'Unexpected server error',
+          errorMsg: error.response.data.error || 'Unexpected server error'
         });
       });
   }
@@ -78,7 +78,7 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
-          flexDirection: 'column',
+          flexDirection: 'column'
         }}
       >
         <div>

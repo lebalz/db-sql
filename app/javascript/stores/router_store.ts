@@ -1,4 +1,3 @@
-
 import { RouterStore as ReactRouterStore } from 'mobx-react-router';
 import { Store } from './root_store';
 

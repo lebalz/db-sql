@@ -10,14 +10,14 @@ import DbTable from './DbTable';
 
 export enum DbType {
   Psql = 'psql',
-  MySql = 'mysql',
+  MySql = 'mysql'
 }
 
 export enum QueryState {
   None,
   Executing,
   Success,
-  Error,
+  Error
 }
 
 export interface UpdateProps extends Partial<DbServerProps> {
@@ -43,11 +43,7 @@ export default class DbServer {
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
 
-  constructor(
-    props: DbServerProps,
-    dbServerStore: DbServerStore,
-    cancelToken: CancelTokenSource
-  ) {
+  constructor(props: DbServerProps, dbServerStore: DbServerStore, cancelToken: CancelTokenSource) {
     this.dbServerStore = dbServerStore;
     this.id = props.id;
     this.name = props.name;
@@ -88,7 +84,7 @@ export default class DbServer {
       initial_db: this.initDb,
       initial_table: this.initTable,
       created_at: this.createdAt.toISOString(),
-      updated_at: this.updatedAt.toISOString(),
+      updated_at: this.updatedAt.toISOString()
     };
   }
 
@@ -102,7 +98,7 @@ export default class DbServer {
       port: this.port,
       username: this.username,
       initial_db: this.initDb,
-      initial_table: this.initTable,
+      initial_table: this.initTable
     };
     if (this.password) {
       connection.password = this.password;

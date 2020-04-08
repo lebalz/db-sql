@@ -36,7 +36,7 @@ export default class SqlEditor extends React.Component<Props> {
         callback: (error: null | string, res: Completion[]) => void
       ) => {
         callback(null, (editor as any).id === this.editorId ? this.completers : []);
-      },
+      }
     });
   }
 
@@ -47,7 +47,7 @@ export default class SqlEditor extends React.Component<Props> {
       name: table.name,
       value: table.name,
       meta: 'TABLE',
-      score: 1,
+      score: 1
     }));
     const columns = database.tables.reduce((res, table) => {
       const cols = table.columns.map(
@@ -56,7 +56,7 @@ export default class SqlEditor extends React.Component<Props> {
             name: col.name,
             value: col.name,
             meta: 'COLUMN',
-            score: 2,
+            score: 2
           } as Completion)
       );
       return [...res, ...cols];
@@ -73,15 +73,15 @@ export default class SqlEditor extends React.Component<Props> {
         mode="sql"
         theme="github"
         onChange={(change) => {
-            query.query = change as string;
+          query.query = change as string;
         }}
         commands={[
           {
             // commands is array of key bindings.
             name: 'Execute Query',
             bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-            exec: () => query.run(),
-          },
+            exec: () => query.run()
+          }
         ]}
         value={query.query}
         defaultValue={query.query}

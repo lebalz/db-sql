@@ -5,7 +5,6 @@ import { computed } from 'mobx';
 import SessionStore, { RequestState } from '../../stores/session_store';
 import { isSafePassword } from '../../views/helper';
 
-
 interface InjectedProps {
   sessionStore: SessionStore;
 }
@@ -40,7 +39,7 @@ export default class ChangePassword extends React.Component {
     if (!this.isValid) {
       this.validate();
     }
-  }
+  };
 
   setNewPassword() {
     this.injected.sessionStore.passwordState = RequestState.None;
@@ -95,28 +94,11 @@ export default class ChangePassword extends React.Component {
     const newPasswordSet = passwordState === RequestState.Success;
 
     return (
-      <Segment
-        color={this.segmentColor}
-        style={{ minWidth: '350px' }}
-      >
+      <Segment color={this.segmentColor} style={{ minWidth: '350px' }}>
         <Header as="h2" content="Change your Password" />
-        <Form
-          onSubmit={() => this.setNewPassword()}
-          error={!validPassword}
-          success={newPasswordSet}
-        >
-          <Message
-            error
-            header="Errors"
-            list={errorMessages}
-            style={{ maxWidth: '320px' }}
-          />
-          <Message
-            success
-            header="Success"
-            content="Password updated"
-            style={{ maxWidth: '320px' }}
-          />
+        <Form onSubmit={() => this.setNewPassword()} error={!validPassword} success={newPasswordSet}>
+          <Message error header="Errors" list={errorMessages} style={{ maxWidth: '320px' }} />
+          <Message success header="Success" content="Password updated" style={{ maxWidth: '320px' }} />
           <Form.Group>
             <Form.Input
               type="password"
@@ -156,5 +138,4 @@ export default class ChangePassword extends React.Component {
       </Segment>
     );
   }
-
 }

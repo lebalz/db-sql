@@ -16,10 +16,7 @@ export default class Query extends React.Component<Props> {
   render() {
     return (
       <Fragment>
-        <Segment
-          attached="bottom"
-          style={{ padding: '0.5em 0 0 0', marginBottom: '3em' }}
-        >
+        <Segment attached="bottom" style={{ padding: '0.5em 0 0 0', marginBottom: '3em' }}>
           <SqlEditor query={this.props.query} />
           <Button
             floated="right"

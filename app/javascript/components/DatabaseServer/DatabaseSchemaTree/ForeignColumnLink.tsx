@@ -1,9 +1,8 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
-import DbColumn, { Mark } from '../../../models/DbColumn';
+import { Mark } from '../../../models/DbColumn';
 import { ItemKind, TreeItem, DbColumnItem, DbTableItem } from './DatabaseSchemaTree';
-import DbTable from '../../../models/DbTable';
 import { computed } from 'mobx';
 
 type Line = [number, number, number, number];
@@ -51,9 +50,7 @@ class ForeignColumnLink extends React.Component<Props> {
           </marker>
         </defs>
         {from.map((item) => {
-          return (
-            <Line key={`${item.value.name}-${item.treePosition}`} from={item} to={to} />
-          );
+          return <Line key={`${item.value.name}-${item.treePosition}`} from={item} to={to} />;
         })}
       </svg>
     );

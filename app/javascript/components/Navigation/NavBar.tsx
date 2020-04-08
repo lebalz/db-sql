@@ -114,10 +114,7 @@ export default class NavBar extends React.Component {
                   <Popup.Content>
                     An activation link has been sent to you.
                     <br />
-                    <a
-                      onClick={() => this.injected.sessionStore.resendActivationLink()}
-                      href="#"
-                    >
+                    <a onClick={() => this.injected.sessionStore.resendActivationLink()} href="#">
                       Resend the activation link
                     </a>
                     {resendActivationLinkState !== RequestState.None && (
@@ -138,10 +135,7 @@ export default class NavBar extends React.Component {
             </Menu.Item>
           )}
           <Menu.Menu position="right">
-            <Menu.Item
-              name="Logout"
-              onClick={() => this.injected.sessionStore.logout()}
-            />
+            <Menu.Item name="Logout" onClick={() => this.injected.sessionStore.logout()} />
           </Menu.Menu>
         </Menu>
       </Fragment>

@@ -57,7 +57,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   scrollIntoView() {
     this.itemRef.current?.scrollIntoView({
       behavior: 'smooth',
-      block: 'center',
+      block: 'center'
     });
   }
 
@@ -90,8 +90,8 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
               this.props.onOpenContextMenu({
                 dbRef: this.contextMenuRef,
                 items: [
-                  { key: 'reload', content: 'Reload', icon: 'refresh', onClick: () => this.reloadDatabase() },
-                ],
+                  { key: 'reload', content: 'Reload', icon: 'refresh', onClick: () => this.reloadDatabase() }
+                ]
               });
             }}
             onClick={() => {

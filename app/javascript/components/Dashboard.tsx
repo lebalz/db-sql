@@ -1,6 +1,5 @@
 import React, { Fragment } from 'react';
 import { Header, Button } from 'semantic-ui-react';
-import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';

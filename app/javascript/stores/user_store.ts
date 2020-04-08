@@ -2,12 +2,7 @@ import { observable, action, computed } from 'mobx';
 import { RootStore } from './root_store';
 import User from '../models/User';
 import _ from 'lodash';
-import {
-  users,
-  deleteUser,
-  updateUser as apiUpdate,
-  user as apiUser
-} from '../api/admin';
+import { users, deleteUser, updateUser as apiUpdate, user as apiUser } from '../api/admin';
 
 export enum ReloadState {
   None,

@@ -2,15 +2,12 @@ import React, { Fragment } from 'react';
 import {
   Header,
   List,
-  Loader,
   Popup,
   Menu,
   MenuItemProps,
   SemanticShorthandCollection,
-  Ref,
-  Button,
+  Button
 } from 'semantic-ui-react';
-import SessionStore from '../../../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbServerStore, { LoadState } from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
@@ -34,7 +31,7 @@ export enum ItemKind {
   Database = 'database',
   Placeholder = 'placeholder',
   Table = 'table',
-  Column = 'column',
+  Column = 'column'
 }
 
 interface DbTreeItem {
@@ -83,7 +80,7 @@ const getDatabaseItem = (
         onOpenContextMenu={onOpenContextMenu}
         closeContextMenu={closeContextMenu}
       />
-    ),
+    )
   };
 };
 const getPlaceholderItem = (dbServerId: string, dbName: string, treePosition: number): DbPlaceholderItem => {
@@ -91,7 +88,7 @@ const getPlaceholderItem = (dbServerId: string, dbName: string, treePosition: nu
     kind: ItemKind.Placeholder,
     value: dbName,
     treePosition: treePosition,
-    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} />,
+    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} />
   };
 };
 
@@ -100,7 +97,7 @@ const getTableItem = (table: DbTable, treePosition: number): DbTableItem => {
     kind: ItemKind.Table,
     value: table,
     treePosition: treePosition,
-    draw: () => <TableItem key={treePosition} table={table} />,
+    draw: () => <TableItem key={treePosition} table={table} />
   };
 };
 
@@ -109,7 +106,7 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
     kind: ItemKind.Column,
     value: column,
     treePosition: treePosition,
-    draw: () => <ColumnItem key={treePosition} column={column} />,
+    draw: () => <ColumnItem key={treePosition} column={column} />
   };
 };
 
@@ -128,8 +125,8 @@ export default class DatabaseSchemaTree extends React.Component {
     contextMenuOpen: false,
     contextMenuProps: {
       dbRef: React.createRef(),
-      items: [],
-    },
+      items: []
+    }
   };
 
   get injected() {
@@ -222,7 +219,7 @@ export default class DatabaseSchemaTree extends React.Component {
             style={{
               margin: '0 0 0 1em',
               padding: '0em',
-              flex: '1',
+              flex: '1'
             }}
           >
             {menuItems.map((item) => item.draw())}

@@ -1,11 +1,7 @@
 import React, { Fragment } from 'react';
-import { Icon, List, Progress, Dimmer, Loader } from 'semantic-ui-react';
-import DbServerStore from '../../../stores/db_server_store';
+import { Icon, List, Loader } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import { computed, reaction, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
-import Database from '../../../models/Database';
-import { REST } from '../../../declarations/REST';
 import RouterStore from '../../../stores/router_store';
 
 interface PlaceholderItemProps {
@@ -38,7 +34,7 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
           as="a"
           data-dbname={dbName}
           className="database-item"
-          onClick={(e) => {
+          onClick={() => {
             this.setState({ loading: true });
             this.injected.routerStore.push(this.link);
           }}

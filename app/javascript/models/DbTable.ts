@@ -1,11 +1,6 @@
-import { observable, computed, action, reaction } from 'mobx';
-import {
-  DbTable as DbTableProps,
-  ForeignKey as ForeignKeyProps,
-  Index,
-} from '../api/db_server';
+import { observable, computed, action } from 'mobx';
+import { DbTable as DbTableProps, ForeignKey as ForeignKeyProps, Index } from '../api/db_server';
 import _ from 'lodash';
-import { QueryState } from './DbServer';
 import Database from './Database';
 import DbColumn, { Mark } from './DbColumn';
 import { REST } from '../declarations/REST';

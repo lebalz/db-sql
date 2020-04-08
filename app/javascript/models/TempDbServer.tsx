@@ -6,7 +6,7 @@ import {
   test,
   tables,
   DatabaseName,
-  DbTableName,
+  DbTableName
 } from '../api/temp_db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
@@ -17,7 +17,7 @@ import DbServerStore from '../stores/db_server_store';
 
 export enum TempDbServerRole {
   Update,
-  Create,
+  Create
 }
 
 export class TempDbServer extends DbServer {
@@ -96,7 +96,7 @@ export class TempDbServer extends DbServer {
       username: this.username,
       initial_db: this.isLoaded ? this.initDb : undefined,
       initial_table: this.tablesLoaded ? this.initTable : undefined,
-      password: this.password || '',
+      password: this.password || ''
     };
   }
 

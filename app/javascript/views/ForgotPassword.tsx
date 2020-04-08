@@ -12,7 +12,7 @@ interface InjectedProps {
 @observer
 export default class ForgotPassword extends React.Component {
   state = {
-    resetState: RequestState.None,
+    resetState: RequestState.None
   };
   private email: string = '';
 
@@ -50,11 +50,7 @@ export default class ForgotPassword extends React.Component {
             onChange={(e) => (this.email = e.target.value)}
           />
         </Form.Group>
-        <Message
-          error
-          header="Errors"
-          content="No DB SQL account found for this email address."
-        />
+        <Message error header="Errors" content="No DB SQL account found for this email address." />
         <Message success header="Success" content="Mail with a reset link sent" />
         <Form.Button
           content="Send reset link"

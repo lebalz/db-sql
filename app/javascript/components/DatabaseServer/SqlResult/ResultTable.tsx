@@ -40,7 +40,7 @@ interface Props {
  * be reset to the current position.
  */
 
- const DEFAULT_HEIGHT = 46;
+const DEFAULT_HEIGHT = 46;
 const LOADED_ROWS = 200;
 const THRESHOLD = 10;
 
@@ -53,7 +53,7 @@ export default class ResultTable extends React.Component<Props> {
     wrapperHeight: DEFAULT_HEIGHT * 20,
     preventNextScrollUpdate: false,
     x: 0,
-    y: 0,
+    y: 0
   };
 
   componentDidMount() {
@@ -75,7 +75,7 @@ export default class ResultTable extends React.Component<Props> {
           rowHeight: firstRow.clientHeight,
           wrapperHeight: this.tableWrapper.current.clientHeight,
           x: 0,
-          y: 0,
+          y: 0
         });
       }
     }
@@ -198,7 +198,7 @@ export default class ResultTable extends React.Component<Props> {
           celled
           style={{
             paddingLeft: 0,
-            paddingRight: 0,
+            paddingRight: 0
           }}
         >
           <Table.Header>

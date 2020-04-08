@@ -3,7 +3,6 @@ import { InputOnChangeData, Message, Segment, Form, Header } from 'semantic-ui-r
 import { inject, observer } from 'mobx-react';
 import SessionStore, { RequestState } from '../../stores/session_store';
 
-
 interface InjectedProps {
   sessionStore: SessionStore;
 }
@@ -19,7 +18,7 @@ export default class DeleteAccount extends React.Component {
 
   onChangePassword = (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
     this.password = event.target.value;
-  }
+  };
 
   deleteAccount() {
     this.injected.sessionStore.deleteAccount(this.password);
@@ -28,23 +27,10 @@ export default class DeleteAccount extends React.Component {
   render() {
     const { passwordState } = this.injected.sessionStore;
     return (
-      <Segment
-        color="red"
-        style={{ minWidth: '350px' }}
-      >
-        <Header
-          as="h2"
-          content="Parmanently delete your Account."
-        />
-        <Message
-          info
-          icon="info"
-          content="All your data is deleted permanently and cannot be restored."
-        />
-        <Form
-          onSubmit={() => this.deleteAccount()}
-          error={passwordState === RequestState.Error}
-        >
+      <Segment color="red" style={{ minWidth: '350px' }}>
+        <Header as="h2" content="Parmanently delete your Account." />
+        <Message info icon="info" content="All your data is deleted permanently and cannot be restored." />
+        <Form onSubmit={() => this.deleteAccount()} error={passwordState === RequestState.Error}>
           <Message
             error
             header="Errors"

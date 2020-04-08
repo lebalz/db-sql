@@ -95,7 +95,7 @@ export type ResultTable = ResultRow[];
 
 export enum ResultType {
   Success = 'success',
-  Error = 'error',
+  Error = 'error'
 }
 interface Result {
   time: number;
@@ -135,7 +135,7 @@ export function updateDbServer(connection: UpdateProps, cancelToken: CancelToken
   return api.put(
     `/db_servers/${connection.id}`,
     {
-      data: connection,
+      data: connection
     },
     { cancelToken: cancelToken.token }
   );
@@ -147,18 +147,11 @@ export function createDbServer(
   return api.post('/db_servers', connection, { cancelToken: cancelToken.token });
 }
 
-export function databases(
-  id: string,
-  cancelToken: CancelTokenSource
-): AxiosPromise<DatabaseName[]> {
+export function databases(id: string, cancelToken: CancelTokenSource): AxiosPromise<DatabaseName[]> {
   return api.get(`/db_servers/${id}/databases`, { cancelToken: cancelToken.token });
 }
 
-export function database(
-  id: string,
-  dbName: string,
-  cancelToken: CancelTokenSource
-): AxiosPromise<Database> {
+export function database(id: string, dbName: string, cancelToken: CancelTokenSource): AxiosPromise<Database> {
   return api.get(`/db_servers/${id}/${dbName}`, { cancelToken: cancelToken.token });
 }
 
@@ -171,7 +164,7 @@ export function query(
   return api.post(
     `/db_servers/${id}/${databaseName}/multi_query`,
     {
-      queries: queries,
+      queries: queries
     },
     { cancelToken: cancelToken.token }
   );

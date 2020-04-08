@@ -1,8 +1,7 @@
-import { computed, observable, action } from 'mobx';
+import { observable } from 'mobx';
 import _ from 'lodash';
 import DbTable from './DbTable';
 import { SqlTypeMetadata, Column as ColumnProps } from '../api/db_server';
-import Database from './Database';
 
 export enum Mark {
   From = 'from',
@@ -53,5 +52,4 @@ export default class DbColumn {
   //   .filter(fk => fk.toColumn === this)
   //   .map(fk => fk.fromColumn);
   // }
-
 }

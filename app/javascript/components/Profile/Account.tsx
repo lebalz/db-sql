@@ -17,41 +17,36 @@ export default class Account extends React.Component {
   render() {
     const { currentUser } = this.injected.sessionStore;
     return (
-      <Segment
-        piled
-        className="flex-list"
-        style={{ minWidth: '350px' }}
-      >
+      <Segment piled className="flex-list" style={{ minWidth: '350px' }}>
         <div className="flex-list-item">
           <Menu.Item>
             <Icon name="mail" />
             Mail
-            </Menu.Item>
+          </Menu.Item>
           {currentUser.email}
         </div>
         <div className="flex-list-item">
           <Menu.Item>
             <Icon name="users" />
             Member Since
-              </Menu.Item>
+          </Menu.Item>
           {currentUser.createdAt.toLocaleDateString()}
         </div>
         <div className="flex-list-item">
           <Menu.Item>
             <Icon name="refresh" />
             Updated
-              </Menu.Item>
+          </Menu.Item>
           {`${currentUser.updatedAt.toLocaleDateString()} ${currentUser.updatedAt.toLocaleTimeString()}`}
         </div>
         <div className="flex-list-item">
           <Menu.Item>
             <Icon name="log out" />
             Login Count
-              </Menu.Item>
+          </Menu.Item>
           {currentUser.loginCount}
         </div>
       </Segment>
     );
   }
-
 }

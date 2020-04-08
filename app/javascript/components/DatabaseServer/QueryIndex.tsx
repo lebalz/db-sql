@@ -4,7 +4,6 @@ import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import Query from '../../models/Query';
 import { RouterStore } from 'mobx-react-router';
-import { action } from 'mobx';
 import { REST } from '../../declarations/REST';
 
 interface Props {
@@ -61,7 +60,7 @@ export default class QueryIndex extends React.Component<Props> {
                   style={{
                     padding: '2px',
                     marginLeft: '4px',
-                    marginRight: '-4px',
+                    marginRight: '-4px'
                   }}
                 />
               )}

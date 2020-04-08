@@ -1,25 +1,12 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import { DbType } from '../../models/DbServer';
-import {
-  Label,
-  Button,
-  Modal,
-  Form,
-  Grid,
-  DropdownProps,
-  Message,
-  Icon,
-  Popup,
-} from 'semantic-ui-react';
+import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Popup } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { computed, reaction, action } from 'mobx';
 import _ from 'lodash';
 import { RequestState } from '../../stores/session_store';
-import {
-  TempDbServerRole,
-  TempDbServer as TempDbServerModel,
-} from '../../models/TempDbServer';
+import { TempDbServerRole, TempDbServer as TempDbServerModel } from '../../models/TempDbServer';
 import { REST } from '../../declarations/REST';
 
 interface InjectedProps {
@@ -32,7 +19,7 @@ export class TempDbServer extends React.Component {
   state = {
     showPassword: false,
     showDeleteConfirm: true,
-    isOpen: false,
+    isOpen: false
   };
 
   constructor(props: any) {
@@ -61,20 +48,18 @@ export class TempDbServer extends React.Component {
   }
 
   @computed get dbNameOptions() {
-    return _.uniq([
-      undefined,
-      ...this.dbServer.databases.map((db) => db.name),
-      this.dbServer.initDb,
-    ]).map((name) => {
-      return { key: `db-${name}`, text: name, value: name };
-    });
+    return _.uniq([undefined, ...this.dbServer.databases.map((db) => db.name), this.dbServer.initDb]).map(
+      (name) => {
+        return { key: `db-${name}`, text: name, value: name };
+      }
+    );
   }
 
   @computed get dbTableOptions() {
     return _.uniq([
       undefined,
       ...this.dbServer.tables.map((table) => table.name),
-      this.dbServer.initTable,
+      this.dbServer.initTable
     ]).map((name) => {
       return { key: `table-${name}`, text: name, value: name };
     });
@@ -85,18 +70,12 @@ export class TempDbServer extends React.Component {
     this.injected.dbServerStore.setTempDbServer();
   }
 
-  handleInitDbChange = (
-    e: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
+  handleInitDbChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
     const value = data.value as string | undefined;
     this.dbServer.initDb = value;
   };
 
-  handleInitTableChange = (
-    e: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
+  handleInitTableChange = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
     const value = data.value as string | undefined;
     this.dbServer.initTable = value;
   };
@@ -216,9 +195,7 @@ export class TempDbServer extends React.Component {
                         required
                         style={{ width: '6rem' }}
                         value={this.dbServer.port}
-                        onChange={(e) =>
-                          (this.dbServer.port = parseInt(e.target.value, 10))
-                        }
+                        onChange={(e) => (this.dbServer.port = parseInt(e.target.value, 10))}
                         type="number"
                       />
                     </Form.Group>
@@ -248,8 +225,8 @@ export class TempDbServer extends React.Component {
                       link: true,
                       onClick: () =>
                         this.setState({
-                          showPassword: !this.state.showPassword,
-                        }),
+                          showPassword: !this.state.showPassword
+                        })
                     }}
                     placeholder="Password"
                     value={this.dbServer.password || ''}
@@ -312,9 +289,7 @@ export class TempDbServer extends React.Component {
             <Popup
               on="click"
               position="top right"
-              trigger={
-                <Button icon="trash" labelPosition="left" content="Remove" color="red" />
-              }
+              trigger={<Button icon="trash" labelPosition="left" content="Remove" color="red" />}
               header="Confirm"
               content={
                 <Button

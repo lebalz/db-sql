@@ -11,7 +11,6 @@ interface Props {
 }
 
 export default class SqlResults extends React.Component<Props> {
-
   @computed
   get results() {
     return this.props.query.results;
@@ -57,23 +56,14 @@ export default class SqlResults extends React.Component<Props> {
 
     return (
       <Fragment>
-        <Header
-          as="h5"
-          attached="top"
-          className="results-header"
-        >
+        <Header as="h5" attached="top" className="results-header">
           Result
-          <Popup
-            content={`${totalTime}s`}
-            trigger={<Label color="blue">{totalTime.toFixed(2)}s</Label>}
-          />
+          <Popup content={`${totalTime}s`} trigger={<Label color="blue">{totalTime.toFixed(2)}s</Label>} />
           {this.errors.length > 0 ? (
             <Popup
               content={`Errors: ${this.errors.length}`}
               trigger={
-                <Label color="orange">
-                  {`${this.succeeded.length}/${this.results.length} successful`}
-                </Label>
+                <Label color="orange">{`${this.succeeded.length}/${this.results.length} successful`}</Label>
               }
             />
           ) : (
@@ -83,7 +73,7 @@ export default class SqlResults extends React.Component<Props> {
             />
           )}
         </Header>
-        <Segment attached style={{ padding: 0.  }}>
+        <Segment attached style={{ padding: 0 }}>
           <Accordion
             styled
             fluid
@@ -109,7 +99,5 @@ export const TimeLabel = ({ result }: { result: QueryResult }) => {
     popup = `Time: ${time}s`;
     label = `${result.result.length} in ${time.toFixed(2)}s`;
   }
-  return (
-    <Popup content={popup} trigger={<Label as="a" tag color="blue" content={label} />} />
-  );
+  return <Popup content={popup} trigger={<Label as="a" tag color="blue" content={label} />} />;
 };

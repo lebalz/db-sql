@@ -46,9 +46,7 @@ export default class ColumnItem extends React.Component<Props> {
         onMouseOut={() => this.onMouseOut(column)}
       >
         <List.Icon name="columns" color={highlighted ? 'yellow' : 'grey'} />
-        <List.Content className={column.isPrimaryKey ? 'primary-key' : ''}>
-          {column.name}
-        </List.Content>
+        <List.Content className={column.isPrimaryKey ? 'primary-key' : ''}>{column.name}</List.Content>
         {column.isForeignKey && <List.Icon name="key" color="grey" />}
       </List.Item>
     );

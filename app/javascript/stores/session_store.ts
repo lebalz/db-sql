@@ -7,15 +7,11 @@ import {
   newPassword as setNewPasswordCall,
   user,
   deleteAccount as deleteAccountCall,
-  resendActivationLink as resendActivationLinkCall,
+  resendActivationLink as resendActivationLinkCall
 } from '../api/user';
 import api from '../api/base';
 import { createBrowserHistory, Action, Location } from 'history';
-import {
-  SynchronizedHistory,
-  RouterStore,
-  syncHistoryWithStore,
-} from 'mobx-react-router';
+import { SynchronizedHistory, RouterStore, syncHistoryWithStore } from 'mobx-react-router';
 import { matchPath } from 'react-router';
 import User from '../models/User';
 import _ from 'lodash';
@@ -23,14 +19,14 @@ import _ from 'lodash';
 export enum LocalStorageKey {
   User = 'db-sql-current-user',
   Authorization = 'Authorization',
-  CryptoKey = 'Crypto-Key',
+  CryptoKey = 'Crypto-Key'
 }
 
 export enum RequestState {
   Waiting,
   Error,
   Success,
-  None,
+  None
 }
 
 const LOGIN_PATH = '/login';
@@ -42,11 +38,7 @@ const ACCOUNT_ACTIVATION_REGEXP = '/users/:id/activate';
 const RESET_PASSWORD_REGEXP = '/users/:id/reset_password';
 
 const isNoLoginRequired = (pathname: string) => {
-  return !!matchPath(pathname, [
-    LOGIN_PATH,
-    ACCOUNT_ACTIVATION_REGEXP,
-    RESET_PASSWORD_REGEXP,
-  ]);
+  return !!matchPath(pathname, [LOGIN_PATH, ACCOUNT_ACTIVATION_REGEXP, RESET_PASSWORD_REGEXP]);
 };
 
 const isLoginRequired = (pathname: string) => {
@@ -140,10 +132,7 @@ class SessionStore implements Store {
         const historyLength = this.locationHistory.length;
         if (historyLength > 1) {
           const lastLocation = this.locationHistory[historyLength - 2];
-          if (
-            this.authorize(lastLocation.pathname) &&
-            isLoginRequired(lastLocation.pathname)
-          ) {
+          if (this.authorize(lastLocation.pathname) && isLoginRequired(lastLocation.pathname)) {
             return this.history.push(lastLocation);
           }
         }
@@ -218,11 +207,7 @@ class SessionStore implements Store {
       });
   }
 
-  @action setNewPassword(
-    oldPassword: string,
-    newPassword: string,
-    newPasswordConfirmation: string
-  ) {
+  @action setNewPassword(oldPassword: string, newPassword: string, newPasswordConfirmation: string) {
     this.passwordState = RequestState.Waiting;
     setNewPasswordCall(oldPassword, newPassword, newPasswordConfirmation)
       .then(({ data }) => {

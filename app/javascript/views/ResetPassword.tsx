@@ -23,7 +23,7 @@ enum PasswordState {
   InvalidLength,
   NotEqual,
   Ok,
-  InvalidRequest,
+  InvalidRequest
 }
 
 @inject('sessionStore', 'routerStore')
@@ -32,7 +32,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
   state = {
     passwordState: PasswordState.None,
     resetState: null,
-    requestState: RequestState.None,
+    requestState: RequestState.None
   };
 
   private password: string = '';
@@ -58,17 +58,12 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
 
     this.injected.sessionStore.cleanLocalStorage();
     this.setState({ requestState: RequestState.Waiting });
-    resetPasswordCall(
-      this.id,
-      this.resetToken || '',
-      this.password,
-      this.passwordConfirmation
-    )
+    resetPasswordCall(this.id, this.resetToken || '', this.password, this.passwordConfirmation)
       .then(() => {
         this.setState({ requestState: RequestState.Success });
         this.injected.routerStore.push({
           pathname: '/login',
-          search: '?reset=success',
+          search: '?reset=success'
         });
       })
       .catch((error) => {
@@ -93,9 +88,8 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
 
   get hasError() {
     return (
-      [PasswordState.InvalidLength, PasswordState.NotEqual].includes(
-        this.state.passwordState
-      ) || !!this.state.resetState
+      [PasswordState.InvalidLength, PasswordState.NotEqual].includes(this.state.passwordState) ||
+      !!this.state.resetState
     );
   }
 
@@ -121,7 +115,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
-          flexDirection: 'column',
+          flexDirection: 'column'
         }}
       >
         <div>

@@ -79,9 +79,7 @@ export default class Query {
 
   @computed
   get isActive() {
-    return (
-      this.database.isActive && !this.isClosed && this.id === this.database.activeQueryId
-    );
+    return this.database.isActive && !this.isClosed && this.id === this.database.activeQueryId;
   }
 
   run() {

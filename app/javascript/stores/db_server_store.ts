@@ -8,7 +8,7 @@ import {
   remove as removeApi,
   query as fetchQuery,
   databases,
-  database,
+  database
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
@@ -22,7 +22,7 @@ export enum LoadState {
   Loading,
   Error,
   Success,
-  None,
+  None
 }
 
 class State {
@@ -345,7 +345,6 @@ class DbServerStore implements Store {
   get saveState() {
     return this.state.saveState;
   }
-
 
   @action updateDbServer(dbConnection: TempDbServer) {
     this.state.saveState = RequestState.Waiting;

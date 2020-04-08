@@ -11,7 +11,6 @@ interface DatabaseItemProps {
 
 @observer
 export default class TableItem extends React.Component<DatabaseItemProps> {
-
   render() {
     const { table } = this.props;
     const highlighted = table.mark !== Mark.None;
@@ -23,7 +22,7 @@ export default class TableItem extends React.Component<DatabaseItemProps> {
             {/* {table.hasPendingRequest ? (
               <Icon loading name="circle notch" />
             ) : ( */}
-              <Icon fitted name="table" color={highlighted ? 'yellow' : 'grey'} />
+            <Icon fitted name="table" color={highlighted ? 'yellow' : 'grey'} />
             {/* )} */}
             <span style={{ marginLeft: '10px' }}>{table.name}</span>
           </div>

@@ -14,11 +14,7 @@ export function user(id: string, cancelToken: CancelTokenSource): AxiosPromise<U
   return api.get(`admin/users/${id}`, { cancelToken: cancelToken.token });
 }
 
-export function updateUser(
-  id: string,
-  userParams: Partial<User>,
-  cancelToken: CancelTokenSource
-) {
+export function updateUser(id: string, userParams: Partial<User>, cancelToken: CancelTokenSource) {
   return api.put(
     `admin/users/${id}`,
     {

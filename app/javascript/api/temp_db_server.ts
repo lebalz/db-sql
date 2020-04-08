@@ -1,7 +1,6 @@
 import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
-import { DbType, UpdateProps } from '../models/DbServer';
-import { Database, DbTable } from './db_server';
+import { DbType } from '../models/DbServer';
 
 export interface DbServer {
   name: string;
@@ -27,10 +26,7 @@ export interface TestResult {
   message?: string;
 }
 
-export function databases(
-  dbServer: DbServer,
-  cancelToken: CancelTokenSource
-): AxiosPromise<DatabaseName[]> {
+export function databases(dbServer: DbServer, cancelToken: CancelTokenSource): AxiosPromise<DatabaseName[]> {
   return api.post('/temp_db_server/databases', dbServer, {
     cancelToken: cancelToken.token
   });
@@ -46,10 +42,7 @@ export function tables(
   });
 }
 
-export function test(
-  dbServer: DbServer,
-  cancelToken: CancelTokenSource
-): AxiosPromise<TestResult> {
+export function test(dbServer: DbServer, cancelToken: CancelTokenSource): AxiosPromise<TestResult> {
   return api.post('/temp_db_server/test', dbServer, {
     cancelToken: cancelToken.token
   });
