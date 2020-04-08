@@ -226,7 +226,7 @@ RSpec.describe "API::Resources::TempDbServer" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]).to eq(
+      expect(json[0]).to include(
         "name" => "id",
         "is_primary" => true,
         "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
@@ -238,7 +238,7 @@ RSpec.describe "API::Resources::TempDbServer" do
           "type" => "integer"
         }
       )
-      expect(json[1]).to eq(
+      expect(json[1]).to include(
         "name" => "name",
         "is_primary" => false,
         "null" => true,

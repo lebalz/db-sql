@@ -257,7 +257,12 @@ RSpec.describe "API::Resources::DbServer" do
         headers: @headers
       )
       expect(response.successful?).to be_truthy
-      expect(json).to include("name" => "ninja_turtles_db")
+      expect(json).to include(
+        {
+          "name" => "ninja_turtles_db",
+          "db_server_id" => @db_server.id
+        }
+      )
     end
   end
 
@@ -413,7 +418,7 @@ RSpec.describe "API::Resources::DbServer" do
       expect(json[0]).to eq(
         "name" => "id",
         "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
-        "is_primary"=>true,
+        "is_primary" => true,
         "null" => false,
         "serial" => true,
         "sql_type_metadata" => {

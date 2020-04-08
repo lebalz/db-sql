@@ -235,11 +235,17 @@ module Resources
                 database_name: params[:database_name],
                 table_name: params[:table_name]
               )
-              present db_server.columns(
+              columns = db_server.columns(
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
-              ), with: Entities::Column, primary_keys: primary_keys
+              )
+              present(
+                columns.map do |col|
+                  col.merge({ is_primary: primary_keys.include?(col[:name]) })
+                end,
+                with: Entities::Column
+              )
             end
 
             desc "Get the table's primary key names"
