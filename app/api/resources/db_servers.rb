@@ -179,6 +179,7 @@ module Resources
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
                 next if query.blank?
+
                 t0 = Time.now
                 begin
                   results << {
