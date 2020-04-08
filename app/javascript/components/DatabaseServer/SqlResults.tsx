@@ -3,9 +3,8 @@ import { Segment, Label, Popup, Header, Accordion } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultType, QueryResult } from '../../api/db_server';
 import { computed } from 'mobx';
-import { SqlResult } from './SqlResult';
+import { SqlResult } from './SqlResult/SqlResult';
 import Query from '../../models/Query';
-
 
 interface Props {
   query: Query;

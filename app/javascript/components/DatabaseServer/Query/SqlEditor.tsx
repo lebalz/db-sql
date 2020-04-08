@@ -7,7 +7,7 @@ import 'ace-builds/src-noconflict/snippets/sql';
 import 'ace-builds/src-noconflict/theme-github';
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
 import { computed } from 'mobx';
-import Query from '../../models/Query';
+import Query from '../../../models/Query';
 
 interface Props {
   query: Query;
@@ -56,7 +56,7 @@ export default class SqlEditor extends React.Component<Props> {
             name: col.name,
             value: col.name,
             meta: 'COLUMN',
-            score: 1,
+            score: 2,
           } as Completion)
       );
       return [...res, ...cols];

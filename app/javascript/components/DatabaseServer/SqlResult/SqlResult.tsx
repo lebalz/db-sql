@@ -1,7 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
 import { ErrorReport } from './ErrorReport';
-import { ResultType, QueryResult } from '../../api/db_server';
+import { ResultType, QueryResult } from '../../../api/db_server';
 import { EmptyResult } from './EmptyResult';
 import ResultTable from './ResultTable';
 

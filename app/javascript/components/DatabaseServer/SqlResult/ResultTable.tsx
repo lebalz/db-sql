@@ -1,7 +1,7 @@
 import React from 'react';
-import { Table, Label, Popup, Placeholder } from 'semantic-ui-react';
+import { Table, Placeholder } from 'semantic-ui-react';
 import _ from 'lodash';
-import { ResultTable as ResulTableType } from '../../api/db_server';
+import { ResultTable as ResulTableType } from '../../../api/db_server';
 import { computed } from 'mobx';
 
 interface Props {

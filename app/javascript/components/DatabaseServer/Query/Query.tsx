@@ -3,9 +3,9 @@ import { Button, Segment } from 'semantic-ui-react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 import SqlEditor from './SqlEditor';
-import SqlResults from './SqlResults';
-import { default as QueryModel } from '../../models/Query';
-import { REST } from '../../declarations/REST';
+import SqlResults from '../SqlResults';
+import { default as QueryModel } from '../../../models/Query';
+import { REST } from '../../../declarations/REST';
 
 interface Props {
   query: QueryModel;

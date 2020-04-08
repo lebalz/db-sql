@@ -13,7 +13,7 @@ import DbServerIndex from './DatabaseServer/DbServerIndex';
 import { Route } from 'react-router-dom';
 import { Dimmer, Loader, Segment } from 'semantic-ui-react';
 import QueryIndex from './DatabaseServer/QueryIndex';
-import Query from './DatabaseServer/Query';
+import Query from './DatabaseServer/Query/Query';
 
 interface MatchParams {
   id: string;
