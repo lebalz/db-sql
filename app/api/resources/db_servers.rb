@@ -201,6 +201,17 @@ module Resources
             present(results, with: Entities::QueryResult)
           end
 
+          desc 'Query the database and returns the raw result. Multiple query statements are allowed'
+          params do
+            requires(:query, type: String)
+          end
+          post :raw_query do
+            db_name = params[:database_name]
+            db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
+              params[:query]
+            end
+          end
+
           desc "Get the database's tables"
           get :tables do
             present(
