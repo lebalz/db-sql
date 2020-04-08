@@ -7,14 +7,16 @@ import {
   Menu,
   MenuItemProps,
   SemanticShorthandCollection,
+  Ref,
+  Button,
 } from 'semantic-ui-react';
 import SessionStore from '../../../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
-import DbServerStore from '../../../stores/db_server_store';
+import DbServerStore, { LoadState } from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import DbTable from '../../../models/DbTable';
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
 import DbColumn from '../../../models/DbColumn';
 import ForeignColumnLink from './ForeignColumnLink';
 import Database from '../../../models/Database';
@@ -112,12 +114,11 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
 };
 
 interface InjectedProps {
-  sessionStore: SessionStore;
   routerStore: RouterStore;
   dbServerStore: DbServerStore;
 }
 
-@inject('sessionStore', 'routerStore', 'dbServerStore')
+@inject('routerStore', 'dbServerStore')
 @observer
 export default class DatabaseSchemaTree extends React.Component {
   state: {
@@ -130,8 +131,15 @@ export default class DatabaseSchemaTree extends React.Component {
       items: [],
     },
   };
+
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  @action
+  reloadDatabases() {
+    this.injected.dbServerStore.activeDbServer?.reload();
+    this.onCloseContextMenu();
   }
 
   onOpenContextMenu = (props: ContextMenuProps) => {
@@ -192,16 +200,19 @@ export default class DatabaseSchemaTree extends React.Component {
       return null;
     }
 
-    const isLoaded = true;
-
     return (
       <Fragment>
-        <Header as="h3" content="Databases" />
-        {!isLoaded && (
-          <Loader active inline="centered" indeterminate>
-            Loading Databases
-          </Loader>
-        )}
+        <div className="database-index-header">
+          <Header as="h3" content="Databases" />
+          <Button
+            size="mini"
+            icon="refresh"
+            onClick={() => this.reloadDatabases()}
+            circular
+            basic
+            loading={dbServerStore.dbIndexLoadState === LoadState.Loading}
+          />
+        </div>
         <div style={{ overflow: 'auto', display: 'flex' }}>
           <div style={{ width: '0', marginLeft: '3px' }}>
             <ForeignColumnLink menuItems={menuItems} />
@@ -217,14 +228,14 @@ export default class DatabaseSchemaTree extends React.Component {
             {menuItems.map((item) => item.draw())}
           </List>
           {/* context menu */}
-          <Popup
-            context={this.state.contextMenuProps.dbRef}
-            open={this.state.contextMenuOpen}
-            onClose={this.onCloseContextMenu}
-          >
-            <Menu items={this.state.contextMenuProps.items} secondary vertical />
-          </Popup>
         </div>
+        <Popup
+          context={this.state.contextMenuProps.dbRef}
+          open={this.state.contextMenuOpen}
+          onClose={this.onCloseContextMenu}
+        >
+          <Menu items={this.state.contextMenuProps.items} secondary vertical />
+        </Popup>
       </Fragment>
     );
   }

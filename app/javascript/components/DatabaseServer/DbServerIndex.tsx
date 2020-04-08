@@ -23,19 +23,7 @@ export default class DbServerIndex extends React.Component<Props> {
   close(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, dbServer: DbServer) {
     e.stopPropagation();
 
-    const { loadedDbServers } = this.injected.dbServerStore;
-    const idx = loadedDbServers.indexOf(dbServer);
     dbServer.close();
-
-    const numQueries = loadedDbServers.length;
-    if (numQueries > 1) {
-      const nextDbServer = loadedDbServers[idx > 0 ? idx - 1 : 1];
-      this.injected.routerStore.push(nextDbServer.link);
-    } else {
-      this.injected.dbServerStore.setActiveDbServer('');
-      this.injected.routerStore.replace('/dashboard');
-    }
-
   }
 
   render() {

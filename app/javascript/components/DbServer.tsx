@@ -15,7 +15,6 @@ import { Dimmer, Loader, Segment } from 'semantic-ui-react';
 import QueryIndex from './DatabaseServer/QueryIndex';
 import Query from './DatabaseServer/Query';
 
-
 interface MatchParams {
   id: string;
   db_name?: string;
@@ -74,7 +73,11 @@ export default class DbServer extends React.Component<DbConnectionProps> {
 
   @computed
   get dbName() {
-    return this.props.match.params.db_name;
+    const { db_name } = this.props.match.params;
+    if (db_name) {
+      return db_name;
+    }
+    return this.injected.dbServerStore.activeDbServer?.defaultDatabaseName;
   }
 
   render() {
@@ -85,20 +88,16 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           <NavBar />
         </header>
         <div id="sidebar">
-          <Route path="/connections/:id/:db_name?" component={DatabaseSchemaTree} />
+          <DatabaseSchemaTree />
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
           <DbServerIndex />
           <Segment>
-            <QueryIndex
-              queries={this.injected.dbServerStore.activeDbServer?.queries ?? []}
-            />
+            <QueryIndex queries={this.injected.dbServerStore.activeDbServer?.queries ?? []} />
             {query && <Query query={query} />}
           </Segment>
         </main>
-        <Dimmer
-          active={this.injected.dbServerStore.dbIndexLoadState === LoadState.Loading}
-        >
+        <Dimmer active={this.injected.dbServerStore.dbIndexLoadState === LoadState.Loading}>
           <Loader indeterminate content="Loading Databases" />
         </Dimmer>
       </Fragment>

@@ -74,11 +74,17 @@ class DbServerStore implements Store {
 
     // load the current database if it is not loaded
     this.currentDbLoader = reaction(
-      () => this.activeDbServer?.activeDatabaseName,
-      (activeDatabaseName) => {
-        if (activeDatabaseName) {
-          if (!this.activeDatabase(this.state.activeDbServerId)) {
-            this.loadDatabase(this.activeDbServerId, activeDatabaseName);
+      () => this.activeDbServer?.activeDatabaseKey,
+      (activeDatabaseKey) => {
+        if (activeDatabaseKey) {
+          const { activeDbServerId } = this.state;
+          if (this.activeDatabase(activeDbServerId)) {
+            return;
+          }
+
+          const dbName = this.state.activeDatabase.get(activeDbServerId);
+          if (dbName) {
+            this.loadDatabase(activeDbServerId, dbName);
           }
         }
       }
@@ -89,6 +95,67 @@ class DbServerStore implements Store {
     this.loginDisposer();
     this.dbIndexLoader();
     this.currentDbLoader();
+  }
+
+  @computed
+  get loadedDbServers(): DbServer[] {
+    return Array.from(this.state.databaseIndex.keys()).map((id) => this.dbServer(id)!);
+  }
+
+  dbServer(id: string): DbServer | undefined {
+    return this.state.dbServers.find((c) => c.id === id);
+  }
+
+  @computed
+  get isLoaded() {
+    return this.state.loadState === LoadState.Success;
+  }
+
+  @action loadDbServers(forceReload: boolean = false) {
+    if ((this.isLoaded && !forceReload) || this.state.loadState === LoadState.Loading) {
+      return;
+    }
+
+    this.state.loadState = LoadState.Loading;
+
+    dbServers(this.root.cancelToken)
+      .then(({ data }) => {
+        const dbServers = _.sortBy(data, ['name']).map(
+          (dbConnection) => new DbServer(dbConnection, this, this.root.cancelToken)
+        );
+        this.state.dbServers.replace(dbServers);
+        this.state.loadState = LoadState.Success;
+      })
+      .catch(() => {
+        console.log('Could not fetch db connections');
+        this.state.loadState = LoadState.Error;
+      });
+  }
+
+  @action reloadDbServer(dbServerId: string) {
+    this.state.dbIndexLoadState = LoadState.Loading;
+    databases(dbServerId, this.cancelToken)
+      .then(({ data }) => {
+        const dbIndex = data.map((db) => db.name);
+        this.state.databaseIndex.set(dbServerId, dbIndex);
+        this.state.dbIndexLoadState = LoadState.Success;
+        return dbIndex;
+      })
+      .then((dbIndex) => {
+        const dbMap = this.state.databases.get(dbServerId);
+        if (!dbMap) {
+          return;
+        }
+        dbMap.forEach((db, name) => {
+          if (!dbIndex.includes(name)) {
+            return this.state.databases.get(dbServerId)!.delete(name);
+          }
+          this.reloadDatabase(db.dbServerId, db.name);
+        });
+      })
+      .catch((e) => {
+        this.state.dbIndexLoadState = LoadState.Error;
+      });
   }
 
   @computed
@@ -147,6 +214,26 @@ class DbServerStore implements Store {
         this.state.databases.delete(dbServerId);
         this.state.activeDatabase.delete(dbServerId);
       });
+  }
+
+  @action reloadDatabase(dbServerId: string, dbName: string) {
+    const dbServer = this.dbServer(dbServerId);
+    if (!dbServer) {
+      return;
+    }
+    const oldDb = this.database(dbServerId, dbName);
+    if (!oldDb) {
+      return this.loadDatabase(dbServerId, dbName);
+    }
+    oldDb.isLoading = true;
+
+    database(dbServerId, dbName, this.cancelToken)
+      .then(({ data }) => {
+        const db = new Database(dbServer, data);
+        db.copyFrom(oldDb);
+        this.state.databases.get(dbServerId)!.set(dbName, db);
+      })
+      .catch((e) => console.error('Update not successful: ', e));
   }
 
   loadedDatabases(dbServerId: string): Database[] {
@@ -230,17 +317,19 @@ class DbServerStore implements Store {
     if (!dbServer) {
       return;
     }
+    const idx = this.loadedDbServers.indexOf(dbServer);
 
     this.state.databaseIndex.delete(dbServerId);
     this.state.databases.delete(dbServerId);
-    // if (this.activeDbServerId === dbServer.id) {
-    //   const dbServerCount = this.state.dbServers.length;
-    //   if (dbServerCount > 0) {
-    //     this.setActiveDbServer(this.state.dbServers[dbServerCount - 1].id);
-    //   } else {
-    //     this.setActiveDbServer('');
-    //   }
-    // }
+
+    const numQueries = this.loadedDbServers.length;
+    if (numQueries > 0) {
+      const nextDbServer = this.loadedDbServers[idx > 0 ? idx - 1 : 0];
+      this.root.routing.push(nextDbServer.link);
+    } else {
+      this.root.routing.replace('/dashboard');
+      this.setActiveDbServer('');
+    }
   }
 
   get cancelToken() {
@@ -257,59 +346,6 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
-  @computed
-  get loadedDbServers(): DbServer[] {
-    return Array.from(this.state.databaseIndex.keys()).map((id) => this.dbServer(id)!);
-  }
-
-  dbServer(id: string): DbServer | undefined {
-    return this.state.dbServers.find((c) => c.id === id);
-  }
-
-  @computed
-  get isLoaded() {
-    return this.state.loadState === LoadState.Success;
-  }
-
-  @action loadDbServers(forceReload: boolean = false) {
-    if ((this.isLoaded && !forceReload) || this.state.loadState === LoadState.Loading) {
-      return;
-    }
-
-    this.state.loadState = LoadState.Loading;
-
-    dbServers(this.root.cancelToken)
-      .then(({ data }) => {
-        const dbServers = _.sortBy(data, ['name']).map(
-          (dbConnection) => new DbServer(dbConnection, this, this.root.cancelToken)
-        );
-        this.state.dbServers.replace(dbServers);
-        this.state.loadState = LoadState.Success;
-      })
-      .catch(() => {
-        console.log('Could not fetch db connections');
-        this.state.loadState = LoadState.Error;
-      });
-  }
-
-  @action reloadDatabase(dbServerId: string, dbName: string) {
-    const dbServer = this.dbServer(dbServerId);
-    if (!dbServer) {
-      return;
-    }
-    const oldDb = this.database(dbServerId, dbName);
-    if (!oldDb) {
-      return this.loadDatabase(dbServerId, dbName);
-    }
-
-    database(dbServerId, dbName, this.cancelToken)
-      .then(({ data }) => {
-        const db = new Database(dbServer, data);
-        db.copyFrom(oldDb);
-        this.state.databases.get(dbServerId)!.set(dbName, db);
-      })
-      .catch((e) => console.error('Update not successful: ', e));
-  }
 
   @action updateDbServer(dbConnection: TempDbServer) {
     this.state.saveState = RequestState.Waiting;

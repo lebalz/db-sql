@@ -121,6 +121,11 @@ export default class DbServer {
   }
 
   @action
+  reload() {
+    this.dbServerStore.reloadDbServer(this.id);
+  }
+
+  @action
   reloadDatabase(name: string) {
     this.dbServerStore.reloadDatabase(this.id, name);
   }
@@ -145,6 +150,16 @@ export default class DbServer {
   @computed
   get activeDatabaseName(): string | undefined {
     return this.dbServerStore.activeDatabaseName(this.id);
+  }
+
+  /**
+   * unique key that is unique per database. Can be used to trigger reactions
+   * when the database changes.
+   * @returns [string | undefined]
+   */
+  @computed
+  get activeDatabaseKey(): string | undefined {
+    return `${this.id}/${this.dbServerStore.activeDatabaseName(this.id)}`;
   }
 
   @computed

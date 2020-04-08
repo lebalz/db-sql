@@ -43,7 +43,6 @@ export default class Database {
 
   @action
   reload() {
-    this.isLoading = true;
     this.dbServer.reloadDatabase(this.name);
   }
 
