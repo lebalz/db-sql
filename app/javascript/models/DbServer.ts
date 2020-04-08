@@ -120,6 +120,11 @@ export default class DbServer {
     return this.dbServerStore.loadedDatabases(this.id);
   }
 
+  @action
+  reloadDatabase(name: string) {
+    this.dbServerStore.reloadDatabase(this.id, name);
+  }
+
   database(dbName: string): Database | undefined {
     return this.dbServerStore.database(this.id, dbName);
   }

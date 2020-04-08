@@ -16,6 +16,7 @@ export default class Database {
   @observable activeQueryId: number = 1;
 
   @observable show: boolean = false;
+  @observable isLoading: boolean = false;
 
   constructor(dbServer: DbServer, props: DatabaseProps) {
     this.dbServer = dbServer;
@@ -28,6 +29,22 @@ export default class Database {
   @action
   setActiveQuery(id: number) {
     this.activeQueryId = id;
+  }
+
+  @action
+  copyFrom(database: Database) {
+    this.queries.clear();
+    database.queries.forEach((query) => {
+      this.queries.push(query.createCopyFor(database));
+    });
+    this.activeQueryId = database.activeQueryId;
+    this.show = database.show;
+  }
+
+  @action
+  reload() {
+    this.isLoading = true;
+    this.dbServer.reloadDatabase(this.name);
   }
 
   @computed

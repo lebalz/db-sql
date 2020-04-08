@@ -55,6 +55,12 @@ export default class Query {
     return `${this.database.name}#${this.id}`;
   }
 
+  createCopyFor(database: Database) {
+    const copy = new Query(database, this.id);
+    copy.query = this.query;
+    return copy;
+  }
+
   @action
   setActive() {
     this.database.setActiveQuery(this.id);

@@ -128,12 +128,7 @@ class DbServerStore implements Store {
     if (!dbServer) {
       return;
     }
-    // const dummyDb = new Database(dbServer, {
-    //   name: dbName,
-    //   db_server_id: dbServerId,
-    //   tables: [],
-    // });
-    // this.state.databases.get(dbServerId)!.set(dbName, dummyDb);
+
     database(dbServerId, dbName, this.cancelToken)
       .then(({ data }) => {
         const db = new Database(dbServer, data);
@@ -164,7 +159,9 @@ class DbServerStore implements Store {
 
   queries(dbServerId: string): Query[] {
     const dbMap = this.loadedDatabaseMap(dbServerId);
-    const queries = _.flatten(Array.from(dbMap, ([_, value]) => value.queries));
+    const queries = _.flatten(Array.from(dbMap, ([_, db]) => db.queries));
+
+    // add placeholder query if the active database is loading
     const activeDbName = this.activeDatabaseName(dbServerId);
     if (activeDbName && !queries.find((q) => q.database.name === activeDbName)) {
       queries.push(PlaceholderQuery(activeDbName));
@@ -295,6 +292,25 @@ class DbServerStore implements Store {
       });
   }
 
+  @action reloadDatabase(dbServerId: string, dbName: string) {
+    const dbServer = this.dbServer(dbServerId);
+    if (!dbServer) {
+      return;
+    }
+    const oldDb = this.database(dbServerId, dbName);
+    if (!oldDb) {
+      return this.loadDatabase(dbServerId, dbName);
+    }
+
+    database(dbServerId, dbName, this.cancelToken)
+      .then(({ data }) => {
+        const db = new Database(dbServer, data);
+        db.copyFrom(oldDb);
+        this.state.databases.get(dbServerId)!.set(dbName, db);
+      })
+      .catch((e) => console.error('Update not successful: ', e));
+  }
+
   @action updateDbServer(dbConnection: TempDbServer) {
     this.state.saveState = RequestState.Waiting;
     updateDbServer(dbConnection.params, this.root.cancelToken)
@@ -302,9 +318,7 @@ class DbServerStore implements Store {
         const connection = this.state.dbServers.find((db) => db.id === dbConnection.id);
         if (!connection) return;
         this.state.dbServers.remove(connection);
-        this.state.dbServers.push(
-          new DbServer(dbConnection.props, this, this.root.cancelToken)
-        );
+        this.state.dbServers.push(new DbServer(dbConnection.props, this, this.root.cancelToken));
         this.state.saveState = RequestState.Success;
       })
       .catch(() => {

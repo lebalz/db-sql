@@ -50,21 +50,18 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
             </div>
           </List.Content>
         </List.Item>
-        {this.state.loading && (
-          <List.Item style={{ height: '4em' }}>
-            <List.Content>
-              <Loader
-                style={{ marginLeft: '2em' }}
-                size="small"
-                indeterminate
-                active
-                inline
-                content="Loading"
-              />
-            </List.Content>
-          </List.Item>
-        )}
+        {this.state.loading && <DbLoadIndicator />}
       </Fragment>
     );
   }
 }
+
+export const DbLoadIndicator = () => {
+  return (
+    <List.Item style={{ height: '4em' }}>
+      <List.Content>
+        <Loader style={{ marginLeft: '2em' }} size="small" indeterminate active inline content="Loading" />
+      </List.Content>
+    </List.Item>
+  );
+};

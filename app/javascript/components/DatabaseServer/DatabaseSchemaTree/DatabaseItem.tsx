@@ -2,15 +2,17 @@ import React, { Fragment } from 'react';
 import { Icon, List, Ref } from 'semantic-ui-react';
 import DbServerStore from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
-import { computed, reaction, IReactionDisposer } from 'mobx';
+import { computed, reaction, IReactionDisposer, action } from 'mobx';
 import _ from 'lodash';
 import Database from '../../../models/Database';
 import RouterStore from '../../../stores/router_store';
 import { ContextMenuProps } from './DatabaseSchemaTree';
+import { DbLoadIndicator } from './PlaceholderItem';
 
 interface DatabaseItemProps {
   database: Database;
   onOpenContextMenu: (props: ContextMenuProps) => void;
+  closeContextMenu: () => void;
 }
 
 interface InjectedDbItemPorps extends DatabaseItemProps {
@@ -59,6 +61,12 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
     });
   }
 
+  @action
+  reloadDatabase() {
+    this.props.database.reload();
+    this.props.closeContextMenu();
+  }
+
   @computed get color() {
     const { database } = this.props;
 
@@ -82,7 +90,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
               this.props.onOpenContextMenu({
                 dbRef: this.contextMenuRef,
                 items: [
-                  { key: 'reload', content: 'Reload', icon: 'refresh', onClick: () => console.log('hii') },
+                  { key: 'reload', content: 'Reload', icon: 'refresh', onClick: () => this.reloadDatabase() },
                 ],
               });
             }}
@@ -103,13 +111,7 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
             </List.Content>
           </List.Item>
         </Ref>
-        {/* <Popup
-          context={this.contextMenuRef}
-          open={this.state.contextMenuOpen}
-          onClose={() => this.setState({ contextMenuOpen: false })}
-        >
-          <Menu items={[{ key: 'reload', content: 'Reload', icon: 'refresh' }]} secondary vertical />
-        </Popup> */}
+        {database.isLoading && <DbLoadIndicator />}
       </Fragment>
     );
   }

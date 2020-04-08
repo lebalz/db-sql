@@ -67,13 +67,21 @@ export type TreeItem = DbDatabaseItem | DbTableItem | DbColumnItem | DbPlacehold
 const getDatabaseItem = (
   db: Database,
   treePosition: number,
-  onOpenContextMenu: (props: ContextMenuProps) => void
+  onOpenContextMenu: (props: ContextMenuProps) => void,
+  closeContextMenu: () => void
 ): DbDatabaseItem => {
   return {
     kind: ItemKind.Database,
     value: db,
     treePosition: treePosition,
-    draw: () => <DatabaseItem key={treePosition} database={db} onOpenContextMenu={onOpenContextMenu} />,
+    draw: () => (
+      <DatabaseItem
+        key={treePosition}
+        database={db}
+        onOpenContextMenu={onOpenContextMenu}
+        closeContextMenu={closeContextMenu}
+      />
+    ),
   };
 };
 const getPlaceholderItem = (dbServerId: string, dbName: string, treePosition: number): DbPlaceholderItem => {
@@ -130,8 +138,8 @@ export default class DatabaseSchemaTree extends React.Component {
     this.setState({ contextMenuProps: props, contextMenuOpen: true });
   };
 
-  onCloseContextMenu = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
-    event.preventDefault();
+  onCloseContextMenu = (event?: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    event?.preventDefault();
     this.setState({ dbRef: React.createRef(), contextMenuOpen: false });
   };
 
@@ -153,10 +161,10 @@ export default class DatabaseSchemaTree extends React.Component {
         return dbs;
       }
       const db = loadedDatabases.get(dbName)!;
-      const dbItem = getDatabaseItem(db, pos, this.onOpenContextMenu);
+      const dbItem = getDatabaseItem(db, pos, this.onOpenContextMenu, this.onCloseContextMenu);
       pos += 1;
       dbs.push(dbItem);
-      if (!db.show) {
+      if (!db.show || db.isLoading) {
         return dbs;
       }
       const tableItems = db.tables.reduce((tables, table) => {
@@ -199,6 +207,7 @@ export default class DatabaseSchemaTree extends React.Component {
             <ForeignColumnLink menuItems={menuItems} />
           </div>
           <List
+            className="database-index"
             style={{
               margin: '0 0 0 1em',
               padding: '0em',
