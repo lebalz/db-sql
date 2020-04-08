@@ -1,17 +1,7 @@
 [![Build Status](https://travis-ci.com/lebalz/db-sql.svg?branch=master)](https://travis-ci.com/lebalz/db-sql)
 
-# DB-SQL ![dbsql](/home/balz/Documents/github/lebalz/db-sql/docs/logo.png)
-
-
-<p align="center">
-  <a href="#"><img width="150" src="./docs/logo.png"></a>
-</p>
-
-## Demo
-
-[https://db-sql.ch](https://db-sql.ch)
-
-![demo](docs/db-sql.gif)
+# [DB-SQL](https://db-sql.ch)
+![db-sql](docs/db-sql.gif)
 
 ## Setup
 
