@@ -1,5 +1,13 @@
 import React, { Fragment } from 'react';
-import { Header, List, Loader } from 'semantic-ui-react';
+import {
+  Header,
+  List,
+  Loader,
+  Popup,
+  Menu,
+  MenuItemProps,
+  SemanticShorthandCollection,
+} from 'semantic-ui-react';
 import SessionStore from '../../../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
 import DbServerStore from '../../../stores/db_server_store';
@@ -14,13 +22,17 @@ import DatabaseItem from './DatabaseItem';
 import TableItem from './TableItem';
 import ColumnItem from './ColumnItem';
 import PlaceholderItem from './PlaceholderItem';
-import { RouteComponentProps } from 'react-router';
+
+export interface ContextMenuProps {
+  dbRef: React.MutableRefObject<any>;
+  items: SemanticShorthandCollection<MenuItemProps>;
+}
 
 export enum ItemKind {
   Database = 'database',
   Placeholder = 'placeholder',
   Table = 'table',
-  Column = 'column'
+  Column = 'column',
 }
 
 interface DbTreeItem {
@@ -52,21 +64,24 @@ export interface DbPlaceholderItem extends DbTreeItem {
 
 export type TreeItem = DbDatabaseItem | DbTableItem | DbColumnItem | DbPlaceholderItem;
 
-const getDatabaseItem = (db: Database, treePosition: number): DbDatabaseItem => {
+const getDatabaseItem = (
+  db: Database,
+  treePosition: number,
+  onOpenContextMenu: (props: ContextMenuProps) => void
+): DbDatabaseItem => {
   return {
     kind: ItemKind.Database,
     value: db,
     treePosition: treePosition,
-    draw: () => <DatabaseItem key={treePosition} database={db} />
+    draw: () => <DatabaseItem key={treePosition} database={db} onOpenContextMenu={onOpenContextMenu} />,
   };
 };
-
 const getPlaceholderItem = (dbServerId: string, dbName: string, treePosition: number): DbPlaceholderItem => {
   return {
     kind: ItemKind.Placeholder,
     value: dbName,
     treePosition: treePosition,
-    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} />
+    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} />,
   };
 };
 
@@ -75,7 +90,7 @@ const getTableItem = (table: DbTable, treePosition: number): DbTableItem => {
     kind: ItemKind.Table,
     value: table,
     treePosition: treePosition,
-    draw: () => <TableItem key={treePosition} table={table} />
+    draw: () => <TableItem key={treePosition} table={table} />,
   };
 };
 
@@ -84,7 +99,7 @@ const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => 
     kind: ItemKind.Column,
     value: column,
     treePosition: treePosition,
-    draw: () => <ColumnItem key={treePosition} column={column} />
+    draw: () => <ColumnItem key={treePosition} column={column} />,
   };
 };
 
@@ -97,9 +112,28 @@ interface InjectedProps {
 @inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class DatabaseSchemaTree extends React.Component {
+  state: {
+    contextMenuOpen: boolean;
+    contextMenuProps: ContextMenuProps;
+  } = {
+    contextMenuOpen: false,
+    contextMenuProps: {
+      dbRef: React.createRef(),
+      items: [],
+    },
+  };
   get injected() {
     return this.props as InjectedProps;
   }
+
+  onOpenContextMenu = (props: ContextMenuProps) => {
+    this.setState({ contextMenuProps: props, contextMenuOpen: true });
+  };
+
+  onCloseContextMenu = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    event.preventDefault();
+    this.setState({ dbRef: React.createRef(), contextMenuOpen: false });
+  };
 
   @computed get menuItems(): TreeItem[] {
     const { dbServerStore } = this.injected;
@@ -119,7 +153,7 @@ export default class DatabaseSchemaTree extends React.Component {
         return dbs;
       }
       const db = loadedDatabases.get(dbName)!;
-      const dbItem = getDatabaseItem(db, pos);
+      const dbItem = getDatabaseItem(db, pos, this.onOpenContextMenu);
       pos += 1;
       dbs.push(dbItem);
       if (!db.show) {
@@ -168,11 +202,19 @@ export default class DatabaseSchemaTree extends React.Component {
             style={{
               margin: '0 0 0 1em',
               padding: '0em',
-              flex: '1'
+              flex: '1',
             }}
           >
             {menuItems.map((item) => item.draw())}
           </List>
+          {/* context menu */}
+          <Popup
+            context={this.state.contextMenuProps.dbRef}
+            open={this.state.contextMenuOpen}
+            onClose={this.onCloseContextMenu}
+          >
+            <Menu items={this.state.contextMenuProps.items} secondary vertical />
+          </Popup>
         </div>
       </Fragment>
     );
