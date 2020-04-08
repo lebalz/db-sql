@@ -56,9 +56,9 @@ class API < Grape::API
 
   mount Resources::Login
   mount Resources::Users
-  mount Resources::DbConnections
+  mount Resources::DbServers
   mount Resources::Admin
-  mount Resources::TempDbConnection
+  mount Resources::TempDbServer
 
   # This needs to happen at the very end of this file.
   add_swagger_documentation(

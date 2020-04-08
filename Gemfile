@@ -1,15 +1,15 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.6.2'
-
+ruby '2.6.5'
+gem 'sassc-rails'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.0'
+gem 'rails', '~> 6.0.2'
 gem 'pg', '~> 0.18'
 gem 'mysql2', '~>0.5.2'
 
 # Use Puma as the app server
-gem 'puma', '~> 3.12'
+gem 'puma', '~> 4.3'
 
 gem 'redis'
 gem 'hiredis'
@@ -35,11 +35,10 @@ gem 'grape-entity'
 gem 'sidekiq'
 
 gem 'semantic-ui-sass'
-gem 'uglifier', '>=4.1.12'
-gem 'webpacker', '~>4.0.2'
+gem 'webpacker', '~>4.2.2'
 
 # Reduces boot times through caching; required in config/boot.rb
-gem 'bootsnap', '>= 1.1.0', require: false
+gem 'bootsnap', '>= 1.4.2', require: false
 
 # Character encoding detection
 # gem 'charlock_holmes'
@@ -61,8 +60,8 @@ group :development, :test do
   gem 'solargraph'
 
   # for vscode-development
-  gem 'ruby-debug-ide', '~>0.7.0'
-  gem 'debase', '~>0.2.3.beta5'
+  gem 'ruby-debug-ide', '~>0.7.1.beta3'
+  gem 'debase', '~>0.2.5.beta1'
 
   gem 'factory_bot_rails'
 
@@ -83,7 +82,6 @@ group :development do
   gem 'spring-watcher-listen', '~> 2.0.0'
 
   gem 'annotate'
-  gem 'mailcatcher'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

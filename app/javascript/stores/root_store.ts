@@ -1,16 +1,22 @@
-import { observable } from 'mobx';
-import { RouterStore } from 'mobx-react-router';
+import { observable, action } from 'mobx';
 import SessionStore from './session_store';
 import UserStore from './user_store';
-import DbConnectionStore from './db_connection_store';
+import DbServerStore from './db_server_store';
+import axios, { CancelTokenSource } from 'axios';
+import RouterStore from './router_store';
 
-export class RootStore {
-  stores = observable<any>([]);
+export interface Store {
+  cleanup: () => void;
+}
+
+export class RootStore implements Store {
+  stores = observable<Store>([]);
+  cancelToken: CancelTokenSource = axios.CancelToken.source();
 
   session: SessionStore;
   routing: RouterStore;
   user: UserStore;
-  dbConnection: DbConnectionStore;
+  dbServer: DbServerStore;
 
   @observable initialized = false;
 
@@ -24,10 +30,21 @@ export class RootStore {
     this.user = new UserStore(this);
     this.stores.push(this.user);
 
-    this.dbConnection = new DbConnectionStore(this);
-    this.stores.push(this.dbConnection);
+    this.dbServer = new DbServerStore(this);
+    this.stores.push(this.dbServer);
 
     this.initialized = true;
+  }
+
+  @action
+  cancelApiRequests() {
+    this.cancelToken.cancel('Requests canceled');
+    this.cancelToken = axios.CancelToken.source();
+  }
+
+  @action cleanup() {
+    this.cancelApiRequests();
+    this.stores.forEach((store) => store.cleanup());
   }
 }
 

@@ -1,10 +1,7 @@
 [![Build Status](https://travis-ci.com/lebalz/db-sql.svg?branch=master)](https://travis-ci.com/lebalz/db-sql)
 
-# DB-SQL
-
-<p align="center">
-  <a href="#"><img width="250" src="./docs/logo.png"></a>
-</p>
+# [DB-SQL](https://db-sql.ch)
+![db-sql](docs/db-sql.gif)
 
 ## Setup
 
@@ -75,10 +72,10 @@ postgres=# CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA public;
 
 ### Custom Seeds
 
-If you need for development custom seeds of DbConnections with confidential credentials, then create a new File `seed_db_connections.yaml` in root:
+If you need for development custom seeds of DbServers with confidential credentials, then create a new File `seed_db_servers.yaml` in root:
 
 ```sh
-cp seed_db_connections.example.yaml seed_db_connections.yaml
+cp seed_db_servers.example.yaml seed_db_servers.yaml
 ```
 edit it to your needs and reseed.
 
@@ -122,7 +119,20 @@ Mails sent with `:smtp` to [http://localhost:1025](http://localhost:1025) are ca
 
 ## Deploy
 
-The app is deployed with dokku and the [Dockerfile](Dockerfile)
+The app can be deployed with dokku (thorough the usage of this [Dockerfile](Dockerfile)).
+
+To deploy db-sql on a dokku-instance, you can run
+
+```sh
+SSH_USER=root IP=<DOKKUS_IP> ./setup_dokku.sh
+```
+
+to easyly
+
+- install needed Plugins (postgres and letsencrypt)
+- setup the needed env variables
+- deploy the app
+- letsencrypt the connection
 
 ### ENV variables on production
 

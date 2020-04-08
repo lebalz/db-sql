@@ -5,12 +5,16 @@ import SessionStore from '../stores/session_store';
 import { signup } from '../api/user';
 import { isSafePassword } from './helper';
 
-
 interface InjectedProps {
   sessionStore: SessionStore;
 }
 
-enum LoginState { None, Waiting, Success, Error };
+enum LoginState {
+  None,
+  Waiting,
+  Success,
+  Error
+}
 
 @inject('sessionStore')
 @observer
@@ -46,25 +50,27 @@ export default class Signup extends React.Component {
     if (!this.isValid) {
       this.validate();
     }
-  }
+  };
 
   signup() {
     if (this.validate()) {
       this.setState({ loginState: LoginState.Waiting });
-      signup(this.email, this.password).then(({ data }) => {
-        this.injected.sessionStore.setCurrentUser(data);
-        this._isMounted && this.setState({ loginState: LoginState.Success });
-      }).catch((error) => {
-        console.log(error);
-        this._isMounted && this.setState({ loginState: LoginState.Error });
-      });
+      signup(this.email, this.password)
+        .then(({ data }) => {
+          this.injected.sessionStore.setCurrentUser(data);
+          this._isMounted && this.setState({ loginState: LoginState.Success });
+        })
+        .catch((error) => {
+          console.log(error);
+          this._isMounted && this.setState({ loginState: LoginState.Error });
+        });
     }
   }
 
   validate() {
     const isSafe = isSafePassword(this.password);
     this.setState({
-      isSafe: isSafe,
+      isSafe: isSafe
     });
     return isSafe;
   }
@@ -85,10 +91,7 @@ export default class Signup extends React.Component {
 
     const validPassword = errorMessages.length === 0;
     return (
-      <Form
-        onSubmit={() => this.signup()}
-        error={!validPassword || createError}
-      >
+      <Form onSubmit={() => this.signup()} error={!validPassword || createError}>
         <Form.Group>
           <Form.Input
             icon="mail"
@@ -113,11 +116,7 @@ export default class Signup extends React.Component {
             onChange={this.onChange}
           />
         </Form.Group>
-        <Message
-          error
-          header="Errors"
-          list={errorMessages}
-        />
+        <Message error header="Errors" list={errorMessages} />
         <Form.Button
           content="Signup"
           loading={this.state.loginState === LoginState.Waiting}
@@ -125,8 +124,6 @@ export default class Signup extends React.Component {
           disabled={!this.isValid}
         />
       </Form>
-
     );
   }
-
 }

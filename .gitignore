@@ -59,4 +59,8 @@ yarn-debug.log*
 .yarn-integrity
 .browserslistrc
 
-db_connections.yaml
+db_servers.yaml
+
+.antlr
+*.interp
+*.tokens

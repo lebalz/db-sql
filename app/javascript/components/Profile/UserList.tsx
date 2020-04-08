@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { Icon, Table, Button } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
@@ -55,11 +55,11 @@ export default class UserList extends React.Component {
     const { users, reloadState } = this.injected.userStore;
     const { currentUser } = this.injected.sessionStore;
     return (
-      <Fragment>
+      <div>
         <Button
           icon={this.reloadIcon}
           color={this.reloadIconColor}
-          label="Refresh users"
+          label="Refresh Users"
           labelPosition="left"
           onClick={() => this.injected.userStore.loadUsers()}
           floated="left"
@@ -79,51 +79,47 @@ export default class UserList extends React.Component {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {
-              _.sortBy(users, ['email']).map((user) => {
-                return (
-                  <Table.Row key={user.email}>
-                    <Table.Cell content={user.email} />
-                    <Table.Cell content={User.formatDate(user.createdAt)} />
-                    <Table.Cell content={User.formatDate(user.updatedAt)} />
-                    <Table.Cell content={user.loginCount} />
-                    <Table.Cell>
-                      <Button.Group size="mini">
-                        {
-                          Object.values(Role).map((role) => {
-                            return (
-                              <Button
-                                key={role}
-                                content={role}
-                                active={user.role === role}
-                                onClick={() => this.setUserRole(user.id, role)}
-                              />
-                            );
-                          })
-                        }
-                      </Button.Group>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Icon
-                        name={user.activated ? 'check circle' : 'times circle'}
-                        color={user.activated ? 'green' : 'red'}
-                      />
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Button
-                        disabled={currentUser.id === user.id}
-                        icon="trash"
-                        onClick={() => this.onDeleteUser(user.id)}
-                        color="red"
-                      />
-                    </Table.Cell>
-                  </Table.Row>
-                );
-              })
-            }
+            {_.sortBy(users, ['email']).map((user) => {
+              return (
+                <Table.Row key={user.email}>
+                  <Table.Cell content={user.email} />
+                  <Table.Cell content={User.formatDate(user.createdAt)} />
+                  <Table.Cell content={User.formatDate(user.updatedAt)} />
+                  <Table.Cell content={user.loginCount} />
+                  <Table.Cell>
+                    <Button.Group size="mini">
+                      {Object.values(Role).map((role) => {
+                        return (
+                          <Button
+                            key={role}
+                            content={role}
+                            active={user.role === role}
+                            onClick={() => this.setUserRole(user.id, role)}
+                          />
+                        );
+                      })}
+                    </Button.Group>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Icon
+                      name={user.activated ? 'check circle' : 'times circle'}
+                      color={user.activated ? 'green' : 'red'}
+                    />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Button
+                      disabled={currentUser.id === user.id}
+                      icon="trash"
+                      onClick={() => this.onDeleteUser(user.id)}
+                      color="red"
+                    />
+                  </Table.Cell>
+                </Table.Row>
+              );
+            })}
           </Table.Body>
         </Table>
-      </Fragment>
+      </div>
     );
   }
 }

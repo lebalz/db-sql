@@ -8,7 +8,7 @@ import Dashboard from '../components/Dashboard';
 import Profile from '../components/Profile';
 import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
-import DbConnection from '../components/DbConnection';
+import DbServer from '../components/DbServer';
 
 const AppContent = observer(() => (
   <Provider
@@ -16,21 +16,19 @@ const AppContent = observer(() => (
     sessionStore={rootStore.session}
     routerStore={rootStore.routing}
     userStore={rootStore.user}
-    dbConnectionStore={rootStore.dbConnection}
+    dbServerStore={rootStore.dbServer}
   >
     <Router history={rootStore.session.history}>
-      <Fragment>
-        <Switch>
-          <Route path="/login" component={Login} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/connections" component={DbConnection} />
-          <Route path="/profile/:part" component={Profile} />
-          <Route path="/users/:id/reset_password" component={ResetPassword} />
-          <Route path="/users/:id/activate" component={ActivateAccount} />
-          <Redirect from="/" exact to="/dashboard" />
-          <Redirect to="/dashboard" />
-        </Switch>
-      </Fragment>
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/connections/:id/:db_name?" component={DbServer} />
+        <Route path="/profile/:part" component={Profile} />
+        <Route path="/users/:id/reset_password" component={ResetPassword} />
+        <Route path="/users/:id/activate" component={ActivateAccount} />
+        <Redirect from="/" exact to="/dashboard" />
+        <Redirect to="/dashboard" />
+      </Switch>
     </Router>
   </Provider>
 ));

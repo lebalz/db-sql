@@ -2,14 +2,13 @@ import axios from 'axios';
 
 export namespace Api {
   export const BASE_API_URL = dbSqlApiUrl();
-  export const RIDE_URL = dbSqlUrl();
 
   function dbSqlUrl() {
     switch (process.env.NODE_ENV) {
       case 'development':
         return 'http://localhost:3000';
       default:
-        return 'https://db-sql.ch';
+        return process.env.DOMAIN || 'https://db-sql.ch';
     }
   }
 

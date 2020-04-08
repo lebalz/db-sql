@@ -1,76 +1,127 @@
 import { observable, computed, action, reaction } from 'mobx';
-import { Database as DatabaseProps, tables } from '../api/db_connection';
+import { Database as DatabaseProps, query as fetchQuery } from '../api/db_server';
 import _ from 'lodash';
-import DbConnection, { QueryState } from './DbConnection';
+import DbServer from './DbServer';
 import DbTable from './DbTable';
-import ForeignKey from './ForeignKey';
 import { REST } from '../declarations/REST';
+import Query from './Query';
+import DbServerStore from '../stores/db_server_store';
 
 export default class Database {
-  readonly dbConnection: DbConnection;
+  readonly dbServer: DbServer;
   readonly name: string;
-  tables = observable<DbTable>([]);
-  @observable requestState: REST = REST.None;
+  readonly dbServerId: string;
+  readonly tables: DbTable[];
+  queries = observable<Query>([new Query(this, 1)]);
+  @observable activeQueryId: number = 1;
+
   @observable show: boolean = false;
+  @observable isLoading: boolean = false;
 
-  constructor(dbConnection: DbConnection, props: DatabaseProps) {
-    this.dbConnection = dbConnection;
+  constructor(dbServer: DbServer, props: DatabaseProps) {
+    this.dbServer = dbServer;
     this.name = props.name;
-    reaction(
-      () => this.show,
-      (show: boolean) => {
-        if (show) {
-          this.load();
-        }
-      }
-    );
+    this.dbServerId = props.db_server_id;
+    this.tables = props.tables.map((table) => new DbTable(this, table));
+    this.connectForeignKeys();
   }
 
-  @action toggleShow() {
-    this.show = !this.show;
+  @action
+  setActiveQuery(id: number) {
+    this.activeQueryId = id;
   }
 
-  @computed get id() {
-    return this.dbConnection.id;
-  }
-
-  @computed get foreignKeyReferences(): ForeignKey[] {
-    return this.tables.reduce((fks, table) => {
-      return [
-        ...fks,
-        ...table.columns
-          .filter(col => col.isForeignKey)
-          .map(col => col.foreignKey!)
-      ];
-    }, Array<ForeignKey>());
-  }
-
-  @computed get isLoaded() {
-    return this.requestState === REST.Success && this.tables.every(t => t.isLoaded);
-  }
-
-  @computed get hasPendingRequest() {
-    return this.requestState === REST.Requested || this.tables.some(t => t.hasPendingRequest);
-  }
-
-  @action load(forceLoad: boolean = false) {
-    if (this.isLoaded && !forceLoad) {
-      return;
-    }
-    this.requestState = REST.Requested;
-    tables(this.id, this.name).then(
-      ({ data }) => {
-        this.tables.replace(data.map(table => new DbTable(this, table)));
-        this.requestState = REST.Success;
-      }
-    ).then(() => this.tables.forEach(t => t.load())
-    ).catch((e) => {
-      this.requestState = REST.Error;
+  @action
+  copyFrom(database: Database) {
+    this.queries.clear();
+    database.queries.forEach((query) => {
+      this.queries.push(query.createCopyFor(database));
     });
+    this.activeQueryId = database.activeQueryId;
+    this.show = database.show;
+  }
+
+  @action
+  reload() {
+    this.dbServer.reloadDatabase(this.name);
+  }
+
+  @computed
+  get link() {
+    return `${this.dbServer.link}/${this.name}`;
+  }
+
+  @computed
+  get activeQuery() {
+    return this.queries.find((query) => query.id === this.activeQueryId);
+  }
+
+  @action
+  addQuery() {
+    const query = new Query(this, this.nextQueryId);
+    this.queries.push(query);
+    this.setActiveQuery(query.id);
   }
 
   table(name: string): DbTable | undefined {
-    return this.tables.find(t => t.name === name);
+    return this.tables.find((table) => table.name === name);
   }
 
+  @action
+  toggleShow() {
+    this.setShow(!this.show);
+  }
+
+  @action
+  setShow(show: boolean) {
+    this.show = show;
+    if (this.show && this.queries.length === 0) {
+      this.addQuery();
+    }
+  }
+
+  @computed
+  get isActive(): boolean {
+    return this.name === this.dbServer.activeDatabaseName && this.dbServer.isActive;
+  }
+
+  @action
+  setDefaultQueryActive() {
+    if (this.queries.length > 0) {
+      const lastQuery = this.queries[this.queries.length - 1];
+      this.setActiveQuery(lastQuery.id);
+    }
+  }
+
+  @action
+  removeQuery(query: Query) {
+    const idx = this.queries.indexOf(query);
+    if (idx >= 0) {
+      this.queries.remove(query);
+      query.cancel();
+      if (idx > 0) {
+        this.setActiveQuery(idx - 1);
+      }
+    }
+  }
+
+  private connectForeignKeys() {
+    this.tables.forEach((table) => {
+      table.foreignKeys.forEach((fkey) => {
+        const fromColumn = table.column(fkey.options.column);
+        const toTable = this.table(fkey.to_table);
+        const toColumn = toTable?.column(fkey.options.primary_key);
+        if (!toColumn || !toTable || !fromColumn) {
+          return;
+        }
+        fromColumn.references = toColumn;
+        toColumn.referencedBy.push(fromColumn);
+      });
+    });
+  }
+
+  @computed
+  private get nextQueryId(): number {
+    return this.queries.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
+  }
 }

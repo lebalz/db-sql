@@ -1,13 +1,33 @@
+<div class="mail">
 <h1>Welcome to DB SQL</h1>
 
+<p>
+Thank you for joining DB SQL.
+<br>
+<br>
 Please verify your email address <%= @user.email %> to complete your registration.
-
+<div class="link">
 <a
   id="activation-link"
   href="<%= "#{root_url}users/#{@user.id}/activate?activation_token=#{@user.activation_token}" %>"
   target="_blank"
+  class="button"
 >
-  Activate your Account
+  Activate here
 </a>
-
+</div>
+Best regards,
+<br>
 Your DB-SQL Team
+</p>
+
+<p class="plain-link">
+if the link does not work, navigate to the following url:
+<br>
+<br>
+<%= "#{root_url}users/#{@user.id}/activate?activation_token=#{@user.activation_token}" %>
+</p>
+
+<br />
+<br />
+</div>

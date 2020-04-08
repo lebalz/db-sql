@@ -5,16 +5,17 @@ import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import SessionStore, { RequestState } from '../../stores/session_store';
+import DbServerStore from '../../stores/db_server_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
+  dbServerStore: DbServerStore;
 }
 
-@inject('sessionStore', 'routerStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class NavBar extends React.Component {
-
   get injected() {
     return this.props as InjectedProps;
   }
@@ -49,15 +50,9 @@ export default class NavBar extends React.Component {
     return (
       <Fragment>
         <Menu secondary pointing>
-          <Menu.Item
-            onClick={() => router.push('/dashboard')}
-          >
+          <Menu.Item onClick={() => router.push('/dashboard')}>
             <DbSqlIcon size="large" />
-            <Header
-              as="h2"
-              content="DB SQL"
-              style={{ marginLeft: '0.5rem' }}
-            />
+            <Header as="h2" content="DB SQL" style={{ marginLeft: '0.5rem' }} />
           </Menu.Item>
           <Menu.Item
             style={{ marginLeft: '2em' }}
@@ -77,17 +72,24 @@ export default class NavBar extends React.Component {
             <Icon name="user" />
             Profile
           </Menu.Item>
-          <Menu.Item
-            style={{ marginLeft: '2em' }}
-            name="Connections"
-            active={router.location.pathname.startsWith('/connections')}
-            onClick={() => router.push('/connections')}
-          >
-            <Icon name="plug" />
-            Connections
-          </Menu.Item>
-          {
-            !this.injected.sessionStore.currentUser.activated &&
+          {this.injected.dbServerStore.loadedDbServers.length > 0 && (
+            <Menu.Item
+              style={{ marginLeft: '2em' }}
+              name="Connections"
+              active={router.location.pathname.startsWith('/connections')}
+              onClick={() => {
+                const { activeDbServer: activeConnection } = this.injected.dbServerStore;
+                if (!activeConnection) {
+                  return;
+                }
+                router.push(`/connections/${activeConnection.id}`);
+              }}
+            >
+              <Icon name="plug" />
+              Connections
+            </Menu.Item>
+          )}
+          {!this.injected.sessionStore.currentUser.activated && (
             <Menu.Item style={{ paddingBottom: 0, marginLeft: '4em' }}>
               <Step.Group size="mini" className="activation">
                 <Step completed>
@@ -108,26 +110,20 @@ export default class NavBar extends React.Component {
                   wide
                   on="hover"
                 >
-                  <Popup.Header>
-                    Check your mails
-                  </Popup.Header>
+                  <Popup.Header>Check your mails</Popup.Header>
                   <Popup.Content>
                     An activation link has been sent to you.
                     <br />
-                    <a
-                      onClick={() => this.injected.sessionStore.resendActivationLink()}
-                      href="#"
-                    >
+                    <a onClick={() => this.injected.sessionStore.resendActivationLink()} href="#">
                       Resend the activation link
                     </a>
-                    {
-                      resendActivationLinkState !== RequestState.None &&
+                    {resendActivationLinkState !== RequestState.None && (
                       <Icon
                         loading={resendActivationLinkState === RequestState.Waiting}
                         name={this.resendIcon}
                         color={this.resendIconColor}
                       />
-                    }
+                    )}
                   </Popup.Content>
                 </Popup>
                 <Step disabled>
@@ -137,12 +133,9 @@ export default class NavBar extends React.Component {
                 </Step>
               </Step.Group>
             </Menu.Item>
-          }
+          )}
           <Menu.Menu position="right">
-            <Menu.Item
-              name="Logout"
-              onClick={() => this.injected.sessionStore.logout()}
-            />
+            <Menu.Item name="Logout" onClick={() => this.injected.sessionStore.logout()} />
           </Menu.Menu>
         </Menu>
       </Fragment>

@@ -117,12 +117,13 @@ Rails.application.configure do
     address: 'smtp.sendgrid.net',
     port: 587,
     domain: 'db-sql.ch',
-    user_name: Rails.application.credentials[:production][:SENDGRID_USERNAME],
-    password: Rails.application.credentials[:production][:SENDGRID_API_KEY],
+    user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SENDGRID_USERNAME],
+    password: (Rails.application.credentials[Rails.env.to_sym] || {})[:SENDGRID_API_KEY],
     authentication: :login,
     enable_starttls_auto: true
   }
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.default_url_options = { host: "https://db-sql.ch" }
 
+  config.webpacker.check_yarn_integrity = false
 end

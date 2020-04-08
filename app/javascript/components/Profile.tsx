@@ -3,7 +3,6 @@ import { Divider, Menu } from 'semantic-ui-react';
 import NavBar from './Navigation/NavBar';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
-import Footer from './Navigation/Footer';
 import { RouteComponentProps } from 'react-router';
 import Account from './Profile/Account';
 import ChangePassword from './Profile/ChangePassword';
@@ -16,7 +15,7 @@ interface MatchParams {
   part: string;
 }
 
-interface ProfileProps extends RouteComponentProps<MatchParams> { }
+interface ProfileProps extends RouteComponentProps<MatchParams> {}
 
 interface InjectedProps extends ProfileProps {
   sessionStore: SessionStore;
@@ -58,8 +57,7 @@ export default class Profile extends React.Component<ProfileProps> {
             active={part === 'delete_account'}
             onClick={() => router.push('./delete_account')}
           />
-          {
-            this.injected.sessionStore.currentUser.isAdmin &&
+          {this.injected.sessionStore.currentUser.isAdmin && (
             <Fragment>
               <Divider horizontal content="Admin" />
               <Menu.Item
@@ -69,7 +67,7 @@ export default class Profile extends React.Component<ProfileProps> {
                 onClick={() => router.push('./users')}
               />
             </Fragment>
-          }
+          )}
         </Menu>
         <main style={{ alignItems: 'center' }}>
           {(() => {
@@ -87,9 +85,7 @@ export default class Profile extends React.Component<ProfileProps> {
             }
           })()}
         </main>
-        <Footer />
       </Fragment>
     );
   }
-
 }

@@ -6,11 +6,13 @@ import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
 import { RouteComponentProps } from 'react-router';
 import { resetPassword as resetPasswordCall, activateAccount } from '../api/user';
+import { Link } from 'react-router-dom';
+import { computed } from 'mobx';
 
 interface MatchParams {
   id: string;
 }
-interface ResetPasswordProps extends RouteComponentProps<MatchParams> { }
+interface ResetPasswordProps extends RouteComponentProps<MatchParams> {}
 
 interface InjectedProps extends ResetPasswordProps {
   sessionStore: SessionStore;
@@ -27,14 +29,21 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
 
   componentDidMount() {
     this.setState({ requestState: RequestState.Waiting });
-    activateAccount(this.id, this.activationToken).then(() => {
-      this.setState({ requestState: RequestState.Success });
-    }).catch((error) => {
-      this.setState({
-        requestState: RequestState.Error,
-        errorMsg: error.response.data.error || 'Unexpected server error'
+    activateAccount(this.id, this.activationToken)
+      .then(() => {
+        this.setState({ requestState: RequestState.Success });
+        if (this.injected.sessionStore.isLoggedIn) {
+          if (this.injected.sessionStore.authorize(this.props.location.pathname)) {
+            this.injected.sessionStore.reloadUser();
+          }
+        }
+      })
+      .catch((error) => {
+        this.setState({
+          requestState: RequestState.Error,
+          errorMsg: error.response.data.error || 'Unexpected server error'
+        });
       });
-    });
   }
 
   get injected() {
@@ -53,6 +62,14 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
     return new URLSearchParams(this.props.location.search);
   }
 
+  @computed
+  get backLink() {
+    if (this.injected.sessionStore.isLoggedIn) {
+      return '/dashboard';
+    }
+    return '/login';
+  }
+
   render() {
     return (
       <main
@@ -69,27 +86,20 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
             <Loader indeterminate>Activating Account</Loader>
           </Dimmer>
           <DbSqlIcon size="large" />
-          {this.state.requestState === RequestState.Success &&
+          {this.state.requestState === RequestState.Success && (
             <Fragment>
-              <Message
-                success
-                content="Account successfully activated."
-              />
-              <a href="/login">Back to DB-SQL</a>
+              <Message success content="Account successfully activated." />
+              <Link to={this.backLink}>Back to DB-SQL</Link>
             </Fragment>
-          }
-          {this.state.requestState === RequestState.Error &&
+          )}
+          {this.state.requestState === RequestState.Error && (
             <Fragment>
-              <Message
-                error
-                content={this.state.errorMsg}
-              />
-              <a href="/login">Back to DB-SQL</a>
+              <Message error content={this.state.errorMsg} />
+              <Link to={this.backLink}>Back to DB-SQL</Link>
             </Fragment>
-          }
+          )}
         </div>
       </main>
     );
   }
-
 }

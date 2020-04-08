@@ -13,12 +13,6 @@ export default class LogoutButton extends React.Component {
     return this.props as InjectedProps;
   }
   render() {
-    return (
-      <Button
-        compact
-        content="Logout"
-        onClick={() => this.injected.sessionStore.logout()}
-      />
-    );
+    return <Button compact content="Logout" onClick={() => this.injected.sessionStore.logout()} />;
   }
 }

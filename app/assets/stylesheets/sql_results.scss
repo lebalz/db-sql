@@ -1,0 +1,27 @@
+.results-header {
+  position: sticky;
+  top: 0px;
+  z-index: 999;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.sql-results.accordion {
+  &>div.title {
+    position: sticky;
+    top: 46px;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
+.sql-result-table {
+  position: relative;
+  max-height: 66vh;
+  overflow-y: auto;
+  table {
+    thead th {
+      position: sticky;
+      top: 0;
+    }
+  }
+}

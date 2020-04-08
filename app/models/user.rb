@@ -26,7 +26,7 @@ class User < ApplicationRecord
   enum role: ROLES
 
   has_many :login_tokens, dependent: :destroy
-  has_many :db_connections, dependent: :destroy
+  has_many :db_servers, dependent: :destroy
 
   validates(
     :email,
@@ -64,12 +64,12 @@ class User < ApplicationRecord
     password_confirmation:
   )
     ActiveRecord::Base.transaction do
-      update_attributes!(
+      update!(
         password: new_password,
         password_confirmation: password_confirmation
       )
-      db_connections.each do |db_connection|
-        db_connection.recrypt!(
+      db_servers.each do |db_server|
+        db_server.recrypt!(
           old_crypto_key: crypto_key(old_password),
           new_crypto_key: crypto_key(new_password)
         )
@@ -78,20 +78,20 @@ class User < ApplicationRecord
     end
   end
 
-  # !! all db connection passwords will be useless
+  # !! all db server passwords will be useless
   # because we can not decrypt them. They are blanked out
   def reset_password(reset_token:, password:, password_confirmation:)
     return unless password_reset_authenticated?(token: reset_token)
 
     ActiveRecord::Base.transaction do
-      update_attributes!(
+      update!(
         password: password,
         password_confirmation: password_confirmation,
         reset_password_digest: nil,
         reset_password_mail_sent_at: nil
       )
-      db_connections.each do |db_connection|
-        db_connection.reset_crypto_key(
+      db_servers.each do |db_server|
+        db_server.reset_crypto_key(
           new_crypto_key: crypto_key(password)
         )
       end
@@ -120,7 +120,7 @@ class User < ApplicationRecord
 
     return false unless valid
 
-    update_attributes(
+    update!(
       activated: true,
       activated_at: Time.zone.now
     )

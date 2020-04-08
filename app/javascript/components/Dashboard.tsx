@@ -1,27 +1,26 @@
 import React, { Fragment } from 'react';
 import { Header, Button } from 'semantic-ui-react';
-import Footer from './Navigation/Footer';
 import NavBar from './Navigation/NavBar';
 import SessionStore from '../stores/session_store';
 import { RouterStore } from 'mobx-react-router';
-import DbConnectionStore from '../stores/db_connection_store';
+import DbServerStore from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
-import DbConnectionOverview from './Dashboard/DbConnectionOverview';
-import { TempDbConnection as TempDbConnectionComponent } from './Dashboard/TempDbConnection';
+import DbServerOverview from './Dashboard/DbServerOverview';
+import { TempDbServer as TempDbServerComponent } from './Dashboard/TempDbServer';
 import _ from 'lodash';
-import { TempDbConnection, TempDbConnectionRole } from '../models/TempDbConnection';
-import { DbConnection as DbConnectionProps } from '../api/db_connection';
-import { DbType } from '../models/DbConnection';
+import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
+import { DbServer } from '../api/db_server';
+import { DbType } from '../models/DbServer';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
-  dbConnectionStore: DbConnectionStore;
+  dbServerStore: DbServerStore;
 }
 
-const DEFAULT_DB_CONNECTION: DbConnectionProps = {
-  created_at: (new Date()).toISOString(),
-  updated_at: (new Date()).toISOString(),
+const DEFAULT_DB_SERVER: DbServer = {
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   db_type: DbType.Psql,
   host: '',
   id: '',
@@ -30,23 +29,22 @@ const DEFAULT_DB_CONNECTION: DbConnectionProps = {
   username: ''
 };
 
-@inject('sessionStore', 'routerStore', 'dbConnectionStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
 export default class Dashboard extends React.Component {
-
   get injected() {
     return this.props as InjectedProps;
   }
 
   render() {
-    const { dbConnections } = this.injected.dbConnectionStore;
+    const { dbServers } = this.injected.dbServerStore;
     return (
       <Fragment>
         <header>
           <NavBar />
         </header>
         <main className="no-sidebar">
-          <TempDbConnectionComponent />
+          <TempDbServerComponent />
           <Header as="h1" content="Welcome to DB SQL" />
           <div
             style={{
@@ -58,34 +56,35 @@ export default class Dashboard extends React.Component {
               flexWrap: 'wrap'
             }}
           >
-            {
-              _.sortBy(dbConnections, ['name']).map((dbConnection) => {
-                return (
-                  <DbConnectionOverview
-                    key={dbConnection.id}
-                    dbConnection={dbConnection}
-                    style={{
-                      flexBasis: '250px',
-                      marginRight: '14px',
-                      flexShrink: 0
-                    }}
-                  />
-                );
-              })
-            }
+            {_.sortBy(dbServers, ['name']).map((dbConnection) => {
+              return (
+                <DbServerOverview
+                  key={dbConnection.id}
+                  dbConnection={dbConnection}
+                  style={{
+                    flexBasis: '250px',
+                    marginRight: '14px',
+                    flexShrink: 0
+                  }}
+                />
+              );
+            })}
           </div>
           <Button
             icon="add"
             size="big"
             onClick={() => {
-              const temp = new TempDbConnection(DEFAULT_DB_CONNECTION, TempDbConnectionRole.Create)
-              this.injected.dbConnectionStore.tempDbConnection = temp;
+              const temp = new TempDbServer(
+                DEFAULT_DB_SERVER,
+                this.injected.dbServerStore,
+                TempDbServerRole.Create,
+                this.injected.dbServerStore.cancelToken
+              );
+              this.injected.dbServerStore.setTempDbServer(temp);
             }}
           />
         </main>
-        <Footer />
       </Fragment>
     );
   }
-
 }

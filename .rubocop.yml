@@ -33,7 +33,7 @@ Layout/EmptyLineBetweenDefs:
 Layout/MultilineOperationIndentation:
   EnforcedStyle: indented
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   EnforcedStyle: with_first_parameter
 
 Layout/DotPosition:
@@ -124,9 +124,6 @@ Naming/PredicateName:
   Enabled: false
 
 Naming/MethodName:
-  Enabled: false
-
-Performance/RedundantBlockCall:
   Enabled: false
 
 Lint/UnusedMethodArgument:

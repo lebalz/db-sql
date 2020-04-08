@@ -12,6 +12,7 @@ export default class User {
   readonly createdAt: Date;
   readonly role: Role;
   readonly activated: boolean;
+  readonly passwordResetRequested: boolean;
   @observable loginCount: number;
   @observable updatedAt: Date;
 
@@ -23,6 +24,7 @@ export default class User {
     this.updatedAt = new Date(props.updated_at);
     this.activated = props.activated;
     this.role = props.role;
+    this.passwordResetRequested = props.password_reset_requested;
   }
 
   @computed get isAdmin() {

@@ -27,10 +27,7 @@ export default class Login extends React.Component {
   }
 
   login() {
-    this.injected.sessionStore.login(
-      this.email,
-      this.password
-    );
+    this.injected.sessionStore.login(this.email, this.password);
     this.password = '';
     const passwordInput = document.querySelector<HTMLInputElement>('#password-input');
     if (passwordInput) {
@@ -58,24 +55,21 @@ export default class Login extends React.Component {
           <DbSqlIcon size="massive" />
           <Header as="h1" textAlign="center" style={{ marginTop: '40px' }}>
             DB SQL
-            </Header>
+          </Header>
         </div>
         <Form
           onSubmit={() => this.login()}
           error={passwordState === RequestState.Error}
           success={this.queryParams.get('reset') === 'success'}
         >
-          <Message
-            success
-            content="Password successfully reset. Login with the new password."
-          />
+          <Message success content="Password successfully reset. Login with the new password." />
           <Form.Group>
             <Form.Input
               icon="at"
               iconPosition="left"
               placeholder="E-Mail"
               name="email"
-              onChange={e => this.email = e.target.value}
+              onChange={(e) => (this.email = e.target.value)}
             />
             <Form.Input
               icon="key"
@@ -84,19 +78,11 @@ export default class Login extends React.Component {
               placeholder="Passwort"
               name="password"
               id="password-input"
-              onChange={e => this.password = e.target.value}
+              onChange={(e) => (this.password = e.target.value)}
             />
-            <Form.Button
-              content="Login"
-              type="submit"
-              loading={passwordState === RequestState.Waiting}
-            />
+            <Form.Button content="Login" type="submit" loading={passwordState === RequestState.Waiting} />
           </Form.Group>
-          <Message
-            error
-            header="Login Failed"
-            content="E-Mail or Password is incorrect"
-          />
+          <Message error header="Login Failed" content="E-Mail or Password is incorrect" />
         </Form>
         <Accordion>
           <Accordion.Title
@@ -124,5 +110,4 @@ export default class Login extends React.Component {
       </main>
     );
   }
-
 }

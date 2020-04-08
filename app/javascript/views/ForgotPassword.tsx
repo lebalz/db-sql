@@ -4,17 +4,15 @@ import { inject, observer } from 'mobx-react';
 import SessionStore, { RequestState } from '../stores/session_store';
 import { requestPasswordReset } from '../api/user';
 
-
 interface InjectedProps {
   sessionStore: SessionStore;
 }
-
 
 @inject('sessionStore')
 @observer
 export default class ForgotPassword extends React.Component {
   state = {
-    resetState: RequestState.None,
+    resetState: RequestState.None
   };
   private email: string = '';
 
@@ -24,11 +22,13 @@ export default class ForgotPassword extends React.Component {
 
   resetPassword() {
     this.setState({ resetState: RequestState.Waiting });
-    requestPasswordReset(this.email).then(() => {
-      this.setState({ resetState: RequestState.Success });
-    }).catch(() => {
-      this.setState({ resetState: RequestState.Error });
-    });
+    requestPasswordReset(this.email)
+      .then(() => {
+        this.setState({ resetState: RequestState.Success });
+      })
+      .catch(() => {
+        this.setState({ resetState: RequestState.Error });
+      });
   }
 
   render() {
@@ -47,27 +47,17 @@ export default class ForgotPassword extends React.Component {
             label="E-Mail"
             placeholder="E-Mail"
             name="email"
-            onChange={e => this.email = e.target.value}
+            onChange={(e) => (this.email = e.target.value)}
           />
         </Form.Group>
-        <Message
-          error
-          header="Errors"
-          content="No DB SQL account found for this email address."
-        />
-        <Message
-          success
-          header="Success"
-          content="Mail with a reset link sent"
-        />
+        <Message error header="Errors" content="No DB SQL account found for this email address." />
+        <Message success header="Success" content="Mail with a reset link sent" />
         <Form.Button
           content="Send reset link"
           loading={this.state.resetState === RequestState.Waiting}
           type="submit"
         />
       </Form>
-
     );
   }
-
 }
