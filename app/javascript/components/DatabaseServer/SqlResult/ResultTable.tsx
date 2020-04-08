@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Placeholder } from 'semantic-ui-react';
+import { Table, Placeholder, Label } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultTable as ResulTableType } from '../../../api/db_server';
 import { computed } from 'mobx';
@@ -212,8 +212,12 @@ export default class ResultTable extends React.Component<Props> {
             {this.resultRange.map((val, i) => {
               return (
                 <Table.Row key={i}>
-                  {Object.values(val).map((ds, j) => {
-                    return <Table.Cell key={j}>{ds}</Table.Cell>;
+                  {Object.values(val).map((cell, j) => {
+                    return (
+                      <Table.Cell key={j}>
+                        {cell === null ? <Label content="NULL" size="mini" /> : cell}
+                      </Table.Cell>
+                    );
                   })}
                 </Table.Row>
               );
