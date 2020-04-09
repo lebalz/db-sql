@@ -9,7 +9,7 @@
 }
 
 .database-index-header {
-  margin: 0 8px 1rem 8px;
+  margin: 0 8px 4px 8px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -24,5 +24,12 @@
     -ms-user-select: none;
     -o-user-select: none;
     user-select: none;
+  }
+}
+
+.filter-databases {
+  margin: 0 8px 4px 8px;
+  input {
+    line-height: 1rem;
   }
 }
