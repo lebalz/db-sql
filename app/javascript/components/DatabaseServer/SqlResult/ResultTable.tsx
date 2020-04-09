@@ -1,12 +1,8 @@
 import React from 'react';
 import { Table, Placeholder, Label } from 'semantic-ui-react';
 import _ from 'lodash';
-import { ResultTable as ResulTableType } from '../../../api/db_server';
+import { ResultTable as ResulTableData } from '../../../api/db_server';
 import { computed } from 'mobx';
-
-interface Props {
-  table: ResulTableType;
-}
 
 /**
  * show 200 rows at a time
@@ -39,6 +35,9 @@ interface Props {
  * The reloading flicks a bit since the scrollposition changes and must
  * be reset to the current position.
  */
+interface Props {
+  table: ResulTableData;
+}
 
 const DEFAULT_HEIGHT = 46;
 const LOADED_ROWS = 200;

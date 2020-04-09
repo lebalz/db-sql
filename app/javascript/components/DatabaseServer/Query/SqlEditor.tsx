@@ -64,6 +64,17 @@ export default class SqlEditor extends React.Component<Props> {
     return [...tables, ...columns];
   }
 
+  onChange = (value: string, event?: any) => {
+    const { query } = this.props;
+    const modified = query.derivedExecutionMode !== query.executionMode;
+
+    this.props.query.query = value;
+
+    if (!modified) {
+      query.executionMode = query.derivedExecutionMode;
+    }
+  };
+
   render() {
     const { query } = this.props;
 
@@ -72,9 +83,7 @@ export default class SqlEditor extends React.Component<Props> {
         style={{ width: '100%', height: '200px' }}
         mode="sql"
         theme="github"
-        onChange={(change) => {
-          query.query = change as string;
-        }}
+        onChange={this.onChange}
         commands={[
           {
             // commands is array of key bindings.

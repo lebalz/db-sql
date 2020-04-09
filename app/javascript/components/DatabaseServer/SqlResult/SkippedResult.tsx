@@ -6,10 +6,10 @@ interface Props {
   queryIndex: number;
 }
 
-export const EmptyResult = ({ queryIndex }: Props) => {
+export const SkippedResult = ({ queryIndex }: Props) => {
   return (
-    <Message success>
-      <Message.Header>{`Successfully executed query ${queryIndex + 1}.`}</Message.Header>
+    <Message positive color="yellow">
+      <Message.Header>{`Skipped query ${queryIndex + 1}.`}</Message.Header>
     </Message>
   );
 };
