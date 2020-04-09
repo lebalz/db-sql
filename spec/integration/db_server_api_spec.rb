@@ -417,6 +417,20 @@ RSpec.describe "API::Resources::DbServer" do
       expect(json["result"][1][2]).to eq({ "name" => 'Mutant Holzkopf' })
     end
 
+    it 'can exeute queries without result' do
+      post(
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+        headers: @headers,
+        params: { query: "CREATE TABLE raw_test ();" }
+      )
+      expect(response.successful?).to be_truthy
+
+      expect(json["type"]).to eq("success")
+      expect(json["result"].length).to be(1)
+      expect(json["result"][0].length).to be(0)
+      expect(json["time"]).to be > 0
+    end
+
     it 'can not return result on error' do
 
       params[:query] = "SELECT id FROM ninja_turtles; SELECT no_row FROM ninja_turtles"
@@ -534,6 +548,7 @@ RSpec.describe "API::Resources::DbServer" do
       expect(json.first).to eq('id')
     end
   end
+
   describe 'GET /api/db_servers/:id/:database_name/:table_name/columns' do
     it 'can get columns of a table' do
       get(
@@ -613,6 +628,7 @@ RSpec.describe "API::Resources::DbServer" do
       )
     end
   end
+
   describe 'GET /api/db_servers/:id/:database_name/:table_name/column_names' do
     it 'can get column names of a table' do
       get(

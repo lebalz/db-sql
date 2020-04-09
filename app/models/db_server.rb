@@ -190,8 +190,8 @@ class DbServer < ApplicationRecord
 
         results = []
         begin
-          results << connection.execute(yield)
-          results << connection.raw_connection.store_result while connection.raw_connection.next_result
+          results << (connection.execute(yield) || [])
+          results << (connection.raw_connection.store_result || []) while connection.raw_connection.next_result
         rescue StandardError => e
           return {
             error: e,
