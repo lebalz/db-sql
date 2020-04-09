@@ -1,11 +1,19 @@
 import { observable, computed, action } from 'mobx';
 import { REST } from '../declarations/REST';
-import { QueryResult, query as fetchQuery } from '../api/db_server';
+import {
+  MultiQueryResult,
+  RawQueryResult,
+  query as fetchQuery,
+  rawQuery,
+  ResultType,
+  ResultTable as ResultTableData
+} from '../api/db_server';
 import Database from './Database';
 import axios, { CancelTokenSource } from 'axios';
 import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexer';
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import _ from 'lodash';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -32,14 +40,54 @@ export const PlaceholderQuery = (dbName: string) => {
   return query;
 };
 
+export enum QueryExecutionMode {
+  Multi = 'multi_query',
+  Raw = 'raw_query'
+}
+
+interface MultiResult {
+  type: QueryExecutionMode.Multi;
+  results: MultiQueryResult[];
+}
+
+interface RawResult {
+  type: QueryExecutionMode.Raw;
+  result: RawQueryResult;
+}
+
+export type QueryResult = MultiResult | RawResult;
+
+interface SqlTableData {
+  type: ResultType;
+  time?: number;
+}
+
+interface SuccessTableData extends SqlTableData {
+  type: ResultType.Success;
+  result: ResultTableData;
+}
+interface ErrorTableData extends SqlTableData {
+  type: ResultType.Error;
+  error: string;
+}
+interface SkipTableData extends SqlTableData {
+  type: ResultType.Skipped;
+}
+
+export type TableData = SuccessTableData | ErrorTableData | SkipTableData;
+
 export default class Query {
   readonly database: Database;
   readonly id: number;
   @observable requestState: REST = REST.None;
   @observable query: string = '';
-  @observable results: QueryResult[] = [];
+  @observable result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
   @observable active: boolean = false;
   @observable isClosed: boolean = false;
+  @observable proceedAfterError: boolean = true;
+  @observable executionMode: QueryExecutionMode = QueryExecutionMode.Multi;
+  @observable modifiedRawQueryConfig: boolean = false;
+
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
   constructor(database: Database, id: number, loading: boolean = false) {
@@ -53,6 +101,17 @@ export default class Query {
       return this.database.name;
     }
     return `${this.database.name}#${this.id}`;
+  }
+
+  @computed
+  get derivedExecutionMode(): QueryExecutionMode {
+    // when more than 50 lines sql is written, the parsing
+    // of the query can take a lot of time. In this case we
+    // suggest to perform a raw sql query.
+    if (/(.*[\r\n|\r|\n]){50,}/.test(this.query)) {
+      return QueryExecutionMode.Raw;
+    }
+    return QueryExecutionMode.Multi;
   }
 
   createCopyFor(database: Database) {
@@ -82,16 +141,46 @@ export default class Query {
     return this.database.isActive && !this.isClosed && this.id === this.database.activeQueryId;
   }
 
+  @action
+  toggleProceedAfterError() {
+    this.proceedAfterError = !this.proceedAfterError;
+  }
+
+  @action
+  toggleExecuteRawQuery() {
+    this.executionMode =
+      this.executionMode === QueryExecutionMode.Multi ? QueryExecutionMode.Raw : QueryExecutionMode.Multi;
+  }
+
+  @computed
+  get queryExecutionTime(): number {
+    if (this.result.type === QueryExecutionMode.Multi) {
+      return _.sumBy(this.result.results, 'time');
+    }
+    return this.result.result.time;
+  }
+
   run() {
+    if (this.executionMode === QueryExecutionMode.Raw) {
+      this.runRawQuery();
+    } else {
+      this.runMultiQuery();
+    }
+  }
+
+  runMultiQuery() {
     this.requestState = REST.Requested;
     const rawInput = this.query;
     const t0 = Date.now();
     const queries = identifyCommands(rawInput);
     console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    fetchQuery(this.database.dbServerId, this.name, queries, this.cancelToken)
+    fetchQuery(this.database.dbServerId, this.name, queries, this.proceedAfterError, this.cancelToken)
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
-        this.results = data;
+        this.result = {
+          results: data,
+          type: QueryExecutionMode.Multi
+        };
         this.requestState = REST.Success;
       })
       .catch((e) => {
@@ -99,10 +188,47 @@ export default class Query {
       });
   }
 
+  runRawQuery() {
+    this.requestState = REST.Requested;
+    rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
+      .then(({ data }) => {
+        this.result = {
+          result: data,
+          type: QueryExecutionMode.Raw
+        };
+        this.requestState = REST.Success;
+      })
+      .catch((e) => {
+        this.requestState = REST.Error;
+      });
+  }
+
+  @computed
+  get resultTableData(): TableData[] {
+    if (this.result.type === QueryExecutionMode.Multi) {
+      return this.multiQueryTableData(this.result.results);
+    }
+    return this.rawQueryTableData(this.result.result);
+  }
+
   @action
   cancel() {
     this.cancelToken.cancel();
     this.cancelToken = axios.CancelToken.source();
     this.requestState = REST.Canceled;
+  }
+
+  private rawQueryTableData(result: RawQueryResult): TableData[] {
+    if (result.type === ResultType.Error) {
+      return [result];
+    }
+    return result.result.map((res) => ({
+      type: ResultType.Success,
+      result: res
+    }));
+  }
+
+  private multiQueryTableData(results: MultiQueryResult[]): TableData[] {
+    return results;
   }
 }

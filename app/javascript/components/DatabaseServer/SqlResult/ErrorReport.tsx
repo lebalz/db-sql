@@ -9,7 +9,7 @@ interface Props {
 
 export const ErrorReport = ({ error, queryIndex }: Props) => {
   return (
-    <Message negative>
+    <Message error>
       <Message.Header>{`Error in the ${queryIndex + 1}. query`}</Message.Header>
       <p>{error}</p>
     </Message>

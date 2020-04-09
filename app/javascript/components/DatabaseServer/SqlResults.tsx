@@ -1,19 +1,31 @@
 import React, { Fragment } from 'react';
 import { Segment, Label, Popup, Header, Accordion } from 'semantic-ui-react';
 import _ from 'lodash';
-import { ResultType, QueryResult } from '../../api/db_server';
+import { ResultType } from '../../api/db_server';
 import { computed } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
-import Query from '../../models/Query';
+import Query, { QueryExecutionMode, TableData } from '../../models/Query';
+import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 
 interface Props {
   query: Query;
 }
 
+const labelColor = (result: TableData): SemanticCOLORS => {
+  switch (result.type) {
+    case ResultType.Error:
+      return 'red';
+    case ResultType.Skipped:
+      return 'yellow';
+    case ResultType.Success:
+      return 'green';
+  }
+};
+
 export default class SqlResults extends React.Component<Props> {
   @computed
   get results() {
-    return this.props.query.results;
+    return this.props.query.resultTableData;
   }
 
   @computed
@@ -27,17 +39,18 @@ export default class SqlResults extends React.Component<Props> {
   }
 
   get resultPanels() {
-    return this.results.map((result, idx) => ({
+    return this.props.query.resultTableData.map((result, idx) => ({
       key: idx,
       title: {
         content: (
           <Fragment>
             <Label
               size="large"
+              color={labelColor(result)}
               content={`Query #${idx + 1}`}
               style={{ marginRight: '1em', color: 'black' }}
             />
-            <TimeLabel result={result} />
+            {<TimeLabel result={result} />}
           </Fragment>
         )
       },
@@ -52,7 +65,7 @@ export default class SqlResults extends React.Component<Props> {
       return null;
     }
 
-    const totalTime = _.sumBy(this.results, 'time');
+    const totalTime = this.props.query.queryExecutionTime;
 
     return (
       <Fragment>
@@ -88,16 +101,27 @@ export default class SqlResults extends React.Component<Props> {
   }
 }
 
-export const TimeLabel = ({ result }: { result: QueryResult }) => {
+export const TimeLabel = ({ result }: { result: TableData }) => {
   const { time } = result;
+  if (time === undefined) {
+    return null;
+  }
+
   let popup: string;
   let label: string;
-  if (result.type === ResultType.Error) {
-    popup = `Time: ${time}s`;
-    label = `${time.toFixed(2)}s`;
-  } else {
-    popup = `Time: ${time}s`;
-    label = `${result.result.length} in ${time.toFixed(2)}s`;
+  switch (result.type) {
+    case ResultType.Error:
+      popup = `Time: ${time}s`;
+      label = `${time.toFixed(2)}s`;
+      break;
+    case ResultType.Success:
+      popup = `Time: ${time}s`;
+      label = `${result.result.length} in ${time.toFixed(2)}s`;
+      break;
+    case ResultType.Skipped:
+      popup = `Time: ${time}s`;
+      label = `${time.toFixed(2)}s`;
+      break;
   }
   return <Popup content={popup} trigger={<Label as="a" tag color="blue" content={label} />} />;
 };

@@ -172,13 +172,23 @@ module Resources
           desc 'Query the database with mutliple statements'
           params do
             requires(:queries, type: Array[String])
+            optional(:proceed_after_error, type: Boolean, default: true, desc: 'Wheter to proceed query execution after an error or not.')
           end
           post :multi_query do
             db_name = params[:database_name]
             results = []
+            error_occured = false
+
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
                 next if query.blank?
+                if error_occured && !params[:proceed_after_error]
+                  results << {
+                    type: :skipped,
+                    time: 0
+                  }
+                  next
+                end
 
                 t0 = Time.now
                 begin
@@ -190,6 +200,7 @@ module Resources
                     time: Time.now - t0
                   }
                 rescue StandardError => e
+                  error_occured = true
                   results << {
                     error: e.message,
                     type: 'error',
@@ -199,6 +210,22 @@ module Resources
               end
             end
             present(results, with: Entities::QueryResult)
+          end
+
+          desc 'Query the database and returns the raw result. Multiple query statements are allowed'
+          params do
+            requires(:query, type: String)
+          end
+          post :raw_query do
+            db_name = params[:database_name]
+            t0 = Time.now
+            db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
+              params[:query]
+            end.merge(
+              {
+                time: Time.now - t0
+              }
+            )
           end
 
           desc "Get the database's tables"

@@ -1,0 +1,15 @@
+.query-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  .spacer {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+  }
+  .toggle.checkbox {
+    margin-right: 1em;
+  }
+
+}

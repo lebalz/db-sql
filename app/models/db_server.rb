@@ -1,6 +1,9 @@
 # frozen_string_literal: true
-
 require Rails.root.join('lib', 'queries', 'query')
+
+class InvalidDatabaseTypeError < StandardError
+end
+
 # == Schema Information
 #
 # Table name: db_servers
@@ -110,13 +113,15 @@ class DbServer < ApplicationRecord
     db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
     unless @connection.connected?(@conn_key)
       @connection.establish_connection(
+        as: :hash,
         adapter: DEFAULT_AR_DB_ADAPTER[db_type],
         host: db_host,
         port: port,
         username: username,
         password: password(key),
         database: database_name,
-        name: @conn_key
+        name: @conn_key,
+        flags: ["MULTI_STATEMENTS"]
       )
     end
     @active_connection = @connection.retrieve_connection(@conn_key)
@@ -171,6 +176,65 @@ class DbServer < ApplicationRecord
   def exec_query(key:, database_name: nil)
     connect(key: key, database_name: database_name) do |connection|
       connection.exec_query(yield)
+    end
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @return [ActiveRecord::Result]
+  def exec_raw_query(key:, database_name: nil)
+    raise InvalidDatabaseTypeError, "Type '#{db_type}' can not perform raw queries" unless mysql? || mariadb? || psql?
+
+    connect(key: key, database_name: database_name) do |connection|
+      if mysql? || mariadb?
+        connection.raw_connection.query_options[:as] = :hash
+
+        results = []
+        begin
+          results << (connection.execute(yield) || [])
+          results << (connection.raw_connection.store_result || []) while connection.raw_connection.next_result
+        rescue StandardError => e
+          return {
+            error: e,
+            type: :error
+          }
+        ensure
+          connection.raw_connection.abandon_results!
+        end
+        {
+          result: results,
+          type: :success
+        }
+      elsif psql?
+        results = []
+        error = nil
+        begin
+          connection.raw_connection.send_query(yield)
+          while result = connection.raw_connection.get_result
+            if result.error_message.empty?
+              results << result
+            else
+              error = result.error_message
+            end
+          end
+        rescue StandardError => e
+          return {
+            error: e,
+            type: :error
+          }
+        ensure
+          connection.raw_connection.flush
+        end
+        unless error.nil?
+          return {
+            error: error,
+            type: :error
+          }
+        end
+        return {
+          result: results,
+          type: :success
+        }
+      end
     end
   end
 
