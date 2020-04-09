@@ -73,6 +73,16 @@ export default class DbServer {
   }
 
   @computed
+  get treeViewFilter() {
+    return this.dbServerStore.databaseTreeViewFilter(this.id);
+  }
+
+  @action
+  setTreeViewFilter(filter: string) {
+    this.dbServerStore.setDatabaseTreeViewFilter(this.id, filter);
+  }
+
+  @computed
   get props(): DbServerProps {
     return {
       id: this.id,

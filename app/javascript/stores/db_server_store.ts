@@ -32,6 +32,8 @@ class State {
   activeDatabase = observable(new Map<string, string>());
   databases = observable(new Map<string, Map<string, Database>>());
 
+  databaseTreeViewFilter = observable(new Map<string, string>());
+
   @observable tempDbServer?: TempDbServer = undefined;
 
   @observable loadState: LoadState = LoadState.None;
@@ -95,6 +97,18 @@ class DbServerStore implements Store {
     this.loginDisposer();
     this.dbIndexLoader();
     this.currentDbLoader();
+  }
+
+  databaseTreeViewFilter(dbServerId: string): string {
+    if (!this.state.databaseTreeViewFilter.has(dbServerId)) {
+      this.state.databaseTreeViewFilter.set(dbServerId, '');
+    }
+    return this.state.databaseTreeViewFilter.get(dbServerId)!;
+  }
+
+  @action
+  setDatabaseTreeViewFilter(dbServerId: string, filter: string) {
+    this.state.databaseTreeViewFilter.set(dbServerId, filter);
   }
 
   @computed

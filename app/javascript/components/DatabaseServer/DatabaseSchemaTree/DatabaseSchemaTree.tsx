@@ -6,7 +6,8 @@ import {
   Menu,
   MenuItemProps,
   SemanticShorthandCollection,
-  Button
+  Button,
+  Input
 } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbServerStore, { LoadState } from '../../../stores/db_server_store';
@@ -156,10 +157,14 @@ export default class DatabaseSchemaTree extends React.Component {
     }
     const databaseNames = dbServerStore.databaseNames(activeDbServerId);
     const loadedDatabases = dbServerStore.loadedDatabaseMap(activeDbServerId);
+    const filter = dbServerStore.databaseTreeViewFilter(activeDbServerId);
 
     let pos = 0;
 
     return databaseNames.reduce((dbs, dbName) => {
+      if (filter.length > 0 && !dbName.startsWith(filter)) {
+        return dbs;
+      }
       if (!loadedDatabases.has(dbName)) {
         dbs.push(getPlaceholderItem(activeDbServerId, dbName, pos));
         pos += 1;
@@ -210,6 +215,19 @@ export default class DatabaseSchemaTree extends React.Component {
             loading={dbServerStore.dbIndexLoadState === LoadState.Loading}
           />
         </div>
+        <Input
+          size="mini"
+          className="filter-databases"
+          icon={{
+            name: 'close',
+            circular: true,
+            link: true,
+            onClick: () => activeDbServer.setTreeViewFilter('')
+          }}
+          placeholder="Filter"
+          onChange={(_, data) => activeDbServer.setTreeViewFilter(data.value)}
+          value={activeDbServer.treeViewFilter}
+        />
         <div style={{ overflow: 'auto', display: 'flex' }}>
           <div style={{ width: '0', marginLeft: '3px' }}>
             <ForeignColumnLink menuItems={menuItems} />
