@@ -35,6 +35,10 @@ export default class DbColumn {
     this.isPrimaryKey = props.is_primary;
   }
 
+  get locationName():string {
+    return `${this.table.name}#${this.name}`;
+  }
+
   get isForeignKey() {
     return !!this.references;
   }
@@ -46,10 +50,4 @@ export default class DbColumn {
   get foreignTable(): DbTable | undefined {
     return this.references?.table;
   }
-
-  // get referencedBy(): DbColumn[] {
-  //   return this.table.database.foreignKeyReferences
-  //   .filter(fk => fk.toColumn === this)
-  //   .map(fk => fk.fromColumn);
-  // }
 }

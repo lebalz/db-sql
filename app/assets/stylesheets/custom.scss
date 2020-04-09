@@ -51,21 +51,6 @@ body {
     overflow-y: hidden;
     display: flex;
     flex-direction: column;
-
-    .item {
-      height: 22px;
-      &.table-item {
-        margin-left: 1em;
-      }
-      &.column-item {
-        margin-left: 2em;
-        .primary-key {
-          text-decoration: underline;
-          font-weight: 600;
-        }
-      }
-
-    }
   }
 
 
@@ -115,5 +100,11 @@ body {
         }
       }
     }
+  }
+
+  .spacer {
+    flex-shrink: 1;
+    flex-grow: 1;
+    flex-basis: 0;
   }
 }
