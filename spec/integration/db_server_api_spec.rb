@@ -389,6 +389,52 @@ RSpec.describe "API::Resources::DbServer" do
       expect(json[2]["time"]).to be_nil
     end
   end
+
+  describe 'POST /api/db_servers/:id/:database_name/raw_query' do
+    let(:params) do
+      {
+        query: "SELECT id FROM ninja_turtles; SELECT name FROM ninja_turtles"
+      }
+    end
+    it 'can exeute multiple queries on the database' do
+      post(
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+        headers: @headers,
+        params: params
+      )
+      expect(response.successful?).to be_truthy
+
+      expect(json["type"]).to eq("success")
+      expect(json["result"].length).to be(2)
+      expect(json["time"]).to be > 0
+
+      expect(json["result"][0][0]).to eq({ "id" => 1 })
+      expect(json["result"][0][1]).to eq({ "id" => 2 })
+      expect(json["result"][0][2]).to eq({ "id" => 3 })
+
+      expect(json["result"][1][0]).to eq({ "name" => 'Ninja Reto' })
+      expect(json["result"][1][1]).to eq({ "name" => 'Warrior Maria' })
+      expect(json["result"][1][2]).to eq({ "name" => 'Mutant Holzkopf' })
+    end
+
+    it 'can not return result on error' do
+
+      params[:query] = "SELECT id FROM ninja_turtles; SELECT no_row FROM ninja_turtles"
+
+      post(
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+        headers: @headers,
+        params: params
+      )
+      expect(response.successful?).to be_truthy
+
+      expect(json["type"]).to eq("error")
+      expect(json["result"]).to be_nil
+      expect(json["error"]).to start_with 'ERROR:  column "no_row" does not exist'
+      expect(json["time"]).to be > 0
+    end
+  end
+
   describe 'GET /api/db_servers/:id/:database_name/table_names' do
     it 'can get table names of a database' do
       get(

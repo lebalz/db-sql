@@ -217,9 +217,14 @@ module Resources
           end
           post :raw_query do
             db_name = params[:database_name]
+            t0 = Time.now
             db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
               params[:query]
-            end
+            end.merge(
+              {
+                time: Time.now - t0
+              }
+            )
           end
 
           desc "Get the database's tables"

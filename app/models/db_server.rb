@@ -1,6 +1,9 @@
 # frozen_string_literal: true
-
 require Rails.root.join('lib', 'queries', 'query')
+
+class InvalidDatabaseTypeError < StandardError
+end
+
 # == Schema Information
 #
 # Table name: db_servers
@@ -179,39 +182,58 @@ class DbServer < ApplicationRecord
   # @param key [String] base64 encoded crypto key from the user
   # @return [ActiveRecord::Result]
   def exec_raw_query(key:, database_name: nil)
+    raise InvalidDatabaseTypeError, "Type '#{db_type}' can not perform raw queries" unless mysql? || mariadb? || psql?
+
     connect(key: key, database_name: database_name) do |connection|
       if mysql? || mariadb?
         connection.raw_connection.query_options[:as] = :hash
 
-        result = []
+        results = []
         begin
-          result << connection.execute(yield)
-          result << connection.raw_connection.store_result while connection.raw_connection.next_result
+          results << connection.execute(yield)
+          results << connection.raw_connection.store_result while connection.raw_connection.next_result
         rescue StandardError => e
-          return e
+          return {
+            error: e,
+            type: :error
+          }
         ensure
           connection.raw_connection.abandon_results!
         end
-        return result
+        {
+          result: results,
+          type: :success
+        }
       elsif psql?
         results = []
+        error = nil
         begin
           connection.raw_connection.send_query(yield)
           while result = connection.raw_connection.get_result
             if result.error_message.empty?
               results << result
             else
-              results << result.error_message
+              error = result.error_message
             end
           end
         rescue StandardError => e
-          return e
+          return {
+            error: e,
+            type: :error
+          }
         ensure
           connection.raw_connection.flush
         end
-        return results
-      else
-        connection.execute(yield)
+        unless error.nil?
+          return {
+            error: error,
+            type: :error
+          }
+        end
+        return {
+          result: results,
+          type: :success
+        }
       end
     end
   end
