@@ -40,18 +40,18 @@ export const PlaceholderQuery = (dbName: string) => {
   return query;
 };
 
-export enum QueryType {
+export enum QueryExecutionMode {
   Multi = 'multi_query',
   Raw = 'raw_query'
 }
 
 interface MultiResult {
-  type: QueryType.Multi;
+  type: QueryExecutionMode.Multi;
   results: MultiQueryResult[];
 }
 
 interface RawResult {
-  type: QueryType.Raw;
+  type: QueryExecutionMode.Raw;
   result: RawQueryResult;
 }
 
@@ -81,11 +81,11 @@ export default class Query {
   readonly id: number;
   @observable requestState: REST = REST.None;
   @observable query: string = '';
-  @observable result: QueryResult = { type: QueryType.Multi, results: [] };
+  @observable result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
   @observable active: boolean = false;
   @observable isClosed: boolean = false;
   @observable proceedAfterError: boolean = true;
-  @observable executionMode: QueryType = QueryType.Multi;
+  @observable executionMode: QueryExecutionMode = QueryExecutionMode.Multi;
   @observable modifiedRawQueryConfig: boolean = false;
 
   cancelToken: CancelTokenSource = axios.CancelToken.source();
@@ -104,14 +104,14 @@ export default class Query {
   }
 
   @computed
-  get derivedExecutionMode(): QueryType {
+  get derivedExecutionMode(): QueryExecutionMode {
     // when more than 50 lines sql is written, the parsing
     // of the query can take a lot of time. In this case we
     // suggest to perform a raw sql query.
     if (/(.*[\r\n|\r|\n]){50,}/.test(this.query)) {
-      return QueryType.Raw;
+      return QueryExecutionMode.Raw;
     }
-    return QueryType.Multi;
+    return QueryExecutionMode.Multi;
   }
 
   createCopyFor(database: Database) {
@@ -148,19 +148,20 @@ export default class Query {
 
   @action
   toggleExecuteRawQuery() {
-    this.executionMode = this.executionMode === QueryType.Multi ? QueryType.Raw : QueryType.Multi;
+    this.executionMode =
+      this.executionMode === QueryExecutionMode.Multi ? QueryExecutionMode.Raw : QueryExecutionMode.Multi;
   }
 
   @computed
   get queryExecutionTime(): number {
-    if (this.result.type === QueryType.Multi) {
+    if (this.result.type === QueryExecutionMode.Multi) {
       return _.sumBy(this.result.results, 'time');
     }
     return this.result.result.time;
   }
 
   run() {
-    if (this.executionMode === QueryType.Raw) {
+    if (this.executionMode === QueryExecutionMode.Raw) {
       this.runRawQuery();
     } else {
       this.runMultiQuery();
@@ -178,7 +179,7 @@ export default class Query {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
         this.result = {
           results: data,
-          type: QueryType.Multi
+          type: QueryExecutionMode.Multi
         };
         this.requestState = REST.Success;
       })
@@ -193,7 +194,7 @@ export default class Query {
       .then(({ data }) => {
         this.result = {
           result: data,
-          type: QueryType.Raw
+          type: QueryExecutionMode.Raw
         };
         this.requestState = REST.Success;
       })
@@ -204,7 +205,7 @@ export default class Query {
 
   @computed
   get resultTableData(): TableData[] {
-    if (this.result.type === QueryType.Multi) {
+    if (this.result.type === QueryExecutionMode.Multi) {
       return this.multiQueryTableData(this.result.results);
     }
     return this.rawQueryTableData(this.result.result);

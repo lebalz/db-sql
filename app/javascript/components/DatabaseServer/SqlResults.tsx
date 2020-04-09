@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { ResultType } from '../../api/db_server';
 import { computed } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
-import Query, { QueryType, TableData } from '../../models/Query';
+import Query, { QueryExecutionMode, TableData } from '../../models/Query';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 
 interface Props {

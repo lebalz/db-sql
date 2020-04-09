@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import _ from 'lodash';
 import SqlEditor from './SqlEditor';
 import SqlResults from '../SqlResults';
-import { default as QueryModel, QueryType } from '../../../models/Query';
+import { default as QueryModel, QueryExecutionMode } from '../../../models/Query';
 import { REST } from '../../../declarations/REST';
 
 interface Props {
@@ -23,13 +23,13 @@ export default class Query extends React.Component<Props> {
           <Checkbox
             toggle
             checked={this.props.query.proceedAfterError}
-            disabled={this.props.query.executionMode === QueryType.Raw}
+            disabled={this.props.query.executionMode === QueryExecutionMode.Raw}
             label="Proceed after sql error"
             onChange={() => this.props.query.toggleProceedAfterError()}
           />
           <Checkbox
             toggle
-            checked={this.props.query.executionMode === QueryType.Raw}
+            checked={this.props.query.executionMode === QueryExecutionMode.Raw}
             label="Execute raw query"
             onChange={() => this.props.query.toggleExecuteRawQuery()}
           />
