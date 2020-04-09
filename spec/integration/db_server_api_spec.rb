@@ -429,6 +429,32 @@ RSpec.describe "API::Resources::DbServer" do
       expect(json["result"].length).to be(1)
       expect(json["result"][0].length).to be(0)
       expect(json["time"]).to be > 0
+
+      get(
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
+        headers: @headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json.size).to be(3)
+      expect(json[0]).to eq('name' => 'fights')
+      expect(json[1]).to eq('name' => 'ninja_turtles')
+      expect(json[2]).to eq('name' => 'raw_test')
+
+      post(
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+        headers: @headers,
+        params: { query: "DROP TABLE raw_test;" }
+      )
+      expect(response.successful?).to be_truthy
+
+      get(
+        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
+        headers: @headers
+      )
+      expect(response.successful?).to be_truthy
+      expect(json.size).to be(2)
+      expect(json[0]).to eq('name' => 'fights')
+      expect(json[1]).to eq('name' => 'ninja_turtles')
     end
 
     it 'can not return result on error' do
