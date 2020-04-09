@@ -386,7 +386,7 @@ RSpec.describe "API::Resources::DbServer" do
       expect(json[2]["type"]).to eq("skipped")
       expect(json[2]["result"]).to be_nil
       expect(json[2]["error"]).to be_nil
-      expect(json[2]["time"]).to be_nil
+      expect(json[2]["time"]).to be(0)
     end
   end
 

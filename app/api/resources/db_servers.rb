@@ -184,7 +184,8 @@ module Resources
                 next if query.blank?
                 if error_occured && !params[:proceed_after_error]
                   results << {
-                    type: :skipped
+                    type: :skipped,
+                    time: 0
                   }
                   next
                 end
