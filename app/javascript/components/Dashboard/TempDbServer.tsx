@@ -182,15 +182,18 @@ export class TempDbServer extends React.Component {
               </Grid.Row>
               <Grid.Row>
                 <Grid.Column>
-                  <Label as="a" color="teal" ribbon content="Host: Port" />
                   <Form id="host-port-group">
-                    <Form.Group>
+                    <div className="host">
+                      <Label as="a" color="teal" ribbon content="Host" />
                       <Form.Input
                         required
                         value={this.dbServer.host}
                         onChange={(e) => (this.dbServer.host = e.target.value)}
                         type="text"
                       />
+                    </div>
+                    <div>
+                      <Label as="a" color="teal" ribbon content="Port" />
                       <Form.Input
                         required
                         style={{ width: '6rem' }}
@@ -198,7 +201,7 @@ export class TempDbServer extends React.Component {
                         onChange={(e) => (this.dbServer.port = parseInt(e.target.value, 10))}
                         type="number"
                       />
-                    </Form.Group>
+                    </div>
                   </Form>
                 </Grid.Column>
               </Grid.Row>
