@@ -84,12 +84,19 @@ const getDatabaseItem = (
     )
   };
 };
-const getPlaceholderItem = (dbServerId: string, dbName: string, treePosition: number): DbPlaceholderItem => {
+const getPlaceholderItem = (
+  dbServerId: string,
+  dbName: string,
+  treePosition: number,
+  isLoading?: boolean
+): DbPlaceholderItem => {
   return {
     kind: ItemKind.Placeholder,
     value: dbName,
     treePosition: treePosition,
-    draw: () => <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} />
+    draw: () => (
+      <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} isLoading={isLoading} />
+    )
   };
 };
 
@@ -157,6 +164,7 @@ export default class DatabaseSchemaTree extends React.Component {
     }
     const databaseNames = dbServerStore.databaseNames(activeDbServerId);
     const loadedDatabases = dbServerStore.loadedDatabaseMap(activeDbServerId);
+    const activeDatabaseName = dbServerStore.activeDatabaseName(activeDbServerId);
     const filter = dbServerStore.databaseTreeViewFilter(activeDbServerId);
 
     let pos = 0;
@@ -166,7 +174,7 @@ export default class DatabaseSchemaTree extends React.Component {
         return dbs;
       }
       if (!loadedDatabases.has(dbName)) {
-        dbs.push(getPlaceholderItem(activeDbServerId, dbName, pos));
+        dbs.push(getPlaceholderItem(activeDbServerId, dbName, pos, dbName === activeDatabaseName));
         pos += 1;
         return dbs;
       }

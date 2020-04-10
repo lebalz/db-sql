@@ -19,11 +19,7 @@ export default class TableItem extends React.Component<DatabaseItemProps> {
       <List.Item as="a" className="table-item" onClick={(e) => table.toggleShow()}>
         <List.Content>
           <div style={{ display: 'flex' }}>
-            {/* {table.hasPendingRequest ? (
-              <Icon loading name="circle notch" />
-            ) : ( */}
             <Icon fitted name="table" color={highlighted ? 'yellow' : 'grey'} />
-            {/* )} */}
             <span style={{ marginLeft: '10px' }}>{table.name}</span>
           </div>
         </List.Content>

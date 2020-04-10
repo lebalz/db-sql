@@ -1,11 +1,9 @@
-import { observable, computed, action, reaction } from 'mobx';
-import { Database as DatabaseProps, query as fetchQuery } from '../api/db_server';
+import { observable, computed, action } from 'mobx';
+import { Database as DatabaseProps } from '../api/db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
 import DbTable from './DbTable';
-import { REST } from '../declarations/REST';
 import Query from './Query';
-import DbServerStore from '../stores/db_server_store';
 
 export default class Database {
   readonly dbServer: DbServer;

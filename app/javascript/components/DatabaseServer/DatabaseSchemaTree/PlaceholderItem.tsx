@@ -7,6 +7,7 @@ import RouterStore from '../../../stores/router_store';
 interface PlaceholderItemProps {
   dbName: string;
   dbServerId: string;
+  isLoading?: boolean;
 }
 
 interface InjectedDbItemPorps extends PlaceholderItemProps {
@@ -27,7 +28,7 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
   }
 
   render() {
-    const { dbName } = this.props;
+    const { dbName, isLoading } = this.props;
     return (
       <Fragment>
         <List.Item
@@ -46,7 +47,7 @@ export default class PlaceholderItem extends React.Component<PlaceholderItemProp
             </div>
           </List.Content>
         </List.Item>
-        {this.state.loading && <DbLoadIndicator />}
+        {(isLoading || this.state.loading) && <DbLoadIndicator />}
       </Fragment>
     );
   }
