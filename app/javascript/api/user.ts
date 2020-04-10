@@ -8,6 +8,8 @@ export interface User {
   login_count: number;
   role: Role;
   activated: boolean;
+  query_count: number;
+  error_query_count: number;
   created_at: string;
   updated_at: string;
   password_reset_requested: boolean;

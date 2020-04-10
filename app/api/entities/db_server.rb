@@ -13,6 +13,8 @@ module Entities
     expose :initialization_vector
     expose :initial_db
     expose :initial_table
+    expose :query_count
+    expose :error_query_count
     expose :created_at
     expose :updated_at
   end

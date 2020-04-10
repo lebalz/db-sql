@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_04_04_090911) do
+ActiveRecord::Schema.define(version: 2020_04_10_155552) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -29,6 +29,8 @@ ActiveRecord::Schema.define(version: 2020_04_04_090911) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "username"
+    t.integer "query_count", default: 0
+    t.integer "error_query_count", default: 0
     t.index ["user_id"], name: "index_db_servers_on_user_id"
   end
 
@@ -54,4 +56,6 @@ ActiveRecord::Schema.define(version: 2020_04_04_090911) do
     t.datetime "reset_password_mail_sent_at"
   end
 
+  add_foreign_key "db_servers", "users"
+  add_foreign_key "login_tokens", "users"
 end

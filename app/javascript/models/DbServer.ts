@@ -30,6 +30,8 @@ export default class DbServer {
   readonly id: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly queryCount: number;
+  readonly errorQueryCount: number;
   @observable name: string;
   @observable dbType: DbType;
   @observable host: string;
@@ -53,6 +55,8 @@ export default class DbServer {
     this.username = props.username;
     this.initDb = props.initial_db;
     this.initTable = props.initial_table;
+    this.queryCount = props.query_count;
+    this.errorQueryCount = props.error_query_count;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.cancelToken = cancelToken;
@@ -93,6 +97,8 @@ export default class DbServer {
       username: this.username,
       initial_db: this.initDb,
       initial_table: this.initTable,
+      query_count: this.queryCount,
+      error_query_count: this.errorQueryCount,
       created_at: this.createdAt.toISOString(),
       updated_at: this.updatedAt.toISOString()
     };

@@ -164,6 +164,7 @@ module Resources
           end
           post :query do
             db_name = params[:database_name]
+            db_server.increment!(:query_count, 1)
             db_server.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
             end.to_a
@@ -182,6 +183,7 @@ module Resources
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
                 next if query.blank?
+
                 if error_occured && !params[:proceed_after_error]
                   results << {
                     type: :skipped,
@@ -192,6 +194,7 @@ module Resources
 
                 t0 = Time.now
                 begin
+                  db_server.increment!(:query_count, 1)
                   results << {
                     result: conn.exec_query(key: crypto_key, database_name: db_name) do
                       query
@@ -200,6 +203,7 @@ module Resources
                     time: Time.now - t0
                   }
                 rescue StandardError => e
+                  db_server.increment!(:error_query_count, 1)
                   error_occured = true
                   results << {
                     error: e.message,
@@ -219,13 +223,13 @@ module Resources
           post :raw_query do
             db_name = params[:database_name]
             t0 = Time.now
-            db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
+            db_server.increment!(:query_count, 1)
+            results = db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
               params[:query]
-            end.merge(
-              {
-                time: Time.now - t0
-              }
-            )
+            end
+            db_server.increment!(:error_query_count, 1) if results[:type] == :error
+
+            results.merge({ time: Time.now - t0 })
           end
 
           desc "Get the database's tables"
