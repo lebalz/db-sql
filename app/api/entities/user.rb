@@ -21,6 +21,12 @@ module Entities
     end
     expose :role
     expose :activated
+    expose :query_count do |user|
+      user.query_count
+    end
+    expose :error_query_count do |user|
+      user.error_query_count
+    end
     expose :password_reset_requested do |user|
       user.password_reset_requested?
     end
