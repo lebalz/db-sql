@@ -28,6 +28,7 @@ RSpec.describe "API::Resources::User" do
       expect(json).to eq(
         "id" => @user.id,
         "email" => @user.email,
+        "error_query_count" => 0,
         "updated_at" => @user.updated_at.iso8601,
         "created_at" => @user.created_at.iso8601,
         "crypto_key" => nil,
@@ -35,6 +36,7 @@ RSpec.describe "API::Resources::User" do
         "role" => "user",
         "login_count" => @user.login_count,
         "password_reset_requested" => false,
+        "query_count" => 0,
         "activated" => @user.activated
       )
     end
