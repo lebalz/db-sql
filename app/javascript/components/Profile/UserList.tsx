@@ -74,6 +74,8 @@ export default class UserList extends React.Component {
               <Table.HeaderCell>Updated At</Table.HeaderCell>
               <Table.HeaderCell>Login Count</Table.HeaderCell>
               <Table.HeaderCell>Role</Table.HeaderCell>
+              <Table.HeaderCell>Queries</Table.HeaderCell>
+              <Table.HeaderCell>Errors</Table.HeaderCell>
               <Table.HeaderCell>Activated</Table.HeaderCell>
               <Table.HeaderCell>Delete</Table.HeaderCell>
             </Table.Row>
@@ -100,6 +102,8 @@ export default class UserList extends React.Component {
                       })}
                     </Button.Group>
                   </Table.Cell>
+                  <Table.Cell content={user.queryCount} />
+                  <Table.Cell content={user.errorQueryCount} />
                   <Table.Cell>
                     <Icon
                       name={user.activated ? 'check circle' : 'times circle'}
