@@ -6,6 +6,7 @@ import DbServerStore from '../../stores/db_server_store';
 import { TempDbServer, TempDbServerRole } from '../../models/TempDbServer';
 import { action } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
+import Tooltip from '../../shared/Tooltip';
 
 interface Props {
   dbConnection: DbServer;
@@ -33,14 +34,24 @@ export default class DbServerOverview extends React.Component<Props> {
   }
 
   render() {
-    const { name, host, port, dbType } = this.dbConnection;
+    const { name, host, port, dbType, queryCount, errorQueryCount } = this.dbConnection;
     return (
-      <Card style={this.props.style}>
+      <Card style={this.props.style} className="db-server-card">
         <Card.Content>
           <Card.Header content={name} />
           <Card.Meta content={`${host}:${port}`} />
           <Label content={dbType} color={dbType === DbType.MySql ? 'orange' : 'blue'} />
         </Card.Content>
+        <Tooltip
+          content={
+            <p>
+              Executed Queries: {queryCount}<br />
+              Errors: {errorQueryCount}
+            </p>
+          }
+        >
+          <div className="query-count" >{queryCount}</div>
+        </Tooltip>
         <Card.Content extra>
           <Button
             floated="left"

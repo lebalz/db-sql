@@ -46,6 +46,20 @@ export default class Account extends React.Component {
           </Menu.Item>
           {currentUser.loginCount}
         </div>
+        <div className="flex-list-item">
+          <Menu.Item>
+            <Icon name="weight" />
+            Executed Queries
+          </Menu.Item>
+          {currentUser.queryCount}
+        </div>
+        <div className="flex-list-item">
+          <Menu.Item>
+            <Icon name="ban" />
+            Erroneous Queries
+          </Menu.Item>
+          {currentUser.errorQueryCount}
+        </div>
       </Segment>
     );
   }

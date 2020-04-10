@@ -13,6 +13,8 @@ export default class User {
   readonly role: Role;
   readonly activated: boolean;
   readonly passwordResetRequested: boolean;
+  readonly queryCount: number;
+  readonly errorQueryCount: number;
   @observable loginCount: number;
   @observable updatedAt: Date;
 
@@ -24,6 +26,8 @@ export default class User {
     this.updatedAt = new Date(props.updated_at);
     this.activated = props.activated;
     this.role = props.role;
+    this.queryCount = props.query_count;
+    this.errorQueryCount = props.error_query_count;
     this.passwordResetRequested = props.password_reset_requested;
   }
 

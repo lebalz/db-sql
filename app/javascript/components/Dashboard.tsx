@@ -26,7 +26,9 @@ const DEFAULT_DB_SERVER: DbServer = {
   id: '',
   name: '',
   port: 5432,
-  username: ''
+  username: '',
+  query_count: 0,
+  error_query_count: 0
 };
 
 @inject('sessionStore', 'routerStore', 'dbServerStore')

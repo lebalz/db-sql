@@ -11,6 +11,8 @@ export interface DbServer {
   username: string;
   initial_db?: string;
   initial_table?: string;
+  query_count: number;
+  error_query_count: number;
   created_at: string;
   updated_at: string;
 }
