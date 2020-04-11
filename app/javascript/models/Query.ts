@@ -214,7 +214,7 @@ export default class Query {
       });
   }
  
- private runRawQuey() {
+ private runRawQuery() {
     this.queries.clear();
     this.requestState = REST.Requested;
     return rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
