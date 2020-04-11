@@ -31,7 +31,7 @@ function identifyCommands(queryText: string) {
     return [];
   }
 
-  return children.map((child) => child.text).slice(0, -1);
+  return children.map((child) => child.text.trim()).slice(0, -1);
 }
 
 export const PlaceholderQuery = (dbName: string) => {
@@ -81,6 +81,7 @@ export default class Query {
   readonly id: number;
   @observable requestState: REST = REST.None;
   @observable query: string = '';
+  queries = observable<string>([]);
   @observable result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
   @observable active: boolean = false;
   @observable isClosed: boolean = false;
@@ -177,6 +178,7 @@ export default class Query {
     fetchQuery(this.database.dbServerId, this.name, queries, this.proceedAfterError, this.cancelToken)
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
+        this.queries.replace(queries);
         this.result = {
           results: data,
           type: QueryExecutionMode.Multi
@@ -189,6 +191,7 @@ export default class Query {
   }
 
   runRawQuery() {
+    this.queries.clear();
     this.requestState = REST.Requested;
     rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
       .then(({ data }) => {
