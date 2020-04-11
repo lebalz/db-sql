@@ -3,17 +3,24 @@ body {
   padding: 0;
   font-family: sans-serif;
 
-  #app {
+  #db-sql {
     display: grid;
-    grid-template-columns: 280px auto;
+    grid-template-columns: 280px 2px auto;
     grid-template-rows: 82px auto;
     grid-template-areas:
-      "header header"
-      "sidebar main";
+      "header  header header"
+      "sidebar divider main";
     justify-items: stretch;
     width: 100vw;
     height: 100vh;
     overflow-y: hidden;
+  }
+
+  #divider {
+    grid-area: divider;
+    height: 100%;
+    cursor: col-resize;
+    border-right: 2px solid gray;
   }
 
   .grid {
@@ -28,7 +35,7 @@ body {
     grid-column-start: sidebar;
     grid-column-end: main;
     grid-row-start: header;
-    grid-row-end: footer;
+    grid-row-end: main;
   }
 
   .no-sidebar {

@@ -10,6 +10,10 @@ import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
 import DbServer from '../components/DbServer';
 
+const MIN_SIDEBAR_WIDTH = 50;
+const GRID_COLUMN_GAP_WIDTH = 1;
+const DEFAULT_SIDEBAR_WIDTH = 280;
+
 const AppContent = observer(() => (
   <Provider
     rootStore={rootStore}
@@ -35,8 +39,55 @@ const AppContent = observer(() => (
 
 @observer
 class App extends React.Component {
+  state: { mouseDown: boolean; leftShare: number } = { mouseDown: false, leftShare: DEFAULT_SIDEBAR_WIDTH };
+
+  componentDidMount() {
+    document.addEventListener('mouseup', this.onMouseUp);
+    document.addEventListener('mousemove', this.onMouseMove);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('mouseup', this.onMouseUp);
+    document.removeEventListener('mousemove', this.onMouseMove);
+  }
+
+  onMouseDown = () => {
+    this.setState({ mouseDown: true });
+    console.log('mouse down');
+  };
+
+  onMouseUp = () => {
+    this.setState({ mouseDown: false });
+    console.log('mouse up');
+  };
+
+  onMouseMove = (e: MouseEvent) => {
+    if (this.state.mouseDown) {
+      e.preventDefault();
+      console.log('mouse move');
+
+      const divider = document.getElementById('divider');
+
+      if (!divider) {
+        return console.log('Resizing not possible due to missing dom elements');
+      }
+
+      const leftShare = Math.max(
+        Math.max(0, e.clientX - GRID_COLUMN_GAP_WIDTH),
+        MIN_SIDEBAR_WIDTH
+      );
+
+      this.setState({ leftShare: leftShare });
+    }
+  };
+
   render() {
-    return <AppContent />;
+    return (
+      <div id="db-sql" style={{ gridTemplateColumns: `${this.state.leftShare}px 2px auto`}}>
+        <div id="divider" onMouseDown={this.onMouseDown} />
+        <AppContent />
+      </div>
+    );
   }
 }
 
