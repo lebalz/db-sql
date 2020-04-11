@@ -52,8 +52,8 @@ export default class SqlResults extends React.Component<Props> {
         content: (
           <Fragment>
             <Tooltip
-              content={<PrismCode code={this.queries[idx]} language="sql" plugins={['line-numbers']} />}
-              disabled={this.queries[idx] === undefined}
+              content={<PrismCode code={this.queries.length > idx ? this.queries[idx] : ''} language="sql" plugins={['line-numbers']} />}
+              disabled={this.queries.length === 0}
             >
               <Label
                 size="large"
