@@ -6,6 +6,8 @@ import { computed } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
 import Query, { QueryExecutionMode, TableData } from '../../models/Query';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
+import Tooltip from '../../shared/Tooltip';
+import { PrismCode } from './SqlResult/PrismCode';
 
 interface Props {
   query: Query;
@@ -29,6 +31,11 @@ export default class SqlResults extends React.Component<Props> {
   }
 
   @computed
+  get queries() {
+    return this.props.query.queries;
+  }
+
+  @computed
   get errors() {
     return this.results.filter((r) => r.type === ResultType.Error);
   }
@@ -44,12 +51,17 @@ export default class SqlResults extends React.Component<Props> {
       title: {
         content: (
           <Fragment>
-            <Label
-              size="large"
-              color={labelColor(result)}
-              content={`Query #${idx + 1}`}
-              style={{ marginRight: '1em', color: 'black' }}
-            />
+            <Tooltip
+              content={<PrismCode code={this.queries.length > idx ? this.queries[idx] : ''} language="sql" plugins={['line-numbers']} />}
+              disabled={this.queries.length === 0}
+            >
+              <Label
+                size="large"
+                color={labelColor(result)}
+                content={`Query #${idx + 1}`}
+                style={{ marginRight: '1em', color: 'black' }}
+              />
+            </Tooltip>
             {<TimeLabel result={result} />}
           </Fragment>
         )
