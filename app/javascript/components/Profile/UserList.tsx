@@ -81,7 +81,7 @@ export default class UserList extends React.Component {
     const { filteredUsers, reloadState, sortColumn } = userStore;
     const { currentUser } = this.injected.sessionStore;
     return (
-      <div>
+      <div style={{ width: '100%' }}>
         <div id="userlist-commands">
           <Input
             className="filter-users"
@@ -104,7 +104,7 @@ export default class UserList extends React.Component {
             loading={reloadState === ReloadState.Loading}
           />
         </div>
-        <Table celled sortable>
+        <Table celled sortable compact striped stackable>
           <Table.Header>
             <Table.Row>
               {Object.values(SortableUserColumns).map((column) => {
