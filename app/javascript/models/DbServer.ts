@@ -30,8 +30,8 @@ export default class DbServer {
   readonly id: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
-  readonly queryCount: number;
-  readonly errorQueryCount: number;
+  @observable queryCount: number;
+  @observable errorQueryCount: number;
   @observable name: string;
   @observable dbType: DbType;
   @observable host: string;
@@ -64,6 +64,12 @@ export default class DbServer {
 
   static formatDate(date: Date) {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+  }
+
+  @action
+  incrementQueryCount(queryCount: number, errorCount: number) {
+    this.queryCount += queryCount;
+    this.errorQueryCount += errorCount;
   }
 
   @computed
