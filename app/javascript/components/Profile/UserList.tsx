@@ -1,8 +1,8 @@
 import React from 'react';
 import { Icon, Table, Button, Input } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import { computed } from 'mobx';
-import UserStore, { ReloadState } from '../../stores/user_store';
+import { computed, action } from 'mobx';
+import UserStore, { ReloadState, SortableUserColumns } from '../../stores/user_store';
 import User, { Role } from '../../models/User';
 import SessionStore from '../../stores/session_store';
 import _ from 'lodash';
@@ -11,6 +11,17 @@ interface InjectedProps {
   userStore: UserStore;
   sessionStore: SessionStore;
 }
+
+const COLUMN_NAMES: { [key in SortableUserColumns]: string } = {
+  [SortableUserColumns.Email]: 'E-Mail',
+  [SortableUserColumns.CreatedAt]: 'Created At',
+  [SortableUserColumns.UpdatedAt]: 'Last Activity',
+  [SortableUserColumns.Role]: 'Role',
+  [SortableUserColumns.LoginCount]: 'Login Count',
+  [SortableUserColumns.QueryCount]: 'Queries',
+  [SortableUserColumns.ErrorQueryCount]: 'Errors',
+  [SortableUserColumns.Activated]: 'Activated'
+};
 
 @inject('userStore', 'sessionStore')
 @observer
@@ -51,9 +62,23 @@ export default class UserList extends React.Component {
     }
   }
 
+  @computed
+  get order() {
+    return this.injected.userStore.order === 'asc' ? 'ascending' : 'descending';
+  }
+
+  @action
+  onChangeSort(columnName: SortableUserColumns) {
+    if (this.injected.userStore.sortColumn === columnName) {
+      this.injected.userStore.toggleOrder();
+    } else {
+      this.injected.userStore.setSortColumn(columnName);
+    }
+  }
+
   render() {
     const { userStore } = this.injected;
-    const { filteredUsers, reloadState } = userStore;
+    const { filteredUsers, reloadState, sortColumn } = userStore;
     const { currentUser } = this.injected.sessionStore;
     return (
       <div>
@@ -79,22 +104,24 @@ export default class UserList extends React.Component {
             loading={reloadState === ReloadState.Loading}
           />
         </div>
-        <Table celled>
+        <Table celled sortable>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell>E-Mail</Table.HeaderCell>
-              <Table.HeaderCell>Created At</Table.HeaderCell>
-              <Table.HeaderCell>Updated At</Table.HeaderCell>
-              <Table.HeaderCell>Login Count</Table.HeaderCell>
-              <Table.HeaderCell>Role</Table.HeaderCell>
-              <Table.HeaderCell>Queries</Table.HeaderCell>
-              <Table.HeaderCell>Errors</Table.HeaderCell>
-              <Table.HeaderCell>Activated</Table.HeaderCell>
+              {Object.values(SortableUserColumns).map((column) => {
+                return (
+                  <Table.HeaderCell
+                    key={column}
+                    content={COLUMN_NAMES[column]}
+                    sorted={column === sortColumn ? this.order : undefined}
+                    onClick={() => this.onChangeSort(column)}
+                  />
+                );
+              })}
               <Table.HeaderCell>Delete</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {_.sortBy(filteredUsers, ['email']).map((user) => {
+            {filteredUsers.map((user) => {
               return (
                 <Table.Row key={user.email}>
                   <Table.Cell content={user.email} />

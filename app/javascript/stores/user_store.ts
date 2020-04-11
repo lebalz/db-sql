@@ -11,9 +11,22 @@ export enum ReloadState {
   Error
 }
 
+export enum SortableUserColumns {
+  Email = 'email',
+  CreatedAt = 'createdAt',
+  UpdatedAt = 'updatedAt',
+  LoginCount = 'loginCount',
+  Role = 'role',
+  QueryCount = 'queryCount',
+  ErrorQueryCount = 'errorQueryCount',
+  Activated = 'activated'
+}
+
 class State {
   users = observable<User>([]);
   @observable userFilter: string = '';
+  @observable sortColumn: SortableUserColumns = SortableUserColumns.Email;
+  @observable order: 'asc' | 'desc' = 'asc';
   @observable reloadState = ReloadState.None;
 }
 
@@ -37,11 +50,33 @@ class UserStore {
   }
 
   @computed
+  get sortColumn() {
+    return this.state.sortColumn;
+  }
+
+  @action
+  setSortColumn(sortColumn: SortableUserColumns) {
+    this.state.sortColumn = sortColumn;
+  }
+
+  @computed
+  get order() {
+    return this.state.order;
+  }
+
+  @action
+  toggleOrder() {
+    this.state.order = this.state.order === 'asc' ? 'desc' : 'asc';
+  }
+
+  @computed
   get filteredUsers(): User[] {
     const escapedFilter = _.escapeRegExp(this.userFilter);
     const regexp = new RegExp(escapedFilter, 'i');
 
-    return this.users.filter((user) => (regexp.test(user.email)));
+    const filtered = this.users.filter((user) => (regexp.test(user.email)));
+
+    return _.orderBy(filtered, this.sortColumn, this.order);
   }
 
   @action loadUsers() {
