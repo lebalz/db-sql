@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon, Table, Button } from 'semantic-ui-react';
+import { Icon, Table, Button, Input } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import UserStore, { ReloadState } from '../../stores/user_store';
@@ -52,20 +52,33 @@ export default class UserList extends React.Component {
   }
 
   render() {
-    const { users, reloadState } = this.injected.userStore;
+    const { userStore } = this.injected;
+    const { filteredUsers, reloadState } = userStore;
     const { currentUser } = this.injected.sessionStore;
     return (
       <div>
-        <Button
-          icon={this.reloadIcon}
-          color={this.reloadIconColor}
-          label="Refresh Users"
-          labelPosition="left"
-          onClick={() => this.injected.userStore.loadUsers()}
-          floated="left"
-          style={{ alignSelf: 'flex-start' }}
-          loading={reloadState === ReloadState.Loading}
-        />
+        <div id="userlist-commands">
+          <Input
+            className="filter-users"
+            icon={{
+              name: 'close',
+              circular: true,
+              link: true,
+              onClick: () => userStore.setUserFilter('')
+            }}
+            placeholder="Filter"
+            onChange={(_, data) => userStore.setUserFilter(data.value)}
+            value={userStore.userFilter}
+          />
+          <Button
+            icon={this.reloadIcon}
+            color={this.reloadIconColor}
+            label="Refresh Users"
+            labelPosition="left"
+            onClick={() => this.injected.userStore.loadUsers()}
+            loading={reloadState === ReloadState.Loading}
+          />
+        </div>
         <Table celled>
           <Table.Header>
             <Table.Row>
@@ -81,7 +94,7 @@ export default class UserList extends React.Component {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {_.sortBy(users, ['email']).map((user) => {
+            {_.sortBy(filteredUsers, ['email']).map((user) => {
               return (
                 <Table.Row key={user.email}>
                   <Table.Cell content={user.email} />

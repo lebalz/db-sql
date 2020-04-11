@@ -13,6 +13,7 @@ export enum ReloadState {
 
 class State {
   users = observable<User>([]);
+  @observable userFilter: string = '';
   @observable reloadState = ReloadState.None;
 }
 
@@ -23,6 +24,24 @@ class UserStore {
 
   constructor(root: RootStore) {
     this.root = root;
+  }
+
+  @action
+  setUserFilter(filter: string) {
+    this.state.userFilter = filter;
+  }
+
+  @computed
+  get userFilter() {
+    return this.state.userFilter;
+  }
+
+  @computed
+  get filteredUsers(): User[] {
+    const escapedFilter = _.escapeRegExp(this.userFilter);
+    const regexp = new RegExp(escapedFilter, 'i');
+
+    return this.users.filter((user) => (regexp.test(user.email)));
   }
 
   @action loadUsers() {

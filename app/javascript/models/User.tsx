@@ -36,6 +36,6 @@ export default class User {
   }
 
   static formatDate(date: Date) {
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    return date.toLocaleString('de-CH');
   }
 }
