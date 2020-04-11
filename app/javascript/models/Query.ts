@@ -14,6 +14,7 @@ import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexe
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import _ from 'lodash';
+import User from './User';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -161,11 +162,21 @@ export default class Query {
   }
 
   run() {
+    let runner: () => Promise<QueryResult | void>;
     if (this.executionMode === QueryExecutionMode.Raw) {
-      this.runRawQuery();
+      runner = () => this.runRawQuery();
     } else {
-      this.runMultiQuery();
+      runner = () => this.runMultiQuery();
     }
+    runner().then((result: QueryResult | void) => {
+      if (!result) {
+        return;
+      }
+      const resultData = this.resultTableDataFor(result);
+      const queryCount = resultData.reduce((cnt, res) => (cnt + res.type !== ResultType.Skipped ? 1 : 0), 0);
+      const errorCount = resultData.reduce((cnt, res) => (cnt + res.type === ResultType.Error ? 1 : 0), 0);
+      this.database.incrementQueryCount(queryCount, errorCount);
+    });
   }
 
   runMultiQuery() {
@@ -174,7 +185,7 @@ export default class Query {
     const t0 = Date.now();
     const queries = identifyCommands(rawInput);
     console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    fetchQuery(this.database.dbServerId, this.name, queries, this.proceedAfterError, this.cancelToken)
+    return fetchQuery(this.database.dbServerId, this.name, queries, this.proceedAfterError, this.cancelToken)
       .then(({ data }) => {
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
         this.result = {
@@ -182,6 +193,7 @@ export default class Query {
           type: QueryExecutionMode.Multi
         };
         this.requestState = REST.Success;
+        return this.result;
       })
       .catch((e) => {
         this.requestState = REST.Error;
@@ -190,13 +202,14 @@ export default class Query {
 
   runRawQuery() {
     this.requestState = REST.Requested;
-    rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
+    return rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
       .then(({ data }) => {
         this.result = {
           result: data,
           type: QueryExecutionMode.Raw
         };
         this.requestState = REST.Success;
+        return this.result;
       })
       .catch((e) => {
         this.requestState = REST.Error;
@@ -205,10 +218,7 @@ export default class Query {
 
   @computed
   get resultTableData(): TableData[] {
-    if (this.result.type === QueryExecutionMode.Multi) {
-      return this.multiQueryTableData(this.result.results);
-    }
-    return this.rawQueryTableData(this.result.result);
+    return this.resultTableDataFor(this.result);
   }
 
   @action
@@ -216,6 +226,13 @@ export default class Query {
     this.cancelToken.cancel();
     this.cancelToken = axios.CancelToken.source();
     this.requestState = REST.Canceled;
+  }
+
+  private resultTableDataFor(result: QueryResult): TableData[] {
+    if (result.type === QueryExecutionMode.Multi) {
+      return this.multiQueryTableData(result.results);
+    }
+    return this.rawQueryTableData(result.result);
   }
 
   private rawQueryTableData(result: RawQueryResult): TableData[] {
