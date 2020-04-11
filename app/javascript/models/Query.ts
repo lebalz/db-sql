@@ -173,13 +173,25 @@ export default class Query {
         return;
       }
       const resultData = this.resultTableDataFor(result);
-      const queryCount = resultData.reduce((cnt, res) => (cnt + res.type !== ResultType.Skipped ? 1 : 0), 0);
-      const errorCount = resultData.reduce((cnt, res) => (cnt + res.type === ResultType.Error ? 1 : 0), 0);
-      this.database.incrementQueryCount(queryCount, errorCount);
+      const count = resultData.reduce((cnt, res) => (cnt + (res.type !== ResultType.Skipped ? 1 : 0)), 0);
+      const errorCount = resultData.reduce((cnt, res) => (cnt + (res.type === ResultType.Error ? 1 : 0)), 0);
+      this.database.incrementQueryCount(count, errorCount);
     });
   }
 
-  runMultiQuery() {
+  @computed
+  get resultTableData(): TableData[] {
+    return this.resultTableDataFor(this.result);
+  }
+
+  @action
+  cancel() {
+    this.cancelToken.cancel();
+    this.cancelToken = axios.CancelToken.source();
+    this.requestState = REST.Canceled;
+  }
+
+  private runMultiQuery() {
     this.requestState = REST.Requested;
     const rawInput = this.query;
     const t0 = Date.now();
@@ -200,7 +212,7 @@ export default class Query {
       });
   }
 
-  runRawQuery() {
+  private runRawQuery() {
     this.requestState = REST.Requested;
     return rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
       .then(({ data }) => {
@@ -214,18 +226,6 @@ export default class Query {
       .catch((e) => {
         this.requestState = REST.Error;
       });
-  }
-
-  @computed
-  get resultTableData(): TableData[] {
-    return this.resultTableDataFor(this.result);
-  }
-
-  @action
-  cancel() {
-    this.cancelToken.cancel();
-    this.cancelToken = axios.CancelToken.source();
-    this.requestState = REST.Canceled;
   }
 
   private resultTableDataFor(result: QueryResult): TableData[] {

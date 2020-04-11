@@ -126,6 +126,6 @@ export default class Database {
 
   @computed
   private get nextQueryId(): number {
-    return this.queries.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
+    return this.queries.reduce((maxId, query) => ((maxId > query.id) ? maxId : query.id), 0) + 1;
   }
 }
