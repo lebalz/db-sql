@@ -47,7 +47,7 @@ export default class SqlEditor extends React.Component<Props> {
       name: table.name,
       value: table.name,
       meta: 'TABLE',
-      score: 1
+      score: 2
     }));
     const columns = database.tables.reduce((res, table) => {
       const cols = table.columns.map(
@@ -56,7 +56,7 @@ export default class SqlEditor extends React.Component<Props> {
             name: col.name,
             value: col.name,
             meta: 'COLUMN',
-            score: 2
+            score: 1
           } as Completion)
       );
       return [...res, ...cols];
