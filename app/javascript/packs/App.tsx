@@ -84,8 +84,8 @@ class App extends React.Component {
   render() {
     return (
       <div id="db-sql" style={{ gridTemplateColumns: `${this.state.leftShare}px 2px auto`}}>
-        <div id="divider" onMouseDown={this.onMouseDown} />
         <AppContent />
+        <div id="divider" onMouseDown={this.onMouseDown} />
       </div>
     );
   }

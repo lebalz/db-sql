@@ -41,6 +41,11 @@ body {
   .no-sidebar {
     grid-column-start: sidebar;
     grid-column-end: main;
+
+    // sibling selector - divider should not be displayed 
+    & ~ #divider {
+      display: none;
+    }
   }
 
   header {
