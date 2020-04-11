@@ -6,14 +6,12 @@ import {
   updateDbServer,
   createDbServer,
   remove as removeApi,
-  query as fetchQuery,
   databases,
   database
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
-import { REST } from '../declarations/REST';
 import { RequestState } from './session_store';
 import Database from '../models/Database';
 import Query, { PlaceholderQuery } from '../models/Query';

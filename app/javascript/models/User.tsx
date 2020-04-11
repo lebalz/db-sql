@@ -13,8 +13,8 @@ export default class User {
   readonly role: Role;
   readonly activated: boolean;
   readonly passwordResetRequested: boolean;
-  readonly queryCount: number;
-  readonly errorQueryCount: number;
+  @observable queryCount: number;
+  @observable errorQueryCount: number;
   @observable loginCount: number;
   @observable updatedAt: Date;
 
@@ -36,6 +36,6 @@ export default class User {
   }
 
   static formatDate(date: Date) {
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    return date.toLocaleString('de-CH');
   }
 }

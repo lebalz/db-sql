@@ -10,7 +10,7 @@ export default class Database {
   readonly name: string;
   readonly dbServerId: string;
   readonly tables: DbTable[];
-  queries = observable<Query>([new Query(this, 1)]);
+  queries = observable<Query>([]);
   @observable activeQueryId: number = 1;
 
   @observable show: boolean = false;
@@ -18,6 +18,7 @@ export default class Database {
 
   constructor(dbServer: DbServer, props: DatabaseProps) {
     this.dbServer = dbServer;
+    this.addQuery();
     this.name = props.name;
     this.dbServerId = props.db_server_id;
     this.tables = props.tables.map((table) => new DbTable(this, table));
@@ -27,6 +28,11 @@ export default class Database {
   @action
   setActiveQuery(id: number) {
     this.activeQueryId = id;
+  }
+
+  @action
+  incrementQueryCount(queryCount: number, errorCount: number) {
+    this.dbServer.incrementQueryCount(queryCount, errorCount);
   }
 
   @action
@@ -120,6 +126,6 @@ export default class Database {
 
   @computed
   private get nextQueryId(): number {
-    return this.queries.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
+    return this.queries.reduce((maxId, query) => ((maxId > query.id) ? maxId : query.id), 0) + 1;
   }
 }
