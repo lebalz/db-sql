@@ -53,18 +53,15 @@ class App extends React.Component {
 
   onMouseDown = () => {
     this.setState({ mouseDown: true });
-    console.log('mouse down');
   };
 
   onMouseUp = () => {
     this.setState({ mouseDown: false });
-    console.log('mouse up');
   };
 
   onMouseMove = (e: MouseEvent) => {
     if (this.state.mouseDown) {
       e.preventDefault();
-      console.log('mouse move');
 
       const divider = document.getElementById('divider');
 
