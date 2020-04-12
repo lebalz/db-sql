@@ -36,13 +36,18 @@ body {
     grid-column-end: main;
     grid-row-start: header;
     grid-row-end: main;
+
+    // sibling selector - divider should not be displayed for fullscreen
+    & ~ #divider {
+      display: none;
+    }
   }
 
   .no-sidebar {
     grid-column-start: sidebar;
     grid-column-end: main;
 
-    // sibling selector - divider should not be displayed 
+    // sibling selector - divider should not be displayed for no-sidebar
     & ~ #divider {
       display: none;
     }
