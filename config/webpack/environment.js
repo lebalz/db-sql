@@ -6,4 +6,10 @@ environment.loaders.append('typescript', {
   loader: 'awesome-typescript-loader'
 });
 
+environment.loaders.append('css', 
+{
+    test: /\.css/,
+    loader: 'style-loader!css-loader'
+});
+
 module.exports = environment

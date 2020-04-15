@@ -1,9 +1,9 @@
 import React from 'react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism.css';
-import 'prismjs/components/prism-sql';
+import 'prismjs/components/prism-sql.min.js';
 
-import 'prismjs/plugins/line-numbers/prism-line-numbers';
+import 'prismjs/plugins/line-numbers/prism-line-numbers.min.js';
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
 
 interface Props {

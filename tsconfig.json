@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": false,
     "emitDecoratorMetadata": true,
-    "target": "es5",
+    "target": "es6",
     "module": "commonjs",
     "lib": ["dom", "es2017"],
     "allowJs": true,
