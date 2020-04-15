@@ -24,4 +24,16 @@
       top: 0;
     }
   }
+  .selectable-column {
+    cursor: pointer !important;
+    &:hover {
+      background: #d6d6d6;
+    }
+    &.selected {
+      background: #93f39b;
+    }
+  }
+  td.selected {
+    background: #c0fac5;
+  }
 }

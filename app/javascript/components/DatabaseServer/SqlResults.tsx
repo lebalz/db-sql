@@ -67,7 +67,7 @@ export default class SqlResults extends React.Component<Props> {
         )
       },
       content: {
-        content: <SqlResult result={result} queryIndex={idx} key={idx} />
+        content: <SqlResult result={result} viewStateKey={`${this.props.query.name}#${idx}`} queryIndex={idx} key={idx} />
       }
     }));
   }

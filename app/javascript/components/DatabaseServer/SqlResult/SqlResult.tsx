@@ -10,9 +10,10 @@ import { TableData } from '../../../models/Query';
 interface Props {
   result: TableData;
   queryIndex: number;
+  viewStateKey: string;
 }
 
-export const SqlResult = ({ result, queryIndex }: Props) => {
+export const SqlResult = ({ result, queryIndex, viewStateKey }: Props) => {
   switch (result.type) {
     case ResultType.Error:
       return <ErrorReport key={queryIndex} queryIndex={queryIndex} error={result.error} />;
@@ -20,7 +21,7 @@ export const SqlResult = ({ result, queryIndex }: Props) => {
       if (result.result.length === 0) {
         return <EmptyResult queryIndex={queryIndex} key={queryIndex} />;
       }
-      return <ResultTable table={result.result} key={queryIndex} />;
+      return <ResultTable table={result.result} viewStateKey={viewStateKey} key={queryIndex} />;
     case ResultType.Skipped:
       return <SkippedResult key={queryIndex} queryIndex={queryIndex} />;
   }

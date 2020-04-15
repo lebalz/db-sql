@@ -10,6 +10,7 @@
   "description": "An easy to use DBMS to query any PSQL or MYSQL database",
   "dependencies": {
     "@rails/webpacker": "^4.2.2",
+    "@types/classnames": "^2.2.10",
     "@types/history": "^4.7.5",
     "@types/lodash": "^4.14.149",
     "@types/prismjs": "^1.16.0",
@@ -22,6 +23,7 @@
     "antlr4ts": "^0.5.0-alpha.3",
     "awesome-typescript-loader": "^5.2.1",
     "axios": "^0.19.2",
+    "classnames": "^2.2.6",
     "css-loader": "^3.5.2",
     "express": "^4.16.4",
     "lodash": "^4.17.15",

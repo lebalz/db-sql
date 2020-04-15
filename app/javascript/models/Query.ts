@@ -14,20 +14,13 @@ import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexe
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import _ from 'lodash';
-import User from './User';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
-  console.time('lexing');
   const lexer = new QuerySeparationGrammarLexer(inputStream);
-  console.timeLog('lexing');
   const tokenStream = new CommonTokenStream(lexer);
-  console.time('parse');
   const parser = new QuerySeparationGrammarParser(tokenStream);
-  console.timeLog('parse');
-  console.time('queryText');
   const { children } = parser.queriesText();
-  console.timeLog('queryText');
   if (!children) {
     return [];
   }
@@ -89,6 +82,7 @@ export default class Query {
   @observable proceedAfterError: boolean = true;
   @observable executionMode: QueryExecutionMode = QueryExecutionMode.Multi;
   @observable modifiedRawQueryConfig: boolean = false;
+  selectedResultColumns = observable<number>([]);
 
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
@@ -176,6 +170,7 @@ export default class Query {
       const resultData = this.resultTableDataFor(result);
       const count = resultData.reduce((cnt, res) => (cnt + (res.type !== ResultType.Skipped ? 1 : 0)), 0);
       const errorCount = resultData.reduce((cnt, res) => (cnt + (res.type === ResultType.Error ? 1 : 0)), 0);
+      this.selectedResultColumns.clear();
       this.database.incrementQueryCount(count, errorCount);
     });
   }
