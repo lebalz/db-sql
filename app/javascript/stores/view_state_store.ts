@@ -1,7 +1,8 @@
-import { observable, action, computed } from 'mobx';
+import { observable, action } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
 import { DEFAULT_HEIGHT } from '../components/DatabaseServer/SqlResult/ResultTable';
+import { Graph } from '../models/Graph';
 
 class ResultTableState {
   @observable row = 0;
@@ -10,7 +11,10 @@ class ResultTableState {
   @observable preventNextScrollUpdate = false;
   @observable x = 0;
   @observable y = 0;
-  selectedColumns = observable<number>([]);
+  @observable showGraph = false;
+  @observable.ref
+  graph?: Graph;
+  @observable canSelectColumns: boolean = false;
 }
 
 class State {
@@ -19,12 +23,10 @@ class State {
 }
 
 class ViewStateStore {
-  private readonly rootStore: RootStore;
   @observable.ref
   private state = new State();
 
   constructor(root: RootStore) {
-    this.rootStore = root;
   }
 
   resultTableState(key: string): ResultTableState {

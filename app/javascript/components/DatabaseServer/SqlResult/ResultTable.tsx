@@ -90,7 +90,7 @@ class ResultTable extends React.Component<Props> {
         this.viewState.wrapperHeight = this.tableWrapper.current.clientHeight;
         this.viewState.x = 0;
         this.viewState.y = 0;
-        this.viewState.selectedColumns.clear();
+        this.viewState.graph = undefined;
       }
     }
   }
@@ -196,25 +196,25 @@ class ResultTable extends React.Component<Props> {
       } else if (needsLowerExtend) {
         dt = -this.lowerThreshold(-1);
       }
-      this.setState({
-        row: newRow < 0 ? 0 : newRow,
-        preventNextScrollUpdate: true,
-        x: event.currentTarget.scrollLeft,
-        y: scrollTop - dt
-      });
+      this.viewState.row = newRow < 0 ? 0 : newRow;
+      this.viewState.preventNextScrollUpdate = true;
+      this.viewState.x = event.currentTarget.scrollLeft;
+      this.viewState.y = scrollTop - dt;
     }
   };
 
   @action
   onColumnClick(index: number) {
-    if (this.viewState.selectedColumns.includes(index)) {
-      this.viewState.selectedColumns.remove(index);
-    } else {
-      this.viewState.selectedColumns.push(index);
+    if (!this.viewState.graph) {
+      return;
     }
+    this.viewState.graph.onColumnSelection(index);
   }
 
   render() {
+    const selectedColumns = this.viewState.graph?.selectedColumns || [];
+    const selectionMap = this.headers.map((_, idx) => selectedColumns.includes(idx));
+    const colorMap = this.headers.map((_, idx) => this.viewState.graph?.highlightColor(idx));
     return (
       <div className="sql-result-table" onScroll={this.onScroll} ref={this.tableWrapper}>
         <ScrollPlaceholder height={this.topSpacerHeight} />
@@ -231,8 +231,9 @@ class ResultTable extends React.Component<Props> {
                 return (
                   <Table.HeaderCell
                     key={i}
-                    className={cx('selectable-column', {
-                      selected: this.viewState.selectedColumns.includes(i)
+                    className={cx(colorMap[i], {
+                      'selectable-column': this.viewState.graph?.canFocus,
+                      selected: selectionMap[i]
                     })}
                     onClick={() => this.onColumnClick(i)}
                   >
@@ -250,7 +251,7 @@ class ResultTable extends React.Component<Props> {
                     return (
                       <Table.Cell
                         key={j}
-                        className={cx({ selected: this.viewState.selectedColumns.includes(j) })}
+                        className={cx(colorMap[j], { selected: selectionMap[j] })}
                       >
                         {cell === null ? <Label content="NULL" size="mini" /> : cell}
                       </Table.Cell>

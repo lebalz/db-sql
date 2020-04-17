@@ -1,0 +1,39 @@
+:root {
+
+  --semantic-red-rgb: 219, 40, 40;
+  --semantic-orange-rgb: 242, 113, 28;
+  --semantic-yellow-rgb: 251, 189, 8;
+  --semantic-olive-rgb: 181, 204, 24;
+  --semantic-green-rgb: 33, 186, 69;
+  --semantic-teal-rgb: 0, 181, 173;
+  --semantic-blue-rgb: 33, 133, 208;
+  --semantic-violet-rgb: 100, 53, 201;
+  --semantic-purple-rgb: 163, 51, 200;
+  --semantic-pink-rgb: 224, 57, 151;
+  --semantic-brown-rgb: 165, 103, 63;
+  --semantic-lightgrey-rgb: 232, 232, 232;
+  --semantic-grey-rgb: 118, 118, 118;
+  --semantic-black-rgb: 27, 28, 29;
+
+  --semantic-red: rgb(var(--semantic-red-rgb));
+  --semantic-orange: rgb(var(--semantic-orange-rgb));
+  --semantic-yellow: rgb(var(--semantic-yellow-rgb));
+  --semantic-olive: rgb(var(--semantic-olive-rgb));
+  --semantic-green: rgb(var(--semantic-green-rgb));
+  --semantic-teal: rgb(var(--semantic-teal-rgb));
+  --semantic-blue: rgb(var(--semantic-blue-rgb));
+  --semantic-violet: rgb(var(--semantic-violet-rgb));
+  --semantic-purple: rgb(var(--semantic-purple-rgb));
+  --semantic-pink: rgb(var(--semantic-pink-rgb));
+  --semantic-brown: rgb(var(--semantic-brown-rgb));
+  --semantic-lightgrey: rgb(var(--semantic-lightgrey-rgb));
+  --semantic-grey: rgb(var(--semantic-grey-rgb));
+  --semantic-black: rgb(var(--semantic-black-rgb));
+
+  --highlight-grey-50: #e7e6e6;
+  --highlight-grey-100: #929292;
+  --highlight-green-50: #b4f7ba;
+  --highlight-green-100: #c9facd;
+  --highlight-blue-50: #b1caff;
+  --highlight-blue-100: #c3d2f3;
+}

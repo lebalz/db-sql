@@ -55,8 +55,7 @@ interface SqlTableData {
   type: ResultType;
   time?: number;
 }
-
-interface SuccessTableData extends SqlTableData {
+export interface SuccessTableData extends SqlTableData {
   type: ResultType.Success;
   result: ResultTableData;
 }
@@ -76,13 +75,12 @@ export default class Query {
   @observable requestState: REST = REST.None;
   @observable query: string = '';
   queries = observable<string>([]);
-  @observable result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
+  @observable.ref result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
   @observable active: boolean = false;
   @observable isClosed: boolean = false;
   @observable proceedAfterError: boolean = true;
   @observable executionMode: QueryExecutionMode = QueryExecutionMode.Multi;
   @observable modifiedRawQueryConfig: boolean = false;
-  selectedResultColumns = observable<number>([]);
 
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
@@ -170,7 +168,6 @@ export default class Query {
       const resultData = this.resultTableDataFor(result);
       const count = resultData.reduce((cnt, res) => (cnt + (res.type !== ResultType.Skipped ? 1 : 0)), 0);
       const errorCount = resultData.reduce((cnt, res) => (cnt + (res.type === ResultType.Error ? 1 : 0)), 0);
-      this.selectedResultColumns.clear();
       this.database.incrementQueryCount(count, errorCount);
     });
   }

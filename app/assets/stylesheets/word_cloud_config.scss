@@ -1,0 +1,26 @@
+@import 'colors';
+.wordcloud-config {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  flex-wrap: wrap;
+  .input {
+    margin-right: 1em;
+  }
+  .word-column {
+    input {
+      background: var(--highlight-green-100) !important;
+      color: black !important;
+    }
+  }
+  .count-column {
+    input {
+      background: var(--highlight-blue-100) !important;
+      color: black !important;
+    }
+  }
+  .numeric {
+    width: 6em;
+    margin-right: 4.5em;
+  }
+}

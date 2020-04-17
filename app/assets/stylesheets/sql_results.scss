@@ -1,3 +1,5 @@
+@import "colors";
+
 .results-header {
   position: sticky;
   top: 0px;
@@ -6,7 +8,7 @@
 }
 
 .sql-results.accordion {
-  &>div.title {
+  & > div.title {
     position: sticky;
     top: 46px;
     z-index: 999;
@@ -30,10 +32,22 @@
       background: #d6d6d6;
     }
     &.selected {
-      background: #93f39b;
+    background: var(--highlight-grey-100);
+        &.green {
+        background: var(--highlight-green-100);
+      }
+      &.blue {
+        background: var(--highlight-blue-100);
+      }
     }
   }
   td.selected {
-    background: #c0fac5;
+    background: var(--highlight-grey-50);
+    &.green {
+      background: var(--highlight-green-50);
+    }
+    &.blue {
+      background: var(--highlight-blue-50);
+    }
   }
 }
