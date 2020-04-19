@@ -96,17 +96,20 @@ class SqlResults extends React.Component<Props> {
                 />
               </Tooltip>
               {<TimeLabel result={result} />}
+              <div className="spacer" />
               {result.type === ResultType.Success && (
-                <Button
-                  size="mini"
-                  active={this.viewState(idx).showGraph}
-                  icon={
-                    <Icon.Group>
-                      <Icon name="area graph" color="blue" />
-                    </Icon.Group>
-                  }
-                  onClick={(e) => this.onShowGraph(e, idx)}
-                />
+                <Tooltip content="Show graph">
+                  <Button
+                    size="mini"
+                    active={this.viewState(idx).showGraph}
+                    icon={
+                      <Icon.Group>
+                        <Icon name="area graph" color="blue" />
+                      </Icon.Group>
+                    }
+                    onClick={(e) => this.onShowGraph(e, idx)}
+                  />
+                </Tooltip>
               )}
             </Fragment>
           )

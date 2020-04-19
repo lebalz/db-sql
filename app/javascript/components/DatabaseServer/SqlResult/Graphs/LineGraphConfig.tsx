@@ -55,7 +55,7 @@ class LineGraphConfig extends React.Component<Props> {
                 size="mini"
                 label={
                   <Tooltip content="Select a data column containing y values">
-                    <Label color={isFocused ? 'blue' : undefined} content={`y-column ${nr}`} />
+                    <Label color={isFocused ? 'blue' : undefined} content={`y-column ${nr + 1}`} />
                   </Tooltip>
                 }
                 labelPosition="left"
@@ -74,7 +74,10 @@ class LineGraphConfig extends React.Component<Props> {
                   name: 'close',
                   circular: true,
                   link: true,
-                  onClick: () => this.graph.yColumns.remove(this.graph.yColumns[nr])
+                  onClick: () => {
+                    this.graph.colors.remove(this.graph.colors[nr]);
+                    this.graph.yColumns.remove(this.graph.yColumns[nr]);
+                  }
                 }}
               />
             );
@@ -89,7 +92,7 @@ class LineGraphConfig extends React.Component<Props> {
                       ? 'blue'
                       : undefined
                   }
-                  content={`y-column ${this.graph.yColumns.length}`}
+                  content={`y-column ${this.graph.yColumns.length + 1}`}
                 />
               </Tooltip>
             }

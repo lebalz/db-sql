@@ -6,6 +6,7 @@
   flex-wrap: wrap;
   align-items: flex-start;
   .input {
+    margin-right: 1em;
     .label {
       cursor: pointer;
     }
@@ -14,5 +15,18 @@
     display: flex;
     flex-direction: column;
     justify-content: start;
+  }
+
+  .y-columns {
+    input {
+      background: var(--highlight-green-100) !important;
+      color: black !important;
+    }
+  }
+  .x-column {
+    input {
+      background: var(--highlight-blue-100) !important;
+      color: black !important;
+    }
   }
 }

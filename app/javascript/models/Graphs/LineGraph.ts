@@ -1,6 +1,7 @@
 import { action, observable, computed } from 'mobx';
 import { rejectUndefined } from '../../utils/listFilters';
 import { IGraph, GraphType } from './WordcloudGraph';
+import { SEMANTIC_HEX_COLORS } from '../../utils/colors';
 
 export default class LineGraph implements IGraph {
   readonly type = GraphType.LineGraph;
@@ -11,6 +12,8 @@ export default class LineGraph implements IGraph {
 
   @observable xColumn?: number;
   yColumns = observable<number>([]);
+  @observable
+  colors = observable<string>([]);
 
   @action
   onColumnSelection(columnIndex: number) {
@@ -26,15 +29,16 @@ export default class LineGraph implements IGraph {
       this.yColumns[this.focuseIndex] = columnIndex;
     } else {
       this.yColumns.push(columnIndex);
+      this.colors.push(SEMANTIC_HEX_COLORS[columnIndex % SEMANTIC_HEX_COLORS.length]);
     }
   }
 
   highlightColor(idx: number) {
     if (idx === this.xColumn) {
-      return 'green';
+      return 'blue';
     }
     if (this.yColumns.includes(idx)) {
-      return 'blue';
+      return 'green';
     }
   }
 

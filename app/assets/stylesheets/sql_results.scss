@@ -13,6 +13,9 @@
     top: 46px;
     z-index: 999;
     background: rgba(255, 255, 255, 0.8) !important;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
 }
 

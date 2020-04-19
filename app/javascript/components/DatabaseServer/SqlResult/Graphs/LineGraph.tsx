@@ -92,7 +92,15 @@ class LineGraph extends React.Component<Props> {
             <Tooltip />
             <Legend />
             {this.graph.yColumns.map((col) => {
-              return <Line type="monotone" dataKey={this.headers[col]} key={col} dot={false} />;
+              return (
+                <Line
+                  type="monotone"
+                  dataKey={this.headers[col]}
+                  key={col}
+                  dot={false}
+                  stroke={this.graph.colors[col]}
+                />
+              );
             })}
           </LineChart>
         )}
