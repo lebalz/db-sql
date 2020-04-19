@@ -2,7 +2,7 @@ import { observable, action, autorun } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
 import { DEFAULT_HEIGHT } from '../components/DatabaseServer/SqlResult/ResultTable';
-import { Graph } from '../models/Graph';
+import { Graph } from '../models/Graphs/WordcloudGraph';
 
 class ResultTableState {
   @observable row = 0;

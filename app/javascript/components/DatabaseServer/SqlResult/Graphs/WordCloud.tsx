@@ -6,7 +6,7 @@ import { computed } from 'mobx';
 import { SuccessTableData } from '../../../../models/Query';
 import _ from 'lodash';
 import WordCloudConfig from './WordCloudConfig';
-import { GraphType } from '../../../../models/Graph';
+import WordcloudGraph, { GraphType } from '../../../../models/Graphs/WordcloudGraph';
 
 interface Props {
   id: string;
@@ -57,12 +57,21 @@ class WordCloud extends React.Component<Props> {
   }
 
   @computed
+  get graph(): WordcloudGraph {
+    if (this.viewState.graph?.type !== GraphType.WordCloud) {
+      throw new Error('No linegraph configured');
+    }
+
+    return this.viewState.graph;
+  }
+
+  @computed
   get wordcloudOptions(): Optional<Options> | undefined {
     if (!this.viewState.graph) {
       return;
     }
-    const minFontSize = this.viewState.graph.minFontSize;
-    const maxFontSize = this.viewState.graph.maxFontSize;
+    const minFontSize = this.graph.minFontSize;
+    const maxFontSize = this.graph.maxFontSize;
     if (minFontSize < 1 || maxFontSize < 1) {
       return;
     }

@@ -4,11 +4,12 @@ import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../stores/view_state_store';
 import { computed } from 'mobx';
 import { SuccessTableData } from '../../../models/Query';
-import { ResultType } from '../../../api/db_server';
 import _ from 'lodash';
 import { Segment, Header, Icon, Button } from 'semantic-ui-react';
-import { WordcloudGraph, GraphType } from '../../../models/Graph';
+import WordcloudGraph, { GraphType } from '../../../models/Graphs/WordcloudGraph';
+import {default as LineGraphModel } from '../../../models/Graphs/LineGraph';
 import WordCloud from './Graphs/WordCloud';
+import LineGraph from './Graphs/LineGraph';
 
 interface Props {
   id: string;
@@ -50,6 +51,7 @@ class Graph extends React.Component<Props> {
               <Button
                 icon="area graph"
                 content="Line Graph"
+                onClick={() => (this.viewState.graph = new LineGraphModel())}
               />
             </Segment.Inline>
           </Fragment>
@@ -57,6 +59,11 @@ class Graph extends React.Component<Props> {
         {this.viewState.graph?.type === GraphType.WordCloud && (
           <Fragment>
             <WordCloud data={this.props.data} id={this.props.id} />
+          </Fragment>
+        )}
+        {this.viewState.graph?.type === GraphType.LineGraph && (
+          <Fragment>
+            <LineGraph data={this.props.data} id={this.props.id} />
           </Fragment>
         )}
       </Segment>

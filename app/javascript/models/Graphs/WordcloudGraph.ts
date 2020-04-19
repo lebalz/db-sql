@@ -1,13 +1,13 @@
 import { action, observable, computed } from 'mobx';
-import { rejectUndefined } from '../utils/listFilters';
+import { rejectUndefined } from '../../utils/listFilters';
+import LineGraph from './LineGraph';
 
 export enum GraphType {
   WordCloud,
-  LineGraph,
-  None
+  LineGraph
 }
 
-export type Graph = WordcloudGraph;
+export type Graph = WordcloudGraph | LineGraph;
 
 export interface IGraph {
   readonly type: GraphType;
@@ -17,7 +17,7 @@ export interface IGraph {
   selectedColumns: number[];
 }
 
-class WordcloudGraph implements IGraph {
+export default class WordcloudGraph implements IGraph {
   readonly type = GraphType.WordCloud;
   readonly canFocus = true;
 
@@ -61,5 +61,3 @@ class WordcloudGraph implements IGraph {
     return rejectUndefined([this.wordColumn, this.countColumn]);
   }
 }
-
-export { WordcloudGraph };
