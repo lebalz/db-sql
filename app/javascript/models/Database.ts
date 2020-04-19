@@ -31,6 +31,15 @@ export default class Database {
   }
 
   @action
+  replaceQuery(query: Query) {
+    const oldQuery = this.queries.find(q => q.id === query.id);
+    if (oldQuery) {
+      this.queries.remove(oldQuery);
+    }
+    this.queries.push(query);
+  }
+
+  @action
   incrementQueryCount(queryCount: number, errorCount: number) {
     this.dbServer.incrementQueryCount(queryCount, errorCount);
   }

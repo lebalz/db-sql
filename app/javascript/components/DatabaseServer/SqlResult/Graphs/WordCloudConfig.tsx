@@ -3,8 +3,9 @@ import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
 import { computed, action } from 'mobx';
 import _ from 'lodash';
-import { Input, InputOnChangeData } from 'semantic-ui-react';
+import { Input, InputOnChangeData, Label, Button } from 'semantic-ui-react';
 import { GraphType } from '../../../../models/Graph';
+import Tooltip from '../../../../shared/Tooltip';
 
 interface Props {
   id: string;
@@ -79,11 +80,17 @@ class WordCloudConfig extends React.Component<Props> {
       return null;
     }
 
+    const wordColumnSet = this.viewState.graph.wordColumn !== undefined;
+
     return (
       <div className="wordcloud-config">
         <Input
           size="mini"
-          label={{ content: 'Words' }}
+          label={
+            <Tooltip content="Select a column containing the words">
+              <Label color={this.viewState.graph.focused === 'wordColumn' ? 'blue' : undefined}>Words</Label>
+            </Tooltip>
+          }
           labelPosition="left"
           className="word-column"
           placeholder="Word Column"
@@ -98,7 +105,24 @@ class WordCloudConfig extends React.Component<Props> {
         />
         <Input
           size="mini"
-          label={{ content: 'Counts' }}
+          label={
+            <Tooltip
+              content={
+                <div>
+                  <b>Optional</b>
+                  <br />
+                  Select a column containing the word counts.
+                  <br />
+                  Can be used in combination with GROUP BY clauses.
+                </div>
+              }
+            >
+              <Label color={this.viewState.graph.focused === 'countColumn' ? 'blue' : undefined}>
+                Counts
+              </Label>
+            </Tooltip>
+          }
+          disabled={!wordColumnSet}
           labelPosition="left"
           className="count-column"
           placeholder="Count Column"
@@ -113,7 +137,12 @@ class WordCloudConfig extends React.Component<Props> {
         <Input
           className="numeric"
           size="mini"
-          label={{ content: 'Min' }}
+          label={
+            <Tooltip content="The minimal fontsize used for the words">
+              <Label content="Min" />
+            </Tooltip>
+          }
+          disabled={!wordColumnSet}
           title="Minimal Fontsize"
           labelPosition="left"
           type="number"
@@ -123,14 +152,22 @@ class WordCloudConfig extends React.Component<Props> {
         <Input
           className="numeric"
           size="mini"
-          label={{ content: 'Max' }}
+          label={
+            <Tooltip content="The maximal fontsize used for the words">
+              <Label content="Max" />
+            </Tooltip>
+          }
           title="Maximal Fontsize"
           labelPosition="left"
           type="number"
-          disabled={this.viewState.graph.minFontSize <= 0}
+          disabled={!wordColumnSet || this.viewState.graph.minFontSize <= 0}
           value={this.viewState.graph.maxFontSize}
           onChange={(_, data) => this.onChangeMaxFontSize(data)}
         />
+        <div className="spacer" />
+        <Tooltip content="Close Graph">
+          <Button size="mini" icon="close" onClick={() => this.viewState.graph = undefined} />
+        </Tooltip>
       </div>
     );
   }

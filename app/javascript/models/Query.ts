@@ -75,8 +75,8 @@ export default class Query {
   @observable requestState: REST = REST.None;
   @observable query: string = '';
   queries = observable<string>([]);
-  @observable.ref result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
-  @observable active: boolean = false;
+  @observable.ref
+  result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
   @observable isClosed: boolean = false;
   @observable proceedAfterError: boolean = true;
   @observable executionMode: QueryExecutionMode = QueryExecutionMode.Multi;
@@ -111,6 +111,9 @@ export default class Query {
   createCopyFor(database: Database) {
     const copy = new Query(database, this.id);
     copy.query = this.query;
+    copy.proceedAfterError = this.proceedAfterError;
+    copy.executionMode = this.executionMode;
+    copy.modifiedRawQueryConfig = this.modifiedRawQueryConfig;
     return copy;
   }
 

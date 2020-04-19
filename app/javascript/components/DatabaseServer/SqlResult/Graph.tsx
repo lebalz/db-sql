@@ -32,31 +32,9 @@ class Graph extends React.Component<Props> {
     return this.injected.viewStateStore.resultTableState(this.props.id);
   }
 
-  @computed
-  get wordClouds(): Word[] {
-    const cols = this.viewState.graph?.selectedColumns;
-    if (!cols || cols.length > 2 || cols.length === 0) {
-      return [];
-    }
-    const { data } = this.props;
-    if (!data || data.type !== ResultType.Success) {
-      return [];
-    }
-    const columnNames = Object.keys(data.result[0]);
-    if (cols.length === 1) {
-      const colName = columnNames[cols[0]];
-      const groups = _.groupBy(data.result.map((r) => r[colName]));
-      return Object.keys(groups).map((k) => ({ text: k, value: groups[k].length }));
-    }
-
-    const valueKey = columnNames[cols[0]];
-    const countKey = columnNames[cols[1]];
-    return data.result.map((r) => ({ text: r[valueKey] as string, value: r[countKey] as number }));
-  }
-
   render() {
     return (
-      <Segment>
+      <Segment placeholder={this.viewState.graph === undefined}>
         {this.viewState.graph === undefined && (
           <Fragment>
             <Header icon>

@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, autorun } from 'mobx';
 import { RootStore } from './root_store';
 import _ from 'lodash';
 import { DEFAULT_HEIGHT } from '../components/DatabaseServer/SqlResult/ResultTable';
@@ -12,9 +12,9 @@ class ResultTableState {
   @observable x = 0;
   @observable y = 0;
   @observable showGraph = false;
+
   @observable.ref
   graph?: Graph;
-  @observable canSelectColumns: boolean = false;
 }
 
 class State {
@@ -37,7 +37,19 @@ class ViewStateStore {
   }
 
   @action
+  resetScrollState(key: string, rowHeight: number, clientHeight: number) {
+    const state = this.resultTableState(key);
+
+    state.rowHeight = rowHeight;
+    state.preventNextScrollUpdate = false;
+    state.wrapperHeight = clientHeight;
+    state.x = 0;
+    state.y = 0;
+  }
+
+  @action
   cleanResultTableState(key: string) {
+    console.log('cleanup: ', key);
     this.state.resultTable.delete(key);
   }
 

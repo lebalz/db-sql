@@ -6,6 +6,9 @@
   flex-wrap: wrap;
   .input {
     margin-right: 1em;
+    .label {
+      cursor: pointer;
+    }
   }
   .word-column {
     input {

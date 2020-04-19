@@ -76,21 +76,17 @@ class ResultTable extends React.Component<Props> {
     }
   }
 
-  componentWillUnmount() {
-    this.injected.viewStateStore.cleanResultTableState(this.props.viewStateKey);
-  }
-
   @action
   setInitialState() {
     if (this.tableWrapper.current) {
       this.tableWrapper.current.scrollTo(0, 0);
       const firstRow = this.tableWrapper.current.querySelector('table tbody tr');
       if (firstRow) {
-        this.viewState.rowHeight = firstRow.clientHeight;
-        this.viewState.wrapperHeight = this.tableWrapper.current.clientHeight;
-        this.viewState.x = 0;
-        this.viewState.y = 0;
-        this.viewState.graph = undefined;
+        this.injected.viewStateStore.resetScrollState(
+          this.props.viewStateKey,
+          firstRow.clientHeight,
+          this.tableWrapper.current.clientHeight
+        );
       }
     }
   }
@@ -249,10 +245,7 @@ class ResultTable extends React.Component<Props> {
                 <Table.Row key={i}>
                   {Object.values(val).map((cell, j) => {
                     return (
-                      <Table.Cell
-                        key={j}
-                        className={cx(colorMap[j], { selected: selectionMap[j] })}
-                      >
+                      <Table.Cell key={j} className={cx(colorMap[j], { selected: selectionMap[j] })}>
                         {cell === null ? <Label content="NULL" size="mini" /> : cell}
                       </Table.Cell>
                     );
