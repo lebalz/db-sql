@@ -11,5 +11,11 @@
   .toggle.checkbox {
     margin-right: 1em;
   }
+}
 
+#ace-resizer {
+  width: 100%;
+  cursor: row-resize;
+  border-bottom: 2px solid gray;
+  z-index: 100;
 }
