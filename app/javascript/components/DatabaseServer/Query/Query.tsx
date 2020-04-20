@@ -11,13 +11,60 @@ interface Props {
   query: QueryModel;
 }
 
+const MIN_EDITOR_HEIGHT = 50;
+const EDITOR_PADDING_TOP = 10;
+const DEFAULT_EDITOR_HEIGHT = 280;
+
 @observer
 export default class Query extends React.Component<Props> {
+  state: { mouseDown: boolean; editorHeight: number } = {
+    mouseDown: false,
+    editorHeight: DEFAULT_EDITOR_HEIGHT
+  };
+
+  componentDidMount() {
+    document.addEventListener('mouseup', this.onMouseUp);
+    document.addEventListener('mousemove', this.onMouseMove);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('mouseup', this.onMouseUp);
+    document.removeEventListener('mousemove', this.onMouseMove);
+  }
+
+  onMouseDown = () => {
+    this.setState({ mouseDown: true });
+  };
+
+  onMouseUp = () => {
+    this.setState({ mouseDown: false });
+  };
+
+  onMouseMove = (e: MouseEvent) => {
+    if (this.state.mouseDown) {
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const wrapper = document.getElementById('editor-wrapper');
+
+      if (!wrapper) {
+        return console.log('Resizing not possible due to missing dom elements');
+      }
+      const topY = wrapper.getBoundingClientRect().y;
+
+      const height = Math.max(Math.max(0, e.clientY - topY - EDITOR_PADDING_TOP), MIN_EDITOR_HEIGHT);
+
+      this.setState({ editorHeight: height });
+    }
+  };
+
   render() {
     return (
       <Fragment>
-        <Segment attached="bottom" style={{ padding: '0.5em 0 0 0', marginBottom: '0' }}>
-          <SqlEditor query={this.props.query} />
+        <Segment id="editor-wrapper" attached="bottom" style={{ padding: `${EDITOR_PADDING_TOP}px 0 0 0`, marginBottom: '0' }}>
+          <SqlEditor query={this.props.query} height={this.state.editorHeight} />
+          <div id="ace-resizer" onMouseDown={this.onMouseDown} />
         </Segment>
         <div className="query-bar">
           <Checkbox

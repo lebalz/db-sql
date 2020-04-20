@@ -11,6 +11,7 @@ import Query from '../../../models/Query';
 
 interface Props {
   query: Query;
+  height: number;
 }
 
 interface Completion {
@@ -38,6 +39,13 @@ export default class SqlEditor extends React.Component<Props> {
         callback(null, (editor as any).id === this.editorId ? this.completers : []);
       }
     });
+  }
+
+  // ensure ace is resized when it's height changes
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.height !== this.props.height && this.editorRef.current) {
+      this.editorRef.current.editor.resize();
+    }
   }
 
   @computed
@@ -80,7 +88,7 @@ export default class SqlEditor extends React.Component<Props> {
 
     return (
       <AceEditor
-        style={{ width: '100%', height: '200px' }}
+        style={{ width: '100%', height: `${this.props.height}px` }}
         mode="sql"
         theme="github"
         onChange={this.onChange}
