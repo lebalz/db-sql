@@ -13,7 +13,7 @@ interface Props {
 
 const MIN_EDITOR_HEIGHT = 50;
 const EDITOR_PADDING_TOP = 10;
-const DEFAULT_EDITOR_HEIGHT = 280;
+const DEFAULT_EDITOR_HEIGHT = 200;
 
 @observer
 export default class Query extends React.Component<Props> {
