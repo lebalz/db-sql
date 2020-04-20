@@ -34,7 +34,6 @@ const labelColor = (result: TableData): SemanticCOLORS => {
 @inject('viewStateStore')
 @observer
 class SqlResults extends React.Component<Props> {
-  @computed
   get results() {
     return this.props.query.resultTableData;
   }
@@ -161,7 +160,7 @@ class SqlResults extends React.Component<Props> {
             exclusive={false}
             panels={this.resultPanels}
             className="sql-results"
-            defaultActiveIndex={this.results.map((_, idx) => idx)}
+            defaultActiveIndex={[...Array(50).keys()]}
           />
         </Segment>
       </Fragment>
