@@ -1,6 +1,13 @@
 {
   "name": "db-sql",
   "private": true,
+  "license": "GPLv3",
+  "author": "Balthasar Hofer",
+  "bugs": {
+    "url": "https://github.com/lebalz/db-sql/issues"
+  },
+  "homepage": "https://github.com/lebalz/db-sql",
+  "description": "An easy to use DBMS to query any PSQL or MYSQL database",
   "dependencies": {
     "@rails/webpacker": "^4.2.2",
     "@types/history": "^4.7.5",
