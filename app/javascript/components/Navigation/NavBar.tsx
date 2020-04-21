@@ -135,6 +135,11 @@ export default class NavBar extends React.Component {
             </Menu.Item>
           )}
           <Menu.Menu position="right">
+            <Menu.Item
+              name="About"
+              active={router.location.pathname === '/about'}
+              onClick={() => router.push('/about')}
+            />
             <Menu.Item name="Logout" onClick={() => this.injected.sessionStore.logout()} />
           </Menu.Menu>
         </Menu>
