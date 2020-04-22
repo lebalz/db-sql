@@ -5,6 +5,7 @@ import DbServerStore from './db_server_store';
 import axios, { CancelTokenSource } from 'axios';
 import RouterStore from './router_store';
 import StatusStore from './status_store';
+import ViewStateStore from './view_state_store';
 
 export interface Store {
   cleanup: () => void;
@@ -19,6 +20,7 @@ export class RootStore implements Store {
   user: UserStore;
   dbServer: DbServerStore;
   statusStore: StatusStore;
+  viewStateStore: ViewStateStore;
 
   @observable initialized = false;
 
@@ -37,6 +39,9 @@ export class RootStore implements Store {
 
     this.statusStore = new StatusStore(this);
     this.stores.push(this.dbServer);
+
+    this.viewStateStore = new ViewStateStore(this);
+    this.stores.push(this.viewStateStore);
 
     this.initialized = true;
   }

@@ -14,20 +14,13 @@ import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexe
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import _ from 'lodash';
-import User from './User';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
-  console.time('lexing');
   const lexer = new QuerySeparationGrammarLexer(inputStream);
-  console.timeLog('lexing');
   const tokenStream = new CommonTokenStream(lexer);
-  console.time('parse');
   const parser = new QuerySeparationGrammarParser(tokenStream);
-  console.timeLog('parse');
-  console.time('queryText');
   const { children } = parser.queriesText();
-  console.timeLog('queryText');
   if (!children) {
     return [];
   }
@@ -62,8 +55,7 @@ interface SqlTableData {
   type: ResultType;
   time?: number;
 }
-
-interface SuccessTableData extends SqlTableData {
+export interface SuccessTableData extends SqlTableData {
   type: ResultType.Success;
   result: ResultTableData;
 }
@@ -83,8 +75,8 @@ export default class Query {
   @observable requestState: REST = REST.None;
   @observable query: string = '';
   queries = observable<string>([]);
-  @observable result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
-  @observable active: boolean = false;
+  @observable.ref
+  result: QueryResult = { type: QueryExecutionMode.Multi, results: [] };
   @observable isClosed: boolean = false;
   @observable proceedAfterError: boolean = true;
   @observable executionMode: QueryExecutionMode = QueryExecutionMode.Multi;
@@ -119,6 +111,9 @@ export default class Query {
   createCopyFor(database: Database) {
     const copy = new Query(database, this.id);
     copy.query = this.query;
+    copy.proceedAfterError = this.proceedAfterError;
+    copy.executionMode = this.executionMode;
+    copy.modifiedRawQueryConfig = this.modifiedRawQueryConfig;
     return copy;
   }
 

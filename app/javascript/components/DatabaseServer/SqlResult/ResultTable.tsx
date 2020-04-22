@@ -2,7 +2,10 @@ import React from 'react';
 import { Table, Placeholder, Label } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultTable as ResulTableData } from '../../../api/db_server';
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
+import { observer, inject } from 'mobx-react';
+import ViewStateStore from '../../../stores/view_state_store';
+import cx from 'classnames';
 
 /**
  * show 200 rows at a time
@@ -37,23 +40,31 @@ import { computed } from 'mobx';
  */
 interface Props {
   table: ResulTableData;
+  viewStateKey: string;
 }
 
-const DEFAULT_HEIGHT = 46;
+interface InjectedProps extends Props {
+  viewStateStore: ViewStateStore;
+}
+
+export const DEFAULT_HEIGHT = 46;
 const LOADED_ROWS = 200;
 const THRESHOLD = 10;
 
-export default class ResultTable extends React.Component<Props> {
+@inject('viewStateStore')
+@observer
+class ResultTable extends React.Component<Props> {
   tableWrapper = React.createRef<HTMLTableRowElement>();
 
-  state = {
-    row: 0,
-    rowHeight: DEFAULT_HEIGHT,
-    wrapperHeight: DEFAULT_HEIGHT * 20,
-    preventNextScrollUpdate: false,
-    x: 0,
-    y: 0
-  };
+  @computed
+  get injected() {
+    return this.props as InjectedProps;
+  }
+
+  @computed
+  get viewState() {
+    return this.injected.viewStateStore.resultTableState(this.props.viewStateKey)!;
+  }
 
   componentDidMount() {
     this.setInitialState();
@@ -65,17 +76,17 @@ export default class ResultTable extends React.Component<Props> {
     }
   }
 
+  @action
   setInitialState() {
     if (this.tableWrapper.current) {
       this.tableWrapper.current.scrollTo(0, 0);
       const firstRow = this.tableWrapper.current.querySelector('table tbody tr');
       if (firstRow) {
-        this.setState({
-          rowHeight: firstRow.clientHeight,
-          wrapperHeight: this.tableWrapper.current.clientHeight,
-          x: 0,
-          y: 0
-        });
+        this.injected.viewStateStore.resetScrollState(
+          this.props.viewStateKey,
+          firstRow.clientHeight,
+          this.tableWrapper.current.clientHeight
+        );
       }
     }
   }
@@ -94,18 +105,18 @@ export default class ResultTable extends React.Component<Props> {
 
   @computed
   get resultRange() {
-    return this.result.slice(this.state.row, this.state.row + LOADED_ROWS);
+    return this.result.slice(this.viewState.row, this.viewState.row + LOADED_ROWS);
   }
 
   @computed
   get spacerHeight() {
-    const height = (this.result.length - LOADED_ROWS) * this.state.rowHeight;
+    const height = (this.result.length - LOADED_ROWS) * this.viewState.rowHeight;
     return height > 0 ? height : 0;
   }
 
   @computed
   get bottomSpacerHeight() {
-    const height = (this.result.length - LOADED_ROWS - this.state.row) * this.state.rowHeight;
+    const height = (this.result.length - LOADED_ROWS - this.viewState.row) * this.viewState.rowHeight;
     return height > 0 ? height : 0;
   }
 
@@ -119,7 +130,7 @@ export default class ResultTable extends React.Component<Props> {
 
   @computed
   get topSpacerHeight() {
-    return this.state.row * this.state.rowHeight;
+    return this.viewState.row * this.viewState.rowHeight;
   }
 
   @computed
@@ -140,7 +151,7 @@ export default class ResultTable extends React.Component<Props> {
 
   @computed
   get rowsPerPage() {
-    return Math.ceil(this.state.wrapperHeight / this.state.rowHeight);
+    return Math.ceil(this.viewState.wrapperHeight / this.viewState.rowHeight);
   }
 
   onScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -148,10 +159,10 @@ export default class ResultTable extends React.Component<Props> {
       event.preventDefault();
       return;
     }
-    if (this.state.preventNextScrollUpdate) {
+    if (this.viewState.preventNextScrollUpdate) {
       event.preventDefault();
-      this.tableWrapper.current.scrollTo(this.state.x, this.state.y);
-      this.setState({ preventNextScrollUpdate: false });
+      this.tableWrapper.current.scrollTo(this.viewState.x, this.viewState.y);
+      this.viewState.preventNextScrollUpdate = false;
       return;
     }
     const table = this.tableWrapper.current.querySelector('table');
@@ -164,12 +175,13 @@ export default class ResultTable extends React.Component<Props> {
 
     const isInBounds = row < this.result.length && row >= 0;
     const needsUpperExtend =
-      scrollTop > this.state.row * this.state.rowHeight + this.currentTableHeight - this.upperThreshold();
+      scrollTop >
+      this.viewState.row * this.viewState.rowHeight + this.currentTableHeight - this.upperThreshold();
 
-    const needsLowestExtend = scrollTop < this.state.row * this.state.rowHeight;
+    const needsLowestExtend = scrollTop < this.viewState.row * this.viewState.rowHeight;
     const needsLowerExtend =
       scrollTop > this.lowerThreshold() &&
-      scrollTop < this.state.row * this.state.rowHeight + this.lowerThreshold();
+      scrollTop < this.viewState.row * this.viewState.rowHeight + this.lowerThreshold();
 
     if (isInBounds && (needsUpperExtend || needsLowestExtend || needsLowerExtend)) {
       event.preventDefault();
@@ -180,16 +192,25 @@ export default class ResultTable extends React.Component<Props> {
       } else if (needsLowerExtend) {
         dt = -this.lowerThreshold(-1);
       }
-      this.setState({
-        row: newRow < 0 ? 0 : newRow,
-        preventNextScrollUpdate: true,
-        x: event.currentTarget.scrollLeft,
-        y: scrollTop - dt
-      });
+      this.viewState.row = newRow < 0 ? 0 : newRow;
+      this.viewState.preventNextScrollUpdate = true;
+      this.viewState.x = event.currentTarget.scrollLeft;
+      this.viewState.y = scrollTop - dt;
     }
   };
 
+  @action
+  onColumnClick(index: number) {
+    if (!this.viewState.graph) {
+      return;
+    }
+    this.viewState.graph.onColumnSelection(index);
+  }
+
   render() {
+    const selectedColumns = this.viewState.graph?.selectedColumns || [];
+    const selectionMap = this.headers.map((_, idx) => selectedColumns.includes(idx));
+    const colorMap = this.headers.map((_, idx) => this.viewState.graph?.highlightColor(idx));
     return (
       <div className="sql-result-table" onScroll={this.onScroll} ref={this.tableWrapper}>
         <ScrollPlaceholder height={this.topSpacerHeight} />
@@ -203,7 +224,18 @@ export default class ResultTable extends React.Component<Props> {
           <Table.Header>
             <Table.Row>
               {this.headers.map((key, i) => {
-                return <Table.HeaderCell key={i}>{key}</Table.HeaderCell>;
+                return (
+                  <Table.HeaderCell
+                    key={i}
+                    className={cx(colorMap[i], {
+                      'selectable-column': this.viewState.graph?.canFocus,
+                      selected: selectionMap[i]
+                    })}
+                    onClick={() => this.onColumnClick(i)}
+                  >
+                    {key}
+                  </Table.HeaderCell>
+                );
               })}
             </Table.Row>
           </Table.Header>
@@ -213,7 +245,7 @@ export default class ResultTable extends React.Component<Props> {
                 <Table.Row key={i}>
                   {Object.values(val).map((cell, j) => {
                     return (
-                      <Table.Cell key={j}>
+                      <Table.Cell key={j} className={cx(colorMap[j], { selected: selectionMap[j] })}>
                         {cell === null ? <Label content="NULL" size="mini" /> : cell}
                       </Table.Cell>
                     );
@@ -238,3 +270,5 @@ const ScrollPlaceholder = ({ height }: { height: number }) => {
     </Placeholder>
   );
 };
+
+export default ResultTable;

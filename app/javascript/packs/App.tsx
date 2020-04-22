@@ -1,3 +1,4 @@
+import 'rc-slider/assets/index.css';
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { Provider, observer } from 'mobx-react';
@@ -23,6 +24,7 @@ const AppContent = observer(() => (
     userStore={rootStore.user}
     dbServerStore={rootStore.dbServer}
     statusStore={rootStore.statusStore}
+    viewStateStore={rootStore.viewStateStore}
   >
     <Router history={rootStore.session.history}>
       <Switch>

@@ -1,3 +1,5 @@
+@import "colors";
+
 .results-header {
   position: sticky;
   top: 0px;
@@ -6,11 +8,14 @@
 }
 
 .sql-results.accordion {
-  &>div.title {
+  & > div.title {
     position: sticky;
     top: 46px;
     z-index: 999;
     background: rgba(255, 255, 255, 0.8) !important;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
 }
 
@@ -22,6 +27,30 @@
     thead th {
       position: sticky;
       top: 0;
+    }
+  }
+  .selectable-column {
+    cursor: pointer !important;
+    &:hover {
+      background: #d6d6d6;
+    }
+    &.selected {
+    background: var(--highlight-grey-100);
+        &.green {
+        background: var(--highlight-green-100);
+      }
+      &.blue {
+        background: var(--highlight-blue-100);
+      }
+    }
+  }
+  td.selected {
+    background: var(--highlight-grey-50);
+    &.green {
+      background: var(--highlight-green-50);
+    }
+    &.blue {
+      background: var(--highlight-blue-50);
     }
   }
 }

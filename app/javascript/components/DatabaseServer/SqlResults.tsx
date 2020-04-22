@@ -1,16 +1,23 @@
 import React, { Fragment } from 'react';
-import { Segment, Label, Popup, Header, Accordion } from 'semantic-ui-react';
+import { Segment, Label, Popup, Header, Accordion, Button, Icon } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultType } from '../../api/db_server';
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
-import Query, { QueryExecutionMode, TableData } from '../../models/Query';
+import Query, { TableData } from '../../models/Query';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 import Tooltip from '../../shared/Tooltip';
 import { PrismCode } from './SqlResult/PrismCode';
+import { inject, observer } from 'mobx-react';
+import ViewStateStore from '../../stores/view_state_store';
+import Graph from './SqlResult/Graph';
 
 interface Props {
   query: Query;
+}
+
+interface InjectedProps extends Props {
+  viewStateStore: ViewStateStore;
 }
 
 const labelColor = (result: TableData): SemanticCOLORS => {
@@ -24,10 +31,20 @@ const labelColor = (result: TableData): SemanticCOLORS => {
   }
 };
 
-export default class SqlResults extends React.Component<Props> {
-  @computed
+@inject('viewStateStore')
+@observer
+class SqlResults extends React.Component<Props> {
   get results() {
     return this.props.query.resultTableData;
+  }
+
+  @computed
+  get injected() {
+    return this.props as InjectedProps;
+  }
+
+  viewState(idx: number) {
+    return this.injected.viewStateStore.resultTableState(`${this.props.query.name}#${idx}`);
   }
 
   @computed
@@ -45,31 +62,69 @@ export default class SqlResults extends React.Component<Props> {
     return this.results.filter((r) => r.type === ResultType.Success);
   }
 
+  @action
+  onShowGraph(event: React.MouseEvent<HTMLElement, MouseEvent>, idx: number) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.viewState(idx).showGraph = !this.viewState(idx).showGraph;
+  }
+
   get resultPanels() {
-    return this.props.query.resultTableData.map((result, idx) => ({
-      key: idx,
-      title: {
-        content: (
-          <Fragment>
-            <Tooltip
-              content={<PrismCode code={this.queries.length > idx ? this.queries[idx] : ''} language="sql" plugins={['line-numbers']} />}
-              disabled={this.queries.length === 0}
-            >
-              <Label
-                size="large"
-                color={labelColor(result)}
-                content={`Query #${idx + 1}`}
-                style={{ marginRight: '1em', color: 'black' }}
-              />
-            </Tooltip>
-            {<TimeLabel result={result} />}
-          </Fragment>
-        )
-      },
-      content: {
-        content: <SqlResult result={result} queryIndex={idx} key={idx} />
-      }
-    }));
+    return this.props.query.resultTableData.map((result, idx) => {
+      const resultId = `${this.props.query.name}#${idx}`;
+      return {
+        key: idx,
+        title: {
+          content: (
+            <Fragment>
+              <Tooltip
+                content={
+                  <PrismCode
+                    code={this.queries.length > idx ? this.queries[idx] : ''}
+                    language="sql"
+                    plugins={['line-numbers']}
+                  />
+                }
+                disabled={this.queries.length === 0}
+              >
+                <Label
+                  size="large"
+                  color={labelColor(result)}
+                  content={`Query #${idx + 1}`}
+                  style={{ marginRight: '1em', color: 'black' }}
+                />
+              </Tooltip>
+              {<TimeLabel result={result} />}
+              <div className="spacer" />
+              {result.type === ResultType.Success && (
+                <Tooltip content="Show graph">
+                  <Button
+                    size="mini"
+                    active={this.viewState(idx).showGraph}
+                    icon={
+                      <Icon.Group>
+                        <Icon name="area graph" color="blue" />
+                      </Icon.Group>
+                    }
+                    onClick={(e) => this.onShowGraph(e, idx)}
+                  />
+                </Tooltip>
+              )}
+            </Fragment>
+          )
+        },
+        content: {
+          content: (
+            <Fragment>
+              {result.type === ResultType.Success && this.viewState(idx).showGraph && (
+                <Graph data={result} id={resultId} />
+              )}
+              <SqlResult result={result} viewStateKey={resultId} queryIndex={idx} key={idx} />
+            </Fragment>
+          )
+        }
+      };
+    });
   }
 
   render() {
@@ -105,7 +160,7 @@ export default class SqlResults extends React.Component<Props> {
             exclusive={false}
             panels={this.resultPanels}
             className="sql-results"
-            defaultActiveIndex={this.results.map((_, idx) => idx)}
+            defaultActiveIndex={[...Array(50).keys()]}
           />
         </Segment>
       </Fragment>
@@ -137,3 +192,5 @@ export const TimeLabel = ({ result }: { result: TableData }) => {
   }
   return <Popup content={popup} trigger={<Label as="a" tag color="blue" content={label} />} />;
 };
+
+export default SqlResults;
