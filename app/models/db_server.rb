@@ -30,6 +30,13 @@ class DbServer < ApplicationRecord
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
 
+  MYSQL_CONNECTION_OPTIONS = {
+    encoding: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci'
+  }.freeze
+
+  PSQL_CONNECTION_OPTIONS = {}.freeze
+
   DEFAULT_AR_DB_ADAPTER = {
     'psql' => 'postgresql',
     'mysql' => 'mysql2',
@@ -121,7 +128,8 @@ class DbServer < ApplicationRecord
         password: password(key),
         database: database_name,
         name: @conn_key,
-        flags: ["MULTI_STATEMENTS"]
+        flags: ["MULTI_STATEMENTS"],
+        **db_specific_connection_options
       )
     end
     @active_connection = @connection.retrieve_connection(@conn_key)
@@ -465,4 +473,15 @@ class DbServer < ApplicationRecord
     database_name ||= default_database_name
     "#{id}-#{database_name}-#{DateTime.now.strftime('%Q')}"
   end
+
+  # @return [Hash]
+  #   additional connection options, e.g. utf8 capability for mysql
+  def db_specific_connection_options
+    if mysql?
+      MYSQL_CONNECTION_OPTIONS
+    else
+      PSQL_CONNECTION_OPTIONS
+    end
+  end
+
 end
