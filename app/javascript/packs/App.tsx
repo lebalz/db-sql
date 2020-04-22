@@ -10,6 +10,9 @@ import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
 import DbServer from '../components/DbServer';
 import About from '../components/About';
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const MIN_SIDEBAR_WIDTH = 50;
 const GRID_COLUMN_GAP_WIDTH = 1;

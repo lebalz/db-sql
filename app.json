@@ -3,6 +3,7 @@
   "description": "Web based dbms for PostgreSQL and MySql",
   "scripts": {
     "dokku": {
+      "predeploy": "echo -e \"GIT_REV=$GIT_REV\nDOMAIN=$DOMAIN\" >> .env",
       "postdeploy": "bundle exec rails db:migrate"
     }
   }

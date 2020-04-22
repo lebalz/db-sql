@@ -27,28 +27,26 @@ export default class About extends React.Component {
               DB SQL
             </Header>
           </div>
-            <div>
-              <Button icon="github" as="a" href="https://github.com/lebalz/db-sql" content="GitHub" />
-              <Button icon="star" as="a" href="https://github.com/lebalz/db-sql" content="Star" />
+          <div>
+            {process.env.GIT_REV && (
               <Button
-                icon="eye"
+                icon="code branch"
                 as="a"
-                href="https://github.com/lebalz/db-sql/subscription"
-                content="Watch"
+                href={`https://github.com/lebalz/db-sql/commit/${process.env.GIT_REV}`}
+                content={`v${process.env.GIT_REV.slice(0, 7)}`}
               />
-              <Button
-                icon="exclamation circle"
-                as="a"
-                href="https://github.com/lebalz/db-sql/issues"
-                content="Issues"
-              />
-              <Button
-                icon="balance"
-                as="a"
-                href="https://www.gnu.org/licenses/gpl-3.0.html"
-                content="GPLv3"
-              />
-            </div>
+            )}
+            <Button icon="github" as="a" href="https://github.com/lebalz/db-sql" content="GitHub" />
+            <Button icon="star" as="a" href="https://github.com/lebalz/db-sql" content="Star" />
+            <Button icon="eye" as="a" href="https://github.com/lebalz/db-sql/subscription" content="Watch" />
+            <Button
+              icon="exclamation circle"
+              as="a"
+              href="https://github.com/lebalz/db-sql/issues"
+              content="Issues"
+            />
+            <Button icon="balance" as="a" href="https://www.gnu.org/licenses/gpl-3.0.html" content="GPLv3" />
+          </div>
         </main>
       </Fragment>
     );
