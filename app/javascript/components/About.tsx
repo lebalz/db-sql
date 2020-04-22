@@ -1,11 +1,20 @@
 import React, { Fragment } from 'react';
 import { Header, Button } from 'semantic-ui-react';
 import NavBar from './Navigation/NavBar';
-import { observer } from 'mobx-react';
+import { observer, inject } from 'mobx-react';
 import DbSqlIcon from '../shared/DbSqlIcon';
+import StatusStore from '../stores/status_store';
 
+interface InjectedProps {
+  statusStore: StatusStore;
+}
+
+@inject('statusStore')
 @observer
 export default class About extends React.Component {
+  get injected() {
+    return this.props as InjectedProps;
+  }
   render() {
     return (
       <Fragment>
@@ -28,14 +37,12 @@ export default class About extends React.Component {
             </Header>
           </div>
           <div>
-            {process.env.GIT_REV && (
-              <Button
-                icon="code branch"
-                as="a"
-                href={`https://github.com/lebalz/db-sql/commit/${process.env.GIT_REV}`}
-                content={`v${process.env.GIT_REV.slice(0, 7)}`}
-              />
-            )}
+            <Button
+              icon="code branch"
+              as="a"
+              href={this.injected.statusStore.commit.link}
+              content={`v${this.injected.statusStore.commit.commit}`}
+            />
             <Button icon="github" as="a" href="https://github.com/lebalz/db-sql" content="GitHub" />
             <Button icon="star" as="a" href="https://github.com/lebalz/db-sql" content="Star" />
             <Button icon="eye" as="a" href="https://github.com/lebalz/db-sql/subscription" content="Watch" />

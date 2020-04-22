@@ -1,5 +1,5 @@
 import { observable, action, computed } from 'mobx';
-import { RootStore } from './root_store';
+import { RootStore, Store } from './root_store';
 import User from '../models/User';
 import _ from 'lodash';
 import { users, deleteUser, updateUser as apiUpdate, user as apiUser } from '../api/admin';
@@ -30,7 +30,7 @@ class State {
   @observable reloadState = ReloadState.None;
 }
 
-class UserStore {
+class UserStore implements Store {
   private readonly root: RootStore;
   @observable.ref
   private state = new State();
