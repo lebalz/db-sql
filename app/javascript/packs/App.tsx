@@ -9,6 +9,10 @@ import Profile from '../components/Profile';
 import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
 import DbServer from '../components/DbServer';
+import About from '../components/About';
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const MIN_SIDEBAR_WIDTH = 50;
 const GRID_COLUMN_GAP_WIDTH = 1;
@@ -21,11 +25,13 @@ const AppContent = observer(() => (
     routerStore={rootStore.routing}
     userStore={rootStore.user}
     dbServerStore={rootStore.dbServer}
+    statusStore={rootStore.statusStore}
   >
     <Router history={rootStore.session.history}>
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/about" component={About} />
         <Route path="/connections/:id/:db_name?" component={DbServer} />
         <Route path="/profile/:part" component={Profile} />
         <Route path="/users/:id/reset_password" component={ResetPassword} />

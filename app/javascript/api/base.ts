@@ -8,7 +8,7 @@ export namespace Api {
       case 'development':
         return 'http://localhost:3000';
       default:
-        return process.env.DOMAIN || 'https://db-sql.ch';
+        return process.env.DOMAIN || window.origin;
     }
   }
 
