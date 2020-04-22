@@ -15,7 +15,7 @@ module Resources
                             [sha, short]
                           end
 
-      @link = "https://github.com/lebalz/db-sql/workspace/commit/#{commit}"
+      @link = "https://github.com/lebalz/db-sql/commit/#{commit}"
       @commit = short_sha
       { commit: @commit, link: @link }
     end

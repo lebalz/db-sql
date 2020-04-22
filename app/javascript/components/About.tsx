@@ -37,22 +37,53 @@ export default class About extends React.Component {
             </Header>
           </div>
           <div>
-            <Button
-              icon="code branch"
-              as="a"
-              href={this.injected.statusStore.commit.link}
-              content={`v${this.injected.statusStore.commit.commit}`}
-            />
-            <Button icon="github" as="a" href="https://github.com/lebalz/db-sql" content="GitHub" />
-            <Button icon="star" as="a" href="https://github.com/lebalz/db-sql" content="Star" />
-            <Button icon="eye" as="a" href="https://github.com/lebalz/db-sql/subscription" content="Watch" />
-            <Button
-              icon="exclamation circle"
-              as="a"
-              href="https://github.com/lebalz/db-sql/issues"
-              content="Issues"
-            />
-            <Button icon="balance" as="a" href="https://www.gnu.org/licenses/gpl-3.0.html" content="GPLv3" />
+            <div className="further-info">
+              <Button
+                icon="github"
+                target="_blank"
+                as="a"
+                href="https://github.com/lebalz/db-sql"
+                content="GitHub"
+              />
+              <Button
+                icon="star"
+                target="_blank"
+                as="a"
+                href="https://github.com/lebalz/db-sql"
+                content="Star"
+              />
+              <Button
+                icon="eye"
+                as="a"
+                target="_blank"
+                href="https://github.com/lebalz/db-sql/subscription"
+                content="Watch"
+              />
+              <Button
+                icon="exclamation circle"
+                as="a"
+                target="_blank"
+                href="https://github.com/lebalz/db-sql/issues"
+                content="Issues"
+              />
+            </div>
+            <div className="further-info">
+              <Button
+                icon="code branch"
+                as="a"
+                target="_blank"
+                href={this.injected.statusStore.commit.link}
+                content={`v${this.injected.statusStore.commit.commit}`}
+              />
+
+              <Button
+                icon="balance"
+                as="a"
+                target="_blank"
+                href="https://www.gnu.org/licenses/gpl-3.0.html"
+                content="GPLv3"
+              />
+            </div>
           </div>
         </main>
       </Fragment>
