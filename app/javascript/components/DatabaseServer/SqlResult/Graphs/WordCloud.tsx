@@ -70,13 +70,15 @@ class WordCloud extends React.Component<Props> {
     if (!this.viewState.graph) {
       return;
     }
-    const minFontSize = this.graph.minFontSize;
-    const maxFontSize = this.graph.maxFontSize;
-    if (minFontSize < 1 || maxFontSize < 1) {
-      return;
+
+    if (this.graph.minFontSize < 1) {
+      return {
+        deterministic: this.graph.deterministic
+      }
     }
     return {
-      fontSizes: [minFontSize, maxFontSize]
+      fontSizes: [this.graph.minFontSize, this.graph.maxFontSize],
+      deterministic: this.graph.deterministic
     };
   }
 

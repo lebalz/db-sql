@@ -1,3 +1,4 @@
+import 'rc-slider/assets/index.css';
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { Provider, observer } from 'mobx-react';

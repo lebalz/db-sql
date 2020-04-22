@@ -1,11 +1,12 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
-import { computed, action } from 'mobx';
+import { computed } from 'mobx';
 import _ from 'lodash';
-import { Input, InputOnChangeData, Label, Button } from 'semantic-ui-react';
+import { Input, Label, Button, Checkbox } from 'semantic-ui-react';
 import Tooltip from '../../../../shared/Tooltip';
-import WordcloudGraph, { GraphType } from '../../../../models/Graphs/WordcloudGraph';
+import WordcloudGraph, { GraphType, MAX_FONT_SIZE } from '../../../../models/Graphs/WordcloudGraph';
+import { Range } from 'rc-slider';
 
 interface Props {
   id: string;
@@ -15,6 +16,11 @@ interface Props {
 interface InjectedProps extends Props {
   viewStateStore: ViewStateStore;
 }
+
+const DISABLED_STYLE = {
+  background: 'grey',
+  borderColor: 'grey'
+};
 
 @inject('viewStateStore')
 @observer
@@ -45,19 +51,9 @@ class WordCloudConfig extends React.Component<Props> {
     return this.props.header[this.graph.countColumn];
   }
 
-  @action
-  onChangeMinFontSize(data: InputOnChangeData) {
-    if (!this.viewState.graph) {
-      return;
-    }
-    const fontSize = Number.parseInt(data.value, 10);
-    if (fontSize < 0) {
-      return (this.graph.minFontSize = 0);
-    }
-    if (fontSize > this.graph.maxFontSize) {
-      this.graph.maxFontSize = fontSize + 1;
-    }
-    this.graph.minFontSize = fontSize;
+  @computed
+  get isSliderActive() {
+    return this.graph.minFontSize > 0;
   }
 
   @computed
@@ -67,21 +63,6 @@ class WordCloudConfig extends React.Component<Props> {
     }
 
     return this.viewState.graph;
-  }
-
-  @action
-  onChangeMaxFontSize(data: InputOnChangeData) {
-    if (!this.viewState.graph) {
-      return;
-    }
-    const fontSize = Number.parseInt(data.value, 10);
-    if (fontSize < 0) {
-      return (this.graph.maxFontSize = 0);
-    }
-    if (fontSize < this.graph.minFontSize) {
-      this.graph.maxFontSize = this.graph.minFontSize + 1;
-    }
-    this.graph.maxFontSize = fontSize;
   }
 
   render() {
@@ -126,9 +107,7 @@ class WordCloudConfig extends React.Component<Props> {
                 </div>
               }
             >
-              <Label color={this.graph.focused === 'countColumn' ? 'blue' : undefined}>
-                Counts
-              </Label>
+              <Label color={this.graph.focused === 'countColumn' ? 'blue' : undefined}>Counts</Label>
             </Tooltip>
           }
           disabled={!wordColumnSet}
@@ -143,35 +122,47 @@ class WordCloudConfig extends React.Component<Props> {
             }
           }}
         />
-        <Input
-          className="numeric"
-          size="mini"
-          label={
-            <Tooltip content="The minimal fontsize used for the words">
-              <Label content="Min" />
-            </Tooltip>
-          }
-          disabled={!wordColumnSet}
-          title="Minimal Fontsize"
-          labelPosition="left"
-          type="number"
-          value={this.graph.minFontSize <= 0 ? undefined : this.graph.minFontSize}
-          onChange={(_, data) => this.onChangeMinFontSize(data)}
-        />
-        <Input
-          className="numeric"
-          size="mini"
-          label={
-            <Tooltip content="The maximal fontsize used for the words">
-              <Label content="Max" />
-            </Tooltip>
-          }
-          title="Maximal Fontsize"
-          labelPosition="left"
-          type="number"
-          disabled={!wordColumnSet || this.graph.minFontSize <= 0}
-          value={this.graph.maxFontSize}
-          onChange={(_, data) => this.onChangeMaxFontSize(data)}
+        <div className="range-slider">
+          <Tooltip content="Minimal Fontsize">
+            <Label
+              as="a"
+              id="min-font-size"
+              size="mini"
+              detail={`${this.graph.minFontSize}px`}
+              active={this.isSliderActive}
+            />
+          </Tooltip>
+          <Tooltip content="Maximal Fontsize">
+            <Label
+              as="a"
+              id="max-font-size"
+              size="mini"
+              detail={`${this.graph.maxFontSize}px`}
+              active={this.isSliderActive}
+            />
+          </Tooltip>
+          <Range
+            min={0}
+            max={MAX_FONT_SIZE}
+            className="font-size-slider"
+            defaultValue={[this.graph.minFontSize, this.graph.maxFontSize]}
+            value={[this.graph.minFontSize, this.graph.maxFontSize]}
+            pushable={10}
+            trackStyle={this.isSliderActive ? undefined : [DISABLED_STYLE]}
+            handleStyle={this.isSliderActive ? undefined : [DISABLED_STYLE, DISABLED_STYLE]}
+            onChange={(tabs) => {
+              this.graph.minFontSize = tabs[0];
+              if (tabs[0] > 0) {
+                this.graph.maxFontSize = tabs[1];
+              }
+            }}
+          />
+        </div>
+        <Checkbox
+          toggle
+          checked={this.graph.deterministic}
+          label="Deterministic"
+          onChange={() => (this.graph.deterministic = !this.graph.deterministic)}
         />
         <div className="spacer" />
         <Tooltip content="Close Graph">

@@ -3,7 +3,9 @@
   display: flex;
   flex-direction: row;
   justify-content: start;
+  align-items: flex-start;
   flex-wrap: wrap;
+
   .input {
     margin-right: 1em;
     .label {
@@ -25,5 +27,28 @@
   .numeric {
     width: 6em;
     margin-right: 4.5em;
+  }
+  .range-slider {
+    flex-shrink: 1;
+    flex-grow: 1;
+    max-width: 16em;
+    flex-basis: 8em;
+    margin-left: 1em;
+    margin-right: 2em;
+    display: grid;
+    grid-template-areas:
+      'min    spacer max'
+      'slider slider slider';
+    grid-template-columns: min-content 1fr min-content;
+    grid-template-rows: repeat(2, min-content);
+    #min-font-size {
+      grid-area: min;
+    }
+    #max-font-size {
+      grid-area: max;
+    }
+    .font-size-slider {
+      grid-area: slider;
+    }
   }
 }

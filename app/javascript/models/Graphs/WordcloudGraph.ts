@@ -8,6 +8,7 @@ export enum GraphType {
 }
 
 export type Graph = WordcloudGraph | LineGraph;
+export const MAX_FONT_SIZE = 120;
 
 export interface IGraph {
   readonly type: GraphType;
@@ -26,8 +27,9 @@ export default class WordcloudGraph implements IGraph {
 
   @observable wordColumn?: number;
   @observable countColumn?: number;
-  @observable minFontSize: number = -1;
-  @observable maxFontSize: number = -1;
+  @observable minFontSize: number = 0;
+  @observable maxFontSize: number = 100;
+  @observable deterministic: boolean = false;
 
   @action
   onColumnSelection(columnIndex: number) {
