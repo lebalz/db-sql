@@ -3,6 +3,8 @@
 # [DB-SQL](https://db-sql.ch)
 ![db-sql](docs/db-sql.gif)
 
+Try it out: [db-sql.ch](https://db-sql.ch)
+
 ## Setup
 
 ### PreRequirements
