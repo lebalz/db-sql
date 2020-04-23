@@ -14,6 +14,7 @@ import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexe
 import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarParser';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import _ from 'lodash';
+import { DbType } from './DbServer';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -95,6 +96,17 @@ export default class Query {
       return this.database.name;
     }
     return `${this.database.name}#${this.id}`;
+  }
+
+  @computed
+  get databaseType(): 'sql' | 'mysql' | 'pgsql' {
+    if (this.database.dbServer.dbType === DbType.MySql) {
+      return 'mysql';
+    }
+    if (this.database.dbServer.dbType === DbType.Psql) {
+      return 'pgsql';
+    }
+    return 'sql';
   }
 
   @computed

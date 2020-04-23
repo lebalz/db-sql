@@ -3,8 +3,15 @@ import { observer } from 'mobx-react';
 import AceEditor from 'react-ace';
 
 import 'ace-builds/src-noconflict/mode-sql';
-import 'ace-builds/src-noconflict/snippets/sql';
+import 'ace-builds/src-noconflict/mode-mysql';
+import 'ace-builds/src-noconflict/mode-pgsql';
+
 import 'ace-builds/src-noconflict/theme-github';
+
+import 'ace-builds/src-noconflict/snippets/sql';
+import 'ace-builds/src-noconflict/snippets/mysql';
+import 'ace-builds/src-noconflict/snippets/pgsql';
+
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
 import { computed } from 'mobx';
 import Query from '../../../models/Query';
@@ -21,13 +28,24 @@ interface Completion {
   score: number;
 }
 
+const EXECUTE_QUERY_COMMAND = 'executeQuery';
+
 @observer
 export default class SqlEditor extends React.Component<Props> {
   editorRef = React.createRef<AceEditor>();
   editorId?: string = undefined;
+
   componentDidMount() {
     const editor = this.editorRef.current?.editor;
     this.editorId = editor?.id;
+    if (editor) {
+      editor.commands.addCommand({
+        // commands is array of key bindings.
+        name: EXECUTE_QUERY_COMMAND,
+        bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+        exec: () => this.props.query.run()
+      });
+    }
     addCompleter({
       getCompletions: (
         editor: AceEditor,
@@ -45,6 +63,17 @@ export default class SqlEditor extends React.Component<Props> {
   componentDidUpdate(prevProps: Props) {
     if (prevProps.height !== this.props.height && this.editorRef.current) {
       this.editorRef.current.editor.resize();
+    }
+  }
+
+  componentWillUnmount() {
+    const editor = this.editorRef.current?.editor;
+    this.editorId = editor?.id;
+    if (editor) {
+      const cmd = editor.commands.commands[EXECUTE_QUERY_COMMAND];
+      if (cmd) {
+        editor.commands.removeCommand(cmd, true);
+      }
     }
   }
 
@@ -89,17 +118,9 @@ export default class SqlEditor extends React.Component<Props> {
     return (
       <AceEditor
         style={{ width: '100%', height: `${this.props.height}px` }}
-        mode="sql"
+        mode={query.databaseType}
         theme="github"
         onChange={this.onChange}
-        commands={[
-          {
-            // commands is array of key bindings.
-            name: 'Execute Query',
-            bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-            exec: () => query.run()
-          }
-        ]}
         value={query.query}
         defaultValue={query.query}
         name={query.name}
