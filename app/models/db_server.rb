@@ -50,7 +50,7 @@ class DbServer < ApplicationRecord
     'mariadb' => 'information_schema'
   }.freeze
 
-  belongs_to :user
+  belongs_to :user, touch: true
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [String] cleartext password for the db connection

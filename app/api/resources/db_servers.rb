@@ -165,6 +165,7 @@ module Resources
           post :query do
             db_name = params[:database_name]
             db_server.increment!(:query_count, 1)
+            db_server.user.touch
             db_server.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
             end.to_a
@@ -179,6 +180,7 @@ module Resources
             db_name = params[:database_name]
             results = []
             error_occured = false
+            db_server.user.touch
 
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
@@ -221,6 +223,7 @@ module Resources
             requires(:query, type: String)
           end
           post :raw_query do
+            db_server.user.touch
             db_name = params[:database_name]
             t0 = Time.now
             db_server.increment!(:query_count, 1)
