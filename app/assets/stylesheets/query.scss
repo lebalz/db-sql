@@ -19,3 +19,8 @@
   border-bottom: 2px solid gray;
   z-index: 100;
 }
+
+.ace_editor,
+.ace_editor div {
+  font-family: Monaco, Menlo, 'Ubuntu Mono', Consolas, source-code-pro, monospace;
+}
