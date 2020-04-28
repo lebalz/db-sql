@@ -79,6 +79,12 @@ export interface Database {
 export interface DatabaseName {
   name: string;
   db_server_id: string;
+  schema_search_path?: string[];
+}
+
+export interface DatabaseSchemaName {
+  name: string;
+  db_server_id: string;
 }
 
 export interface CreateProps {
@@ -166,6 +172,10 @@ export function databases(id: string, cancelToken: CancelTokenSource): AxiosProm
 
 export function database(id: string, dbName: string, cancelToken: CancelTokenSource): AxiosPromise<Database> {
   return api.get(`/db_servers/${id}/${dbName}`, { cancelToken: cancelToken.token });
+}
+
+export function schemas(id: string, dbName: string, cancelToken: CancelTokenSource): AxiosPromise<DatabaseSchemaName[]> {
+  return api.get(`/db_servers/${id}/${dbName}/schemas`, { cancelToken: cancelToken.token });
 }
 
 export function query(

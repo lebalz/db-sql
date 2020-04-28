@@ -130,15 +130,20 @@ module Resources
 
         desc 'Get the databases of a database server connection'
         get :databases do
-          present(
+          dbs = db_server.reuse_connection do
             db_server.database_names(key: crypto_key).map do |n|
+              search_path = db_server.schema_search_path(
+                key: crypto_key,
+                database_name: n
+              )
               {
                 name: n,
-                db_server_id: db_server.id
+                db_server_id: db_server.id,
+                schema_search_path: search_path
               }
-            end,
-            with: Entities::Database
-          )
+            end
+          end
+          present(dbs, with: Entities::Database)
         end
         desc 'Get the database names of a database server connection'
         get :database_names do

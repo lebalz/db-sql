@@ -111,7 +111,10 @@ class DbServer < ApplicationRecord
   # @param database_name [String] name of the database_name
   def connect(key:, database_name:)
     database_name ||= default_database_name
+    t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     return yield @active_connection if @active_connection&.active?
+
+    p "Connect: #{database_name}"
 
     @connection ||= ActiveRecord::ConnectionAdapters::ConnectionHandler.new
     @conn_key ||= connection_key(database_name: database_name)
@@ -135,16 +138,19 @@ class DbServer < ApplicationRecord
     @active_connection = @connection.retrieve_connection(@conn_key)
     yield(@active_connection)
   ensure
+    p "Elapsed Time: #{Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0}"
     close_connection unless @keep_connection
   end
 
   # use when performing subsequent db-calls to the same database.
   # @yield [DbServer] self
   def reuse_connection
+    t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @keep_connection = true
     yield self
   ensure
     @keep_connection = false
+    p "-- Elapsed Time: #{Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0}"
     close_connection
   end
 
@@ -254,6 +260,31 @@ class DbServer < ApplicationRecord
     end&.rows&.flatten&.sort || []
   end
 
+  # @return [boolean]
+  def has_schema?
+    psql?
+  end
+
+  # @param key [String] base64 encoded crypto key from the user
+  # @param database_name [String] name of the database_name
+  def schema_names(key:, database_name:)
+    return unless has_schema?
+
+    exec_query(key: key, database_name: database_name) do
+      query_for(db_type: db_type, name: :schema_tables)
+    end&.rows&.flatten || []
+  end
+
+  def schema_search_path(key:, database_name:)
+    return unless has_schema?
+
+    connect(key: key, database_name: database_name) do |connection|
+      connection.schema_search_path.split(/\s*,\s+/).map do |schema|
+        schema == "\"$user\"" ? self.username : schema
+      end
+    end
+  end
+
   # @param key [String] base64 encoded crypto key from the user
   # @param database_name [String] name of the database_name
   # @return [Hash] full table structure
@@ -283,8 +314,15 @@ class DbServer < ApplicationRecord
   #     }
   #   ]
   # }
-  def full_database(key:, database_name:)
+  def full_database(key:, database_name:, schema_name: nil)
     reuse_connection do
+
+      unless schema_name.nil?
+        connect(key: key, database_name: database_name) do |connection|
+          connection.schema_search_path = schema_name
+        end
+      end
+
       table_names = table_names(key: key, database_name: database_name)
       tables = table_names.map do |table_name|
         pkeys = primary_key_names(
