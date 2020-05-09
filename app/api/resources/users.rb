@@ -44,7 +44,7 @@ module Resources
       end
       post :reset_password do
         logout_existing_user
-        @user = User.find_by(email: params[:email])
+        @user = User.find_by(email: params[:email].downcase)
         error!('No user found with this email', 400) unless @user
 
         @user.request_password_reset
