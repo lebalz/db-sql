@@ -31,6 +31,7 @@ export class TempDbServer extends DbServer {
 
   databases = observable<DatabaseName>([]);
   tables = observable<DbTableName>([]);
+  testConnection = _.debounce(this.testCurrentConnection, 2500, { leading: false });
 
   constructor(
     props: DbServerProps,
@@ -40,7 +41,6 @@ export class TempDbServer extends DbServer {
   ) {
     super(props, dbServerStore, cancelToken);
     this.role = role;
-    this.testConnection = _.debounce(this.testConnection, 400, { leading: false });
 
     reaction(
       () => this.dbConnectionHash,
@@ -148,7 +148,8 @@ export class TempDbServer extends DbServer {
       });
   }
 
-  @action.bound testConnection() {
+  @action.bound
+  private testCurrentConnection() {
     this.testConnectionState = RequestState.Waiting;
     this.validConnection = undefined;
     test(this.tempDbPorps, this.cancelToken)
