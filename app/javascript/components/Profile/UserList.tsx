@@ -6,6 +6,7 @@ import UserStore, { ReloadState, SortableUserColumns, DEFAULT_SORT_ORDER } from 
 import User, { Role } from '../../models/User';
 import SessionStore from '../../stores/session_store';
 import _ from 'lodash';
+import Highlighter from 'react-highlight-words';
 
 interface InjectedProps {
   userStore: UserStore;
@@ -124,8 +125,12 @@ export default class UserList extends React.Component {
           <Table.Body>
             {filteredUsers.map((user) => {
               return (
-                <Table.Row key={user.email}>
-                  <Table.Cell content={user.email} />
+                <Table.Row key={user.id}>
+                  <Table.Cell
+                    content={
+                      <Highlighter textToHighlight={user.email} searchWords={[userStore.userFilter]} />
+                    }
+                  />
                   <Table.Cell content={User.formatDate(user.createdAt)} />
                   <Table.Cell content={User.formatDate(user.updatedAt)} />
                   <Table.Cell content={user.loginCount} />
