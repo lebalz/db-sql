@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon, Table, Button, Input } from 'semantic-ui-react';
+import { Icon, Table, Button, Input, Popup } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed, action } from 'mobx';
 import UserStore, { ReloadState, SortableUserColumns, DEFAULT_SORT_ORDER } from '../../stores/user_store';
@@ -157,11 +157,21 @@ export default class UserList extends React.Component {
                     />
                   </Table.Cell>
                   <Table.Cell>
-                    <Button
+                    <Popup
                       disabled={currentUser.id === user.id}
-                      icon="trash"
-                      onClick={() => this.onDeleteUser(user.id)}
-                      color="red"
+                      on="click"
+                      position="top right"
+                      trigger={<Button icon="trash" color="red" disabled={currentUser.id === user.id} />}
+                      header="Confirm"
+                      content={
+                        <Button
+                          icon="trash"
+                          labelPosition="left"
+                          content="Yes Delete"
+                          color="red"
+                          onClick={() => this.onDeleteUser(user.id)}
+                        />
+                      }
                     />
                   </Table.Cell>
                 </Table.Row>
