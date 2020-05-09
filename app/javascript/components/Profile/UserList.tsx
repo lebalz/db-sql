@@ -1,11 +1,12 @@
 import React from 'react';
-import { Icon, Table, Button, Input } from 'semantic-ui-react';
+import { Icon, Table, Button, Input, Popup } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed, action } from 'mobx';
-import UserStore, { ReloadState, SortableUserColumns } from '../../stores/user_store';
+import UserStore, { ReloadState, SortableUserColumns, DEFAULT_SORT_ORDER } from '../../stores/user_store';
 import User, { Role } from '../../models/User';
 import SessionStore from '../../stores/session_store';
 import _ from 'lodash';
+import Highlighter from 'react-highlight-words';
 
 interface InjectedProps {
   userStore: UserStore;
@@ -73,6 +74,7 @@ export default class UserList extends React.Component {
       this.injected.userStore.toggleOrder();
     } else {
       this.injected.userStore.setSortColumn(columnName);
+      this.injected.userStore.setSortOrder(DEFAULT_SORT_ORDER[columnName]);
     }
   }
 
@@ -123,8 +125,12 @@ export default class UserList extends React.Component {
           <Table.Body>
             {filteredUsers.map((user) => {
               return (
-                <Table.Row key={user.email}>
-                  <Table.Cell content={user.email} />
+                <Table.Row key={user.id}>
+                  <Table.Cell
+                    content={
+                      <Highlighter textToHighlight={user.email} searchWords={[userStore.userFilter]} />
+                    }
+                  />
                   <Table.Cell content={User.formatDate(user.createdAt)} />
                   <Table.Cell content={User.formatDate(user.updatedAt)} />
                   <Table.Cell content={user.loginCount} />
@@ -151,11 +157,21 @@ export default class UserList extends React.Component {
                     />
                   </Table.Cell>
                   <Table.Cell>
-                    <Button
+                    <Popup
                       disabled={currentUser.id === user.id}
-                      icon="trash"
-                      onClick={() => this.onDeleteUser(user.id)}
-                      color="red"
+                      on="click"
+                      position="top right"
+                      trigger={<Button icon="trash" color="red" disabled={currentUser.id === user.id} />}
+                      header="Confirm"
+                      content={
+                        <Button
+                          icon="trash"
+                          labelPosition="left"
+                          content="Yes Delete"
+                          color="red"
+                          onClick={() => this.onDeleteUser(user.id)}
+                        />
+                      }
                     />
                   </Table.Cell>
                 </Table.Row>
