@@ -22,6 +22,17 @@ export enum SortableUserColumns {
   Activated = 'activated'
 }
 
+export const DEFAULT_SORT_ORDER: { [key in SortableUserColumns]: 'asc' | 'desc' } = {
+  [SortableUserColumns.Email]: 'asc',
+  [SortableUserColumns.CreatedAt]: 'desc',
+  [SortableUserColumns.UpdatedAt]: 'desc',
+  [SortableUserColumns.LoginCount]: 'desc',
+  [SortableUserColumns.Role]: 'asc',
+  [SortableUserColumns.QueryCount]: 'desc',
+  [SortableUserColumns.ErrorQueryCount]: 'desc',
+  [SortableUserColumns.Activated]: 'asc'
+};
+
 class State {
   users = observable<User>([]);
   @observable userFilter: string = '';
@@ -69,12 +80,17 @@ class UserStore implements Store {
     this.state.order = this.state.order === 'asc' ? 'desc' : 'asc';
   }
 
+  @action
+  setSortOrder(order: 'asc' | 'desc') {
+    this.state.order = order;
+  }
+
   @computed
   get filteredUsers(): User[] {
     const escapedFilter = _.escapeRegExp(this.userFilter);
     const regexp = new RegExp(escapedFilter, 'i');
 
-    const filtered = this.users.filter((user) => (regexp.test(user.email)));
+    const filtered = this.users.filter((user) => regexp.test(user.email));
 
     return _.orderBy(filtered, this.sortColumn, this.order);
   }
