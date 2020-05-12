@@ -20,7 +20,9 @@ module Entities
       expose :created_at
     end
     expose :role
-    expose :activated
+    expose :activated do |user|
+      user.activated?
+    end
     expose :query_count do |user|
       user.query_count
     end

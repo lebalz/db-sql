@@ -37,7 +37,7 @@ RSpec.describe "API::Resources::User" do
         "login_count" => @user.login_count,
         "password_reset_requested" => false,
         "query_count" => 0,
-        "activated" => @user.activated
+        "activated" => @user.activated?
       )
     end
   end
@@ -247,7 +247,7 @@ RSpec.describe "API::Resources::User" do
   end
 
   describe 'POST /api/users/current/resend_activation_link' do
-    let(:user) { FactoryBot.create(:user, activated: false, activated_at: nil) }
+    let(:user) { FactoryBot.create(:user, :unactivated) }
     let(:token) { FactoryBot.create(:login_token, user: user).token }
     let(:headers) { { 'Authorization' => token } }
     it 'can resend activation link' do

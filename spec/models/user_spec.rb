@@ -102,5 +102,13 @@ RSpec.describe DbServer, type: :model do
       connection2.reload
       expect(connection2.password(user.crypto_key('safe_password'))).to eq('blabla')
     end
+
+    it 'returns correct validation status' do
+      user = FactoryBot.create(:user, :unactivated)
+      token = user.activation_token
+      expect(user.activated?).to be_falsy
+      user.activate(token)
+      expect(user.activated?).to be_truthy
+    end
   end
 end
