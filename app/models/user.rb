@@ -12,7 +12,6 @@
 #  login_count       :integer          default(0)
 #  role              :integer          default("user")
 #  activation_digest :string
-#  activated         :boolean          default(FALSE)
 #  activated_at      :datetime
 #
 
@@ -64,6 +63,10 @@ class User < ApplicationRecord
 
   def error_query_count
     db_servers.map { |db_server| db_server.error_query_count }.sum
+  end
+
+  def activated?
+    !activated_at.nil?
   end
 
   def change_password!(
@@ -129,7 +132,6 @@ class User < ApplicationRecord
     return false unless valid
 
     update!(
-      activated: true,
       activated_at: Time.zone.now
     )
   end

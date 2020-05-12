@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_05_09_090806) do
+ActiveRecord::Schema.define(version: 2020_05_12_102511) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -50,7 +50,6 @@ ActiveRecord::Schema.define(version: 2020_05_09_090806) do
     t.integer "login_count", default: 0
     t.integer "role", default: 0
     t.string "activation_digest"
-    t.boolean "activated", default: false
     t.datetime "activated_at"
     t.string "reset_password_digest"
     t.datetime "reset_password_mail_sent_at"
