@@ -83,7 +83,7 @@ class LineGraph extends React.Component<Props> {
             width={this.state.width}
             height={300}
             data={this.props.data.result}
-            margin={{ top: 20, right: 5, left: -20, bottom: 5 }}
+            margin={{ top: 20, right: 5, left: 0, bottom: 5 }}
           >
             <XAxis
               dataKey={this.graph.xColumn !== undefined ? this.headers[this.graph.xColumn] : undefined}
@@ -91,14 +91,14 @@ class LineGraph extends React.Component<Props> {
             <YAxis />
             <Tooltip />
             <Legend />
-            {this.graph.yColumns.map((col) => {
+            {this.graph.yColumns.map((idx) => {
               return (
                 <Line
                   type="monotone"
-                  dataKey={this.headers[col]}
-                  key={col}
+                  dataKey={this.headers[idx]}
+                  key={idx}
                   dot={false}
-                  stroke={this.graph.colors[col]}
+                  stroke={this.graph.colors.get(idx)}
                 />
               );
             })}

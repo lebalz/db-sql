@@ -1,9 +1,9 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
-import { computed, action } from 'mobx';
+import { computed } from 'mobx';
 import _ from 'lodash';
-import { Input, InputOnChangeData, Label, Button } from 'semantic-ui-react';
+import { Input,  Label, Button } from 'semantic-ui-react';
 import Tooltip from '../../../../shared/Tooltip';
 import { GraphType } from '../../../../models/Graphs/WordcloudGraph';
 import LineGraph from '../../../../models/Graphs/LineGraph';
@@ -75,7 +75,7 @@ class LineGraphConfig extends React.Component<Props> {
                   circular: true,
                   link: true,
                   onClick: () => {
-                    this.graph.colors.remove(this.graph.colors[nr]);
+                    this.graph.colors.delete(nr);
                     this.graph.yColumns.remove(this.graph.yColumns[nr]);
                   }
                 }}
