@@ -77,32 +77,34 @@ class LineGraph extends React.Component<Props> {
   render() {
     return (
       <div ref={this.chartWrapper} style={{ width: '100%' }}>
-        <LineGraphConfig header={this.headers} id={this.props.id} />
+        <LineGraphConfig header={this.headers} id={this.props.id} hasChart={this.graph.yColumns.length > 0} />
         {this.graph.yColumns.length > 0 && (
-          <LineChart
-            width={this.state.width}
-            height={300}
-            data={this.props.data.result}
-            margin={{ top: 20, right: 5, left: 0, bottom: 5 }}
-          >
-            <XAxis
-              dataKey={this.graph.xColumn !== undefined ? this.headers[this.graph.xColumn] : undefined}
-            />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {this.graph.yColumns.map((idx) => {
-              return (
-                <Line
-                  type="monotone"
-                  dataKey={this.headers[idx]}
-                  key={idx}
-                  dot={false}
-                  stroke={this.graph.colors.get(idx)}
-                />
-              );
-            })}
-          </LineChart>
+          <div id={`LineGraph-${this.props.id}`}>
+            <LineChart
+              width={this.state.width}
+              height={300}
+              data={this.props.data.result}
+              margin={{ top: 20, right: 5, left: 0, bottom: 5 }}
+            >
+              <XAxis
+                dataKey={this.graph.xColumn !== undefined ? this.headers[this.graph.xColumn] : undefined}
+              />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {this.graph.yColumns.map((idx) => {
+                return (
+                  <Line
+                    type="monotone"
+                    dataKey={this.headers[idx]}
+                    key={idx}
+                    dot={false}
+                    stroke={this.graph.colors.get(idx)}
+                  />
+                );
+              })}
+            </LineChart>
+          </div>
         )}
       </div>
     );
