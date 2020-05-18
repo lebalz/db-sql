@@ -77,7 +77,8 @@ export class TempDbServer extends DbServer {
     this.loadPassword();
   }
 
-  @action loadPassword() {
+  @action
+  loadPassword() {
     if (this.role === TempDbServerRole.Create) {
       this.password = '';
       return;
@@ -87,14 +88,25 @@ export class TempDbServer extends DbServer {
     });
   }
 
-  @computed get tempDbPorps(): TempDbConnectionProps {
+  @computed
+  get initialDatabase(): string | undefined {
+    return this.initDb ? this.initDb : undefined;
+  }
+
+  @computed
+  get validDatabaseProps(): boolean {
+    return [this.dbType, this.host, this.port, this.username].every((prop) => `${prop}` !== '');
+  }
+
+  @computed
+  get tempDbPorps(): TempDbConnectionProps {
     return {
       name: this.name,
       db_type: this.dbType,
       host: this.host,
       port: this.port,
       username: this.username,
-      initial_db: this.isLoaded ? this.initDb : undefined,
+      initial_db: this.initialDatabase,
       initial_table: this.tablesLoaded ? this.initTable : undefined,
       password: this.password || ''
     };
@@ -103,11 +115,13 @@ export class TempDbServer extends DbServer {
   /**
    * @return [Boolean] wheter needed props to connect to a db are present
    */
-  @computed get dbConnectionHash() {
+  @computed
+  get dbConnectionHash() {
     return [this.dbType, this.host, this.port, this.username, this.password].join(';');
   }
 
-  @action loadDatabases() {
+  @action
+  loadDatabases() {
     this.dbRequestState = REST.Requested;
     databases(this.tempDbPorps, this.cancelToken)
       .then(({ data }) => {
@@ -120,7 +134,8 @@ export class TempDbServer extends DbServer {
       });
   }
 
-  @action loadTables() {
+  @action
+  loadTables() {
     const db = this.databases.find((db) => db.name === this.initDb);
     if (!db) {
       this.tablesLoaded = false;
@@ -150,6 +165,9 @@ export class TempDbServer extends DbServer {
 
   @action.bound
   private testCurrentConnection() {
+    if (!this.validDatabaseProps) {
+      return;
+    }
     this.testConnectionState = RequestState.Waiting;
     this.validConnection = undefined;
     test(this.tempDbPorps, this.cancelToken)
