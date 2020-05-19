@@ -4,7 +4,7 @@ import DbServer, { DbType } from '../../models/DbServer';
 import { Card, Label, Button } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { TempDbServer, TempDbServerRole } from '../../models/TempDbServer';
-import { action } from 'mobx';
+import { action, computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import Tooltip from '../../shared/Tooltip';
 
@@ -33,6 +33,18 @@ export default class DbServerOverview extends React.Component<Props> {
     this.injected.routerStore.push(this.dbConnection.link);
   }
 
+  @computed
+  get queryCount() {
+    const { queryCount } = this.dbConnection;
+    if (queryCount < 1000) {
+      return queryCount.toFixed(0);
+    }
+    if (queryCount < 1000000) {
+      return `${(queryCount / 1000).toFixed(1)}K`;
+    }
+    return `${(queryCount / 1000000).toFixed(2)}M`;
+  }
+
   render() {
     const { name, host, port, dbType, queryCount, errorQueryCount } = this.dbConnection;
     return (
@@ -45,12 +57,13 @@ export default class DbServerOverview extends React.Component<Props> {
         <Tooltip
           content={
             <p>
-              Executed Queries: {queryCount}<br />
+              Executed Queries: {queryCount.toLocaleString()}
+              <br />
               Errors: {errorQueryCount}
             </p>
           }
         >
-          <div className="query-count" >{queryCount}</div>
+          <div className="query-count">{this.queryCount}</div>
         </Tooltip>
         <Card.Content extra>
           <Button
