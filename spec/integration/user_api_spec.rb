@@ -253,8 +253,9 @@ RSpec.describe "API::Resources::User" do
     it 'can resend activation link' do
       count = mail_count
       post(
-        '/api/users/current/resend_activation_link',
-        headers: headers
+        '/api/users/resend_activation_link',
+        headers: headers,
+        params: { email: user.email }
       )
       expect(response.successful?).to be_truthy
       expect(mail_count).to be(count + 1)
@@ -262,14 +263,18 @@ RSpec.describe "API::Resources::User" do
 
     it 'only the last sent activation link can be used to activate' do
       post(
-        '/api/users/current/resend_activation_link',
-        headers: headers
+        '/api/users/resend_activation_link',
+        headers: headers,
+        params: { email: user.email }
       )
+
       expect(response.successful?).to be_truthy
       activation1 = api_activation_link
+
       post(
-        '/api/users/current/resend_activation_link',
-        headers: headers
+        '/api/users/resend_activation_link',
+        headers: headers,
+        params: { email: user.email }
       )
       activation2 = api_activation_link
       put(activation1)

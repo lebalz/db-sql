@@ -4,7 +4,7 @@ import { Header, Menu, Icon, Step, Popup } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
-import SessionStore, { RequestState } from '../../stores/session_store';
+import SessionStore, { ApiRequestState } from '../../stores/session_store';
 import DbServerStore from '../../stores/db_server_store';
 
 interface InjectedProps {
@@ -18,30 +18,6 @@ interface InjectedProps {
 export default class NavBar extends React.Component {
   get injected() {
     return this.props as InjectedProps;
-  }
-
-  @computed get resendIcon() {
-    const { resendActivationLinkState } = this.injected.sessionStore;
-    switch (resendActivationLinkState) {
-      case RequestState.Error:
-        return 'times circle';
-      case RequestState.Success:
-        return 'check circle';
-      default:
-        return 'refresh';
-    }
-  }
-
-  @computed get resendIconColor() {
-    const { resendActivationLinkState } = this.injected.sessionStore;
-    switch (resendActivationLinkState) {
-      case RequestState.Error:
-        return 'red';
-      case RequestState.Success:
-        return 'green';
-      default:
-        return 'grey';
-    }
   }
 
   render() {
@@ -117,12 +93,8 @@ export default class NavBar extends React.Component {
                     <a onClick={() => this.injected.sessionStore.resendActivationLink()} href="#">
                       Resend the activation link
                     </a>
-                    {resendActivationLinkState !== RequestState.None && (
-                      <Icon
-                        loading={resendActivationLinkState === RequestState.Waiting}
-                        name={this.resendIcon}
-                        color={this.resendIconColor}
-                      />
+                    {resendActivationLinkState.state !== ApiRequestState.None && (
+                      <ResendIcon resendState={this.injected.sessionStore.resendActivationLinkState.state} />
                     )}
                   </Popup.Content>
                 </Popup>
@@ -147,3 +119,35 @@ export default class NavBar extends React.Component {
     );
   }
 }
+
+const resendIconName = (resendState: ApiRequestState) => {
+  switch (resendState) {
+    case ApiRequestState.Error:
+      return 'times circle';
+    case ApiRequestState.Success:
+      return 'check circle';
+    default:
+      return 'refresh';
+  }
+};
+
+const resendIconColor = (resendState: ApiRequestState) => {
+  switch (resendState) {
+    case ApiRequestState.Error:
+      return 'red';
+    case ApiRequestState.Success:
+      return 'green';
+    default:
+      return 'grey';
+  }
+};
+
+export const ResendIcon = ({ resendState }: { resendState: ApiRequestState }) => {
+  return (
+    <Icon
+      loading={resendState === ApiRequestState.Waiting}
+      name={resendIconName(resendState)}
+      color={resendIconColor(resendState)}
+    />
+  );
+};

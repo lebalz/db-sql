@@ -1,11 +1,11 @@
 import React, { Fragment } from 'react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { RequestState } from '../stores/session_store';
-import { Header, Form, Message, Dimmer, Loader } from 'semantic-ui-react';
+import SessionStore, { ApiRequestState } from '../stores/session_store';
+import { Message, Dimmer, Loader } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
 import { RouteComponentProps } from 'react-router';
-import { resetPassword as resetPasswordCall, activateAccount } from '../api/user';
+import { activateAccount } from '../api/user';
 import { Link } from 'react-router-dom';
 import { computed } from 'mobx';
 
@@ -23,15 +23,15 @@ interface InjectedProps extends ResetPasswordProps {
 @observer
 export default class ActivateAccount extends React.Component<ResetPasswordProps> {
   state = {
-    requestState: RequestState.None,
+    requestState: ApiRequestState.None,
     errorMsg: ''
   };
 
   componentDidMount() {
-    this.setState({ requestState: RequestState.Waiting });
+    this.setState({ requestState: ApiRequestState.Waiting });
     activateAccount(this.id, this.activationToken)
       .then(() => {
-        this.setState({ requestState: RequestState.Success });
+        this.setState({ requestState: ApiRequestState.Success });
         if (this.injected.sessionStore.isLoggedIn) {
           if (this.injected.sessionStore.authorize(this.props.location.pathname)) {
             this.injected.sessionStore.reloadUser();
@@ -40,7 +40,7 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
       })
       .catch((error) => {
         this.setState({
-          requestState: RequestState.Error,
+          requestState: ApiRequestState.Error,
           errorMsg: error.response.data.error || 'Unexpected server error'
         });
       });
@@ -82,17 +82,17 @@ export default class ActivateAccount extends React.Component<ResetPasswordProps>
         }}
       >
         <div>
-          <Dimmer active={this.state.requestState === RequestState.Waiting}>
+          <Dimmer active={this.state.requestState === ApiRequestState.Waiting}>
             <Loader indeterminate>Activating Account</Loader>
           </Dimmer>
           <DbSqlIcon size="large" />
-          {this.state.requestState === RequestState.Success && (
+          {this.state.requestState === ApiRequestState.Success && (
             <Fragment>
               <Message success content="Account successfully activated." />
               <Link to={this.backLink}>Back to DB-SQL</Link>
             </Fragment>
           )}
-          {this.state.requestState === RequestState.Error && (
+          {this.state.requestState === ApiRequestState.Error && (
             <Fragment>
               <Message error content={this.state.errorMsg} />
               <Link to={this.backLink}>Back to DB-SQL</Link>

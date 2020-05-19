@@ -12,7 +12,7 @@ import {
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
-import { RequestState } from './session_store';
+import { ApiRequestState } from './session_store';
 import Database from '../models/Database';
 import Query, { PlaceholderQuery } from '../models/Query';
 
@@ -36,9 +36,9 @@ class State {
 
   @observable loadState: LoadState = LoadState.None;
   @observable dbIndexLoadState: LoadState = LoadState.None;
-  @observable saveState: RequestState = RequestState.None;
+  @observable saveState: ApiRequestState = ApiRequestState.None;
 
-  @observable queryState: RequestState = RequestState.None;
+  @observable queryState: ApiRequestState = ApiRequestState.None;
 }
 
 class DbServerStore implements Store {
@@ -359,29 +359,29 @@ class DbServerStore implements Store {
   }
 
   @action updateDbServer(dbConnection: TempDbServer) {
-    this.state.saveState = RequestState.Waiting;
+    this.state.saveState = ApiRequestState.Waiting;
     updateDbServer(dbConnection.params, this.root.cancelToken)
       .then(() => {
         const connection = this.state.dbServers.find((db) => db.id === dbConnection.id);
         if (!connection) return;
         this.state.dbServers.remove(connection);
         this.state.dbServers.push(new DbServer(dbConnection.props, this, this.root.cancelToken));
-        this.state.saveState = RequestState.Success;
+        this.state.saveState = ApiRequestState.Success;
       })
       .catch(() => {
-        this.state.saveState = RequestState.Error;
+        this.state.saveState = ApiRequestState.Error;
       });
   }
 
   @action createDbServer(dbConnection: TempDbServer) {
-    this.state.saveState = RequestState.Waiting;
+    this.state.saveState = ApiRequestState.Waiting;
     createDbServer(dbConnection.tempDbPorps, this.root.cancelToken)
       .then(({ data }) => {
         this.state.dbServers.push(new DbServer(data, this, this.root.cancelToken));
-        this.state.saveState = RequestState.Success;
+        this.state.saveState = ApiRequestState.Success;
       })
       .catch(() => {
-        this.state.saveState = RequestState.Error;
+        this.state.saveState = ApiRequestState.Error;
       });
   }
 

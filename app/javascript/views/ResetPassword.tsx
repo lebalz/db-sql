@@ -1,6 +1,6 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { RequestState } from '../stores/session_store';
+import SessionStore, { ApiRequestState } from '../stores/session_store';
 import { Header, Form, Message } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
@@ -32,7 +32,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
   state = {
     passwordState: PasswordState.None,
     resetState: null,
-    requestState: RequestState.None
+    requestState: ApiRequestState.None
   };
 
   private password: string = '';
@@ -57,17 +57,17 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
     if (!this.validatePassword()) return;
 
     this.injected.sessionStore.cleanLocalStorage();
-    this.setState({ requestState: RequestState.Waiting });
+    this.setState({ requestState: ApiRequestState.Waiting });
     resetPasswordCall(this.id, this.resetToken || '', this.password, this.passwordConfirmation)
       .then(() => {
-        this.setState({ requestState: RequestState.Success });
+        this.setState({ requestState: ApiRequestState.Success });
         this.injected.routerStore.push({
           pathname: '/login',
           search: '?reset=success'
         });
       })
       .catch((error) => {
-        this.setState({ requestState: RequestState.Error });
+        this.setState({ requestState: ApiRequestState.Error });
         const msg = error.response.data.error || 'Unexpected server error';
         this.setState({ resetState: msg });
       });
@@ -150,7 +150,7 @@ export default class ResetPassword extends React.Component<ResetPasswordProps> {
           <Message error header="Invalid password reset" list={this.errors} />
           <Form.Button
             content="Reset Password"
-            loading={this.state.resetState === RequestState.Waiting}
+            loading={this.state.resetState === ApiRequestState.Waiting}
             type="submit"
           />
         </Form>

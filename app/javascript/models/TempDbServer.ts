@@ -10,7 +10,7 @@ import {
 } from '../api/temp_db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
-import { RequestState } from '../stores/session_store';
+import { ApiRequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
@@ -22,7 +22,7 @@ export enum TempDbServerRole {
 
 export class TempDbServer extends DbServer {
   readonly role: TempDbServerRole;
-  @observable testConnectionState: RequestState = RequestState.None;
+  @observable testConnectionState: ApiRequestState = ApiRequestState.None;
   @observable message?: String = undefined;
   @observable validConnection?: boolean = false;
   @observable tablesLoaded?: boolean = false;
@@ -168,18 +168,18 @@ export class TempDbServer extends DbServer {
     if (!this.validDatabaseProps) {
       return;
     }
-    this.testConnectionState = RequestState.Waiting;
+    this.testConnectionState = ApiRequestState.Waiting;
     this.validConnection = undefined;
     test(this.tempDbPorps, this.cancelToken)
       .then(({ data }) => {
         this.validConnection = data.success;
         this.message = data.success ? 'Connection established' : data.message;
-        this.testConnectionState = RequestState.Success;
+        this.testConnectionState = ApiRequestState.Success;
       })
       .catch((e) => {
         this.validConnection = false;
         this.message = e.message;
-        this.testConnectionState = RequestState.Error;
+        this.testConnectionState = ApiRequestState.Error;
       });
   }
 }

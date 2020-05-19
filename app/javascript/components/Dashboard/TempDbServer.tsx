@@ -5,7 +5,7 @@ import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Popup }
 import DbServerStore from '../../stores/db_server_store';
 import { computed, reaction, action } from 'mobx';
 import _ from 'lodash';
-import { RequestState } from '../../stores/session_store';
+import { ApiRequestState } from '../../stores/session_store';
 import { TempDbServerRole, TempDbServer as TempDbServerModel } from '../../models/TempDbServer';
 import { REST } from '../../declarations/REST';
 
@@ -27,7 +27,7 @@ export class TempDbServer extends React.Component {
     reaction(
       () => this.injected.dbServerStore.saveState,
       (state) => {
-        if (state === RequestState.Success) {
+        if (state === ApiRequestState.Success) {
           this.onClose();
         }
       }
@@ -290,7 +290,7 @@ export class TempDbServer extends React.Component {
               labelPosition="left"
               content="Test"
               color="blue"
-              loading={this.dbServer.testConnectionState === RequestState.Waiting}
+              loading={this.dbServer.testConnectionState === ApiRequestState.Waiting}
               onClick={() => this.dbServer.testConnection()}
             />
             <Button
