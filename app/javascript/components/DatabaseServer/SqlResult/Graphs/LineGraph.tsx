@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
 import { computed } from 'mobx';
@@ -19,14 +19,18 @@ interface InjectedProps extends Props {
   viewStateStore: ViewStateStore;
 }
 
+const MIN_HEIGHT = 100;
+const DEFAULT_HEIGHT = 300;
+const DEFAULT_WIDTH = 600;
+
 @inject('viewStateStore')
 @observer
 class LineGraph extends React.Component<Props> {
   chartWrapper = React.createRef<HTMLDivElement>();
   chartRef = React.createRef<HTMLDivElement>();
   state = {
-    width: 600,
-    height: 300
+    width: DEFAULT_WIDTH,
+    height: DEFAULT_HEIGHT
   };
 
   componentDidMount() {
@@ -41,7 +45,7 @@ class LineGraph extends React.Component<Props> {
     window.removeEventListener('resize', this.onResize);
   }
 
-  onResize = (event: UIEvent) => {
+  onResize = () => {
     this.setState({ width: this.width });
   };
 
@@ -74,7 +78,7 @@ class LineGraph extends React.Component<Props> {
   @computed
   get width(): number {
     if (!this.chartWrapper.current) {
-      return 600;
+      return DEFAULT_WIDTH;
     }
     return this.chartWrapper.current.clientWidth;
   }
@@ -121,8 +125,8 @@ class LineGraph extends React.Component<Props> {
           onChange={(topShare) => {
             this.setState({ height: topShare - this.chartTopShare });
           }}
-          defaultSize={300}
-          minSize={this.chartTopShare + 100}
+          defaultSize={DEFAULT_HEIGHT}
+          minSize={this.chartTopShare + MIN_HEIGHT}
         />
       </div>
     );

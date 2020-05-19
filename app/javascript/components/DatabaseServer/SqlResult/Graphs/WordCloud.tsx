@@ -18,12 +18,15 @@ interface InjectedProps extends Props {
   viewStateStore: ViewStateStore;
 }
 
+const DEFAULT_HEIGHT = 300;
+const MIN_HEIGHT = 100;
+
 @inject('viewStateStore')
 @observer
 class WordCloud extends React.Component<Props> {
   wordcloudRef = React.createRef<HTMLDivElement>();
   state = {
-    height: 300
+    height: DEFAULT_HEIGHT
   };
 
   @computed
@@ -113,8 +116,8 @@ class WordCloud extends React.Component<Props> {
               onChange={(topShare) => {
                 this.setState({ height: topShare - this.wordcloudTopShare });
               }}
-              defaultSize={300}
-              minSize={this.wordcloudTopShare + 100}
+              defaultSize={DEFAULT_HEIGHT}
+              minSize={this.wordcloudTopShare + MIN_HEIGHT}
             />
           </Fragment>
         )}
