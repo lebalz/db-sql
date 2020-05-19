@@ -242,17 +242,28 @@ export class TempDbServer extends React.Component {
               <Grid.Row>
                 <Grid.Column>
                   <Label as="a" color="teal" ribbon content="Initial DB (optional)" />
-                  <Form.Dropdown
-                    options={this.dbNameOptions}
-                    placeholder="Initial DB"
-                    search
-                    selection
-                    fluid
-                    disabled={this.dbServer.dbRequestState !== REST.Success}
-                    loading={this.dbServer.dbRequestState === REST.Requested}
-                    value={this.dbServer.initDb ?? ''}
-                    onChange={this.handleInitDbChange}
-                  />
+                  {this.dbServer.databases.length > 0 ? (
+                    <Form.Dropdown
+                      options={this.dbNameOptions}
+                      placeholder="Initial DB"
+                      search
+                      selection
+                      fluid
+                      disabled={this.dbServer.dbRequestState !== REST.Success}
+                      loading={this.dbServer.dbRequestState === REST.Requested}
+                      value={this.dbServer.initDb ?? ''}
+                      onChange={this.handleInitDbChange}
+                    />
+                  ) : (
+                    <Form.Input
+                      fluid
+                      required
+                      placeholder="Initial DB"
+                      value={this.dbServer.initDb ?? ''}
+                      onChange={(e) => (this.dbServer.initDb = e.target.value)}
+                      type="text"
+                    />
+                  )}
                 </Grid.Column>
                 <Grid.Column>
                   <Label as="a" color="teal" ribbon content="Initial Table (optional)" />
