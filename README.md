@@ -39,7 +39,11 @@ bundle exec rails db:drop db:setup
 | RAILS_SERVE_STATIC_FILES | `true` (2)             | production, staging |
 
 1. `config/master.key` will be created automatically when calling `rails credentials:edit`. It must not be set in development. Copy this value to your deploy server and set the value from your local `master.key`. Make sure you don't version control `master.key`. See [this blog](https://medium.com/cedarcode/rails-5-2-credentials-9b3324851336) for more about rails credentials.
+
 2. Currently `RAILS_SERVE_STATIC_FILES` is set to `true` on the dokku host to enable serving of static assets. This could lead to bad performance and could be optimized through cdns or volume in the container and serving the assets by nginx.
+
+## DB-SQL Concepts
+- [Security concepts](docs/security_concepts.md)
 
 ## Start Rails
 
