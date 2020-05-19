@@ -1,7 +1,7 @@
 import React from 'react';
 import { InputOnChangeData, Message, Segment, Form, Header } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { RequestState } from '../../stores/session_store';
+import SessionStore, { ApiRequestState } from '../../stores/session_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -25,12 +25,12 @@ export default class DeleteAccount extends React.Component {
   }
 
   render() {
-    const { passwordState } = this.injected.sessionStore;
+    const loginState = this.injected.sessionStore.loginState.state;
     return (
       <Segment color="red" style={{ minWidth: '350px' }}>
         <Header as="h2" content="Parmanently delete your Account." />
         <Message info icon="info" content="All your data is deleted permanently and cannot be restored." />
-        <Form onSubmit={() => this.deleteAccount()} error={passwordState === RequestState.Error}>
+        <Form onSubmit={() => this.deleteAccount()} error={loginState === ApiRequestState.Error}>
           <Message
             error
             header="Errors"
@@ -47,7 +47,7 @@ export default class DeleteAccount extends React.Component {
             />
           </Form.Group>
           <Form.Button
-            loading={passwordState === RequestState.Waiting}
+            loading={loginState === ApiRequestState.Waiting}
             content="Delete Account"
             type="submit"
           />

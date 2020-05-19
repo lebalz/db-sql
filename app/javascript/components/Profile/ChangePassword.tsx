@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, InputOnChangeData, Message, Segment, Header } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
-import SessionStore, { RequestState } from '../../stores/session_store';
+import SessionStore, { ApiRequestState } from '../../stores/session_store';
 import { isSafePassword } from '../../views/helper';
 
 interface InjectedProps {
@@ -41,8 +41,13 @@ export default class ChangePassword extends React.Component {
     }
   };
 
+  @computed
+  get passwordState() {
+    return this.injected.sessionStore.passwordState.state;
+  }
+
   setNewPassword() {
-    this.injected.sessionStore.passwordState = RequestState.None;
+    this.injected.sessionStore.passwordState.state = ApiRequestState.None;
     if (this.validate()) {
       this.injected.sessionStore.setNewPassword(
         this.oldPassword,
@@ -67,18 +72,16 @@ export default class ChangePassword extends React.Component {
   }
 
   @computed get segmentColor() {
-    const { passwordState } = this.injected.sessionStore;
-    if (passwordState === RequestState.Success) {
+    if (this.passwordState === ApiRequestState.Success) {
       return 'green';
     }
-    if (!this.isValid || passwordState === RequestState.Error) {
+    if (!this.isValid || this.passwordState === ApiRequestState.Error) {
       return 'red';
     }
     return 'blue';
   }
 
   render() {
-    const { passwordState } = this.injected.sessionStore;
     const errorMessages: string[] = [];
     if (!this.state.isSafe) {
       errorMessages.push('The length of the new password must be between 8 and 256 characters.');
@@ -86,12 +89,12 @@ export default class ChangePassword extends React.Component {
     if (!this.state.isConfirmed) {
       errorMessages.push('The password confirmation is not equal to the new password.');
     }
-    if (passwordState === RequestState.Error) {
+    if (this.passwordState === ApiRequestState.Error) {
       errorMessages.push('Your current password was wrong. Please try again.');
     }
 
     const validPassword = errorMessages.length === 0;
-    const newPasswordSet = passwordState === RequestState.Success;
+    const newPasswordSet = this.passwordState === ApiRequestState.Success;
 
     return (
       <Segment color={this.segmentColor} style={{ minWidth: '350px' }}>
@@ -129,7 +132,7 @@ export default class ChangePassword extends React.Component {
             />
           </Form.Group>
           <Form.Button
-            loading={passwordState === RequestState.Waiting}
+            loading={this.passwordState === ApiRequestState.Waiting}
             content="Change Password"
             type="submit"
             disabled={!this.isValid}

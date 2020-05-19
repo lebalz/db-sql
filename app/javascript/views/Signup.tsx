@@ -21,10 +21,10 @@ enum LoginState {
 export default class Signup extends React.Component {
   state = {
     isSafe: true,
-    loginState: LoginState.None
+    loginState: LoginState.None,
+    email: '',
+    password: ''
   };
-  private email: string = '';
-  private password: string = '';
   _isMounted: boolean = false;
 
   get injected() {
@@ -39,14 +39,7 @@ export default class Signup extends React.Component {
   }
 
   onChange = (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
-    switch (data.name as String) {
-      case 'email':
-        this.email = event.target.value;
-        break;
-      case 'password':
-        this.password = event.target.value;
-        break;
-    }
+    this.setState({ [data.name]: event.target.value });
     if (!this.isValid) {
       this.validate();
     }
@@ -55,7 +48,7 @@ export default class Signup extends React.Component {
   signup() {
     if (this.validate()) {
       this.setState({ loginState: LoginState.Waiting });
-      signup(this.email, this.password)
+      signup(this.state.email, this.state.password)
         .then(({ data }) => {
           this.injected.sessionStore.setCurrentUser(data);
           this._isMounted && this.setState({ loginState: LoginState.Success });
@@ -68,7 +61,7 @@ export default class Signup extends React.Component {
   }
 
   validate() {
-    const isSafe = isSafePassword(this.password);
+    const isSafe = isSafePassword(this.state.password);
     this.setState({
       isSafe: isSafe
     });
@@ -101,6 +94,7 @@ export default class Signup extends React.Component {
             label="E-Mail"
             placeholder="E-Mail"
             name="email"
+            value={this.state.email}
             onChange={this.onChange}
           />
         </Form.Group>
@@ -113,6 +107,7 @@ export default class Signup extends React.Component {
             label="Password"
             placeholder="Password"
             name="password"
+            value={this.state.password}
             onChange={this.onChange}
           />
         </Form.Group>

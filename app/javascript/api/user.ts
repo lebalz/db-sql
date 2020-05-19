@@ -47,8 +47,8 @@ export function newPassword(
   });
 }
 
-export function resendActivationLink() {
-  return api.post('users/current/resend_activation_link');
+export function resendActivationLink(email: string) {
+  return api.post('users/resend_activation_link', { email: email });
 }
 
 export function deleteAccount(password: string) {

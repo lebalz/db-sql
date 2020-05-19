@@ -22,11 +22,25 @@ export enum LocalStorageKey {
   CryptoKey = 'Crypto-Key'
 }
 
-export enum RequestState {
-  Waiting,
-  Error,
-  Success,
-  None
+export enum ApiRequestState {
+  Waiting = 0,
+  Error = 1,
+  Success = 2,
+  None = 3
+}
+
+export enum ApiLoginRequestState {
+  ActivationPeriodExpired = 4
+}
+
+interface RequestState {
+  state: ApiRequestState;
+  message: string;
+}
+
+interface LoginRequestState {
+  state: ApiRequestState | ApiLoginRequestState;
+  message: string;
 }
 
 const LOGIN_PATH = '/login';
@@ -47,10 +61,12 @@ const isLoginRequired = (pathname: string) => {
 
 class SessionStore implements Store {
   @observable private user: User | null = null;
+  @observable emailOfLastLoginAttempt?: string;
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
-  @observable passwordState: RequestState = RequestState.None;
-  @observable resendActivationLinkState: RequestState = RequestState.None;
+  @observable loginState: LoginRequestState = { state: ApiRequestState.None, message: '' };
+  @observable passwordState: RequestState = { state: ApiRequestState.None, message: '' };
+  @observable resendActivationLinkState: RequestState = { state: ApiRequestState.None, message: '' };
   private readonly root: RootStore;
   private locationHistory: Location[] = [];
 
@@ -80,10 +96,14 @@ class SessionStore implements Store {
       }
     );
     reaction(
-      () => this.passwordState,
+      () => this.loginState.state,
       (state) => {
-        if (![RequestState.None, RequestState.Waiting].includes(state)) {
-          this.passwordState = RequestState.None;
+        if (
+          ![ApiRequestState.None, ApiRequestState.Waiting, ApiLoginRequestState.ActivationPeriodExpired].includes(
+            state
+          )
+        ) {
+          this.loginState.state = ApiRequestState.None;
         }
       },
       { delay: 5000 }
@@ -195,28 +215,35 @@ class SessionStore implements Store {
   }
 
   @action login(email: string, password: string) {
-    this.passwordState = RequestState.Waiting;
+    this.loginState.state = ApiRequestState.Waiting;
+    this.emailOfLastLoginAttempt = email;
     login(email, password)
       .then(({ data }) => {
         this.setCurrentUser(data);
-        this.passwordState = RequestState.Success;
+        this.loginState.state = ApiRequestState.Success;
       })
       .catch((error) => {
-        console.log('Loginfehler!!');
-        this.passwordState = RequestState.Error;
+        if (error?.response?.status === 403) {
+          this.loginState.state = ApiLoginRequestState.ActivationPeriodExpired;
+          this.loginState.message = error.response.data.error;
+        } else {
+          this.loginState.state = ApiRequestState.Error;
+          this.loginState.message = error.response.data.error;
+        }
       });
   }
 
   @action setNewPassword(oldPassword: string, newPassword: string, newPasswordConfirmation: string) {
-    this.passwordState = RequestState.Waiting;
+    this.loginState.state = ApiRequestState.Waiting;
     setNewPasswordCall(oldPassword, newPassword, newPasswordConfirmation)
       .then(({ data }) => {
         this.updateLocalUserCredentials(data);
         this.user = new User(data);
-        this.passwordState = RequestState.Success;
+        this.passwordState.state = ApiRequestState.Success;
       })
-      .catch(() => {
-        this.passwordState = RequestState.Error;
+      .catch((error) => {
+        this.passwordState.state = ApiRequestState.Error;
+        this.passwordState.message = error.response.data.error;
       });
   }
 
@@ -248,29 +275,30 @@ class SessionStore implements Store {
       });
   }
 
-  @action resendActivationLink() {
-    this.resendActivationLinkState = RequestState.Waiting;
-    resendActivationLinkCall()
+  @action resendActivationLink(email: string = this.currentUser.email) {
+    this.resendActivationLinkState.state = ApiRequestState.Waiting;
+    resendActivationLinkCall(email)
       .then(() => {
-        this.resendActivationLinkState = RequestState.Success;
+        this.resendActivationLinkState.state = ApiRequestState.Success;
       })
-      .catch(() => {
-        this.resendActivationLinkState = RequestState.Error;
+      .catch((error) => {
+        this.resendActivationLinkState.state = ApiRequestState.Error;
+        this.resendActivationLinkState.message = error.response.data.error;
       })
       .then((result) => new Promise((resolve) => setTimeout(resolve, 5000, result)))
-      .finally(() => (this.resendActivationLinkState = RequestState.None));
+      .finally(() => (this.resendActivationLinkState.state = ApiRequestState.None));
   }
 
   @action deleteAccount(password: string) {
-    this.passwordState = RequestState.Waiting;
+    this.loginState.state = ApiRequestState.Waiting;
     deleteAccountCall(password)
       .then(() => {
         this.resetAuthorization();
-        this.passwordState = RequestState.Success;
+        this.loginState.state = ApiRequestState.Success;
         this.history.push('/login');
       })
       .catch((e) => {
-        this.passwordState = RequestState.Error;
+        this.loginState.state = ApiRequestState.Error;
       });
   }
 

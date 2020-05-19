@@ -27,6 +27,9 @@ class User < ApplicationRecord
   has_many :login_tokens, dependent: :destroy
   has_many :db_servers, dependent: :destroy
 
+  ACTIVATION_PERIOD = 7.days
+  PASSWORD_RESET_PERIOD = 1.day
+
   validates(
     :email,
     presence: true,
@@ -153,7 +156,7 @@ class User < ApplicationRecord
   end
 
   def activation_expired?
-    !activated? && DateTime.now >= created_at + 2.days
+    !activated? && DateTime.now >= created_at + ACTIVATION_PERIOD
   end
 
   # @return [boolean] returns if a password reset was requested.
@@ -165,7 +168,7 @@ class User < ApplicationRecord
   def pending_password_reset_request?
     return false unless password_reset_requested?
 
-    DateTime.now < reset_password_mail_sent_at + 12.hours
+    DateTime.now < reset_password_mail_sent_at + PASSWORD_RESET_PERIOD
   end
 
   private

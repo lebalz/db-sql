@@ -52,6 +52,23 @@ module Resources
         status :no_content
       end
 
+      desc 'Request a new activation link'
+      route_setting :auth, disabled: true
+      params do
+        requires :email, type: String
+      end
+      post :resend_activation_link do
+        logout_existing_user
+        @user = User.find_by(email: params[:email].downcase)
+        error!('Could not resend activation link', 400) unless @user
+
+        error!('User already activated', 400) if @user.activated?
+
+        @user = @user.reset_activation_digest
+        ActivationMailer.activate_account(@user).deliver_now
+        status :no_content
+      end
+
       resource :current do
         desc 'Get current user'
         get do
@@ -99,15 +116,6 @@ module Resources
             token: token,
             crypto_key: crypto_key
           )
-        end
-
-        desc 'Send a new activation link'
-        post :resend_activation_link do
-          user = current_user.reset_activation_digest
-          error!('Could not resend activation link', 400) unless user
-
-          ActivationMailer.activate_account(user).deliver_now
-          status :no_content
         end
 
         desc 'Delete current user'

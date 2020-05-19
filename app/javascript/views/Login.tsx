@@ -1,11 +1,12 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { RequestState } from '../stores/session_store';
+import SessionStore, { ApiRequestState, ApiLoginRequestState } from '../stores/session_store';
 import { Header, Form, Accordion, Icon, Message } from 'semantic-ui-react';
 import { RouterStore } from 'mobx-react-router';
 import DbSqlIcon from '../shared/DbSqlIcon';
 import Signup from './Signup';
 import ForgotPassword from './ForgotPassword';
+import { ResendIcon } from '../components/Navigation/NavBar';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -20,7 +21,7 @@ export default class Login extends React.Component {
     forgotPassword: false
   };
 
-  private email: string = '';
+  private email: string = this.injected.sessionStore.emailOfLastLoginAttempt ?? '';
   private password: string = '';
   get injected() {
     return this.props as InjectedProps;
@@ -40,7 +41,7 @@ export default class Login extends React.Component {
   }
 
   render() {
-    const { passwordState } = this.injected.sessionStore;
+    const loginState = this.injected.sessionStore.loginState.state;
     return (
       <main
         className="fullscreen"
@@ -59,7 +60,8 @@ export default class Login extends React.Component {
         </div>
         <Form
           onSubmit={() => this.login()}
-          error={passwordState === RequestState.Error}
+          error={loginState === ApiRequestState.Error}
+          warning={loginState === ApiLoginRequestState.ActivationPeriodExpired}
           success={this.queryParams.get('reset') === 'success'}
         >
           <Message success content="Password successfully reset. Login with the new password." />
@@ -80,8 +82,31 @@ export default class Login extends React.Component {
               id="password-input"
               onChange={(e) => (this.password = e.target.value)}
             />
-            <Form.Button content="Login" type="submit" loading={passwordState === RequestState.Waiting} />
+            <Form.Button content="Login" type="submit" loading={loginState === ApiRequestState.Waiting} />
           </Form.Group>
+          <Message warning>
+            <Message.Header>Activation Period Expired</Message.Header>
+            <Message.Content>
+              You have to activate your account by validating your email address.
+              <br />
+              <a
+                onClick={() =>
+                  this.injected.sessionStore.resendActivationLink(
+                    this.injected.sessionStore.emailOfLastLoginAttempt
+                  )
+                }
+                href="#"
+              >
+                Resend the activation link
+              </a>
+              {this.injected.sessionStore.resendActivationLinkState.state !== ApiRequestState.None && (
+                <ResendIcon resendState={this.injected.sessionStore.resendActivationLinkState.state} />
+              )}
+              {this.injected.sessionStore.resendActivationLinkState.state === ApiRequestState.Error && (
+                <div>{this.injected.sessionStore.resendActivationLinkState.message}</div>
+              )}
+            </Message.Content>
+          </Message>
           <Message error header="Login Failed" content="E-Mail or Password is incorrect" />
         </Form>
         <Accordion>
