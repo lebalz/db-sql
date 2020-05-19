@@ -7,6 +7,7 @@ import { SuccessTableData } from '../../../../models/Query';
 import _ from 'lodash';
 import WordCloudConfig from './WordCloudConfig';
 import WordcloudGraph, { GraphType } from '../../../../models/Graphs/WordcloudGraph';
+import Slider from '../../../../shared/Slider';
 
 interface Props {
   id: string;
@@ -20,6 +21,11 @@ interface InjectedProps extends Props {
 @inject('viewStateStore')
 @observer
 class WordCloud extends React.Component<Props> {
+  wordcloudRef = React.createRef<HTMLDivElement>();
+  state = {
+    height: 300
+  };
+
   @computed
   get injected() {
     return this.props as InjectedProps;
@@ -28,6 +34,13 @@ class WordCloud extends React.Component<Props> {
   @computed
   get viewState() {
     return this.injected.viewStateStore.resultTableState(this.props.id);
+  }
+
+  get wordcloudTopShare() {
+    if (!this.wordcloudRef.current) {
+      return 0;
+    }
+    return this.wordcloudRef.current.getBoundingClientRect().top;
   }
 
   @computed
@@ -87,9 +100,23 @@ class WordCloud extends React.Component<Props> {
       <Fragment>
         <WordCloudConfig header={this.headers} id={this.props.id} hasChart={this.wordClouds.length > 0} />
         {this.wordClouds.length > 0 && (
-          <div id={`WordCloud-${this.props.id}`}>
-            <ReactWordcloud words={this.wordClouds} options={this.wordcloudOptions} />
-          </div>
+          <Fragment>
+            <div
+              id={`WordCloud-${this.props.id}`}
+              ref={this.wordcloudRef}
+              style={{ height: `${this.state.height}px` }}
+            >
+              <ReactWordcloud words={this.wordClouds} options={this.wordcloudOptions} />
+            </div>
+            <Slider
+              direction="vertical"
+              onChange={(topShare) => {
+                this.setState({ height: topShare - this.wordcloudTopShare });
+              }}
+              defaultSize={300}
+              minSize={this.wordcloudTopShare + 100}
+            />
+          </Fragment>
         )}
       </Fragment>
     );

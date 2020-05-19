@@ -8,6 +8,7 @@ import LineGraphConfig from './LineGraphConfig';
 import { LineChart, Line, XAxis, Legend, YAxis, Tooltip } from 'recharts';
 import { GraphType } from '../../../../models/Graphs/WordcloudGraph';
 import { default as LineGraphModel } from '../../../../models/Graphs/LineGraph';
+import Slider from '../../../../shared/Slider';
 
 interface Props {
   id: string;
@@ -22,8 +23,10 @@ interface InjectedProps extends Props {
 @observer
 class LineGraph extends React.Component<Props> {
   chartWrapper = React.createRef<HTMLDivElement>();
+  chartRef = React.createRef<HTMLDivElement>();
   state = {
-    width: 600
+    width: 600,
+    height: 300
   };
 
   componentDidMount() {
@@ -45,6 +48,13 @@ class LineGraph extends React.Component<Props> {
   @computed
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  get chartTopShare() {
+    if (!this.chartRef.current) {
+      return 0;
+    }
+    return this.chartRef.current.getBoundingClientRect().top;
   }
 
   @computed
@@ -79,10 +89,10 @@ class LineGraph extends React.Component<Props> {
       <div ref={this.chartWrapper} style={{ width: '100%' }}>
         <LineGraphConfig header={this.headers} id={this.props.id} hasChart={this.graph.yColumns.length > 0} />
         {this.graph.yColumns.length > 0 && (
-          <div id={`LineGraph-${this.props.id}`}>
+          <div id={`LineGraph-${this.props.id}`} ref={this.chartRef}>
             <LineChart
               width={this.state.width}
-              height={300}
+              height={this.state.height}
               data={this.props.data.result}
               margin={{ top: 20, right: 5, left: 0, bottom: 5 }}
             >
@@ -106,6 +116,14 @@ class LineGraph extends React.Component<Props> {
             </LineChart>
           </div>
         )}
+        <Slider
+          direction="vertical"
+          onChange={(topShare) => {
+            this.setState({ height: topShare - this.chartTopShare });
+          }}
+          defaultSize={300}
+          minSize={this.chartTopShare + 100}
+        />
       </div>
     );
   }

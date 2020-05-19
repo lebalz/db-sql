@@ -54,7 +54,7 @@ body {
     grid-row-end: main;
 
     // sibling selector - divider should not be displayed for fullscreen
-    & ~ .divider {
+    & ~ #sidebar-divider {
       display: none;
     }
   }
@@ -64,7 +64,7 @@ body {
     grid-column-end: main;
 
     // sibling selector - divider should not be displayed for no-sidebar
-    & ~ .divider {
+    & ~ #sidebar-divider {
       display: none;
     }
   }
