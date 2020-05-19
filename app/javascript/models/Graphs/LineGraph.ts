@@ -12,8 +12,7 @@ export default class LineGraph implements IGraph {
 
   @observable xColumn?: number;
   yColumns = observable<number>([]);
-  @observable
-  colors = observable<string>([]);
+  colors = observable(new Map<number, string>());
 
   @action
   onColumnSelection(columnIndex: number) {
@@ -29,7 +28,8 @@ export default class LineGraph implements IGraph {
       this.yColumns[this.focuseIndex] = columnIndex;
     } else {
       this.yColumns.push(columnIndex);
-      this.colors.push(SEMANTIC_HEX_COLORS[columnIndex % SEMANTIC_HEX_COLORS.length]);
+
+      this.colors.set(columnIndex, SEMANTIC_HEX_COLORS[this.colors.size % SEMANTIC_HEX_COLORS.length]);
     }
   }
 

@@ -1,16 +1,19 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
-import { computed, action } from 'mobx';
+import { computed } from 'mobx';
 import _ from 'lodash';
-import { Input, InputOnChangeData, Label, Button } from 'semantic-ui-react';
+import { Input, Label, Button } from 'semantic-ui-react';
 import Tooltip from '../../../../shared/Tooltip';
 import { GraphType } from '../../../../models/Graphs/WordcloudGraph';
 import LineGraph from '../../../../models/Graphs/LineGraph';
+import fileDownload from 'js-file-download';
+import domtoimage from 'dom-to-image';
 
 interface Props {
   id: string;
   header: string[];
+  hasChart: boolean;
 }
 
 interface InjectedProps extends Props {
@@ -75,7 +78,7 @@ class LineGraphConfig extends React.Component<Props> {
                   circular: true,
                   link: true,
                   onClick: () => {
-                    this.graph.colors.remove(this.graph.colors[nr]);
+                    this.graph.colors.delete(nr);
                     this.graph.yColumns.remove(this.graph.yColumns[nr]);
                   }
                 }}
@@ -147,6 +150,26 @@ class LineGraphConfig extends React.Component<Props> {
           }}
         />
         <div className="spacer" />
+        {this.props.hasChart && (
+          <Tooltip content="Download">
+            <Button
+              size="mini"
+              icon="download"
+              onClick={() => {
+                const node = document.getElementById(`LineGraph-${this.props.id}`);
+                if (node) {
+                  domtoimage.toBlob(node).then((blob) => {
+                    const d = new Date();
+                    fileDownload(
+                      blob,
+                      `db-sql_${d.getFullYear()}-${d.getMonth()}-${d.getDay()}_${d.getHours()}-${d.getMinutes()}.png`
+                    );
+                  });
+                }
+              }}
+            />
+          </Tooltip>
+        )}
         <Tooltip content="Close Graph">
           <Button size="mini" icon="close" onClick={() => (this.viewState.graph = undefined)} />
         </Tooltip>

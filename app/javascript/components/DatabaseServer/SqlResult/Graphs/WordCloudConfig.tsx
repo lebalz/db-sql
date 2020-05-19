@@ -7,10 +7,13 @@ import { Input, Label, Button, Checkbox } from 'semantic-ui-react';
 import Tooltip from '../../../../shared/Tooltip';
 import WordcloudGraph, { GraphType, MAX_FONT_SIZE } from '../../../../models/Graphs/WordcloudGraph';
 import { Range } from 'rc-slider';
+import fileDownload from 'js-file-download';
+import domtoimage from 'dom-to-image';
 
 interface Props {
   id: string;
   header: string[];
+  hasChart: boolean;
 }
 
 interface InjectedProps extends Props {
@@ -152,9 +155,7 @@ class WordCloudConfig extends React.Component<Props> {
             handleStyle={this.isSliderActive ? undefined : [DISABLED_STYLE, DISABLED_STYLE]}
             onChange={(tabs) => {
               this.graph.minFontSize = tabs[0];
-              if (tabs[0] > 0) {
-                this.graph.maxFontSize = tabs[1];
-              }
+              this.graph.maxFontSize = tabs[1];
             }}
           />
         </div>
@@ -165,6 +166,26 @@ class WordCloudConfig extends React.Component<Props> {
           onChange={() => (this.graph.deterministic = !this.graph.deterministic)}
         />
         <div className="spacer" />
+        {this.props.hasChart && (
+          <Tooltip content="Download">
+            <Button
+              size="mini"
+              icon="download"
+              onClick={() => {
+                const node = document.getElementById(`WordCloud-${this.props.id}`);
+                if (node) {
+                  domtoimage.toBlob(node).then((blob) => {
+                    const d = new Date();
+                    fileDownload(
+                      blob,
+                      `db-sql_${d.getFullYear()}-${d.getMonth()}-${d.getDay()}_${d.getHours()}-${d.getMinutes()}.png`
+                    );
+                  });
+                }
+              }}
+            />
+          </Tooltip>
+        )}
         <Tooltip content="Close Graph">
           <Button size="mini" icon="close" onClick={() => (this.viewState.graph = undefined)} />
         </Tooltip>

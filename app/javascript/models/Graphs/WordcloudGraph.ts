@@ -28,7 +28,7 @@ export default class WordcloudGraph implements IGraph {
   @observable wordColumn?: number;
   @observable countColumn?: number;
   @observable minFontSize: number = 0;
-  @observable maxFontSize: number = 100;
+  @observable maxFontSize: number = 10;
   @observable deterministic: boolean = false;
 
   @action

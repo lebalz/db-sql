@@ -1,18 +1,18 @@
 import _ from 'lodash';
 export const SEMANTIC_HEX_COLORS = [
   '#db2828',
-  '#f2711c',
-  '#fbbd08',
-  '#b5cc18',
   '#21ba45',
-  '#00b5ad',
   '#2185d0',
-  '#6435c9',
-  '#a333c8',
+  '#1b1c1d',
   '#e03997',
+  '#6435c9',
+  '#00b5ad',
+  '#f2711c',
+  '#b5cc18',
+  '#fbbd08',
   '#a5673f',
-  '#767676',
-  '#1b1c1d'
+  '#a333c8',
+  '#767676'
 ];
 
 export const randomColor = (): string => {

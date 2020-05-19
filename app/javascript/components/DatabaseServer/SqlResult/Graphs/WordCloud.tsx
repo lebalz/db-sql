@@ -7,6 +7,7 @@ import { SuccessTableData } from '../../../../models/Query';
 import _ from 'lodash';
 import WordCloudConfig from './WordCloudConfig';
 import WordcloudGraph, { GraphType } from '../../../../models/Graphs/WordcloudGraph';
+import Slider from '../../../../shared/Slider';
 
 interface Props {
   id: string;
@@ -17,9 +18,17 @@ interface InjectedProps extends Props {
   viewStateStore: ViewStateStore;
 }
 
+const DEFAULT_HEIGHT = 300;
+const MIN_HEIGHT = 100;
+
 @inject('viewStateStore')
 @observer
 class WordCloud extends React.Component<Props> {
+  wordcloudRef = React.createRef<HTMLDivElement>();
+  state = {
+    height: DEFAULT_HEIGHT
+  };
+
   @computed
   get injected() {
     return this.props as InjectedProps;
@@ -28,6 +37,13 @@ class WordCloud extends React.Component<Props> {
   @computed
   get viewState() {
     return this.injected.viewStateStore.resultTableState(this.props.id);
+  }
+
+  get wordcloudTopShare() {
+    if (!this.wordcloudRef.current) {
+      return 0;
+    }
+    return this.wordcloudRef.current.getBoundingClientRect().top;
   }
 
   @computed
@@ -74,7 +90,7 @@ class WordCloud extends React.Component<Props> {
     if (this.graph.minFontSize < 1) {
       return {
         deterministic: this.graph.deterministic
-      }
+      };
     }
     return {
       fontSizes: [this.graph.minFontSize, this.graph.maxFontSize],
@@ -85,9 +101,25 @@ class WordCloud extends React.Component<Props> {
   render() {
     return (
       <Fragment>
-        <WordCloudConfig header={this.headers} id={this.props.id} />
+        <WordCloudConfig header={this.headers} id={this.props.id} hasChart={this.wordClouds.length > 0} />
         {this.wordClouds.length > 0 && (
-          <ReactWordcloud words={this.wordClouds} options={this.wordcloudOptions} />
+          <Fragment>
+            <div
+              id={`WordCloud-${this.props.id}`}
+              ref={this.wordcloudRef}
+              style={{ height: `${this.state.height}px` }}
+            >
+              <ReactWordcloud words={this.wordClouds} options={this.wordcloudOptions} />
+            </div>
+            <Slider
+              direction="vertical"
+              onChange={(topShare) => {
+                this.setState({ height: topShare - this.wordcloudTopShare });
+              }}
+              defaultSize={DEFAULT_HEIGHT}
+              minSize={this.wordcloudTopShare + MIN_HEIGHT}
+            />
+          </Fragment>
         )}
       </Fragment>
     );
