@@ -155,9 +155,7 @@ class WordCloudConfig extends React.Component<Props> {
             handleStyle={this.isSliderActive ? undefined : [DISABLED_STYLE, DISABLED_STYLE]}
             onChange={(tabs) => {
               this.graph.minFontSize = tabs[0];
-              if (tabs[0] > 0) {
-                this.graph.maxFontSize = tabs[1];
-              }
+              this.graph.maxFontSize = tabs[1];
             }}
           />
         </div>
