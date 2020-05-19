@@ -30,7 +30,7 @@ export default class DbServerIndex extends React.Component<Props> {
     const { loadedDbServers, activeDbServer } = this.injected.dbServerStore;
 
     return (
-      <Menu stackable secondary compact size="mini" color="teal">
+      <Menu stackable secondary compact size="mini" color="teal" style={{paddingLeft: '1em'}}>
         {loadedDbServers.map((dbServer, i) => {
           return (
             <Menu.Item

@@ -33,6 +33,10 @@ body {
       cursor: col-resize;
       touch-action: pan-y;
     }
+    position: relative;
+    .resizeIcon {
+      position: absolute;
+    }
   }
 
   .grid {

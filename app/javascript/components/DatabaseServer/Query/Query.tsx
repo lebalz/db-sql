@@ -51,6 +51,7 @@ export default class Query extends React.Component<Props> {
             onChange={this.onResize}
             defaultSize={DEFAULT_EDITOR_HEIGHT}
             minSize={MIN_EDITOR_HEIGHT + this.wrapperTopY}
+            iconPosition={{ right: '6em' }}
           />
         </Segment>
         <div className="query-bar">

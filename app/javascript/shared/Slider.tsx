@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from 'semantic-ui-react';
 
 interface Props {
   direction: 'horizontal' | 'vertical';
@@ -6,6 +7,16 @@ interface Props {
   minSize?: number;
   defaultSize: number;
   shift?: number;
+  hideIcon?: boolean;
+  /**
+   * position relative to the divider line
+   */
+  iconPosition?: {
+    top?: string;
+    left?: string;
+    right?: string;
+    bottom?: string;
+  };
   onChange: (size: number) => void;
 }
 
@@ -61,6 +72,31 @@ class Slider extends React.Component<Props> {
     this.props.onChange(this.state.share);
   };
 
+  get iconName(): 'resize horizontal' | 'resize vertical' {
+    return `resize ${this.props.direction}` as 'resize horizontal' | 'resize vertical';
+  }
+
+  get iconStyle() {
+    switch (this.props.direction) {
+      case 'horizontal':
+        const defaultTop = this.props.iconPosition?.bottom ? undefined : '1em';
+        return {
+          left: '-1em',
+          top: this.props.iconPosition?.top ?? defaultTop,
+          bottom: this.props.iconPosition?.bottom
+        };
+      case 'vertical':
+        const defaultLeft = this.props.iconPosition?.right ? undefined : '1em';
+        return {
+          top: '-1em',
+          left: this.props.iconPosition?.left ?? defaultLeft,
+          right: this.props.iconPosition?.right
+        };
+      default:
+        return {};
+    }
+  }
+
   render() {
     return (
       <div
@@ -69,7 +105,11 @@ class Slider extends React.Component<Props> {
         ref={this.ref}
         onPointerDown={this.beginSliding}
         onPointerUp={this.stopSliding}
-      />
+      >
+        {!this.props.hideIcon && (
+          <Icon circular name={this.iconName} style={this.iconStyle} className="resizeIcon" />
+        )}
+      </div>
     );
   }
 }
