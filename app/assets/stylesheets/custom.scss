@@ -16,11 +16,23 @@ body {
     overflow-y: hidden;
   }
 
-  #divider {
+  #sidebar-divider {
     grid-area: divider;
-    height: 100%;
-    cursor: col-resize;
-    border-right: 2px solid gray;
+  }
+  .divider {
+    z-index: 100;
+    &.vertical {
+      width: 100%;
+      touch-action: pan-x;
+      cursor: row-resize;
+      border-bottom: 2px solid gray;
+    }
+    &.horizontal {
+      height: 100%;
+      border-right: 2px solid gray;
+      cursor: col-resize;
+      touch-action: pan-y;
+    }
   }
 
   .grid {
@@ -38,7 +50,7 @@ body {
     grid-row-end: main;
 
     // sibling selector - divider should not be displayed for fullscreen
-    & ~ #divider {
+    & ~ .divider {
       display: none;
     }
   }
@@ -48,7 +60,7 @@ body {
     grid-column-end: main;
 
     // sibling selector - divider should not be displayed for no-sidebar
-    & ~ #divider {
+    & ~ .divider {
       display: none;
     }
   }

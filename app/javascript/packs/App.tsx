@@ -11,6 +11,7 @@ import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
 import DbServer from '../components/DbServer';
 import About from '../components/About';
+import Slider from '../shared/Slider';
 
 const MIN_SIDEBAR_WIDTH = 50;
 const GRID_COLUMN_GAP_WIDTH = 1;
@@ -44,50 +45,22 @@ const AppContent = observer(() => (
 
 @observer
 class App extends React.Component {
-  state: { mouseDown: boolean; leftShare: number } = { mouseDown: false, leftShare: DEFAULT_SIDEBAR_WIDTH };
-
-  componentDidMount() {
-    document.addEventListener('mouseup', this.onMouseUp);
-    document.addEventListener('mousemove', this.onMouseMove);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('mouseup', this.onMouseUp);
-    document.removeEventListener('mousemove', this.onMouseMove);
-  }
-
-  onMouseDown = () => {
-    this.setState({ mouseDown: true });
+  state: { leftShare: number } = { leftShare: DEFAULT_SIDEBAR_WIDTH };
+  onResize = (leftShare: number) => {
+    this.setState({ leftShare: leftShare });
   };
-
-  onMouseUp = () => {
-    this.setState({ mouseDown: false });
-  };
-
-  onMouseMove = (e: MouseEvent) => {
-    if (this.state.mouseDown) {
-      e.preventDefault();
-
-      const divider = document.getElementById('divider');
-
-      if (!divider) {
-        return console.log('Resizing not possible due to missing dom elements');
-      }
-
-      const leftShare = Math.max(
-        Math.max(0, e.clientX - GRID_COLUMN_GAP_WIDTH),
-        MIN_SIDEBAR_WIDTH
-      );
-
-      this.setState({ leftShare: leftShare });
-    }
-  };
-
   render() {
     return (
-      <div id="db-sql" style={{ gridTemplateColumns: `${this.state.leftShare}px 2px auto`}}>
+      <div id="db-sql" style={{ gridTemplateColumns: `${this.state.leftShare}px 2px auto` }}>
         <AppContent />
-        <div id="divider" onMouseDown={this.onMouseDown} />
+        <Slider
+          id="sidebar-divider"
+          direction="horizontal"
+          onChange={this.onResize}
+          defaultSize={DEFAULT_SIDEBAR_WIDTH}
+          shift={-GRID_COLUMN_GAP_WIDTH}
+          minSize={MIN_SIDEBAR_WIDTH}
+        />
       </div>
     );
   }
