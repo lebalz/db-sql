@@ -74,7 +74,7 @@ class WordCloud extends React.Component<Props> {
     if (this.graph.minFontSize < 1) {
       return {
         deterministic: this.graph.deterministic
-      }
+      };
     }
     return {
       fontSizes: [this.graph.minFontSize, this.graph.maxFontSize],
@@ -85,9 +85,11 @@ class WordCloud extends React.Component<Props> {
   render() {
     return (
       <Fragment>
-        <WordCloudConfig header={this.headers} id={this.props.id} />
+        <WordCloudConfig header={this.headers} id={this.props.id} hasChart={this.wordClouds.length > 0} />
         {this.wordClouds.length > 0 && (
-          <ReactWordcloud words={this.wordClouds} options={this.wordcloudOptions} />
+          <div id={`WordCloud-${this.props.id}`}>
+            <ReactWordcloud words={this.wordClouds} options={this.wordcloudOptions} />
+          </div>
         )}
       </Fragment>
     );
