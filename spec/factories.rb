@@ -20,6 +20,18 @@ FactoryBot.define do
     end
   end
 
+  factory :database_schema_query do
+    author { User.first || FactoryBot.create(:user, :admin) }
+    default { false }
+    db_type { :psql }
+    query do
+      Rack::Test::UploadedFile.new(
+        File.join('lib/queries', db_type.to_s, 'database_schema.sql'),
+        'text/plain'
+      )
+    end
+  end
+
   factory :db_server do
     transient do
       user_password { 'asdfasdf' }
@@ -32,12 +44,16 @@ FactoryBot.define do
       end
     end
     sequence(:name) { |n| "db_server#{n}" }
-    db_type { 0 }
+    db_type { :psql }
     host { 'localhost' }
     port { DbServer::DEFAULT_PORT_PSQL }
     username { 'foo' }
     initialization_vector { crypt[:initialization_vector] }
     password_encrypted { crypt[:encrypted_password] }
     association :user, factory: :user
+    database_schema_query do
+      DatabaseSchemaQuery.default(db_type: db_type) ||
+        FactoryBot.create(:database_schema_query, db_type: db_type, default: true)
+    end
   end
 end

@@ -12,6 +12,8 @@ RSpec.describe "API::Resources::DbServer" do
       'ninja_turtles_create.sql'
     )
     `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
+    FactoryBot.create(:database_schema_query, db_type: :mysql, default: true)
+    FactoryBot.create(:database_schema_query, db_type: :psql, default: true)
     @db_server = FactoryBot.create(:db_server)
 
     @user = @db_server.user

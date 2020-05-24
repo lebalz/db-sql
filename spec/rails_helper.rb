@@ -52,6 +52,7 @@ RSpec.configure do |config|
   end
   config.after(:all) do
     DatabaseCleaner.clean
+    FileUtils.rm_rf(Rails.root.join('tmp', 'storage'))
   end
 
   # RSpec Rails can automatically mix in different behaviours to your tests

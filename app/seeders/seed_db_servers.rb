@@ -16,7 +16,8 @@ class SeedDbServers
       username: Rails.configuration.database_configuration[Rails.env]['username'],
       password_encrypted: encrypted_password[:encrypted_password],
       initial_db: ActiveRecord::Base.connection_config[:database],
-      user: user
+      user: user,
+      database_schema_query: DatabaseSchemaQuery.default(db_type: :psql)
     )
     return unless File.exist? Rails.root.join('db_servers.yaml')
 
@@ -40,7 +41,8 @@ class SeedDbServers
         password_encrypted: encrypted_password[:encrypted_password],
         initial_db: db_server['db_initial_db'],
         initial_table: db_server['db_initial_table'],
-        user: user
+        user: user,
+        database_schema_query: DatabaseSchemaQuery.default(db_type: db_server['db_type'])
       )
     end
   end

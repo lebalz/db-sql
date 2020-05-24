@@ -19,6 +19,8 @@ RSpec.describe "API::Resources::TempDbServer" do
       username: 'foo',
       password: 'safe-db-password'
     }
+    FactoryBot.create(:database_schema_query, db_type: :mysql, default: true)
+    FactoryBot.create(:database_schema_query, db_type: :psql, default: true)
     @user = FactoryBot.create(:user)
     login_token = FactoryBot.create(:login_token, user: @user)
     @crypto_key = @user.crypto_key('asdfasdf')

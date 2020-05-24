@@ -51,6 +51,9 @@ class DbServer < ApplicationRecord
   }.freeze
 
   belongs_to :user, touch: true
+  belongs_to :database_schema_query
+
+  before_validation :set_database_schema_query, on: :create
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [String] cleartext password for the db connection
@@ -482,6 +485,12 @@ class DbServer < ApplicationRecord
     else
       PSQL_CONNECTION_OPTIONS
     end
+  end
+
+  def set_database_schema_query
+    return unless database_schema_query.nil?
+
+    self.database_schema_query = DatabaseSchemaQuery.default(db_type: db_type)
   end
 
 end

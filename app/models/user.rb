@@ -17,6 +17,9 @@
 
 class User < ApplicationRecord
   has_secure_password
+  has_many :database_schema_queries,
+           class_name: 'DatabaseSchemaQuery',
+           foreign_key: :author_id
   before_create :create_activation_digest
   before_save   :downcase_email
 
