@@ -25,7 +25,6 @@ RSpec.describe DbServer, type: :model do
   describe 'database server' do
     it 'can create new database server and restore decrypted password' do
       user = FactoryBot.create(:user)
-      FactoryBot.create(:database_schema_query, db_type: :psql, default: true)
       key = user.crypto_key('asdfasdf')
       encrypted_password = DbServer.encrypt(
         key: key,

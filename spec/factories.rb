@@ -18,6 +18,7 @@ FactoryBot.define do
     trait :unactivated do
       activated_at { nil }
     end
+    initialize_with { User.find_or_create_by(email: email) }
   end
 
   factory :database_schema_query do
@@ -45,15 +46,24 @@ FactoryBot.define do
     end
     sequence(:name) { |n| "db_server#{n}" }
     db_type { :psql }
-    host { 'localhost' }
+    host { '127.0.0.1' }
     port { DbServer::DEFAULT_PORT_PSQL }
     username { 'foo' }
     initialization_vector { crypt[:initialization_vector] }
     password_encrypted { crypt[:encrypted_password] }
-    association :user, factory: :user
+    user do
+      User.find_by(email: 'sqler1@db.ch') ||
+        FactoryBot.create(:user, email: 'sqler1@db.ch')
+    end
     database_schema_query do
       DatabaseSchemaQuery.default(db_type: db_type) ||
         FactoryBot.create(:database_schema_query, db_type: db_type, default: true)
+    end
+    trait :psql do
+      username { 'postgres' }
+    end
+    trait :mysql do
+      username { 'root' }
     end
   end
 end

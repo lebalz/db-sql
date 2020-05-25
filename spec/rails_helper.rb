@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 # This file is copied to spec/ when you run 'rails generate rspec:install'
-require 'spec_helper'
+require 'rake'
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
+require 'spec_helper'
+Rails.application.load_tasks
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
@@ -32,6 +34,10 @@ rescue ActiveRecord::PendingMigrationError => e
   puts e.to_s.strip
   exit 1
 end
+puts "startup test databases"
+
+Rake::Task['db:check_dbs_running'].invoke unless ENV['SKIP_DB']
+
 RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
@@ -46,6 +52,13 @@ RSpec.configure do |config|
   config.before(:suite) do
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:transaction)
+
+    if DatabaseSchemaQuery.default(db_type: :psql).nil?
+      FactoryBot.create(:database_schema_query, db_type: :psql, default: true)
+    end
+    if DatabaseSchemaQuery.default(db_type: :mysql).nil?
+      FactoryBot.create(:database_schema_query, db_type: :mysql, default: true)
+    end
   end
   config.before(:all) do
     DatabaseCleaner.start
@@ -53,6 +66,10 @@ RSpec.configure do |config|
   config.after(:all) do
     DatabaseCleaner.clean
     FileUtils.rm_rf(Rails.root.join('tmp', 'storage'))
+  end
+  config.after(:suite) do
+    DatabaseSchemaQuery.default(db_type: :psql)&.send(:force_destroy!)
+    DatabaseSchemaQuery.default(db_type: :mysql)&.send(:force_destroy!)
   end
 
   # RSpec Rails can automatically mix in different behaviours to your tests
