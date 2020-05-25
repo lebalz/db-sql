@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class DatabaseSchemaQuery < ApplicationRecord
   has_many :db_servers
   belongs_to :author, class_name: 'User', inverse_of: :database_schema_queries
@@ -6,14 +8,19 @@ class DatabaseSchemaQuery < ApplicationRecord
   validate :only_one_default_by_db_type
   before_destroy :assert_not_default
 
-  # @param db_type [DbServer::DB_TYPES]
+  # @param db_type [DbServer::DB_TYPES], e.g :mysql or :psql
   # @return [DatabaseSchemaQuery]
-  def self.default(db_type:)
+  def self.default(db_type)
     DatabaseSchemaQuery.where(db_type: db_type, default: true).first
   end
 
   def default?
     default
+  end
+
+  # @return [String] the content of the attached query
+  def to_s
+    query.download
   end
 
   private
@@ -30,8 +37,8 @@ class DatabaseSchemaQuery < ApplicationRecord
 
   def only_one_default_by_db_type
     return unless default
-    return if DatabaseSchemaQuery.default(db_type: db_type).nil?
-    return if DatabaseSchemaQuery.default(db_type: db_type) == self
+    return if DatabaseSchemaQuery.default(db_type).nil?
+    return if DatabaseSchemaQuery.default(db_type) == self
 
     errors.add(
       :default_database_schema_query,

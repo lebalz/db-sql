@@ -18,18 +18,9 @@ addons:
       - postgresql-10
       - postgresql-client-10
 before_script:
-  - docker-compose -f spec/docker-compose.yml up -d --build
   - cp config/database.yml.travis config/database.yml
   - psql -c 'DROP DATABASE IF EXISTS travis_ci_test;' -U postgres
   - psql -c 'CREATE DATABASE travis_ci_test;' -U postgres
-  - |
-    while ! docker exec -it spec_mysql8_1 mysql -u root --password=$TEST_DB_PASSWORD -e "status;"> /dev/null 2>&1; do
-      echo 'Waiting for mysql8...'
-      sleep 1;
-    done;
-  - docker exec -it spec_mysql8_1 mysqld --verbose --help | grep bind-address
-  - docker exec -it spec_mysql8_1 mysql -u root --password=$TEST_DB_PASSWORD -e "show variables where Variable_name like 'have_ssl';"
-  - docker exec -it spec_mysql8_1 mysql -u root --password=$TEST_DB_PASSWORD -e "status;"
 dist: xenial
 language: ruby
 rvm:
@@ -37,6 +28,3 @@ rvm:
 script:
   - bundle exec rails db:setup RAILS_ENV=test
   - bundle exec rspec
-
-after_script:
-  - docker-compose -f spec/docker-compose.yml down

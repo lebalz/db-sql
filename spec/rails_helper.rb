@@ -34,9 +34,7 @@ rescue ActiveRecord::PendingMigrationError => e
   puts e.to_s.strip
   exit 1
 end
-puts "startup test databases"
-
-Rake::Task['db:check_dbs_running'].invoke unless ENV['SKIP_DB']
+INTEGRATION_FEATURE_TEST_REGEXP = /\/integration|features\//i.freeze
 
 RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
@@ -53,11 +51,15 @@ RSpec.configure do |config|
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:transaction)
 
-    if DatabaseSchemaQuery.default(db_type: :psql).nil?
+    if DatabaseSchemaQuery.default(:psql).nil?
       FactoryBot.create(:database_schema_query, db_type: :psql, default: true)
     end
-    if DatabaseSchemaQuery.default(db_type: :mysql).nil?
+    if DatabaseSchemaQuery.default(:mysql).nil?
       FactoryBot.create(:database_schema_query, db_type: :mysql, default: true)
+    end
+    # only start spec dbs when integration or feature tests are requested
+    if config.files_to_run.any? { |f| f.match(INTEGRATION_FEATURE_TEST_REGEXP) }
+      Rake::Task['db:start_spec_dbs'].invoke unless ENV['SKIP_DB']
     end
   end
   config.before(:all) do
@@ -68,8 +70,12 @@ RSpec.configure do |config|
     FileUtils.rm_rf(Rails.root.join('tmp', 'storage'))
   end
   config.after(:suite) do
-    DatabaseSchemaQuery.default(db_type: :psql)&.send(:force_destroy!)
-    DatabaseSchemaQuery.default(db_type: :mysql)&.send(:force_destroy!)
+    DatabaseSchemaQuery.default(:psql)&.send(:force_destroy!)
+    DatabaseSchemaQuery.default(:mysql)&.send(:force_destroy!)
+    # only shut down spec dbs when integration or feature tests were run
+    if config.files_to_run.any? { |f| f.match(INTEGRATION_FEATURE_TEST_REGEXP) }
+      Rake::Task['db:stop_spec_dbs'].invoke unless ENV['KEEP_DBS_RUNNING']
+    end
   end
 
   # RSpec Rails can automatically mix in different behaviours to your tests

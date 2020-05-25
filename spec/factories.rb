@@ -56,7 +56,7 @@ FactoryBot.define do
         FactoryBot.create(:user, email: 'sqler1@db.ch')
     end
     database_schema_query do
-      DatabaseSchemaQuery.default(db_type: db_type) ||
+      DatabaseSchemaQuery.default(db_type) ||
         FactoryBot.create(:database_schema_query, db_type: db_type, default: true)
     end
     trait :psql do

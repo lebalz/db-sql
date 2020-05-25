@@ -490,7 +490,7 @@ class DbServer < ApplicationRecord
   def set_database_schema_query
     return unless database_schema_query.nil?
 
-    self.database_schema_query = DatabaseSchemaQuery.default(db_type: db_type)
+    self.database_schema_query = DatabaseSchemaQuery.default(db_type)
   end
 
 end

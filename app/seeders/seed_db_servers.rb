@@ -17,7 +17,7 @@ class SeedDbServers
       password_encrypted: encrypted_password[:encrypted_password],
       initial_db: ActiveRecord::Base.connection_config[:database],
       user: user,
-      database_schema_query: DatabaseSchemaQuery.default(db_type: :psql)
+      database_schema_query: DatabaseSchemaQuery.default(:psql)
     )
 
     encrypted_password = DbServer.encrypt(
@@ -44,7 +44,7 @@ class SeedDbServers
         password_encrypted: encrypted_password[:encrypted_password],
         initial_db: 'ninja_turtles_db',
         user: user,
-        database_schema_query: DatabaseSchemaQuery.default(db_type: config[:db_type])
+        database_schema_query: DatabaseSchemaQuery.default(config[:db_type])
       )
     end
     return unless File.exist? Rails.root.join('db_servers.yaml')
@@ -70,7 +70,7 @@ class SeedDbServers
         initial_db: db_server['db_initial_db'],
         initial_table: db_server['db_initial_table'],
         user: user,
-        database_schema_query: DatabaseSchemaQuery.default(db_type: db_server['db_type'])
+        database_schema_query: DatabaseSchemaQuery.default(db_server['db_type'])
       )
     end
   end
