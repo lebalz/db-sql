@@ -1,9 +1,10 @@
-SELECT 
+SELECT
+  cols.ORDINAL_POSITION as 'position',
   cols.TABLE_SCHEMA AS 'schema',
   cols.TABLE_NAME as 'table',
   cols.COLUMN_NAME as 'column',
-  cols.DATA_TYPE AS 'sql_type',
-  cols.COLUMN_TYPE AS 'type',
+  cols.COLUMN_TYPE AS 'sql_type',
+  cols.DATA_TYPE AS 'type',
   cols.CHARACTER_MAXIMUM_LENGTH AS 'limit',
   cols.NUMERIC_PRECISION AS 'precision',
   cols.NUMERIC_SCALE AS 'scale',

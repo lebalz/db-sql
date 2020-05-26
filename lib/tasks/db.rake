@@ -21,6 +21,17 @@ namespace :db do
     exit
   end
 
+  desc 'update database schema query of default db types'
+  task update_default_schema_queries: :environment do
+    %i[psql mysql].each do |db_type|
+      schema_query = DatabaseSchemaQuery.default(db_type)
+      next if schema_query.nil?
+
+      file = Rails.root.join('lib/queries', db_type.to_s, 'database_schema.sql')
+      schema_query.update!(query: File.read(file))
+    end
+  end
+
   desc "startup test databases"
   task start_spec_dbs: :environment do
     puts `docker-compose -f #{Rails.root.join('spec', 'docker-compose.yml')} up -d`

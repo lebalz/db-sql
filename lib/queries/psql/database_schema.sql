@@ -1,4 +1,5 @@
 SELECT
+  cols.ordinal_position as "position",
   cols.table_schema AS "schema",
   cols.table_name AS "table",
   cols.column_name AS "column",
