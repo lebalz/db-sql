@@ -128,7 +128,7 @@ module Resources
               columns.map do |col|
                 col.merge({ is_primary: primary_keys.include?(col[:name]) })
               end,
-              with: Entities::Column
+              with: Entities::RailsColumn
             )
           end
           desc "Get the table's primary key names"
@@ -145,7 +145,7 @@ module Resources
               key: crypto_key,
               database_name: params[:database_name],
               table_name: params[:table_name]
-            ), with: Entities::ForeignKey
+            ), with: Entities::RailsForeignKey
           end
           desc "Get the table's indexes"
           post :indexes do
@@ -153,7 +153,7 @@ module Resources
               key: crypto_key,
               database_name: params[:database_name],
               table_name: params[:table_name]
-            ), with: Entities::Index
+            ), with: Entities::RailsIndex
           end
         end
       end
