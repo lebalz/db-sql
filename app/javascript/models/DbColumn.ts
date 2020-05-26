@@ -11,6 +11,7 @@ export enum Mark {
 }
 export default class DbColumn {
   readonly table: DbTable;
+  readonly position: number;
   readonly name: string;
   readonly default: string;
   readonly isNull: boolean;
@@ -25,6 +26,7 @@ export default class DbColumn {
   constructor(table: DbTable, name: string, props: ColumnProps) {
     this.table = table;
     this.name = name;
+    this.position = props.position;
     this.default = props.default;
     this.isNull = props.null;
     this.sqlTypeMetadata = props.sql_type_metadata;

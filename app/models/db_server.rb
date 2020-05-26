@@ -274,30 +274,35 @@ class DbServer < ApplicationRecord
   # @param database_name [String] name of the database_name
   # @return [Hash] full table structure
   # @example
+
   # {
-  #   name: "swissski",
-  #   db_server_id: "fd878c8a-0953-4165-add8-c37283e98900",
-  #   tables: [
-  #     {
-  #       "name": "athletes",
-  #       "columns": [
-  #         {
-  #           "name": "id",
-  #           "null": false,
-  #           "serial": false,
-  #           "sql_type_metadata": {
-  #             "limit": 4,
-  #             "sql_type": "int(11)",
-  #             "type": "integer"
+  #   "name" => 'swissski',
+  #   "db_server_id" => 'fd878c8a-0953-4165-add8-c37283e98900',
+  #   "schemas" => {
+  #     "public" => {
+  #       "athletes" => {
+  #         "id" => {
+  #           "position" => 1,
+  #           "null" => false,
+  #           "is_primary" => true,
+  #           "is_foreign" => false,
+  #           "default" => 'auto_increment',
+  #           "sql_type_metadata" => {
+  #             "type" => 'int',
+  #             "limit" => nil,
+  #             "precision" => 10,
+  #             "scale" => nil,
+  #             "sql_type" => 'int(4)'
   #           },
-  #           "is_primary": true
-  #         },
-  #         ...
-  #       ],
-  #       "indices": [],
-  #       "foreign_keys": []
+  #           "constraints" => [
+  #             {
+  #               "name" => 'PRIMARY'
+  #             }
+  #           ]
+  #         }
+  #       }
   #     }
-  #   ]
+  #   }
   # }
   def full_database(key:, database_name:)
     result = exec_query(key: key, database_name: database_name) do
@@ -309,6 +314,7 @@ class DbServer < ApplicationRecord
     table_idx = columns.index('table')
     column_idx = columns.index('column')
     sql_type_idx = columns.index('sql_type')
+    position_idx = columns.index('position')
     limit_idx = columns.index('limit')
     precision_idx = columns.index('precision')
     scale_idx = columns.index('scale')
@@ -324,96 +330,49 @@ class DbServer < ApplicationRecord
     ref_column_idx = columns.index('referenced_column')
 
     rows = result.rows
-    # has_db_schema = !mysql? &&
-    #   (
-    #     rows.some? { |row| row[schema_idx] != rows[0][schema_idx] } ||
-    #     rows.some? { |row| row[schema_idx] != row[table_idx] }
-    #   )
     schemas = {}
     rows.each do |row|
-      key = "#{row[schema_idx]}::#{row[table_idx]}::#{row[column_idx]}"
       schemas[row[schema_idx]] ||= {}
       schemas[row[schema_idx]][row[table_idx]] ||= {}
       if schemas[row[schema_idx]][row[table_idx]][row[column_idx]].nil?
         schemas[row[schema_idx]][row[table_idx]][row[column_idx]] = {
-          "null": row[is_nullable_idx] == 'YES',
-          "is_primary": row[is_primary_idx] == 'YES',
-          "is_foreign": row[is_foreign_idx] == 'YES',
-          "default": row[default_idx],
-          "sql_type_metadata": {
-            "type": row[type_idx],
-            "limit": row[limit_idx],
-            "precision": row[precision_idx],
-            "scale": row[scale_idx],
-            "sql_type": row[sql_type_idx]
+          "position" => row[position_idx],
+          "null" => row[is_nullable_idx] == 'YES',
+          "is_primary" => row[is_primary_idx] == 'YES',
+          "is_foreign" => row[is_foreign_idx] == 'YES',
+          "default" => row[default_idx],
+          "sql_type_metadata" => {
+            "type" => row[type_idx],
+            "limit" => row[limit_idx],
+            "precision" => row[precision_idx],
+            "scale" => row[scale_idx],
+            "sql_type" => row[sql_type_idx]
           }.compact,
-          "constraints": [
+          "constraints" => [
             row[constraint_idx].nil? ? nil : {
-              "name": row[constraint_idx],
-              "database": row[ref_database_idx],
-              "schema": row[ref_schema_idx],
-              "table": row[ref_table_idx],
-              "column": row[ref_column_idx]
+              "name" => row[constraint_idx],
+              "database" => row[ref_database_idx],
+              "schema" => row[ref_schema_idx],
+              "table" => row[ref_table_idx],
+              "column" => row[ref_column_idx]
             }.compact
           ].compact
         }.compact
       elsif !row[constraint_idx].nil?
-        schemas[row[schema_idx]][row[table_idx]][row[column_idx]][:constraints] << {
-          "name": row[constraint_idx],
-          "database": row[ref_database_idx],
-          "schema": row[ref_schema_idx],
-          "table": row[ref_table_idx],
-          "column": row[ref_column_idx]
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]]["constraints"] << {
+          "name" => row[constraint_idx],
+          "database" => row[ref_database_idx],
+          "schema" => row[ref_schema_idx],
+          "table" => row[ref_table_idx],
+          "column" => row[ref_column_idx]
         }.compact
       end
     end
     {
-      name: database_name,
-      db_server_id: id,
-      schemas: schemas
+      "name" => database_name,
+      "db_server_id" => id,
+      "schemas" => schemas
     }
-
-    # require 'pry'; binding.pry;
-    # reuse_connection do
-    #   table_names = table_names(key: key, database_name: database_name)
-    #   tables = table_names.map do |table_name|
-    #     pkeys = primary_key_names(
-    #       key: key,
-    #       database_name: database_name,
-    #       table_name: table_name
-    #     )
-    #     cols = columns(
-    #       key: key,
-    #       database_name: database_name,
-    #       table_name: table_name
-    #     ).map do |column|
-    #       column.merge(
-    #         is_primary: pkeys.include?(column[:name])
-    #       )
-    #     end
-    #     fkeys = foreign_keys(
-    #       key: key,
-    #       database_name: database_name,
-    #       table_name: table_name
-    #     )
-    #     indices = indexes(
-    #       key: key,
-    #       database_name: database_name,
-    #       table_name: table_name
-    #     )
-    #     {
-    #       name: table_name,
-    #       columns: cols,
-    #       indices: indices,
-    #       foreign_keys: fkeys
-    #     }
-    #   end
-    #   {
-    #     name: database_name,
-    #     db_server_id: id,
-    #     tables: tables
-    #   }
-    # end
   end
 
   # @param key [String] base64 encoded crypto key from the user

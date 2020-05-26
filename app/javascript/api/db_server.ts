@@ -35,6 +35,7 @@ export interface ReferenceConstraint extends Constraint {
 }
 
 export interface Column {
+  position: number;
   default: string;
   null: boolean;
   is_primary: boolean;

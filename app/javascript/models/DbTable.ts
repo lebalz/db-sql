@@ -20,7 +20,8 @@ export default class DbTable {
   constructor(schema: DbSchema, name: string, table: DbTableProps) {
     this.schema = schema;
     this.name = name;
-    this.columns = Object.keys(table).map((name) => new DbColumn(this, name, table[name]));
+    const columns = Object.keys(table).map((name) => new DbColumn(this, name, table[name]));
+    this.columns = columns.sort((col_a, col_b) => col_a.position - col_b.position);
   }
 
   get foreignConstraints(): ReferenceConstraint[] {
