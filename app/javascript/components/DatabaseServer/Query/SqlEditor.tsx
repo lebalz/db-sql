@@ -79,26 +79,34 @@ export default class SqlEditor extends React.Component<Props> {
 
   @computed
   get completers() {
+    const completions: Completion[] = [];
     const { database } = this.props.query;
-    const tables = database.schemas[0].tables.map((table) => ({
-      name: table.name,
-      value: table.name,
-      meta: 'TABLE',
-      score: 2
-    }));
-    const columns = database.schemas[0].tables.reduce((res, table) => {
-      const cols = table.columns.map(
-        (col) =>
-          ({
+
+    database.schemas.forEach((schema) => {
+      completions.push({
+        name: schema.name,
+        value: schema.name,
+        meta: 'SCHEMA',
+        score: 3
+      });
+      schema.tables.forEach((table) => {
+        completions.push({
+          name: table.name,
+          value: table.name,
+          meta: 'TABLE',
+          score: 2
+        });
+        table.columns.forEach((col) => {
+          completions.push({
             name: col.name,
             value: col.name,
             meta: 'COLUMN',
             score: 1
-          } as Completion)
-      );
-      return [...res, ...cols];
-    }, [] as Completion[]);
-    return [...tables, ...columns];
+          });
+        });
+      });
+    });
+    return completions;
   }
 
   onChange = (value: string, event?: any) => {

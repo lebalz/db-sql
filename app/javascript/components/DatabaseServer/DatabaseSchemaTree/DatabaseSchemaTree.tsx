@@ -22,6 +22,8 @@ import DatabaseItem from './DatabaseItem';
 import TableItem from './TableItem';
 import ColumnItem from './ColumnItem';
 import PlaceholderItem from './PlaceholderItem';
+import DbSchema from '../../../models/DbSchema';
+import SchemaItem from './Schematem';
 
 export interface ContextMenuProps {
   dbRef: React.MutableRefObject<any>;
@@ -31,6 +33,7 @@ export interface ContextMenuProps {
 export enum ItemKind {
   Database = 'database',
   Placeholder = 'placeholder',
+  Schema = 'schema',
   Table = 'table',
   Column = 'column'
 }
@@ -38,7 +41,8 @@ export enum ItemKind {
 interface DbTreeItem {
   treePosition: number;
   kind: ItemKind;
-  value: Database | DbColumn | DbTable | string;
+  indentLevel: 0 | 1 | 2 | 3;
+  value: Database | DbColumn | DbTable | DbSchema | string;
   draw: () => JSX.Element;
 }
 
@@ -52,6 +56,11 @@ export interface DbTableItem extends DbTreeItem {
   value: DbTable;
 }
 
+export interface DbSchemaItem extends DbTreeItem {
+  kind: ItemKind.Schema;
+  value: DbSchema;
+}
+
 export interface DbDatabaseItem extends DbTreeItem {
   kind: ItemKind.Database;
   value: Database;
@@ -62,7 +71,7 @@ export interface DbPlaceholderItem extends DbTreeItem {
   value: string;
 }
 
-export type TreeItem = DbDatabaseItem | DbTableItem | DbColumnItem | DbPlaceholderItem;
+export type TreeItem = DbDatabaseItem | DbSchemaItem | DbTableItem | DbColumnItem | DbPlaceholderItem;
 
 const getDatabaseItem = (
   db: Database,
@@ -74,6 +83,7 @@ const getDatabaseItem = (
     kind: ItemKind.Database,
     value: db,
     treePosition: treePosition,
+    indentLevel: 0,
     draw: () => (
       <DatabaseItem
         key={treePosition}
@@ -84,6 +94,7 @@ const getDatabaseItem = (
     )
   };
 };
+
 const getPlaceholderItem = (
   dbServerId: string,
   dbName: string,
@@ -94,27 +105,40 @@ const getPlaceholderItem = (
     kind: ItemKind.Placeholder,
     value: dbName,
     treePosition: treePosition,
+    indentLevel: 0,
     draw: () => (
       <PlaceholderItem key={treePosition} dbName={dbName} dbServerId={dbServerId} isLoading={isLoading} />
     )
   };
 };
 
-const getTableItem = (table: DbTable, treePosition: number): DbTableItem => {
+const getSchemaItem = (schema: DbSchema, treePosition: number): DbSchemaItem => {
   return {
-    kind: ItemKind.Table,
-    value: table,
+    kind: ItemKind.Schema,
+    value: schema,
+    indentLevel: 1,
     treePosition: treePosition,
-    draw: () => <TableItem key={treePosition} table={table} />
+    draw: () => <SchemaItem key={treePosition} schema={schema} />
   };
 };
 
-const getColumnItem = (column: DbColumn, treePosition: number): DbColumnItem => {
+const getTableItem = (table: DbTable, treePosition: number, showSchema: boolean): DbTableItem => {
+  return {
+    kind: ItemKind.Table,
+    value: table,
+    indentLevel: showSchema ? 2 : 1,
+    treePosition: treePosition,
+    draw: () => <TableItem key={treePosition} table={table}  indentLevel={showSchema ? 2 : 1} />
+  };
+};
+
+const getColumnItem = (column: DbColumn, treePosition: number, showSchema: boolean): DbColumnItem => {
   return {
     kind: ItemKind.Column,
     value: column,
+    indentLevel: showSchema ? 3 : 2,
     treePosition: treePosition,
-    draw: () => <ColumnItem key={treePosition} column={column} />
+    draw: () => <ColumnItem key={treePosition} column={column}  indentLevel={showSchema ? 3 : 2}/>
   };
 };
 
@@ -185,19 +209,31 @@ export default class DatabaseSchemaTree extends React.Component {
       if (!db.show || db.isLoading) {
         return dbs;
       }
-      const tableItems = db.schemas[0].tables.reduce((tables, table) => {
-        tables.push(getTableItem(table, pos));
-        pos += 1;
-        if (!table.show) {
-          return tables;
-        }
-        table.columns.forEach((col) => {
-          tables.push(getColumnItem(col, pos));
+      const showSchema = db.hasMultipleSchemas;
+      const schemaItems = db.schemas.reduce((schemas, schema) => {
+        if (showSchema) {
+          schemas.push(getSchemaItem(schema, pos));
           pos += 1;
-        });
-        return tables;
+          if (!schema.show) {
+            return schemas;
+          }
+        }
+        const tableItems = schema.tables.reduce((tables, table) => {
+          tables.push(getTableItem(table, pos, showSchema));
+          pos += 1;
+          if (!table.show) {
+            return tables;
+          }
+          table.columns.forEach((col) => {
+            tables.push(getColumnItem(col, pos, showSchema));
+            pos += 1;
+          });
+          return tables;
+        }, [] as TreeItem[]);
+        schemas.push(...tableItems);
+        return schemas;
       }, [] as TreeItem[]);
-      dbs.push(...tableItems);
+      dbs.push(...schemaItems);
       return dbs;
     }, [] as TreeItem[]);
   }

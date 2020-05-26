@@ -345,7 +345,7 @@ class DbServer < ApplicationRecord
           ].compact
         }.compact
       elsif !row[constraint_idx].nil?
-        schemas[row[schema_idx]][row[table_idx]][row[column_idx]]["constraints"] << {
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]][:constraints] << {
           "name": row[constraint_idx],
           "database": row[ref_database_idx],
           "schema": row[ref_schema_idx],

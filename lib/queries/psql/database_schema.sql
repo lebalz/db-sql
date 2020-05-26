@@ -19,24 +19,24 @@ SELECT
 FROM INFORMATION_SCHEMA.COLUMNS cols
   LEFT JOIN (
     SELECT
-      cols.table_catalog AS "referenced_database",
-      cols.table_schema AS "referenced_schema",
-      cols.table_name AS "referenced_table",
-      cols.column_name AS "referenced_column",
-      refs.table_catalog AS "from_database",
-      refs.table_schema AS "from_schema",
-      refs.table_name AS "from_table",
-      refs.column_name AS "from_column",
-      refs.CONSTRAINT_NAME AS "constraint",
+      pk_def.table_catalog AS "referenced_database",
+      pk_def.table_schema AS "referenced_schema",
+      pk_def.table_name AS "referenced_table",
+      pk_def.column_name AS "referenced_column",
+      fk_def.table_catalog AS "from_database",
+      fk_def.table_schema AS "from_schema",
+      fk_def.table_name AS "from_table",
+      fk_def.column_name AS "from_column",
+      ref.constraint_name AS "constraint",
       'YES' AS "is_foreign",
       NULL AS "is_primary"
-    FROM information_schema.key_column_usage refs
-      /* join the information about the referenced column */
-      INNER JOIN information_schema.columns cols
-        ON  refs.constraint_catalog=cols.table_catalog
-          AND refs.constraint_schema=cols.table_schema
-          AND refs.table_name=cols.table_name
-          AND refs.position_in_unique_constraint=cols.ordinal_position
+    FROM information_schema.referential_constraints ref
+      INNER JOIN information_schema.key_column_usage pk_def
+        ON ref.unique_constraint_schema = pk_def.constraint_schema
+          AND ref.unique_constraint_name = pk_def.constraint_name
+      INNER JOIN information_schema.key_column_usage fk_def
+        ON ref.constraint_schema = fk_def.constraint_schema
+          AND ref.constraint_name = fk_def.constraint_name
     UNION
     SELECT
       NULL AS "referenced_database",

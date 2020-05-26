@@ -8,15 +8,19 @@
   .item {
     height: 22px;
 
-    &.table-item {
+    &.schema-item {
       margin-left: 1em;
+    }
+    &.table-item {
+      margin-left: 2em;
     }
 
   }
-
+  // must be outside of the item class
+  // because it clashes otherwise with semantic
   .column-item {
     height: 22px;
-    margin-left: 2em;
+    margin-left: 3em;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -33,6 +37,7 @@
       font-weight: 800;
     }
   }
+
 }
 
 .database-index-header {

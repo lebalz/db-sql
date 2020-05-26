@@ -32,6 +32,11 @@ export default class Database {
     this.activeQueryId = id;
   }
 
+  @computed
+  get hasMultipleSchemas(): boolean {
+    return this.schemas.length > 1;
+  }
+
   @action
   replaceQuery(query: Query) {
     const oldQuery = this.queries.find((q) => q.id === query.id);

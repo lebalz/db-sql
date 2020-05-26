@@ -28,6 +28,11 @@ export default class DbSchema {
     this.show = !this.show;
   }
 
+  @computed get mark(): Mark {
+    const table = this.tables.find((t) => t.mark === Mark.To || t.mark === Mark.From);
+    return table?.mark ?? Mark.None;
+  }
+
 
   find(tableName: string, columnName: string): DbColumn
   find(tableName: string, columnName?: string): DbTable
