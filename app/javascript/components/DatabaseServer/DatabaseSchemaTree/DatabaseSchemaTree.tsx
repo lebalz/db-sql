@@ -37,6 +37,7 @@ export enum ItemKind {
   Table = 'table',
   Column = 'column'
 }
+export const LINKABLE_ITEMS = [ItemKind.Column, ItemKind.Table, ItemKind.Schema];
 
 interface DbTreeItem {
   treePosition: number;
@@ -128,7 +129,7 @@ const getTableItem = (table: DbTable, treePosition: number, showSchema: boolean)
     value: table,
     indentLevel: showSchema ? 2 : 1,
     treePosition: treePosition,
-    draw: () => <TableItem key={treePosition} table={table}  indentLevel={showSchema ? 2 : 1} />
+    draw: () => <TableItem key={treePosition} table={table} indentLevel={showSchema ? 2 : 1} />
   };
 };
 
@@ -138,7 +139,7 @@ const getColumnItem = (column: DbColumn, treePosition: number, showSchema: boole
     value: column,
     indentLevel: showSchema ? 3 : 2,
     treePosition: treePosition,
-    draw: () => <ColumnItem key={treePosition} column={column}  indentLevel={showSchema ? 3 : 2}/>
+    draw: () => <ColumnItem key={treePosition} column={column} indentLevel={showSchema ? 3 : 2} />
   };
 };
 
