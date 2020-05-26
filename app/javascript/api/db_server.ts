@@ -24,29 +24,23 @@ export interface SqlTypeMetadata {
   type: string;
 }
 
-export interface Column {
+export interface Constraint {
   name: string;
-  collation: string;
-  default: string;
-  default_function: string;
-  null: boolean;
-  serial: boolean;
-  is_primary: boolean;
-  sql_type_metadata: SqlTypeMetadata;
+  schema?: string;
 }
-
-export interface ForeignKeyOption {
+export interface ReferenceConstraint extends Constraint {
+  schema: string;
+  table: string;
   column: string;
-  name: string;
-  primary_key: string;
-  on_update?: string;
-  on_delete?: string;
 }
 
-export interface ForeignKey {
-  from_table: string;
-  to_table: string;
-  options: ForeignKeyOption;
+export interface Column {
+  default: string;
+  null: boolean;
+  is_primary: boolean;
+  is_foreign: boolean;
+  sql_type_metadata: SqlTypeMetadata;
+  constraints: (Constraint | ReferenceConstraint)[];
 }
 
 export interface Index {
@@ -63,17 +57,20 @@ export interface Index {
   comment?: string;
 }
 
-export interface DbTable {
-  name: string;
-  columns: Column[];
-  indices: Index[];
-  foreign_keys: ForeignKey[];
+export type DbTable = {
+  [name: string]: Column
+}
+
+export type Schema = {
+  [name: string]: DbTable
 }
 
 export interface Database {
   name: string;
   db_server_id: string;
-  tables: DbTable[];
+  schemas: {
+    [name: string]: Schema
+  }
 }
 
 export interface DatabaseName {

@@ -3,10 +3,10 @@
 class DatabaseSchemaQuery < ApplicationRecord
   has_many :db_servers
   belongs_to :author, class_name: 'User', inverse_of: :database_schema_queries
-  has_one_attached :query
   enum db_type: DbServer::DB_TYPES
   validate :only_one_default_by_db_type
   before_destroy :assert_not_default
+  has_one_attached :file
 
   # @param db_type [DbServer::DB_TYPES], e.g :mysql or :psql
   # @return [DatabaseSchemaQuery]
@@ -20,17 +20,16 @@ class DatabaseSchemaQuery < ApplicationRecord
 
   # @return [String] the content of the attached query
   def to_s
-    query.download
+    file.download
   end
 
   private
 
+  # ignores the validation and destroys a default database_schema_query
+  # For development purposes only, use with caution
   def force_destroy!
     query = ActiveRecord::Base.sanitize_sql(
-      [
-        'DELETE FROM database_schema_queries WHERE id = ?',
-        id
-      ]
+      ['DELETE FROM database_schema_queries WHERE id = ?', id]
     )
     ActiveRecord::Base.connection.execute(query)
   end

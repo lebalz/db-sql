@@ -148,10 +148,12 @@ module Resources
 
           desc 'Get full database structure'
           get do
-            present(
-              db_server.full_database(key: crypto_key, database_name: params[:database_name]),
-              with: Entities::FullDatabase
-            )
+            # present(
+            #   db_server.full_database(key: crypto_key, database_name: params[:database_name]),
+            #   with: Entities::FullDatabase
+            # )
+            res = db_server.full_database(key: crypto_key, database_name: params[:database_name])
+            res.to_json
           end
 
           desc 'Query the database'

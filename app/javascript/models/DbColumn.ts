@@ -1,7 +1,8 @@
-import { observable } from 'mobx';
+import { observable, action } from 'mobx';
 import _ from 'lodash';
 import DbTable from './DbTable';
-import { SqlTypeMetadata, Column as ColumnProps } from '../api/db_server';
+import { SqlTypeMetadata, Column as ColumnProps, Constraint, ReferenceConstraint } from '../api/db_server';
+import Database from './Database';
 
 export enum Mark {
   From = 'from',
@@ -11,31 +12,42 @@ export enum Mark {
 export default class DbColumn {
   readonly table: DbTable;
   readonly name: string;
-  readonly collation: string;
   readonly default: string;
-  readonly defaultFunction: string;
   readonly isNull: boolean;
-  readonly isSerial: boolean;
   readonly isPrimaryKey: boolean;
   readonly sqlTypeMetadata: SqlTypeMetadata;
+  readonly constraints: (Constraint | ReferenceConstraint)[];
   references?: DbColumn = undefined;
   referencedBy: DbColumn[] = [];
 
   @observable mark: Mark = Mark.None;
 
-  constructor(table: DbTable, props: ColumnProps) {
+  constructor(table: DbTable, name: string, props: ColumnProps) {
     this.table = table;
-    this.name = props.name;
-    this.collation = props.collation;
+    this.name = name;
     this.default = props.default;
-    this.defaultFunction = props.default_function;
     this.isNull = props.null;
-    this.isSerial = props.serial;
     this.sqlTypeMetadata = props.sql_type_metadata;
     this.isPrimaryKey = props.is_primary;
+    this.constraints = props.constraints;
   }
 
-  get locationName():string {
+  @action
+  linkForeignKeys(db: Database) {
+    this.foreignConstraints.forEach((fc) => {
+      const ref = db.find(fc.schema, fc.table, fc.column);
+      if (ref) {
+        ref.referencedBy.push(this);
+        this.references = ref;
+      }
+    });
+  }
+
+  get foreignConstraints(): ReferenceConstraint[] {
+    return this.constraints.filter((constraint) => !!constraint.schema) as ReferenceConstraint[];
+  }
+
+  get locationName(): string {
     return `${this.table.name}#${this.name}`;
   }
 

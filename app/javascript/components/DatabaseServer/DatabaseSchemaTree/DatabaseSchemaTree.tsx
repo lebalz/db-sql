@@ -185,7 +185,7 @@ export default class DatabaseSchemaTree extends React.Component {
       if (!db.show || db.isLoading) {
         return dbs;
       }
-      const tableItems = db.tables.reduce((tables, table) => {
+      const tableItems = db.schemas[0].tables.reduce((tables, table) => {
         tables.push(getTableItem(table, pos));
         pos += 1;
         if (!table.show) {

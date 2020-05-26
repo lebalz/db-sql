@@ -287,46 +287,120 @@ class DbServer < ApplicationRecord
   #   ]
   # }
   def full_database(key:, database_name:)
-    reuse_connection do
-      table_names = table_names(key: key, database_name: database_name)
-      tables = table_names.map do |table_name|
-        pkeys = primary_key_names(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        )
-        cols = columns(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        ).map do |column|
-          column.merge(
-            is_primary: pkeys.include?(column[:name])
-          )
-        end
-        fkeys = foreign_keys(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        )
-        indices = indexes(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        )
-        {
-          name: table_name,
-          columns: cols,
-          indices: indices,
-          foreign_keys: fkeys
-        }
-      end
-      {
-        name: database_name,
-        db_server_id: id,
-        tables: tables
-      }
+    result = exec_query(key: key, database_name: database_name) do
+      database_schema_query.to_s
     end
+    columns = result.columns.map(&:downcase)
+
+    schema_idx = columns.index('schema')
+    table_idx = columns.index('table')
+    column_idx = columns.index('column')
+    sql_type_idx = columns.index('sql_type')
+    limit_idx = columns.index('limit')
+    precision_idx = columns.index('precision')
+    scale_idx = columns.index('scale')
+    type_idx = columns.index('type')
+    default_idx = columns.index('default')
+    is_nullable_idx = columns.index('is_nullable')
+    is_primary_idx = columns.index('is_primary')
+    is_foreign_idx = columns.index('is_foreign')
+    constraint_idx = columns.index('constraint')
+    ref_database_idx = columns.index('referenced_database')
+    ref_schema_idx = columns.index('referenced_schema')
+    ref_table_idx = columns.index('referenced_table')
+    ref_column_idx = columns.index('referenced_column')
+
+    rows = result.rows
+    # has_db_schema = !mysql? &&
+    #   (
+    #     rows.some? { |row| row[schema_idx] != rows[0][schema_idx] } ||
+    #     rows.some? { |row| row[schema_idx] != row[table_idx] }
+    #   )
+    schemas = {}
+    rows.each do |row|
+      key = "#{row[schema_idx]}::#{row[table_idx]}::#{row[column_idx]}"
+      schemas[row[schema_idx]] ||= {}
+      schemas[row[schema_idx]][row[table_idx]] ||= {}
+      if schemas[row[schema_idx]][row[table_idx]][row[column_idx]].nil?
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]] = {
+          "null": row[is_nullable_idx] == 'YES',
+          "is_primary": row[is_primary_idx] == 'YES',
+          "is_foreign": row[is_foreign_idx] == 'YES',
+          "default": row[default_idx],
+          "sql_type_metadata": {
+            "type": row[type_idx],
+            "limit": row[limit_idx],
+            "precision": row[precision_idx],
+            "scale": row[scale_idx],
+            "sql_type": row[sql_type_idx]
+          }.compact,
+          "constraints": [
+            row[constraint_idx].nil? ? nil : {
+              "name": row[constraint_idx],
+              "database": row[ref_database_idx],
+              "schema": row[ref_schema_idx],
+              "table": row[ref_table_idx],
+              "column": row[ref_column_idx]
+            }.compact
+          ].compact
+        }.compact
+      elsif !row[constraint_idx].nil?
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]]["constraints"] << {
+          "name": row[constraint_idx],
+          "database": row[ref_database_idx],
+          "schema": row[ref_schema_idx],
+          "table": row[ref_table_idx],
+          "column": row[ref_column_idx]
+        }.compact
+      end
+    end
+    {
+      name: database_name,
+      db_server_id: id,
+      schemas: schemas
+    }
+
+    # require 'pry'; binding.pry;
+    # reuse_connection do
+    #   table_names = table_names(key: key, database_name: database_name)
+    #   tables = table_names.map do |table_name|
+    #     pkeys = primary_key_names(
+    #       key: key,
+    #       database_name: database_name,
+    #       table_name: table_name
+    #     )
+    #     cols = columns(
+    #       key: key,
+    #       database_name: database_name,
+    #       table_name: table_name
+    #     ).map do |column|
+    #       column.merge(
+    #         is_primary: pkeys.include?(column[:name])
+    #       )
+    #     end
+    #     fkeys = foreign_keys(
+    #       key: key,
+    #       database_name: database_name,
+    #       table_name: table_name
+    #     )
+    #     indices = indexes(
+    #       key: key,
+    #       database_name: database_name,
+    #       table_name: table_name
+    #     )
+    #     {
+    #       name: table_name,
+    #       columns: cols,
+    #       indices: indices,
+    #       foreign_keys: fkeys
+    #     }
+    #   end
+    #   {
+    #     name: database_name,
+    #     db_server_id: id,
+    #     tables: tables
+    #   }
+    # end
   end
 
   # @param key [String] base64 encoded crypto key from the user

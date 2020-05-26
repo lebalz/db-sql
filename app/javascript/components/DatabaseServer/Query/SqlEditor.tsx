@@ -80,13 +80,13 @@ export default class SqlEditor extends React.Component<Props> {
   @computed
   get completers() {
     const { database } = this.props.query;
-    const tables = database.tables.map((table) => ({
+    const tables = database.schemas[0].tables.map((table) => ({
       name: table.name,
       value: table.name,
       meta: 'TABLE',
       score: 2
     }));
-    const columns = database.tables.reduce((res, table) => {
+    const columns = database.schemas[0].tables.reduce((res, table) => {
       const cols = table.columns.map(
         (col) =>
           ({

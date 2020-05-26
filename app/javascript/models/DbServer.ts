@@ -157,7 +157,7 @@ export default class DbServer {
     if (!this.initDb || !this.initTable) {
       return;
     }
-    return this.database(this.initDb)?.tables?.find((t) => t.name === this.initTable);
+    return this.database(this.initDb)?.schemas[0]?.tables?.find((t) => t.name === this.initTable);
   }
 
   @computed

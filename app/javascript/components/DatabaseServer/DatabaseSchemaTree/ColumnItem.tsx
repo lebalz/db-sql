@@ -64,7 +64,6 @@ interface MetaProps {
 const SqlMetaData = ({ column }: MetaProps) => {
   const metaData = [
     { name: 'Default', value: column.default || undefined },
-    { name: 'Serial?', value: column.isSerial ? <Icon name="check circle" color="green" /> : undefined },
     {
       name: 'Primary Key?',
       value: column.isPrimaryKey ? <Icon name="check circle" color="green" /> : undefined

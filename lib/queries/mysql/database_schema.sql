@@ -2,9 +2,12 @@ SELECT
   cols.TABLE_SCHEMA AS 'schema',
   cols.TABLE_NAME as 'table',
   cols.COLUMN_NAME as 'column',
-  cols.DATA_TYPE AS 'data_type',
+  cols.DATA_TYPE AS 'sql_type',
   cols.COLUMN_TYPE AS 'type',
-  COALESCE(cols.COLUMN_DEFAULT, cols.extra) AS 'default',
+  cols.CHARACTER_MAXIMUM_LENGTH AS 'limit',
+  cols.NUMERIC_PRECISION AS 'precision',
+  cols.NUMERIC_SCALE AS 'scale',
+  NULLIF(COALESCE(cols.COLUMN_DEFAULT, cols.extra), '') AS 'default',
   cols.IS_NULLABLE AS 'is_nullable',
   (
     CASE WHEN COLUMN_KEY='PRI'
