@@ -31,7 +31,7 @@ export class TempDbServer extends DbServer {
 
   databases = observable<DatabaseName>([]);
   tables = observable<DbTableName>([]);
-  testConnection = _.debounce(this.testCurrentConnection, 2500, { leading: false });
+  testConnection = _.debounce(this.testCurrentConnection, 2500, { leading: true, trailing: true });
 
   constructor(
     props: DbServerProps,

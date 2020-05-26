@@ -291,7 +291,10 @@ export class TempDbServer extends React.Component {
               content="Test"
               color="blue"
               loading={this.dbServer.testConnectionState === ApiRequestState.Waiting}
-              onClick={() => this.dbServer.testConnection()}
+              onClick={() => {
+                this.dbServer.testConnection.cancel();
+                this.dbServer.testConnection()
+              }}
             />
             <Button
               icon="copy"
