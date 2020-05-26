@@ -23,7 +23,7 @@ export default class Database {
     this.addQuery();
     this.name = props.name;
     this.dbServerId = props.db_server_id;
-    this.schemas = Object.keys(props.schemas).map((name) => new DbSchema(this, name, props.schemas[name]));
+    this.schemas = props.schemas.map((schema) => new DbSchema(this, schema));
     this.connectForeignKeys();
   }
 

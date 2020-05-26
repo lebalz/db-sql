@@ -17,10 +17,10 @@ export default class DbSchema {
   readonly tables: DbTable[];
   @observable show: boolean = false;
 
-  constructor(database: Database, name: string, schema: Schema) {
+  constructor(database: Database, schema: Schema) {
     this.database = database;
-    this.name = name;
-    this.tables = Object.keys(schema).map((name) => new DbTable(this, name, schema[name]));
+    this.name = schema.name;
+    this.tables = schema.tables.map((table) => new DbTable(this, table));
   }
 
   @action

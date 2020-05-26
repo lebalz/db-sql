@@ -17,10 +17,10 @@ export default class DbTable {
   readonly columns: DbColumn[];
   @observable show: boolean = false;
 
-  constructor(schema: DbSchema, name: string, table: DbTableProps) {
+  constructor(schema: DbSchema, table: DbTableProps) {
     this.schema = schema;
-    this.name = name;
-    const columns = Object.keys(table).map((name) => new DbColumn(this, name, table[name]));
+    this.name = table.name;
+    const columns = table.columns.map((column) => new DbColumn(this, column));
     this.columns = columns.sort((col_a, col_b) => col_a.position - col_b.position);
   }
 

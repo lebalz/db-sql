@@ -35,6 +35,7 @@ export interface ReferenceConstraint extends Constraint {
 }
 
 export interface Column {
+  name: string;
   position: number;
   default: string;
   null: boolean;
@@ -58,20 +59,20 @@ export interface Index {
   comment?: string;
 }
 
-export type DbTable = {
-  [name: string]: Column
+export interface DbTable {
+  name: string;
+  columns: Column[];
 }
 
-export type Schema = {
-  [name: string]: DbTable
+export interface Schema {
+  name: string;
+  tables: DbTable[];
 }
 
 export interface Database {
   name: string;
   db_server_id: string;
-  schemas: {
-    [name: string]: Schema
-  }
+  schemas: Schema[];
 }
 
 export interface DatabaseName {
@@ -192,7 +193,7 @@ export function rawQuery(
   return api.post(
     `/db_servers/${id}/${databaseName}/raw_query`,
     {
-      query: query,
+      query: query
     },
     { cancelToken: cancelToken.token }
   );

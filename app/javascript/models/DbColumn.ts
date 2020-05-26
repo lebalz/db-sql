@@ -23,9 +23,9 @@ export default class DbColumn {
 
   @observable mark: Mark = Mark.None;
 
-  constructor(table: DbTable, name: string, props: ColumnProps) {
+  constructor(table: DbTable, props: ColumnProps) {
     this.table = table;
-    this.name = name;
+    this.name = props.name;
     this.position = props.position;
     this.default = props.default;
     this.isNull = props.null;

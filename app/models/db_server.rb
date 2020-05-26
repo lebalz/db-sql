@@ -274,35 +274,47 @@ class DbServer < ApplicationRecord
   # @param database_name [String] name of the database_name
   # @return [Hash] full table structure
   # @example
-
   # {
-  #   "name" => 'swissski',
-  #   "db_server_id" => 'fd878c8a-0953-4165-add8-c37283e98900',
-  #   "schemas" => {
-  #     "public" => {
-  #       "athletes" => {
-  #         "id" => {
-  #           "position" => 1,
-  #           "null" => false,
-  #           "is_primary" => true,
-  #           "is_foreign" => false,
-  #           "default" => 'auto_increment',
-  #           "sql_type_metadata" => {
-  #             "type" => 'int',
-  #             "limit" => nil,
-  #             "precision" => 10,
-  #             "scale" => nil,
-  #             "sql_type" => 'int(4)'
-  #           },
-  #           "constraints" => [
+  #   name: 'swissski',
+  #   db_server_id: 'fd878c8a-0953-4165-add8-c37283e98900',
+  #   schemas: [
+  #     {
+  #       name: 'public',
+  #       tables: [
+  #         {
+  #           name: 'athletes'
+  #           columns: [
   #             {
-  #               "name" => 'PRIMARY'
-  #             }
+  #               name: 'id',
+  #               null: false,
+  #               is_primary: true,
+  #               is_foreign: false,
+  #               default: 'auto_increment',
+  #               sql_type_metadata: {
+  #                 type: 'int',
+  #                 limit: nil,
+  #                 precision: 10,
+  #                 scale: nil,
+  #                 sql_type: 'int(4)'
+  #               },
+  #               constraints: [
+  #                 {
+  #                   name: '',
+  #                   database: '',
+  #                   schema: '',
+  #                   table: '',
+  #                   column: ''
+  #                 }
+  #               ]
+  #             },
+  #             ...
   #           ]
-  #         }
-  #       }
-  #     }
-  #   }
+  #         },
+  #         ...
+  #       ]
+  #     },
+  #     ...
+  #   ]
   # }
   def full_database(key:, database_name:)
     result = exec_query(key: key, database_name: database_name) do
@@ -336,42 +348,55 @@ class DbServer < ApplicationRecord
       schemas[row[schema_idx]][row[table_idx]] ||= {}
       if schemas[row[schema_idx]][row[table_idx]][row[column_idx]].nil?
         schemas[row[schema_idx]][row[table_idx]][row[column_idx]] = {
-          "position" => row[position_idx],
-          "null" => row[is_nullable_idx] == 'YES',
-          "is_primary" => row[is_primary_idx] == 'YES',
-          "is_foreign" => row[is_foreign_idx] == 'YES',
-          "default" => row[default_idx],
-          "sql_type_metadata" => {
-            "type" => row[type_idx],
-            "limit" => row[limit_idx],
-            "precision" => row[precision_idx],
-            "scale" => row[scale_idx],
-            "sql_type" => row[sql_type_idx]
+          name: row[column_idx],
+          position: row[position_idx],
+          null: row[is_nullable_idx] == 'YES',
+          is_primary: row[is_primary_idx] == 'YES',
+          is_foreign: row[is_foreign_idx] == 'YES',
+          default: row[default_idx],
+          sql_type_metadata: {
+            type: row[type_idx],
+            limit: row[limit_idx],
+            precision: row[precision_idx],
+            scale: row[scale_idx],
+            sql_type: row[sql_type_idx]
           }.compact,
-          "constraints" => [
+          constraints: [
             row[constraint_idx].nil? ? nil : {
-              "name" => row[constraint_idx],
-              "database" => row[ref_database_idx],
-              "schema" => row[ref_schema_idx],
-              "table" => row[ref_table_idx],
-              "column" => row[ref_column_idx]
+              name: row[constraint_idx],
+              database: row[ref_database_idx],
+              schema: row[ref_schema_idx],
+              table: row[ref_table_idx],
+              column: row[ref_column_idx]
             }.compact
           ].compact
         }.compact
       elsif !row[constraint_idx].nil?
-        schemas[row[schema_idx]][row[table_idx]][row[column_idx]]["constraints"] << {
-          "name" => row[constraint_idx],
-          "database" => row[ref_database_idx],
-          "schema" => row[ref_schema_idx],
-          "table" => row[ref_table_idx],
-          "column" => row[ref_column_idx]
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]][:constraints] << {
+          name: row[constraint_idx],
+          database: row[ref_database_idx],
+          schema: row[ref_schema_idx],
+          table: row[ref_table_idx],
+          column: row[ref_column_idx]
         }.compact
       end
     end
+    # bring the schema in a grape api ready format
+    db_schemas = schemas.reduce([]) do |s_memo, (schema, tables)|
+      s_memo << {
+        name: schema,
+        tables: tables.reduce([]) do |t_memo, (table, cols)|
+          t_memo << {
+            name: table,
+            columns: cols.values
+          }
+        end
+      }
+    end
     {
-      "name" => database_name,
-      "db_server_id" => id,
-      "schemas" => schemas
+      name: database_name,
+      db_server_id: id,
+      schemas: db_schemas
     }
   end
 
