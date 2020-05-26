@@ -4,6 +4,7 @@ class CreateDatabaseSchemaQueries < ActiveRecord::Migration[6.0]
       t.integer :db_type, null: false
       t.boolean :default, default: false, null: false
       t.references :author, type: :uuid, null: false, index: true
+      t.string :query, null: false
       t.timestamps
     end
 

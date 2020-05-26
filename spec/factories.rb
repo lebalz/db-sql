@@ -25,12 +25,7 @@ FactoryBot.define do
     author { User.first || FactoryBot.create(:user, :admin) }
     default { false }
     db_type { :psql }
-    query do
-      Rack::Test::UploadedFile.new(
-        File.join('lib/queries', db_type.to_s, 'database_schema.sql'),
-        'text/plain'
-      )
-    end
+    query { File.read(File.join('lib/queries', db_type.to_s, 'database_schema.sql')) }
   end
 
   factory :db_server do
