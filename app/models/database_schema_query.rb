@@ -1,5 +1,25 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: database_schema_queries
+#
+#  id         :uuid             not null, primary key
+#  db_type    :integer          not null
+#  default    :boolean          default(FALSE), not null
+#  query      :string           not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  author_id  :uuid             not null
+#
+# Indexes
+#
+#  index_database_schema_queries_on_author_id  (author_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (author_id => users.id)
+#
 class DatabaseSchemaQuery < ApplicationRecord
   has_many :db_servers
   belongs_to :author, class_name: 'User', inverse_of: :database_schema_queries

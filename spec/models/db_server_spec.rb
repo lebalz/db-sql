@@ -4,19 +4,32 @@
 #
 # Table name: db_servers
 #
-#  id                    :uuid             not null, primary key
-#  user_id               :uuid
-#  name                  :string
-#  db_type               :integer
-#  host                  :string
-#  port                  :integer
-#  password_encrypted    :string
-#  initialization_vector :string
-#  initial_db            :string
-#  initial_table        :string
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
-#  username              :string
+#  id                       :uuid             not null, primary key
+#  db_type                  :integer
+#  error_query_count        :integer          default(0)
+#  host                     :string
+#  initial_db               :string
+#  initial_table            :string
+#  initialization_vector    :string
+#  name                     :string
+#  password_encrypted       :string
+#  port                     :integer
+#  query_count              :integer          default(0)
+#  username                 :string
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  database_schema_query_id :uuid
+#  user_id                  :uuid
+#
+# Indexes
+#
+#  index_db_servers_on_database_schema_query_id  (database_schema_query_id)
+#  index_db_servers_on_user_id                   (user_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (database_schema_query_id => database_schema_queries.id)
+#  fk_rails_...  (user_id => users.id)
 #
 
 require_relative '../rails_helper'
