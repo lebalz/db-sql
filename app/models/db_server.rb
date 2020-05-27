@@ -320,6 +320,7 @@ class DbServer < ApplicationRecord
     result = exec_query(key: key, database_name: database_name) do
       database_schema_query.to_s
     end
+
     columns = result.columns.map(&:downcase)
 
     schema_idx = columns.index('schema')
@@ -381,6 +382,7 @@ class DbServer < ApplicationRecord
         }.compact
       end
     end
+
     # bring the schema in a grape api ready format
     db_schemas = schemas.reduce([]) do |s_memo, (schema, tables)|
       s_memo << {

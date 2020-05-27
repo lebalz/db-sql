@@ -82,6 +82,10 @@ group :development do
   # Annotate Rails classes with schema and routes info
   gem 'annotate'
   # for performance measuring
+  #   time = Benchmark.measure {
+  #     code to test
+  #   }
+  #   puts time.real #or save it to logs
   gem 'benchmark'
 end
 
