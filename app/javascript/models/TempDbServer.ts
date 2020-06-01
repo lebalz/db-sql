@@ -14,6 +14,7 @@ import { ApiRequestState } from '../stores/session_store';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
+import SchemaQueryStore from '../stores/schema_query_store';
 
 export enum TempDbServerRole {
   Update,
@@ -36,16 +37,23 @@ export class TempDbServer extends DbServer {
   constructor(
     props: DbServerProps,
     dbServerStore: DbServerStore,
+    schemaQueryStore: SchemaQueryStore,
     role: TempDbServerRole,
     cancelToken: CancelTokenSource
   ) {
-    super(props, dbServerStore, cancelToken);
+    super(props, dbServerStore, schemaQueryStore, cancelToken);
     this.role = role;
 
     reaction(
       () => this.dbConnectionHash,
       (hash) => {
         this.testConnection();
+      }
+    );
+    reaction(
+      () => this.dbType,
+      (type) => {
+        this.databaseSchemaQueryId = schemaQueryStore.default(type).id;
       }
     );
     reaction(
@@ -108,7 +116,8 @@ export class TempDbServer extends DbServer {
       username: this.username,
       initial_db: this.initialDatabase,
       initial_table: this.tablesLoaded ? this.initTable : undefined,
-      password: this.password || ''
+      password: this.password || '',
+      database_schema_query_id: this.databaseSchemaQueryId
     };
   }
 

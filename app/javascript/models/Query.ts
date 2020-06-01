@@ -15,6 +15,7 @@ import { QuerySeparationGrammarParser } from '../antlr/QuerySeparationGrammarPar
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import _ from 'lodash';
 import { DbType } from './DbServer';
+import Sql from './Sql';
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -70,7 +71,7 @@ interface SkipTableData extends SqlTableData {
 
 export type TableData = SuccessTableData | ErrorTableData | SkipTableData;
 
-export default class Query {
+export default class Query extends Sql {
   readonly database: Database;
   readonly id: number;
   @observable requestState: REST = REST.None;
@@ -86,6 +87,7 @@ export default class Query {
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
   constructor(database: Database, id: number, loading: boolean = false) {
+    super();
     this.database = database;
     this.id = id;
   }
@@ -118,6 +120,17 @@ export default class Query {
       return QueryExecutionMode.Raw;
     }
     return QueryExecutionMode.Multi;
+  }
+
+  onSqlChange(sql: string) {
+    const modified = this.derivedExecutionMode !== this.executionMode;
+
+    this.query = sql;
+
+    if (!modified) {
+      this.executionMode = this.derivedExecutionMode;
+    }
+
   }
 
   createCopyFor(database: Database) {

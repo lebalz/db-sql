@@ -6,7 +6,9 @@ module Resources
       def db_server
         db_server = DbServer.find(params[:id])
         error!('Db server not found', 302) unless db_server
-
+        unless db_server.user_id == current_user.id
+          error!('Invalid permission for this db server', 401)
+        end
         db_server
       end
 

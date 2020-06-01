@@ -44,7 +44,7 @@ export default class Query extends React.Component<Props> {
           attached="bottom"
           style={{ padding: `${EDITOR_PADDING_TOP}px 0 0 0`, marginBottom: '0' }}
         >
-          <SqlEditor query={this.props.query} height={this.state.editorHeight} />
+          <SqlEditor sql={this.props.query} height={this.state.editorHeight} />
           <Slider
             direction="vertical"
             shift={-EDITOR_PADDING_TOP}

@@ -15,10 +15,12 @@ import 'ace-builds/src-noconflict/snippets/pgsql';
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
 import { computed } from 'mobx';
 import Query from '../../../models/Query';
+import Sql from '../../../models/Sql';
 
 interface Props {
-  query: Query;
+  sql: Sql;
   height: number;
+  readOnly?: boolean;
 }
 
 interface Completion {
@@ -43,7 +45,7 @@ export default class SqlEditor extends React.Component<Props> {
         // commands is array of key bindings.
         name: EXECUTE_QUERY_COMMAND,
         bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-        exec: () => this.props.query.run()
+        exec: () => this.props.sql.run()
       });
     }
     addCompleter({
@@ -80,9 +82,9 @@ export default class SqlEditor extends React.Component<Props> {
   @computed
   get completers() {
     const completions: Completion[] = [];
-    const { database } = this.props.query;
+    const { database } = this.props.sql;
 
-    database.schemas.forEach((schema) => {
+    database?.schemas?.forEach((schema) => {
       completions.push({
         name: schema.name,
         value: schema.name,
@@ -110,28 +112,23 @@ export default class SqlEditor extends React.Component<Props> {
   }
 
   onChange = (value: string, event?: any) => {
-    const { query } = this.props;
-    const modified = query.derivedExecutionMode !== query.executionMode;
-
-    this.props.query.query = value;
-
-    if (!modified) {
-      query.executionMode = query.derivedExecutionMode;
-    }
+    const { sql } = this.props;
+    sql.onSqlChange(value);
   };
 
   render() {
-    const { query } = this.props;
+    const { sql } = this.props;
 
     return (
       <AceEditor
+        readOnly={this.props.readOnly}
         style={{ width: '100%', height: `${this.props.height}px` }}
-        mode={query.databaseType}
+        mode={sql.databaseType}
         theme="github"
         onChange={this.onChange}
-        value={query.query}
-        defaultValue={query.query}
-        name={query.name}
+        value={sql.query}
+        defaultValue={sql.query}
+        name={sql.name}
         ref={this.editorRef}
         editorProps={{ $blockScrolling: true }}
         showPrintMargin={false}

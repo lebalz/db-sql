@@ -37,7 +37,7 @@ end
 #
 
 class DbServer < ApplicationRecord
-  DB_TYPES = %i[psql mysql mariadb sqlite].freeze
+  DB_TYPES = %i[psql mysql].freeze
   enum db_type: DbServer::DB_TYPES
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306

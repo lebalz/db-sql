@@ -23,7 +23,7 @@ FactoryBot.define do
 
   factory :database_schema_query do
     author { User.first || FactoryBot.create(:user, :admin) }
-    default { false }
+    is_default { false }
     db_type { :psql }
     query { File.read(File.join('lib/queries', db_type.to_s, 'database_schema.sql')) }
   end

@@ -26,6 +26,7 @@ const AppContent = observer(() => (
     dbServerStore={rootStore.dbServer}
     statusStore={rootStore.statusStore}
     viewStateStore={rootStore.viewStateStore}
+    schemaQueryStore={rootStore.schemaQueryStore}
   >
     <Router history={rootStore.session.history}>
       <Switch>

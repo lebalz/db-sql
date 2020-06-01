@@ -19,12 +19,15 @@ ActiveRecord::Schema.define(version: 2020_05_23_222631) do
 
   create_table "database_schema_queries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.integer "db_type", null: false
-    t.boolean "default", default: false, null: false
+    t.boolean "is_default", default: false, null: false
+    t.boolean "is_private", default: false, null: false
     t.uuid "author_id", null: false
+    t.uuid "previous_revision_id"
     t.string "query", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["author_id"], name: "index_database_schema_queries_on_author_id"
+    t.index ["previous_revision_id"], name: "index_database_schema_queries_on_previous_revision_id"
   end
 
   create_table "db_servers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -69,6 +72,7 @@ ActiveRecord::Schema.define(version: 2020_05_23_222631) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "database_schema_queries", "database_schema_queries", column: "previous_revision_id"
   add_foreign_key "database_schema_queries", "users", column: "author_id"
   add_foreign_key "db_servers", "database_schema_queries"
   add_foreign_key "db_servers", "users"

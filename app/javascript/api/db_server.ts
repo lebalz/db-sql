@@ -13,6 +13,7 @@ export interface DbServer {
   initial_table?: string;
   query_count: number;
   error_query_count: number;
+  database_schema_query_id: string;
   created_at: string;
   updated_at: string;
 }

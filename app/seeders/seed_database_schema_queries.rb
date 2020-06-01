@@ -6,7 +6,7 @@ class SeedDatabaseSchemaQueries
       file = Rails.root.join('lib/queries', db_type.to_s, 'database_schema.sql')
       DatabaseSchemaQuery.create!(
         db_type: db_type,
-        default: true,
+        is_default: true,
         author: User.first,
         query: File.read(file)
       )

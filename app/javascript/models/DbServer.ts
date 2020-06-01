@@ -7,6 +7,8 @@ import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
 import Query from './Query';
 import DbTable from './DbTable';
+import SchemaQuery from './SchemaQuery';
+import SchemaQueryStore from '../stores/schema_query_store';
 
 export enum DbType {
   Psql = 'psql',
@@ -27,6 +29,7 @@ export interface UpdateProps extends Partial<DbServerProps> {
 
 export default class DbServer {
   private readonly dbServerStore: DbServerStore;
+  private readonly schemaQueryStore: SchemaQueryStore;
   readonly id: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -40,13 +43,15 @@ export default class DbServer {
   @observable initDb?: string;
   @observable initTable?: string;
   @observable password?: string;
+  @observable databaseSchemaQueryId: string;
   @observable queryState: QueryState = QueryState.None;
 
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
 
-  constructor(props: DbServerProps, dbServerStore: DbServerStore, cancelToken: CancelTokenSource) {
+  constructor(props: DbServerProps, dbServerStore: DbServerStore, schemaQueryStore: SchemaQueryStore, cancelToken: CancelTokenSource) {
     this.dbServerStore = dbServerStore;
+    this.schemaQueryStore = schemaQueryStore;
     this.id = props.id;
     this.name = props.name;
     this.dbType = props.db_type;
@@ -57,6 +62,7 @@ export default class DbServer {
     this.initTable = props.initial_table;
     this.queryCount = props.query_count;
     this.errorQueryCount = props.error_query_count;
+    this.databaseSchemaQueryId = props.database_schema_query_id;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.cancelToken = cancelToken;
@@ -104,6 +110,7 @@ export default class DbServer {
       initial_db: this.initDb,
       initial_table: this.initTable,
       query_count: this.queryCount,
+      database_schema_query_id: this.databaseSchemaQueryId,
       error_query_count: this.errorQueryCount,
       created_at: this.createdAt.toISOString(),
       updated_at: this.updatedAt.toISOString()
@@ -120,7 +127,8 @@ export default class DbServer {
       port: this.port,
       username: this.username,
       initial_db: this.initDb,
-      initial_table: this.initTable
+      initial_table: this.initTable,
+      database_schema_query_id: this.databaseSchemaQueryId
     };
     if (this.password) {
       connection.password = this.password;
