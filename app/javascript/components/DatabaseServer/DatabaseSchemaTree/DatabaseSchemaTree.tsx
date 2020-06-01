@@ -23,7 +23,7 @@ import TableItem from './TableItem';
 import ColumnItem from './ColumnItem';
 import PlaceholderItem from './PlaceholderItem';
 import DbSchema from '../../../models/DbSchema';
-import SchemaItem from './Schematem';
+import SchemaItem from './SchemaItem';
 
 export interface ContextMenuProps {
   dbRef: React.MutableRefObject<any>;

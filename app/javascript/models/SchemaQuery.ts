@@ -1,7 +1,7 @@
 import { observable, computed, action } from 'mobx';
 import { User as UserProps } from '../api/user';
 import _ from 'lodash';
-import { DatabaseSchemaQuery } from '../api/database_schema_query';
+import { DatabaseSchemaQuery, NewRevision } from '../api/database_schema_query';
 import { DbType } from './DbServer';
 import SchemaQueryStore from '../stores/schema_query_store';
 import Sql from './Sql';
@@ -14,10 +14,11 @@ export default class SchemaQuery extends Sql {
   readonly updatedAt: Date;
   readonly authorId: string;
   readonly previousRevisionId: string;
-  readonly isLatest: boolean;
   readonly position?: number;
   readonly nextRevisionIds?: string[];
-  @observable dbType: DbType;
+  readonly pristineState: NewRevision;
+  readonly dbType: DbType;
+  @observable isLatest: boolean;
   @observable isPrivate: boolean;
   @observable query: string;
   constructor(store: SchemaQueryStore, props: DatabaseSchemaQuery) {
@@ -34,5 +35,38 @@ export default class SchemaQuery extends Sql {
     this.isPrivate = props.is_private;
     this.query = props.query;
     this.isLatest = props.is_latest;
+    this.pristineState = {
+      is_private: props.is_private,
+      query: props.query
+    };
+  }
+
+  @action
+  save() {
+    if (!this.isDirty) {
+      return;
+    }
+    this.schemaQueryStore.save(this);
+  }
+
+  @action
+  destroy() {
+    if (this.isDefault) {
+      return;
+    }
+    this.schemaQueryStore.destroy(this);
+  }
+
+  @computed
+  get revisionProps(): NewRevision {
+    return {
+      is_private: this.isPrivate,
+      query: this.query
+    };
+  }
+
+  @computed
+  get isDirty() {
+    return this.pristineState.is_private !== this.isPrivate || this.pristineState.query !== this.query;
   }
 }

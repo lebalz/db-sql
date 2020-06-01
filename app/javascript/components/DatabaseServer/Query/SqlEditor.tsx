@@ -19,7 +19,7 @@ import Sql from '../../../models/Sql';
 
 interface Props {
   sql: Sql;
-  height: number;
+  height?: number;
   readOnly?: boolean;
 }
 
@@ -116,13 +116,14 @@ export default class SqlEditor extends React.Component<Props> {
     sql.onSqlChange(value);
   };
 
+
   render() {
     const { sql } = this.props;
 
     return (
       <AceEditor
         readOnly={this.props.readOnly}
-        style={{ width: '100%', height: `${this.props.height}px` }}
+        style={{ width: '100%', height: this.props.height ? `${this.props.height}px` : '100%' }}
         mode={sql.databaseType}
         theme="github"
         onChange={this.onChange}

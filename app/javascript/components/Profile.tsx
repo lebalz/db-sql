@@ -10,6 +10,7 @@ import { RouterStore } from 'mobx-react-router';
 import UserStore from '../stores/user_store';
 import UserList from './Profile/UserList';
 import DeleteAccount from './Profile/DeleteAccount';
+import SchemaQueries from './Profile/SchemaQueries';
 
 interface MatchParams {
   part: string;
@@ -57,6 +58,15 @@ export default class Profile extends React.Component<ProfileProps> {
             active={part === 'delete_account'}
             onClick={() => router.push('./delete_account')}
           />
+          <Fragment>
+            <Divider horizontal content="Advanced" />
+            <Menu.Item
+              name="schema queries"
+              icon="edit"
+              active={part === 'schema_queries'}
+              onClick={() => router.push('./schema_queries')}
+            />
+          </Fragment>
           {this.injected.sessionStore.currentUser.isAdmin && (
             <Fragment>
               <Divider horizontal content="Admin" />
@@ -80,6 +90,8 @@ export default class Profile extends React.Component<ProfileProps> {
                 return <DeleteAccount />;
               case 'users':
                 return <UserList />;
+              case 'schema_queries':
+                return <SchemaQueries />;
               default:
                 return '404';
             }

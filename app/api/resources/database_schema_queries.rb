@@ -77,8 +77,7 @@ module Resources
         desc 'new revision of a database schema query'
         params do
           requires :data, type: Hash do
-            optional(:db_type, type: String, desc: 'db_type')
-            optional(:is_private, type: String, desc: 'is_private')
+            optional(:is_private, type: Boolean, desc: 'is_private')
             optional(:query, type: String, desc: 'query')
           end
         end
@@ -92,8 +91,6 @@ module Resources
           )
           new_revision.update!(
             change.permit(
-              :db_type,
-              :is_default,
               :is_private,
               :query,
               :author_id,

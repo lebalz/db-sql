@@ -2,14 +2,14 @@ import api from './base';
 import { AxiosPromise } from 'axios';
 import { DbType } from '../models/DbServer';
 
-interface NewRevision {
-  db_type: DbType;
+export interface NewRevision {
   is_private: boolean;
   query: string;
 }
 
 export interface DatabaseSchemaQuery extends NewRevision {
   id: string;
+  db_type: DbType;
   is_default: boolean;
   is_latest: boolean;
   created_at: string;
@@ -30,8 +30,8 @@ export function databaseSchemaQueries(): AxiosPromise<DatabaseSchemaQuery[]> {
   return api.get('/database_schema_queries');
 }
 
-export function newRevision(id: string, data: Partial<NewRevision>): AxiosPromise<DatabaseSchemaQuery> {
-  return api.post(`/database_schema_queries/${id}`, data);
+export function newRevision(id: string, newRevision: NewRevision): AxiosPromise<DatabaseSchemaQuery> {
+  return api.post(`/database_schema_queries/${id}/new_revision`, { data: newRevision });
 }
 
 export function makeDefault(id: string): AxiosPromise<DatabaseSchemaQuery> {
@@ -42,7 +42,11 @@ export function revisions(id: string): AxiosPromise<DatabaseSchemaQuery[]> {
   return api.get(`/database_schema_queries/${id}/revisions`);
 }
 
-export function latestRevisions(offset: number, limit: number, dbType?: DbType): AxiosPromise<DatabaseSchemaQuery[]> {
+export function latestRevisions(
+  offset: number,
+  limit: number,
+  dbType?: DbType
+): AxiosPromise<DatabaseSchemaQuery[]> {
   return api.get(`/database_schema_queries/latest_revisions`, {
     params: {
       offset: offset,
