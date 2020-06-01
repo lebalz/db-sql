@@ -6,20 +6,24 @@ import {
   databaseSchemaQuery,
   DatabaseSchemaQuery,
   revisions,
-  defaultDatabaseSchemaQueries
+  defaultDatabaseSchemaQueries,
+  latestRevisions
 } from '../api/database_schema_query';
 import SchemaQuery from '../models/SchemaQuery';
 import { DbType } from '../models/DbServer';
 
 class State {
   schemaQueries = observable<SchemaQuery>([]);
+  @observable loadedSchemaQueries: { [key in DbType]: number } = {
+    [DbType.MySql]: 20,
+    [DbType.Psql]: 20
+  };
 }
 
 class SchemaQueryStore implements Store {
   private readonly root: RootStore;
   @observable.ref
   private state = new State();
-  defaultSchemaQueries = observable<SchemaQuery>([]);
 
   constructor(root: RootStore) {
     this.root = root;
@@ -28,15 +32,15 @@ class SchemaQueryStore implements Store {
       () => this.root.session.isLoggedIn,
       (isLoggedIn) => {
         if (isLoggedIn) {
-
+          this.loadLatestRevisions();
         }
       }
-    )
+    );
   }
 
   @computed
   get schemaQueries() {
-    return [...this.defaultSchemaQueries, ...this.state.schemaQueries];
+    return this.state.schemaQueries;
   }
 
   default(dbType: DbType): SchemaQuery {
@@ -45,23 +49,37 @@ class SchemaQueryStore implements Store {
 
   find = computedFn(function (this: SchemaQueryStore, id: string): SchemaQuery | undefined {
     return this.schemaQueries.find((q) => q.id === id);
-  });
+  }, { keepAlive: true });
 
   queriesFor = computedFn(function (this: SchemaQueryStore, dbType: DbType): SchemaQuery[] {
     return this.schemaQueries.filter((q) => q.dbType === dbType);
-  });
+  }, { keepAlive: true });
 
   @action
   loadDefaultQueries() {
     defaultDatabaseSchemaQueries().then(({ data }) => {
-      this.defaultSchemaQueries.replace(data.map((schemaQuery) => new SchemaQuery(this, schemaQuery)));
+      data.forEach((schemaQuery) => {
+        const oldValue = this.find(schemaQuery.id);
+        if (oldValue) {
+          this.state.schemaQueries.remove(oldValue);
+        }
+        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+      })
     });
   }
 
   @action
   loadLatestRevisions() {
-    defaultDatabaseSchemaQueries().then(({ data }) => {
-      this.defaultSchemaQueries.replace(data.map((schemaQuery) => new SchemaQuery(this, schemaQuery)));
+    Object.values(DbType).forEach((dbType) => {
+      latestRevisions(0, this.state.loadedSchemaQueries[dbType], dbType).then(({ data }) => {
+        data.forEach((schemaQuery) => {
+          const oldValue = this.find(schemaQuery.id);
+          if (oldValue) {
+            this.state.schemaQueries.remove(oldValue);
+          }
+          this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+        })
+      });
     });
   }
 

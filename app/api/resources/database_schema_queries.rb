@@ -6,7 +6,7 @@ module Resources
       def database_schema_query
         query = DatabaseSchemaQuery.find(params[:id])
         error!('Database schema query not found', 302) unless query
-        unless query.public? || query.user_id == current_user.id
+        unless query.public? || query.author_id == current_user.id
           error!('Invalid permission for this database schema query', 401)
         end
 
@@ -23,16 +23,20 @@ module Resources
         )
       end
 
-      desc 'Get all database schema queries'
+      desc 'Get the latest schema query revisions (=newest revisions)'
       params do
         optional(:limit, type: Integer, desc: 'maximal number of returned database schema queries')
         optional(:offset, type: Integer, desc: 'offset of returned database schema queries')
+        optional(:db_type, type: Symbol, default: %i[psql mysql], values: %i[psql mysql], desc: 'db type')
       end
       get :latest_revisions do
         present(
-          DatabaseSchemaQuery.latest_revisions(author_id: current_user.id)
-                             .offset(params[:offset])
-                             .limit(params[:limit]),
+          DatabaseSchemaQuery.latest_revisions(
+            author_id: current_user.id,
+            db_type: params[:db_type]
+          )
+          .offset(params[:offset])
+          .limit(params[:limit]),
           with: Entities::DatabaseSchemaQuery
         )
       end
@@ -64,7 +68,10 @@ module Resources
 
         desc 'Revisions, including past and future revisions of this database schema query'
         get :revisions do
-          database_schema_query.revisions
+          present(
+            database_schema_query.revision_tree,
+            with: Entities::DatabaseSchemaQuery
+          )
         end
 
         desc 'new revision of a database schema query'

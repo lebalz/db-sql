@@ -14,6 +14,7 @@ export default class SchemaQuery extends Sql {
   readonly updatedAt: Date;
   readonly authorId: string;
   readonly previousRevisionId: string;
+  readonly isLatest: boolean;
   readonly position?: number;
   readonly nextRevisionIds?: string[];
   @observable dbType: DbType;
@@ -28,10 +29,10 @@ export default class SchemaQuery extends Sql {
     this.updatedAt = new Date(props.updated_at);
     this.authorId = props.author_id;
     this.previousRevisionId = props.previous_revision_id;
-    this.position = props.position;
     this.nextRevisionIds = props.next_revision_ids;
     this.dbType = props.db_type;
     this.isPrivate = props.is_private;
     this.query = props.query;
+    this.isLatest = props.is_latest;
   }
 }

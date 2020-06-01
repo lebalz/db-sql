@@ -28,6 +28,7 @@ class DatabaseSchemaQuery < ApplicationRecord
   has_many :db_servers
   belongs_to :author, class_name: 'User', inverse_of: :database_schema_queries
   belongs_to :previous_revision, class_name: 'DatabaseSchemaQuery', optional: true
+  has_many :revisions, class_name: 'DatabaseSchemaQuery', foreign_key: 'previous_revision_id'
 
   enum db_type: DbServer::DB_TYPES
   validate :only_one_default_by_db_type
@@ -52,65 +53,18 @@ class DatabaseSchemaQuery < ApplicationRecord
                        .order(is_default: :desc, created_at: :desc)
   end
 
-  # @return [Array<Hash>] all revisions appearing in the history
-  #   (past and future) of this record
-  # @example
-  # [
-  #   {
-  #     "id"=>"709088ac-e9ab-41c1-bf80-4cdc50bb0431",
-  #     "db_type"=>0,
-  #     "is_default"=>false,
-  #     "is_private"=>false,
-  #     "author_id"=>"06376e09-ba1a-4f9e-b0a6-37043ec9e9c4",
-  #     "previous_revision_id"=>"7c18b8db-5f79-45ac-9dc6-5c40aea2b4e6",
-  #     "query"=>"SELECT * ...",
-  #     "created_at"=>"2020-05-31 08:41:52.139893",
-  #     "updated_at"=>"2020-05-31 08:42:41.935546",
-  #     "position"=>-1,
-  #     "next_revision_ids"=>["781da86a-916f-4b53-962d-72a58bb2f0a2"]
-  #   },
-  #   {
-  #     "id"=>"781da86a-916f-4b53-962d-72a58bb2f0a2",
-  #     "db_type"=>0,
-  #     "is_default"=>false,
-  #     "is_private"=>false,
-  #     "author_id"=>"06376e09-ba1a-4f9e-b0a6-37043ec9e9c4",
-  #     "previous_revision_id"=>"709088ac-e9ab-41c1-bf80-4cdc50bb0431",
-  #     "query"=>"SELECT * FROM FOO...",
-  #     "created_at"=>"2020-05-31 08:47:09.031981",
-  #     "updated_at"=>"2020-05-31 08:47:09.101699",
-  #     "position"=>0,
-  #     "next_revision_ids"=>[]
-  #   }
-  # ]
+  def previous_revisions
+    [previous_revision, *previous_revision&.previous_revisions].compact
+  end
 
-  def revisions
-    ActiveRecord::Base.connection.execute(
-      <<-SQL
-        (WITH RECURSIVE previous_revs AS (
-            SELECT #{DatabaseSchemaQuery.table_name}.*, 0 AS position, '{}'::TEXT[] AS next_revision_ids FROM #{DatabaseSchemaQuery.table_name}
-            WHERE #{DatabaseSchemaQuery.table_name}.id = '#{id}'
-            UNION ALL
-              SELECT #{DatabaseSchemaQuery.table_name}.*, previous_revs.position - 1, next_revision_ids || previous_revs.id::TEXT
-              FROM #{DatabaseSchemaQuery.table_name}, previous_revs
-              WHERE #{DatabaseSchemaQuery.table_name}.id = previous_revs.previous_revision_id
-        ) SELECT * FROM previous_revs WHERE id != '#{id}')
-        UNION ALL
-        (WITH RECURSIVE new_revs AS (
-            SELECT #{DatabaseSchemaQuery.table_name}.*, 0 AS position, '{}'::TEXT[] AS next_revision_ids FROM #{DatabaseSchemaQuery.table_name}
-            WHERE #{DatabaseSchemaQuery.table_name}.id = '#{id}'
-            UNION ALL
-              SELECT #{DatabaseSchemaQuery.table_name}.*, new_revs.position + 1, next_revision_ids || new_revs.id::TEXT
-              FROM #{DatabaseSchemaQuery.table_name}, new_revs
-              WHERE #{DatabaseSchemaQuery.table_name}.previous_revision_id = new_revs.id
-        ) SELECT * FROM new_revs)
-        ORDER BY position ASC
-      SQL
-    ).to_a.map do |row|
-      row.merge(
-        "next_revision_ids" => row['next_revision_ids'][1..-2].split(',')
-      )
-    end
+  def newer_revisions
+    revisions.map do |rev|
+      [rev, *rev.newer_revisions].compact
+    end.flatten
+  end
+
+  def revision_tree
+    [*previous_revisions, self, *newer_revisions].compact
   end
 
   def default?

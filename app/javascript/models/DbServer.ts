@@ -62,7 +62,7 @@ export default class DbServer {
     this.initTable = props.initial_table;
     this.queryCount = props.query_count;
     this.errorQueryCount = props.error_query_count;
-    this.databaseSchemaQueryId = props.database_schema_query_id;
+    this.databaseSchemaQueryId = props.database_schema_query_id || schemaQueryStore.default(props.db_type).id;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.cancelToken = cancelToken;

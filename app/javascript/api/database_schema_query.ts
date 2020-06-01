@@ -11,12 +11,12 @@ interface NewRevision {
 export interface DatabaseSchemaQuery extends NewRevision {
   id: string;
   is_default: boolean;
+  is_latest: boolean;
   created_at: string;
   updated_at: string;
   author_id: string;
   previous_revision_id: string;
-  position?: number;
-  next_revision_ids?: string[];
+  next_revision_ids: string[];
 }
 
 export function defaultDatabaseSchemaQueries(): AxiosPromise<DatabaseSchemaQuery[]> {
@@ -42,7 +42,7 @@ export function revisions(id: string): AxiosPromise<DatabaseSchemaQuery[]> {
   return api.get(`/database_schema_queries/${id}/revisions`);
 }
 
-export function latest_revisions(offset: number, limit: number, dbType?: DbType): AxiosPromise<DatabaseSchemaQuery[]> {
+export function latestRevisions(offset: number, limit: number, dbType?: DbType): AxiosPromise<DatabaseSchemaQuery[]> {
   return api.get(`/database_schema_queries/latest_revisions`, {
     params: {
       offset: offset,
