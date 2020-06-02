@@ -21,6 +21,7 @@ interface Props {
   sql: Sql;
   height?: number;
   readOnly?: boolean;
+  className?: string;
 }
 
 interface Completion {
@@ -135,6 +136,7 @@ export default class SqlEditor extends React.Component<Props> {
         showPrintMargin={false}
         enableBasicAutocompletion
         enableLiveAutocompletion
+        className={this.props.className}
       />
     );
   }

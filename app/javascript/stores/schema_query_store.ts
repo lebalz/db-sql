@@ -22,6 +22,8 @@ class State {
     [DbType.Psql]: 20
   };
   @observable requestState: REST = REST.None;
+  @observable selectedSchemaQueryId?: string = undefined;
+  @observable selectedDbType: DbType = DbType.Psql;
 }
 
 class SchemaQueryStore implements Store {
@@ -40,6 +42,31 @@ class SchemaQueryStore implements Store {
         }
       }
     );
+  }
+
+  @computed
+  get selectedSchemaQuery(): SchemaQuery | undefined {
+    if (!this.state.selectedSchemaQueryId) {
+      return this.latestSchemaQueries.find((q) => !q.isDefault && q.dbType === this.selectedDbType);
+    }
+    return this.find(this.state.selectedSchemaQueryId);
+  }
+
+  @action
+  setSelectedSchemaQueryId(id: string | undefined) {
+    this.state.selectedSchemaQueryId = id;
+    this.selectedSchemaQuery?.loadRevisions();
+  }
+
+  @computed
+  get selectedDbType(): DbType {
+    return this.state.selectedDbType;
+  }
+
+  @action
+  setSelectedDbType(dbType: DbType) {
+    this.state.selectedDbType = dbType;
+    this.state.selectedSchemaQueryId = undefined;
   }
 
   @computed
@@ -78,24 +105,34 @@ class SchemaQueryStore implements Store {
   @action
   save(schemaQuery: SchemaQuery) {
     this.state.requestState = REST.Requested;
-    newRevision(schemaQuery.id, schemaQuery.revisionProps).then(({ data }) => {
-      this.state.schemaQueries.push(new SchemaQuery(this, data));
-      schemaQuery.isLatest = false;
-      this.state.requestState = REST.Success;
-    }).catch(() => {
-      this.state.requestState = REST.Error;
-    });
+    newRevision(schemaQuery.id, schemaQuery.revisionProps)
+      .then(({ data }) => {
+        this.state.schemaQueries.push(new SchemaQuery(this, data));
+        this.setSelectedSchemaQueryId(data.id);
+        schemaQuery.isLatest = false;
+        this.state.requestState = REST.Success;
+      })
+      .catch(() => {
+        this.state.requestState = REST.Error;
+      });
   }
 
   @action
   destroy(schemaQuery: SchemaQuery) {
     this.state.requestState = REST.Requested;
-    remove(schemaQuery.id).then(() => {
-      this.state.schemaQueries.remove(schemaQuery);
-      this.state.requestState = REST.Success;
-    }).catch(() => {
-      this.state.requestState = REST.Error;
-    });
+    remove(schemaQuery.id)
+      .then(() => {
+        const previous = schemaQuery.previousRevision;
+        this.state.schemaQueries.remove(schemaQuery);
+        if (previous) {
+          previous.isLatest = true;
+          this.setSelectedSchemaQueryId(previous.id);
+        }
+        this.state.requestState = REST.Success;
+      })
+      .catch(() => {
+        this.state.requestState = REST.Error;
+      });
   }
 
   @action
@@ -106,7 +143,7 @@ class SchemaQueryStore implements Store {
         if (oldValue) {
           this.state.schemaQueries.remove(oldValue);
         }
-        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery, true));
       });
     });
   }
@@ -151,7 +188,7 @@ class SchemaQueryStore implements Store {
         if (oldValue) {
           this.state.schemaQueries.remove(oldValue);
         }
-        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery, true));
       });
     });
   }

@@ -1,11 +1,5 @@
 import React, { Fragment } from 'react';
-import {
-  Segment,
-  Form,
-  Grid,
-  DropdownProps,
-  Button
-} from 'semantic-ui-react';
+import { Segment, Form, Grid, DropdownProps, Button, Card } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../../stores/session_store';
 import SchemaQueryStore from '../../stores/schema_query_store';
@@ -23,30 +17,28 @@ interface InjectedProps {
 @inject('sessionStore', 'schemaQueryStore')
 @observer
 export default class SchemaQueries extends React.Component {
-  state: { schemaQueryId?: string; dbType: DbType } = {
-    schemaQueryId: undefined,
-    dbType: DbType.Psql
-  };
-
   get injected() {
     return this.props as InjectedProps;
   }
 
   setSchemaQuery = (e: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
-    this.setState({
-      schemaQueryId: data.value
-    });
+    this.injected.schemaQueryStore.setSelectedSchemaQueryId(data.value as string);
   };
 
   @computed
   get default() {
-    return this.injected.schemaQueryStore.default(this.state.dbType);
+    return this.injected.schemaQueryStore.default(this.dbType);
+  }
+
+  @computed
+  get dbType() {
+    return this.injected.schemaQueryStore.selectedDbType;
   }
 
   @computed
   get schemaQueries() {
     return this.injected.schemaQueryStore.latestSchemaQueries.filter(
-      (q) => !q.isDefault && q.dbType === this.state.dbType
+      (q) => !q.isDefault && q.dbType === this.dbType
     );
   }
 
@@ -64,29 +56,25 @@ export default class SchemaQueries extends React.Component {
 
   @computed
   get selectedSchemaQuery(): SchemaQuery | undefined {
-    if (this.state.schemaQueryId) {
-      return this.injected.schemaQueryStore.find(this.state.schemaQueryId);
-    } else {
-      return this.schemaQueries[0];
-    }
+    return this.injected.schemaQueryStore.selectedSchemaQuery;
   }
 
   render() {
     return (
       <Segment style={{ width: '100%', height: '100%' }}>
-        <Grid stackable textAlign="left" columns="equal" style={{ height: '100%' }}>
-          <Grid.Column width="3">
+        <div id="schema-query-grid">
+          <div className="selection">
             <div>
-              <Button.Group color="teal">
+              <Button.Group color="teal" size="mini">
                 <Button
                   content="PostgreSQL"
-                  active={this.state.dbType === DbType.Psql}
-                  onClick={() => this.setState({ dbType: DbType.Psql, schemaQueryId: undefined })}
+                  active={this.dbType === DbType.Psql}
+                  onClick={() => this.injected.schemaQueryStore.setSelectedDbType(DbType.Psql)}
                 />
                 <Button
                   content="MySql"
-                  active={this.state.dbType === DbType.MySql}
-                  onClick={() => this.setState({ dbType: DbType.MySql, schemaQueryId: undefined })}
+                  active={this.dbType === DbType.MySql}
+                  onClick={() => this.injected.schemaQueryStore.setSelectedDbType(DbType.MySql)}
                 />
               </Button.Group>
             </div>
@@ -97,16 +85,57 @@ export default class SchemaQueries extends React.Component {
                 search
                 selection
                 fluid
-                value={this.selectedSchemaQuery?.id}
+                value={this.selectedSchemaQuery?.latestRevision.id}
                 onChange={this.setSchemaQuery}
               />
             )}
-            <Button icon="add" onClick={() => this.setState({ schemaQueryId: this.default.id })} />
-          </Grid.Column>
-          <Grid.Column>
-            {this.selectedSchemaQuery && (
-              <Fragment>
-                <SqlEditor sql={this.selectedSchemaQuery} />
+            <Button
+              icon="add"
+              onClick={() => this.injected.schemaQueryStore.setSelectedSchemaQueryId(this.default.id)}
+            />
+          </div>
+          <div className="history">
+            <div className="cards-container">
+              {this.selectedSchemaQuery?.revisions.reverse().map((rev) => {
+                return (
+                  <Card
+                    key={rev.id}
+                    color={rev.id === this.selectedSchemaQuery?.id ? 'teal' : undefined}
+                    onClick={() => this.injected.schemaQueryStore.setSelectedSchemaQueryId(rev.id)}
+                  >
+                    <Card.Content>
+                      <Card.Description>Nr. {rev.revisionNumber}</Card.Description>
+                      <Card.Meta>
+                        {rev.createdAt.toLocaleString('de-CH')}
+                        <br />
+                        {rev.id}
+                      </Card.Meta>
+                    </Card.Content>
+                    {rev.nextRevisionIds.length > 1 &&
+                      rev.revisionNumber >= this.selectedSchemaQuery!.revisionNumber && (
+                        <Card.Content extra>
+                          <Button.Group size="mini">
+                            <Button
+                              icon="left arrow"
+                              onClick={() => rev.rotateToNextRevisionBranch('backward')}
+                            />
+                            <Button.Or text={`${rev.branchPosition + 1}/${rev.nextRevisionIds.length}`} />
+                            <Button
+                              icon="right arrow"
+                              onClick={() => rev.rotateToNextRevisionBranch('forward')}
+                            />
+                          </Button.Group>
+                        </Card.Content>
+                      )}
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+          {this.selectedSchemaQuery && (
+            <Fragment>
+              <SqlEditor className="editor" sql={this.selectedSchemaQuery} />
+              <div className="actions">
                 <Button
                   positive
                   loading={this.injected.schemaQueryStore.requestState === REST.Requested}
@@ -125,10 +154,10 @@ export default class SchemaQueries extends React.Component {
                 >
                   Löschen
                 </Button>
-              </Fragment>
-            )}
-          </Grid.Column>
-        </Grid>
+              </div>
+            </Fragment>
+          )}
+        </div>
       </Segment>
     );
   }
