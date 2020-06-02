@@ -96,6 +96,7 @@ module Resources
             optional(:password, type: String, desc: 'db password')
             optional(:initial_db, type: String, desc: 'initial database')
             optional(:initial_table, type: String, desc: 'initial table')
+            optional(:database_schema_query_id, type: String, desc: 'id of the database schema query')
           end
         end
         put do
@@ -117,6 +118,7 @@ module Resources
               :host,
               :port,
               :username,
+              :database_schema_query_id,
               :initial_db,
               :initial_table
             )
