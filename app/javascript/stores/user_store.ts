@@ -39,6 +39,7 @@ class State {
   @observable sortColumn: SortableUserColumns = SortableUserColumns.Email;
   @observable order: 'asc' | 'desc' = 'asc';
   @observable reloadState = ReloadState.None;
+  @observable showAdvancedSettings: boolean = false;
 }
 
 class UserStore implements Store {
@@ -63,6 +64,16 @@ class UserStore implements Store {
   @computed
   get sortColumn() {
     return this.state.sortColumn;
+  }
+
+  @computed
+  get showAdvancedSettings(): boolean {
+    return this.state.showAdvancedSettings;
+  }
+
+  @action
+  setShowAdvancedSettings(show: boolean) {
+    this.state.showAdvancedSettings = show;
   }
 
   @action
