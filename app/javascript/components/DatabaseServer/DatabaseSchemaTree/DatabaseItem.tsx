@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Icon, List, Ref } from 'semantic-ui-react';
+import { Icon, List, Ref, Segment, Button } from 'semantic-ui-react';
 import DbServerStore from '../../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import { computed, reaction, IReactionDisposer, action } from 'mobx';
@@ -112,6 +112,19 @@ export default class DatabaseItem extends React.Component<DatabaseItemProps> {
           </List.Item>
         </Ref>
         {database.isLoading && <DbLoadIndicator />}
+        {database.loadError && (
+          <Segment inverted color="red">
+            Error Loading the database schema:
+            <pre>{database.loadError}</pre>
+            {!database.dbServer.schemaQuery?.isDefault && (
+              <Button
+                size="mini"
+                content="Try using the default"
+                onClick={() => database.dbServer.useDefaultSchemaQuery()}
+              />
+            )}
+          </Segment>
+        )}
       </Fragment>
     );
   }

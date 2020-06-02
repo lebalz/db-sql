@@ -17,6 +17,7 @@ export default class Database {
 
   @observable show: boolean = false;
   @observable isLoading: boolean = false;
+  @observable loadError?: string;
 
   constructor(dbServer: DbServer, props: DatabaseProps) {
     this.dbServer = dbServer;

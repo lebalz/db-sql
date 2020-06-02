@@ -49,7 +49,12 @@ export default class DbServer {
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
 
-  constructor(props: DbServerProps, dbServerStore: DbServerStore, schemaQueryStore: SchemaQueryStore, cancelToken: CancelTokenSource) {
+  constructor(
+    props: DbServerProps,
+    dbServerStore: DbServerStore,
+    schemaQueryStore: SchemaQueryStore,
+    cancelToken: CancelTokenSource
+  ) {
     this.dbServerStore = dbServerStore;
     this.schemaQueryStore = schemaQueryStore;
     this.id = props.id;
@@ -134,6 +139,25 @@ export default class DbServer {
       connection.password = this.password;
     }
     return connection;
+  }
+
+  @computed
+  get schemaQuery(): SchemaQuery | undefined {
+    return this.schemaQueryStore.find(this.databaseSchemaQueryId);
+  }
+
+  @action
+  useDefaultSchemaQuery() {
+    this.close();
+    this.databaseSchemaQueryId = this.schemaQueryStore.default(this.dbType).id;
+    this.save().then(() => {
+      this.dbServerStore.routeToDbServer(this.id);
+    });
+  }
+
+  @action
+  save(): Promise<void> {
+    return this.dbServerStore.updateDbServer(this);
   }
 
   @computed

@@ -14,7 +14,7 @@ import {
   Accordion
 } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
-import { computed, reaction, action } from 'mobx';
+import { computed, reaction, action, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import { ApiRequestState } from '../../stores/session_store';
 import { TempDbServerRole, TempDbServer as TempDbServerModel } from '../../models/TempDbServer';
@@ -36,10 +36,11 @@ export class TempDbServer extends React.Component {
     isOpen: false,
     showAdvanced: false
   };
+  reactionDisposer: IReactionDisposer;
 
   constructor(props: any) {
     super(props);
-    reaction(
+    this.reactionDisposer = reaction(
       () => this.injected.dbServerStore.saveState,
       (state) => {
         if (state === ApiRequestState.Success) {
@@ -47,6 +48,10 @@ export class TempDbServer extends React.Component {
         }
       }
     );
+  }
+
+  componentWillUnmount() {
+    this.reactionDisposer();
   }
 
   get injected() {
