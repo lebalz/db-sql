@@ -1,4 +1,4 @@
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, reaction } from 'mobx';
 import { User as UserProps } from '../api/user';
 import _ from 'lodash';
 import { DatabaseSchemaQuery, NewRevision } from '../api/database_schema_query';
@@ -14,7 +14,7 @@ export default class SchemaQuery extends Sql {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly authorId: string;
-  readonly previousRevisionId: string;
+  readonly previousRevisionId?: string;
   readonly position?: number;
   readonly nextRevisionIds: string[];
   readonly pristineState: NewRevision;
@@ -43,7 +43,7 @@ export default class SchemaQuery extends Sql {
       is_private: props.is_private,
       query: props.query
     };
-    this.revisionsLoaded = revisionsLoaded;
+    this.revisionsLoaded = revisionsLoaded || this.previousRevisionId == undefined;
   }
 
   @action
@@ -55,11 +55,11 @@ export default class SchemaQuery extends Sql {
   }
 
   @action
-  loadRevisions(force: boolean = false) {
+  loadRevisions(force: boolean = false): Promise<boolean> {
     if (!force && this.revisionsLoaded) {
-      return;
+      return Promise.resolve(true);
     }
-    this.schemaQueryStore.loadRevisions(this.id);
+    return this.schemaQueryStore.loadRevisions(this.id);
   }
 
   @action
@@ -85,7 +85,7 @@ export default class SchemaQuery extends Sql {
 
   @computed
   get latestRevision(): SchemaQuery {
-    if (this.isDefault || this.isLatest) {
+    if (this.isLatest) {
       return this;
     }
     return this.nextRevision?.latestRevision ?? this;
@@ -106,6 +106,14 @@ export default class SchemaQuery extends Sql {
       return 0;
     }
     return this.nextRevisionIds.indexOf(this.nextRevisionBranchId);
+  }
+
+  @action
+  updateRevisionBranch(parent?: SchemaQuery) {
+    if (parent) {
+      this.nextRevisionBranchId = parent.id;
+    }
+    this.previousRevision?.updateRevisionBranch(this);
   }
 
   @action

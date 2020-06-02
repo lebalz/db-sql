@@ -1,7 +1,9 @@
+@import 'colors';
+
 #schema-query-grid {
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 3fr;
+  grid-template-columns: 220px 3fr;
   grid-template-rows: min-content 1fr min-content;
   grid-template-areas:
     'selection editor'
@@ -23,6 +25,23 @@
     .cards-container {
       height: max-content;
       padding: 2px;
+      .schema-query-card {
+        position: relative;
+        .card-labels {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          display: flex;
+        }
+        &.active {
+          background: var(--highlight-teal-50);
+        }
+        &:hover {
+          background: var(--highlight-grey-50);
+          -webkit-transform: unset !important;
+          transform: unset !important;
+        }
+      }
     }
   }
   .actions {

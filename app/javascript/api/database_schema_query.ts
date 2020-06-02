@@ -15,7 +15,7 @@ export interface DatabaseSchemaQuery extends NewRevision {
   created_at: string;
   updated_at: string;
   author_id: string;
-  previous_revision_id: string;
+  previous_revision_id?: string;
   next_revision_ids: string[];
 }
 

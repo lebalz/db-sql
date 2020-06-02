@@ -4,7 +4,6 @@ import { RootStore, Store } from './root_store';
 import _ from 'lodash';
 import {
   databaseSchemaQuery,
-  DatabaseSchemaQuery,
   revisions,
   defaultDatabaseSchemaQueries,
   latestRevisions,
@@ -38,7 +37,24 @@ class SchemaQueryStore implements Store {
       () => this.root.session.isLoggedIn,
       (isLoggedIn) => {
         if (isLoggedIn) {
-          this.loadLatestRevisions();
+          this.loadLatestRevisions()
+        }
+      }
+    );
+
+    reaction(
+      () => this.selectedSchemaQuery,
+      (selected) => {
+        if (selected) {
+          if (selected) {
+            if (selected.revisionsLoaded) {
+              selected.updateRevisionBranch();
+            } else {
+              selected.loadRevisions().then(() => {
+                selected.updateRevisionBranch();
+              });
+            }
+          }
         }
       }
     );
@@ -55,7 +71,6 @@ class SchemaQueryStore implements Store {
   @action
   setSelectedSchemaQueryId(id: string | undefined) {
     this.state.selectedSchemaQueryId = id;
-    this.selectedSchemaQuery?.loadRevisions();
   }
 
   @computed
@@ -89,7 +104,10 @@ class SchemaQueryStore implements Store {
   }
 
   find = computedFn(
-    function (this: SchemaQueryStore, id: string): SchemaQuery | undefined {
+    function (this: SchemaQueryStore, id?: string): SchemaQuery | undefined {
+      if (!id) {
+        return;
+      }
       return this.schemaQueries.find((q) => q.id === id);
     },
     { keepAlive: true }
@@ -107,7 +125,7 @@ class SchemaQueryStore implements Store {
     this.state.requestState = REST.Requested;
     newRevision(schemaQuery.id, schemaQuery.revisionProps)
       .then(({ data }) => {
-        this.state.schemaQueries.push(new SchemaQuery(this, data));
+        this.state.schemaQueries.push(new SchemaQuery(this, data, true));
         this.setSelectedSchemaQueryId(data.id);
         schemaQuery.isLatest = false;
         this.state.requestState = REST.Success;
@@ -149,18 +167,20 @@ class SchemaQueryStore implements Store {
   }
 
   @action
-  loadLatestRevisions() {
-    Object.values(DbType).forEach((dbType) => {
-      latestRevisions(0, this.state.loadedSchemaQueries[dbType], dbType).then(({ data }) => {
-        data.forEach((schemaQuery) => {
-          const oldValue = this.find(schemaQuery.id);
-          if (oldValue) {
-            this.state.schemaQueries.remove(oldValue);
-          }
-          this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+  loadLatestRevisions(): Promise<void[]> {
+    return Promise.all(
+      Object.values(DbType).map((dbType) => {
+        return latestRevisions(0, this.state.loadedSchemaQueries[dbType], dbType).then(({ data }) => {
+          data.forEach((schemaQuery) => {
+            const oldValue = this.find(schemaQuery.id);
+            if (oldValue) {
+              this.state.schemaQueries.remove(oldValue);
+            }
+            this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+          });
         });
-      });
-    });
+      })
+    );
   }
 
   @action
@@ -178,19 +198,24 @@ class SchemaQueryStore implements Store {
   }
 
   @action
-  loadRevisions(id: string) {
-    revisions(id).then(({ data }) => {
-      data.forEach((schemaQuery) => {
-        if (schemaQuery.is_default) {
-          return;
-        }
-        const oldValue = this.find(schemaQuery.id);
-        if (oldValue) {
-          this.state.schemaQueries.remove(oldValue);
-        }
-        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery, true));
+  loadRevisions(id: string): Promise<boolean> {
+    return revisions(id)
+      .then(({ data }) => {
+        data.forEach((schemaQuery) => {
+          if (schemaQuery.is_default) {
+            return;
+          }
+          const oldValue = this.find(schemaQuery.id);
+          if (oldValue) {
+            this.state.schemaQueries.remove(oldValue);
+          }
+          this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery, true));
+        });
+        return Promise.resolve(true);
+      })
+      .catch(() => {
+        return Promise.resolve(false);
       });
-    });
   }
 
   @action cleanup() {
