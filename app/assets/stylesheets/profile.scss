@@ -4,11 +4,12 @@
   height: 100%;
   display: grid;
   grid-template-columns: 220px 3fr;
-  grid-template-rows: min-content 1fr min-content;
+  grid-template-rows: min-content min-content 1fr min-content;
   grid-template-areas:
-    'selection editor'
-    'history editor'
-    'history actions';
+    'selection name'
+    'history   description'
+    'history   editor'
+    'history   actions';
   gap: 8px;
 
   .editor {
@@ -16,6 +17,32 @@
   }
   .selection {
     grid-area: selection;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .schema-name {
+    grid-area: name;
+    .ui.input {
+      width: 100%;
+      > input {
+        padding: 4px 8px;
+      }
+    }
+  }
+  .schema-description {
+    grid-area: description;
+
+    textarea {
+      border-radius: 4px;
+      width: 100%;
+      font-family: inherit;
+      line-height: inherit;
+      outline: 0;
+      padding: 4px 8px;
+      margin: 0;
+      resize: none;
+    }
   }
   .history {
     grid-area: history;
@@ -30,8 +57,14 @@
         .card-labels {
           position: absolute;
           top: 4px;
-          right: 4px;
+          right: 1px;
           display: flex;
+        }
+        &.dirty::before {
+          content: '*';
+          position: absolute;
+          top: 1px;
+          left: 3px;
         }
         &.active {
           background: var(--highlight-teal-50);

@@ -13,32 +13,47 @@ module Resources
         query
       end
     end
-
     resource :database_schema_queries do
-      desc 'Get all database schema queries'
-      get do
-        present(
-          DatabaseSchemaQuery.where(is_private: false),
-          with: Entities::DatabaseSchemaQuery
-        )
-      end
-
-      desc 'Get the latest schema query revisions (=newest revisions)'
+      desc 'Get database schema queries, by default 20 with no offset'
       params do
-        optional(:limit, type: Integer, desc: 'maximal number of returned database schema queries')
-        optional(:offset, type: Integer, desc: 'offset of returned database schema queries')
+        optional(:limit, type: Integer, default: 20, desc: 'maximal number of returned database schema queries')
+        optional(:offset, type: Integer,  default: 0, desc: 'offset of returned database schema queries')
         optional(:db_type, type: Symbol, default: %i[psql mysql], values: %i[psql mysql], desc: 'db type')
       end
-      get :latest_revisions do
+      get do
         present(
-          DatabaseSchemaQuery.latest_revisions(
-            author_id: current_user.id,
-            db_type: params[:db_type]
-          )
-          .offset(params[:offset])
-          .limit(params[:limit]),
+          DatabaseSchemaQuery.where(is_private: false, db_type: params[:db_type])
+                             .or(
+                               DatabaseSchemaQuery.where(
+                                 is_private: true,
+                                 author_id: current_user.id,
+                                 db_type: params[:db_type]
+                               )
+                             )
+                             .offset(params[:offset])
+                             .limit(params[:limit]),
           with: Entities::DatabaseSchemaQuery
         )
+      end
+
+      desc 'Create a new schema query'
+      params do
+        requires(:name, type: String, desc: 'Name')
+        optional(:description, type: String, desc: 'description')
+        requires(:db_type, type: Symbol, values: %i[psql mysql], desc: 'db type')
+        optional(:is_private, type: Boolean, default: false, desc: 'is private')
+        requires(:query, type: String, desc: 'database schema query')
+      end
+      post do
+        schema_query = DatabaseSchemaQuery.create(
+          author_id: current_user.id,
+          name: params[:name],
+          description: params[:description],
+          db_type: params[:db_type],
+          is_private: params[:is_private],
+          query: params[:query]
+        )
+        present(schema_query, with: Entities::DatabaseSchemaQuery)
       end
 
       desc 'Get the default database schema queries'
@@ -60,49 +75,40 @@ module Resources
 
         desc 'Delete a database schema query'
         delete do
-          error!('No permission to delete this query') unless database_schema_query.author_id = current_user.id
+          unless database_schema_query.author_id = current_user.id
+            error!('No permission to delete this query')
+          end
 
           database_schema_query.destroy!
           status :no_content
         end
 
-        desc 'Revisions, including past and future revisions of this database schema query'
-        get :revisions do
-          present(
-            database_schema_query.revision_tree,
-            with: Entities::DatabaseSchemaQuery
-          )
-        end
-
-        desc 'new revision of a database schema query'
+        desc 'update a database schema query'
         params do
           requires :data, type: Hash do
             optional(:is_private, type: Boolean, desc: 'is_private')
             optional(:query, type: String, desc: 'query')
+            optional(:name, type: String, desc: 'name')
+            optional(:description, type: String, desc: 'description')
           end
         end
-        post :new_revision do
-          new_revision = database_schema_query.clone
-          change = ActionController::Parameters.new(
-            params[:data].merge(
-              author_id: current_user.id,
-              previous_revision_id: database_schema_query.id
-            )
-          )
-          new_revision.update!(
+        put do
+          change = ActionController::Parameters.new(params[:data])
+          database_schema_query.update!(
             change.permit(
               :is_private,
               :query,
-              :author_id,
-              :previous_revision_id
+              :name,
+              :description
             )
           )
-          present(new_revision, with: Entities::DatabaseSchemaQuery)
+          present(database_schema_query, with: Entities::DatabaseSchemaQuery)
         end
 
         desc 'make default'
         post :make_default do
           error!("No permission") unless current_user.admin?
+
           database_schema_query.make_default!
           database_schema_query.reload
           present(database_schema_query, with: Entities::DatabaseSchemaQuery)

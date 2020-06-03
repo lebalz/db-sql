@@ -45,7 +45,7 @@ export default class SchemaQuerySelection extends React.Component<Props> {
   @computed
   get schemaQueryOptions() {
     return this.injected.schemaQueryStore.queriesFor(this.dbServer.dbType).map((q) => {
-      const name = q.isDefault ? 'Default' : q.updatedAt.toLocaleString('de-CH');
+      const name = q.isDefault ? 'Default' : q.name;
       return {
         key: q.id,
         text: name,

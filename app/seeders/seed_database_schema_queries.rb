@@ -5,6 +5,7 @@ class SeedDatabaseSchemaQueries
     %i[psql mysql].each do |db_type|
       file = Rails.root.join('lib/queries', db_type.to_s, 'database_schema.sql')
       DatabaseSchemaQuery.create!(
+        name: db_type.upcase,
         db_type: db_type,
         is_default: true,
         author: User.first,

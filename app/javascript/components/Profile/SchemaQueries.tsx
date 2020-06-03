@@ -1,5 +1,18 @@
-import React, { Fragment } from 'react';
-import { Segment, Form, Grid, DropdownProps, Button, Card, Label, Icon } from 'semantic-ui-react';
+import React, { Fragment, SyntheticEvent } from 'react';
+import {
+  Segment,
+  Form,
+  Grid,
+  DropdownProps,
+  Button,
+  Card,
+  Label,
+  Icon,
+  Input,
+  InputOnChangeData,
+  TextArea,
+  TextAreaProps
+} from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../../stores/session_store';
 import SchemaQueryStore from '../../stores/schema_query_store';
@@ -11,6 +24,7 @@ import { REST } from '../../declarations/REST';
 import cx from 'classnames';
 import Tooltip from '../../shared/Tooltip';
 import UserStore from '../../stores/user_store';
+import SchemaQueryCard from './SchemaQueryCard';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -45,27 +59,27 @@ export default class SchemaQueries extends React.Component {
 
   @computed
   get schemaQueries() {
-    return this.injected.schemaQueryStore.latestSchemaQueries.filter(
-      (q) => !q.isDefault && q.dbType === this.dbType
-    );
-  }
-
-  @computed
-  get schemaQueryOptions() {
-    return this.schemaQueries.map((q) => {
-      const name = q.updatedAt.toLocaleString('de-CH');
-      return {
-        key: q.id,
-        text: name,
-        value: q.id
-      };
-    });
+    return this.injected.schemaQueryStore.schemaQueries;
   }
 
   @computed
   get selectedSchemaQuery(): SchemaQuery | undefined {
     return this.injected.schemaQueryStore.selectedSchemaQuery;
   }
+
+  onChangeName = (event: SyntheticEvent<HTMLInputElement>, data: InputOnChangeData) => {
+    event.preventDefault();
+    if (this.selectedSchemaQuery) {
+      this.selectedSchemaQuery.name = data.value;
+    }
+  };
+
+  onChangeDescription = (event: React.FormEvent<HTMLTextAreaElement>, data: TextAreaProps) => {
+    event.preventDefault();
+    if (this.selectedSchemaQuery) {
+      this.selectedSchemaQuery.description = data.value?.toString() ?? '';
+    }
+  };
 
   render() {
     return (
@@ -86,109 +100,47 @@ export default class SchemaQueries extends React.Component {
                 />
               </Button.Group>
             </div>
-            {this.schemaQueries.length > 0 && (
-              <Form.Dropdown
-                options={this.schemaQueryOptions}
-                placeholder="Schema Query"
-                search
-                selection
-                fluid
-                value={this.selectedSchemaQuery?.latestRevision.id}
-                onChange={this.setSchemaQuery}
-              />
-            )}
-            {!this.selectedSchemaQuery && (
-              <Button
-                icon="add"
-                onClick={() => this.injected.schemaQueryStore.setSelectedSchemaQueryId(this.default.id)}
-              />
-            )}
+            <Button
+              icon="add"
+              size="mini"
+              onClick={() => this.injected.schemaQueryStore.addEmptySchemaQuery()}
+            />
+          </div>
+          <div className="schema-name">
+            <Input
+              value={this.selectedSchemaQuery?.name ?? ''}
+              onChange={this.onChangeName}
+              disabled={this.selectedSchemaQuery?.isDefault}
+              placeholder="Title..."
+            />
+          </div>
+          <div className="schema-description">
+            <TextArea
+              value={this.selectedSchemaQuery?.description ?? ''}
+              onChange={this.onChangeDescription}
+              rows={Math.max(this.selectedSchemaQuery?.description?.split('\n').length ?? 0, 2)}
+              disabled={this.selectedSchemaQuery?.isDefault}
+              placeholder="Description..."
+            />
           </div>
           <div className="history">
             <div className="cards-container">
-              {this.selectedSchemaQuery?.revisions
-                .sort((a, b) => b.revisionNumber - a.revisionNumber)
-                .map((rev) => {
-                  return (
-                    <Card
-                      key={rev.id}
-                      color={rev.id === this.selectedSchemaQuery?.id ? 'teal' : undefined}
-                      onClick={() => this.injected.schemaQueryStore.setSelectedSchemaQueryId(rev.id)}
-                      className={cx('schema-query-card', { active: rev.id === this.selectedSchemaQuery?.id })}
-                    >
-                      <Card.Content>
-                        <div className="card-labels">
-                          {rev.isDefault && (
-                            <Tooltip
-                              delayed
-                              content="This query is used by default to load the database schema."
-                            >
-                              <Label content="default" color="teal" size="mini" />
-                            </Tooltip>
-                          )}
-                          {rev.isLatest && (
-                            <Tooltip content="This is the most recent schema query">
-                              <Label content="latest" color="green" size="mini" />
-                            </Tooltip>
-                          )}
-                          <Tooltip
-                            delayed
-                            content={`This schema query is ${
-                              rev.isPrivate ? 'only visible to you' : 'publicly visible'
-                            }.`}
-                          >
-                            <Icon
-                              name={rev.isPrivate ? 'lock' : 'lock open'}
-                              size="small"
-                              bordered
-                              color={rev.isPrivate ? 'black' : 'yellow'}
-                            />
-                          </Tooltip>
-                          {!rev.revisionsLoaded && (
-                            <Tooltip content="Previous revisions not loaded. Click to load." delayed>
-                              <Icon name="cloud" color="blue" size="small" bordered />
-                            </Tooltip>
-                          )}
-                        </div>
-                        <Card.Description>
-                          {rev.revisionsLoaded ? `Revision Nr. ${rev.revisionNumber}` : 'Revision'}
-                        </Card.Description>
-                        <Card.Meta>
-                          {rev.createdAt.toLocaleString('de-CH')}
-                          <br />
-                          {rev.id}
-                        </Card.Meta>
-                      </Card.Content>
-                      {rev.nextRevisionIds.length > 1 &&
-                        rev.revisionNumber >= this.selectedSchemaQuery!.revisionNumber && (
-                          <Card.Content extra>
-                            <Tooltip
-                              content={`This revision is the base for ${rev.nextRevisionIds.length} newer revisions`}
-                              delayed
-                              position="bottom left"
-                            >
-                              <Button.Group size="mini">
-                                <Button
-                                  icon="left arrow"
-                                  onClick={() => rev.rotateToNextRevisionBranch('backward')}
-                                />
-                                <Button.Or text={`${rev.branchPosition + 1}/${rev.nextRevisionIds.length}`} />
-                                <Button
-                                  icon="right arrow"
-                                  onClick={() => rev.rotateToNextRevisionBranch('forward')}
-                                />
-                              </Button.Group>
-                            </Tooltip>
-                          </Card.Content>
-                        )}
-                    </Card>
-                  );
-                })}
+              {this.schemaQueries.map((rev) => (
+                <SchemaQueryCard
+                  key={rev.id}
+                  schemaQuery={rev}
+                  isActive={this.selectedSchemaQuery?.id === rev.id}
+                />
+              ))}
             </div>
           </div>
           {this.selectedSchemaQuery && (
             <Fragment>
-              <SqlEditor className="editor" sql={this.selectedSchemaQuery} />
+              <SqlEditor
+                className="editor"
+                sql={this.selectedSchemaQuery}
+                readOnly={this.selectedSchemaQuery.isDefault}
+              />
               <div className="actions">
                 <Button
                   positive

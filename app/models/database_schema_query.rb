@@ -4,34 +4,32 @@
 #
 # Table name: database_schema_queries
 #
-#  id                   :uuid             not null, primary key
-#  db_type              :integer          not null
-#  is_default           :boolean          default(FALSE), not null
-#  is_private           :boolean          default(FALSE), not null
-#  query                :string           not null
-#  created_at           :datetime         not null
-#  updated_at           :datetime         not null
-#  author_id            :uuid             not null
-#  previous_revision_id :uuid
+#  id          :uuid             not null, primary key
+#  db_type     :integer          not null
+#  description :string
+#  is_default  :boolean          default(FALSE), not null
+#  is_private  :boolean          default(FALSE), not null
+#  name        :string           not null
+#  query       :string           not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  author_id   :uuid             not null
 #
 # Indexes
 #
-#  index_database_schema_queries_on_author_id             (author_id)
-#  index_database_schema_queries_on_previous_revision_id  (previous_revision_id)
+#  index_database_schema_queries_on_author_id  (author_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (author_id => users.id)
-#  fk_rails_...  (previous_revision_id => database_schema_queries.id)
 #
 class DatabaseSchemaQuery < ApplicationRecord
   has_many :db_servers
   belongs_to :author, class_name: 'User', inverse_of: :database_schema_queries
-  belongs_to :previous_revision, class_name: 'DatabaseSchemaQuery', optional: true
-  has_many :revisions, class_name: 'DatabaseSchemaQuery', foreign_key: 'previous_revision_id'
 
   enum db_type: DbServer::DB_TYPES
   validate :only_one_default_by_db_type
+  validate :check_not_referenced_when_private
   before_destroy :assert_not_default
   before_destroy :assert_not_referenced
 
@@ -39,32 +37,6 @@ class DatabaseSchemaQuery < ApplicationRecord
   # @return [DatabaseSchemaQuery]
   def self.default(db_type)
     DatabaseSchemaQuery.where(db_type: db_type, is_default: true).first
-  end
-
-  def self.latest_revisions(author_id: nil, db_type: DbServer::DB_TYPES)
-    DatabaseSchemaQuery.where('is_private=false OR author_id=?', author_id)
-                       .where(db_type: db_type)
-                       .where.not(
-                         id: DatabaseSchemaQuery.where.not(
-                           previous_revision_id: nil
-                         ).pluck(:previous_revision_id)
-                       )
-                       .or(DatabaseSchemaQuery.where(is_default: true, db_type: db_type))
-                       .order(is_default: :desc, created_at: :desc)
-  end
-
-  def previous_revisions
-    [previous_revision, *previous_revision&.previous_revisions].compact
-  end
-
-  def newer_revisions
-    revisions.map do |rev|
-      [rev, *rev.newer_revisions].compact
-    end.flatten
-  end
-
-  def revision_tree
-    [*previous_revisions, self, *newer_revisions].compact
   end
 
   def default?
@@ -86,6 +58,7 @@ class DatabaseSchemaQuery < ApplicationRecord
 
   def clone
     DatabaseSchemaQuery.create(
+      name: name,
       db_type: db_type,
       is_default: false,
       is_private: is_private,
@@ -127,6 +100,17 @@ class DatabaseSchemaQuery < ApplicationRecord
     errors.add(
       :default_database_schema_query,
       "A default query for '#{db_type}' is already set."
+    )
+  end
+
+  def check_not_referenced_when_private
+    return if public?
+    return if db_servers.count.zero?
+    return if db_servers.all? { |db_server| db_server.user === author }
+
+    errors.add(
+      :database_schema_query,
+      "An already referenced database schema query can not be made private."
     )
   end
 
