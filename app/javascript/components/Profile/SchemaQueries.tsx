@@ -1,8 +1,5 @@
 import React, { Fragment } from 'react';
-import {
-  Segment,
-  DropdownProps,
-  Button} from 'semantic-ui-react';
+import { Segment, DropdownProps, Button } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import { computed } from 'mobx';
@@ -98,6 +95,7 @@ export default class SchemaQueries extends React.Component {
                   key={rev.id}
                   schemaQuery={rev}
                   isActive={this.selectedSchemaQuery?.id === rev.id}
+                  onSelect={() => this.injected.schemaQueryStore.setSelectedSchemaQueryId(rev.id)}
                 />
               ))}
               {canLoadMore && <LoadMoreCard />}

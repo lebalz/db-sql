@@ -10,6 +10,7 @@ import { computed } from 'mobx';
 interface Props {
   schemaQuery: SchemaQuery;
   isActive: boolean;
+  onSelect: () => void
 }
 
 interface InjectedProps extends Props {
@@ -42,7 +43,7 @@ export default class SchemaQueryCard extends React.Component<Props> {
       <Card
         key={rev.id}
         color={this.props.isActive ? 'teal' : undefined}
-        onClick={() => this.injected.schemaQueryStore.setSelectedSchemaQueryId(rev.id)}
+        onClick={() => this.props.onSelect()}
         className={cx('schema-query-card', { active: this.props.isActive, dirty: this.schemaQuery.isDirty })}
       >
         <Card.Content>

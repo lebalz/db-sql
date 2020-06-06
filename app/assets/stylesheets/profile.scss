@@ -1,5 +1,35 @@
 @import 'colors';
-
+.history {
+  grid-area: history;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  .cards-container {
+    height: max-content;
+    padding: 2px;
+    .schema-query-card {
+      position: relative;
+      display: flex;
+      .default-label {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: flex;
+      }
+      .usage-stats {
+        display: flex;
+      }
+      &.active {
+        background: var(--highlight-teal-50);
+      }
+      &:hover {
+        background: var(--highlight-grey-50);
+        -webkit-transform: unset !important;
+        transform: unset !important;
+      }
+    }
+  }
+}
 #schema-query-grid {
   height: 100%;
   display: grid;
@@ -49,34 +79,6 @@
   }
   .history {
     grid-area: history;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    .cards-container {
-      height: max-content;
-      padding: 2px;
-      .schema-query-card {
-        position: relative;
-        display: flex;
-        .default-label {
-          position: absolute;
-          top: 4px;
-          right: 4px;
-          display: flex;
-        }
-        .usage-stats {
-          display: flex;
-        }
-        &.active {
-          background: var(--highlight-teal-50);
-        }
-        &:hover {
-          background: var(--highlight-grey-50);
-          -webkit-transform: unset !important;
-          transform: unset !important;
-        }
-      }
-    }
   }
   .actions {
     grid-area: actions;

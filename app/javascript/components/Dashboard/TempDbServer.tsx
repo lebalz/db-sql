@@ -158,6 +158,11 @@ export class TempDbServer extends React.Component {
       </Message>
     );
   }
+  @action
+  setDbType(dbType: DbType) {
+    this.dbServer.dbType = dbType;
+    this.injected.schemaQueryStore.setSelectedDbType(dbType);
+  }
 
   render() {
     const name = this.dbServer ? this.dbServer.name : '';
@@ -190,12 +195,12 @@ export class TempDbServer extends React.Component {
                       <Button
                         content="PostgreSQL"
                         active={this.dbServer.dbType === DbType.Psql}
-                        onClick={() => (this.dbServer.dbType = DbType.Psql)}
+                        onClick={() => this.setDbType(DbType.Psql)}
                       />
                       <Button
                         content="MySql"
                         active={this.dbServer.dbType === DbType.MySql}
-                        onClick={() => (this.dbServer.dbType = DbType.MySql)}
+                        onClick={() => this.setDbType(DbType.MySql)}
                       />
                     </Button.Group>
                   </div>

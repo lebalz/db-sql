@@ -426,6 +426,9 @@ class DbServerStore implements Store {
   @action
   setTempDbServer(tempDbServer?: TempDbServer) {
     this.state.tempDbServer = tempDbServer;
+    if (tempDbServer) {
+      this.root.schemaQueryStore.setSelectedDbType(tempDbServer.dbType);
+    }
   }
 }
 
