@@ -1,16 +1,12 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import {
-  InputOnChangeData,
-  Message,
   Segment,
   Form,
-  Header,
   Label,
   DropdownProps,
   Grid
 } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SessionStore, { ApiRequestState } from '../../stores/session_store';
 import { TempDbServer } from '../../models/TempDbServer';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import { computed } from 'mobx';

@@ -53,7 +53,7 @@ export class TempDbServer extends DbServer {
     reaction(
       () => this.dbType,
       (type) => {
-        console.log(type);
+        console.log(type, schemaQueryStore.default(type)?.id);
         this.databaseSchemaQueryId = schemaQueryStore.default(type)?.id;
       }
     );

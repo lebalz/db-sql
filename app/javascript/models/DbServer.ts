@@ -1,5 +1,5 @@
 import { observable, computed, action } from 'mobx';
-import { DbServer as DbServerProps, databases } from '../api/db_server';
+import { DbServer as DbServerProps } from '../api/db_server';
 import _ from 'lodash';
 import Database from './Database';
 import { REST } from '../declarations/REST';
@@ -29,7 +29,7 @@ export interface UpdateProps extends Partial<DbServerProps> {
 
 export default class DbServer {
   private readonly dbServerStore: DbServerStore;
-  private readonly schemaQueryStore: SchemaQueryStore;
+  protected readonly schemaQueryStore: SchemaQueryStore;
   readonly id: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;

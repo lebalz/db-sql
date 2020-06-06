@@ -175,7 +175,7 @@ class SchemaQueryStore implements Store {
   }
 
   default(dbType: DbType): SchemaQuery {
-    return this.schemaQueries.find((q) => q.isDefault && q.dbType === dbType)!;
+    return this.state.schemaQueries.find((q) => q.isDefault && q.dbType === dbType)!;
   }
 
   find = computedFn(

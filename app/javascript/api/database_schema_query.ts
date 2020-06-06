@@ -1,7 +1,6 @@
 import api from './base';
 import { AxiosPromise } from 'axios';
 import { DbType } from '../models/DbServer';
-import SchemaQuery from '../models/SchemaQuery';
 
 export enum Changeable {
   Query = 'query',
