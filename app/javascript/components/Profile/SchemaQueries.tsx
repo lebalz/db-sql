@@ -11,7 +11,9 @@ import {
   Input,
   InputOnChangeData,
   TextArea,
-  TextAreaProps
+  TextAreaProps,
+  Modal,
+  Popup
 } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../../stores/session_store';
@@ -82,6 +84,9 @@ export default class SchemaQueries extends React.Component {
   };
 
   render() {
+    const schemaQueryState = this.injected.schemaQueryStore.fetchRequestState[this.dbType];
+    const isLoading = schemaQueryState.state === REST.Requested;
+    const canLoadMore = schemaQueryState.available !== schemaQueryState.loaded;
     return (
       <Segment style={{ width: '100%', height: '100%' }}>
         <div id="schema-query-grid">
@@ -100,26 +105,40 @@ export default class SchemaQueries extends React.Component {
                 />
               </Button.Group>
             </div>
-            <Button
-              icon="add"
-              size="mini"
-              onClick={() => this.injected.schemaQueryStore.addEmptySchemaQuery()}
-            />
+            <Tooltip delayed content="Refresh schema query list">
+              <Button icon="refresh" size="mini" onClick={() => this.injected.schemaQueryStore.refresh()} />
+            </Tooltip>
+            <Tooltip delayed content="Add a new schema query">
+              <Button
+                icon="add"
+                size="mini"
+                onClick={() => this.injected.schemaQueryStore.addEmptySchemaQuery()}
+              />
+            </Tooltip>
           </div>
-          <div className="schema-name">
+          <div
+            className={cx('schema-name', {
+              ['dirty-right']: this.selectedSchemaQuery?.name !== this.selectedSchemaQuery?.pristineState.name
+            })}
+          >
             <Input
               value={this.selectedSchemaQuery?.name ?? ''}
               onChange={this.onChangeName}
-              disabled={this.selectedSchemaQuery?.isDefault}
+              disabled={!this.selectedSchemaQuery?.canEdit}
               placeholder="Title..."
             />
           </div>
-          <div className="schema-description">
+          <div
+            className={cx('schema-description', {
+              ['dirty-right']:
+                this.selectedSchemaQuery?.description !== this.selectedSchemaQuery?.pristineState.description
+            })}
+          >
             <TextArea
               value={this.selectedSchemaQuery?.description ?? ''}
               onChange={this.onChangeDescription}
               rows={Math.max(this.selectedSchemaQuery?.description?.split('\n').length ?? 0, 2)}
-              disabled={this.selectedSchemaQuery?.isDefault}
+              disabled={!this.selectedSchemaQuery?.canEdit}
               placeholder="Description..."
             />
           </div>
@@ -132,34 +151,93 @@ export default class SchemaQueries extends React.Component {
                   isActive={this.selectedSchemaQuery?.id === rev.id}
                 />
               ))}
+              {canLoadMore && (
+                <Card
+                  onClick={() => this.injected.schemaQueryStore.loadNextBatch(this.dbType)}
+                  className="schema-query-card"
+                >
+                  <Card.Content>
+                    <Card.Header textAlign="center">
+                      <Icon name={isLoading ? 'circle notch' : 'plus'} circular loading={isLoading} />
+                    </Card.Header>
+                    <Card.Description>Load more Queries</Card.Description>
+                  </Card.Content>
+                </Card>
+              )}
             </div>
           </div>
           {this.selectedSchemaQuery && (
             <Fragment>
               <SqlEditor
-                className="editor"
+                className={cx('editor', {
+                  ['dirty']: this.selectedSchemaQuery.query !== this.selectedSchemaQuery.pristineState.query
+                })}
                 sql={this.selectedSchemaQuery}
-                readOnly={this.selectedSchemaQuery.isDefault}
+                readOnly={!this.selectedSchemaQuery.canEdit}
               />
               <div className="actions">
+                {this.selectedSchemaQuery.isDirty && this.selectedSchemaQuery.isPersisted && (
+                  <Button
+                    icon="cancel"
+                    labelPosition="left"
+                    content="Cancel"
+                    color="black"
+                    onClick={() => this.selectedSchemaQuery?.restore()}
+                  />
+                )}
                 <Button
-                  positive
+                  className={cx('toggle-privacy', {
+                    ['dirty']:
+                      this.selectedSchemaQuery.isPrivate !== this.selectedSchemaQuery.pristineState.is_private
+                  })}
+                  icon={this.selectedSchemaQuery.isPrivate ? 'lock' : 'lock open'}
+                  labelPosition="left"
+                  color="yellow"
+                  disabled={
+                    !this.selectedSchemaQuery?.canEdit ||
+                    (this.selectedSchemaQuery.isPublic &&
+                      this.selectedSchemaQuery.stats.public_user_count > 0)
+                  }
+                  onClick={() => this.selectedSchemaQuery?.togglePrivacy()}
+                  content={this.selectedSchemaQuery.isPrivate ? 'Private' : 'Public'}
+                />
+
+                <Popup
+                  on="click"
+                  position="top right"
+                  trigger={
+                    <Button
+                      disabled={
+                        !this.selectedSchemaQuery?.canEdit ||
+                        this.selectedSchemaQuery.stats.public_user_count > 0
+                      }
+                      icon="trash"
+                      labelPosition="left"
+                      content="Remove"
+                      color="red"
+                    />
+                  }
+                  header="Confirm"
+                  content={
+                    <Button
+                      icon="trash"
+                      labelPosition="left"
+                      content="Yes Delete"
+                      color="red"
+                      onClick={() => this.selectedSchemaQuery?.destroy()}
+                    />
+                  }
+                />
+                <Button
+                  icon="save"
+                  labelPosition="left"
+                  color="green"
                   loading={this.injected.schemaQueryStore.requestState === REST.Requested}
                   disabled={!this.selectedSchemaQuery.isDirty}
                   style={{ marginRight: 0 }}
                   onClick={() => this.selectedSchemaQuery?.save()}
-                >
-                  Save
-                </Button>
-                <Button
-                  color="red"
-                  loading={this.injected.schemaQueryStore.requestState === REST.Requested}
-                  disabled={this.selectedSchemaQuery.isDefault}
-                  style={{ marginRight: 0 }}
-                  onClick={() => this.selectedSchemaQuery?.destroy()}
-                >
-                  Löschen
-                </Button>
+                  content="Save"
+                />
               </div>
             </Fragment>
           )}

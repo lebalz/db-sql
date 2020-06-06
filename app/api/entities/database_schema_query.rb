@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 module Entities
+  class DatabaseSchemaqQueryStats < Grape::Entity
+    expose :public_user_count
+    expose :reference_count
+  end
   class DatabaseSchemaQuery < Grape::Entity
     with_options(expose_nil: false) do
       expose :id
@@ -13,6 +17,8 @@ module Entities
       expose :created_at
       expose :updated_at
       expose :author_id
+      expose :stats, with: Entities::DatabaseSchemaqQueryStats
     end
+
   end
 end

@@ -6,7 +6,8 @@ import {
   ChangeableProps,
   UpdateProps,
   CreateProps,
-  Changeable
+  Changeable,
+  DatabaseSchemaQueryStats
 } from '../api/database_schema_query';
 import { DbType } from './DbServer';
 import SchemaQueryStore from '../stores/schema_query_store';
@@ -22,13 +23,17 @@ export default class SchemaQuery extends Sql {
   readonly pristineState: ChangeableProps;
   readonly dbType: DbType;
   readonly isPersisted: boolean;
+  readonly stats: DatabaseSchemaQueryStats;
+  readonly orderPosition: number;
+
   @observable name: string;
   @observable description?: string;
   @observable isPrivate: boolean;
   @observable query: string;
 
-  constructor(store: SchemaQueryStore, props: DatabaseSchemaQuery, persisted: boolean = true) {
+  constructor(store: SchemaQueryStore, props: DatabaseSchemaQuery, orderPosition: number, persisted: boolean = true) {
     super();
+    this.orderPosition = orderPosition;
     this.isPersisted = persisted;
     this.schemaQueryStore = store;
     this.id = props.id;
@@ -41,12 +46,31 @@ export default class SchemaQuery extends Sql {
     this.dbType = props.db_type;
     this.isPrivate = props.is_private;
     this.query = props.query;
+    this.stats = props.stats;
     this.pristineState = {
       is_private: props.is_private,
       query: props.query,
       name: props.name,
       description: props.description
     };
+  }
+
+  @computed
+  get isPublic(): boolean {
+    return !this.isPrivate;
+  }
+
+  @computed
+  get canEdit(): boolean {
+    return this.schemaQueryStore.canEdit(this);
+  }
+
+  @action
+  restore() {
+    this.isPrivate = this.pristineState.is_private;
+    this.query = this.pristineState.query;
+    this.name = this.pristineState.name;
+    this.description = this.pristineState.description;
   }
 
   @action
@@ -67,6 +91,11 @@ export default class SchemaQuery extends Sql {
       return;
     }
     this.schemaQueryStore.destroy(this);
+  }
+
+  @action
+  togglePrivacy() {
+    this.isPrivate = !this.isPrivate;
   }
 
   @computed

@@ -4,7 +4,7 @@ module Resources
   class DatabaseSchemaQueries < Grape::API
     helpers do
       def database_schema_query
-        query = DatabaseSchemaQuery.find(params[:id])
+        query = DatabaseSchemaQuery.includes(:db_servers).find(params[:id])
         error!('Database schema query not found', 302) unless query
         unless query.public? || query.author_id == current_user.id
           error!('Invalid permission for this database schema query', 401)
@@ -21,19 +21,23 @@ module Resources
         optional(:db_type, type: Symbol, default: %i[psql mysql], values: %i[psql mysql], desc: 'db type')
       end
       get do
+        escaped_id = ActiveRecord::Base.connection.quote(current_user.id)
+        order_query = "is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC"
         present(
-          DatabaseSchemaQuery.where(is_private: false, db_type: params[:db_type])
-                             .or(
-                               DatabaseSchemaQuery.where(
-                                 is_private: true,
-                                 author_id: current_user.id,
-                                 db_type: params[:db_type]
-                               )
-                             )
+          DatabaseSchemaQuery.available(params[:db_type], current_user)
+                             .order(order_query)
+                             .includes(:db_servers)
                              .offset(params[:offset])
                              .limit(params[:limit]),
           with: Entities::DatabaseSchemaQuery
         )
+      end
+
+      desc 'Get number of avlailable schema queries'
+      get :counts do
+        DbServer::DB_TYPES.map do |db_type|
+          [db_type, DatabaseSchemaQuery.available(db_type, current_user).count]
+        end.to_h
       end
 
       desc 'Create a new schema query'
@@ -75,7 +79,7 @@ module Resources
 
         desc 'Delete a database schema query'
         delete do
-          unless database_schema_query.author_id = current_user.id
+          unless database_schema_query.author_id == current_user.id
             error!('No permission to delete this query')
           end
 
@@ -93,6 +97,10 @@ module Resources
           end
         end
         put do
+          unless database_schema_query.author_id == current_user.id
+            error!('No permission to update this query')
+          end
+
           change = ActionController::Parameters.new(params[:data])
           database_schema_query.update!(
             change.permit(

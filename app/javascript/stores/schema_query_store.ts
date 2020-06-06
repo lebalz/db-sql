@@ -8,21 +8,32 @@ import {
   remove,
   update,
   databaseSchemaQueries,
-  create
+  create,
+  databaseSchemaQueryCounts
 } from '../api/database_schema_query';
 import SchemaQuery from '../models/SchemaQuery';
 import { DbType } from '../models/DbServer';
 import { REST } from '../declarations/REST';
 
+interface LoadedSchemaQueries {
+  loaded: number;
+  state: REST;
+  available: number;
+}
+
 class State {
   schemaQueries = observable<SchemaQuery>([]);
-  @observable loadedSchemaQueries: { [key in DbType]: number } = {
-    [DbType.MySql]: 0,
-    [DbType.Psql]: 0
-  };
-  @observable loadSchemaQueryStates: { [key in DbType]: REST } = {
-    [DbType.MySql]: REST.None,
-    [DbType.Psql]: REST.None
+  @observable loadedSchemaQueries: { [key in DbType]: LoadedSchemaQueries } = {
+    [DbType.MySql]: {
+      available: 0,
+      loaded: 0,
+      state: REST.None,
+    },
+    [DbType.Psql]: {
+      available: 0,
+      loaded: 0,
+      state: REST.None,
+    }
   };
   @observable requestState: REST = REST.None;
   @observable selectedSchemaQueryId?: string = undefined;
@@ -43,6 +54,7 @@ class SchemaQueryStore implements Store {
       () => this.root.session.isLoggedIn,
       (isLoggedIn) => {
         if (isLoggedIn) {
+          this.loadSchemaQueryCounts();
           this.loadNextBatch(DbType.MySql);
           this.loadNextBatch(DbType.Psql);
         }
@@ -59,18 +71,28 @@ class SchemaQueryStore implements Store {
   }
 
   @action
+  refresh() {
+    this.state = new State();
+    this.loadDefaultQueries();
+    this.loadSchemaQueryCounts();
+    this.loadNextBatch(DbType.MySql);
+    this.loadNextBatch(DbType.Psql);
+  }
+
+  @action
   loadNextBatch(dbType: DbType) {
-    if (this.state.loadSchemaQueryStates[dbType] === REST.Requested) {
+    if (this.state.loadedSchemaQueries[dbType].state === REST.Requested) {
       return;
     }
-    this.state.loadSchemaQueryStates[dbType] === REST.Requested;
+    this.state.loadedSchemaQueries[dbType].state = REST.Requested;
+    const offset = this.state.loadedSchemaQueries[dbType].loaded;
     databaseSchemaQueries({
       db_type: dbType,
       limit: BATCH_SIZE,
-      offset: this.state.loadedSchemaQueries[dbType]
+      offset: offset
     })
       .then(({ data }) => {
-        data.forEach((schemaQuery) => {
+        data.forEach((schemaQuery, idx) => {
           runInAction(() => {
             if (schemaQuery.is_default) {
               const oldDefault = this.state.schemaQueries.find((q) => q.id === schemaQuery.id);
@@ -78,19 +100,20 @@ class SchemaQueryStore implements Store {
                 this.state.schemaQueries.remove(oldDefault);
               }
             }
-            this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+            this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery, offset + idx + 1));
           });
         });
-        this.state.loadedSchemaQueries[dbType] += BATCH_SIZE;
-        this.state.loadSchemaQueryStates[dbType] === REST.Success;
+        this.state.loadedSchemaQueries[dbType].loaded += data.length;
+        this.state.loadedSchemaQueries[dbType].state = REST.Success;
       })
       .catch((err) => {
-        this.state.loadSchemaQueryStates[dbType] === REST.Error;
+        this.state.loadedSchemaQueries[dbType].state = REST.Error;
       });
   }
 
   @action
   addEmptySchemaQuery() {
+    const tempId = `${Date.now()}`;
     this.state.schemaQueries.push(
       new SchemaQuery(
         this,
@@ -103,11 +126,17 @@ class SchemaQueryStore implements Store {
           name: 'DATABASE SCHEMA QUERY',
           created_at: new Date().toUTCString(),
           updated_at: new Date().toUTCString(),
-          id: ''
+          id: tempId,
+          stats: {
+            reference_count: 0,
+            public_user_count: 0
+          }
         },
+        0,
         false
       )
     );
+    this.setSelectedSchemaQueryId(tempId);
   }
 
   @action
@@ -132,10 +161,17 @@ class SchemaQueryStore implements Store {
   }
 
   @computed
+  get fetchRequestState() {
+    return this.state.loadedSchemaQueries;
+  }
+
+  @computed
   get schemaQueries() {
-    return this.state.schemaQueries
-      .filter((q) => q.dbType === this.selectedDbType)
-      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    return _.orderBy(
+      this.state.schemaQueries.filter((q) => q.dbType === this.selectedDbType),
+      ['orderPosition', 'updatedAt'],
+      ['asc', 'desc']
+    );
   }
 
   default(dbType: DbType): SchemaQuery {
@@ -159,13 +195,17 @@ class SchemaQueryStore implements Store {
     { keepAlive: true }
   );
 
+  canEdit(schemaQuery: SchemaQuery): boolean {
+    return schemaQuery.authorId === this.root.session.currentUser.id;
+  }
+
   @action
   save(schemaQuery: SchemaQuery) {
     this.state.requestState = REST.Requested;
     update(schemaQuery.updateProps)
       .then(({ data }) => {
         this.state.schemaQueries.remove(schemaQuery);
-        this.state.schemaQueries.push(new SchemaQuery(this, data));
+        this.state.schemaQueries.push(new SchemaQuery(this, data, 0));
         this.setSelectedSchemaQueryId(data.id);
         this.state.requestState = REST.Success;
       })
@@ -183,7 +223,7 @@ class SchemaQueryStore implements Store {
     create(schemaQuery.createProps)
       .then(({ data }) => {
         this.state.schemaQueries.remove(schemaQuery);
-        this.state.schemaQueries.push(new SchemaQuery(this, data));
+        this.state.schemaQueries.push(new SchemaQuery(this, data, 0));
         this.setSelectedSchemaQueryId(data.id);
         this.state.requestState = REST.Success;
       })
@@ -219,7 +259,16 @@ class SchemaQueryStore implements Store {
         if (oldValue) {
           this.state.schemaQueries.remove(oldValue);
         }
-        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery));
+        this.state.schemaQueries.push(new SchemaQuery(this, schemaQuery, 0));
+      });
+    });
+  }
+
+  @action
+  loadSchemaQueryCounts() {
+    databaseSchemaQueryCounts().then(({ data }) => {
+      Object.values(DbType).forEach((db_type) => {
+        this.state.loadedSchemaQueries[db_type].available = data[db_type];
       });
     });
   }
@@ -231,7 +280,7 @@ class SchemaQueryStore implements Store {
       if (oldValue) {
         this.state.schemaQueries.remove(oldValue);
       }
-      this.state.schemaQueries.push(new SchemaQuery(this, data));
+      this.state.schemaQueries.push(new SchemaQuery(this, data, oldValue?.orderPosition ?? 0));
     });
   }
 

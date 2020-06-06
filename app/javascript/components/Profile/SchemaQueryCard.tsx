@@ -28,6 +28,14 @@ export default class SchemaQueryCard extends React.Component<Props> {
     return this.props.schemaQuery;
   }
 
+  @computed
+  get name(): string {
+    if (this.schemaQuery.name.length <= 16) {
+      return this.schemaQuery.name;
+    }
+    return `${this.schemaQuery.name.slice(0, 16)}...`;
+  }
+
   render() {
     const rev = this.props.schemaQuery;
     return (
@@ -41,24 +49,39 @@ export default class SchemaQueryCard extends React.Component<Props> {
           <div className="card-labels">
             {rev.isDefault && (
               <Tooltip delayed content="This query is used by default to load the database schema.">
-                <Label content="default" color="teal" size="mini" />
+                <Label content="default" color="teal" size="mini" className="default-label" />
               </Tooltip>
             )}
-            <Tooltip
-              delayed
-              content={`This schema query is ${rev.isPrivate ? 'only visible to you' : 'publicly visible'}.`}
-            >
-              <Icon
-                name={rev.isPrivate ? 'lock' : 'lock open'}
-                size="small"
-                bordered
-                color={rev.isPrivate ? 'black' : 'yellow'}
-              />
-            </Tooltip>
           </div>
-          <Card.Description>{this.schemaQuery.name}</Card.Description>
-          <Card.Meta>{rev.description ?? ''}</Card.Meta>
+          <Card.Header style={{ fontSize: 'medium' }} title={this.schemaQuery.name}>
+            {this.name}
+          </Card.Header>
           <Card.Meta>{rev.createdAt.toLocaleString()}</Card.Meta>
+          <Card.Description>{rev.description}</Card.Description>
+        </Card.Content>
+        <Card.Content extra className="usage-stats">
+          {rev.isPublic && (
+            <Tooltip delayed content={`Used by ${rev.stats.public_user_count} other users.`}>
+              <Label size="mini" color="blue" icon="user" content={rev.stats.public_user_count} />
+            </Tooltip>
+          )}
+          <Tooltip delayed content={`Used for ${rev.stats.reference_count} database server connections.`}>
+            <Label size="mini" color="blue" icon="server" content={rev.stats.reference_count} />
+          </Tooltip>
+          <div className="spacer" />
+          {rev.canEdit && (
+            <Tooltip delayed content={`You are the author.`}>
+              <Icon size="small" name="edit" bordered color="blue" />
+            </Tooltip>
+          )}
+          <Tooltip delayed content={`${rev.isPrivate ? 'only visible to you' : 'publicly visible'}.`}>
+            <Icon
+              name={rev.isPrivate ? 'lock' : 'lock open'}
+              size="small"
+              bordered
+              color={rev.isPrivate ? 'black' : 'yellow'}
+            />
+          </Tooltip>
         </Card.Content>
       </Card>
     );

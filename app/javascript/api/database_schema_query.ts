@@ -16,6 +16,11 @@ export interface ChangeableProps {
   [Changeable.IsPrivate]: boolean;
 }
 
+export interface DatabaseSchemaQueryStats {
+  public_user_count: number;
+  reference_count: number;
+}
+
 export interface CreateProps extends ChangeableProps {
   db_type: DbType;
 }
@@ -29,6 +34,7 @@ export interface DatabaseSchemaQuery extends UpdateProps, CreateProps {
   created_at: string;
   updated_at: string;
   author_id: string;
+  stats: DatabaseSchemaQueryStats;
 }
 
 interface FetchParams {
@@ -36,9 +42,17 @@ interface FetchParams {
   offset: number;
   db_type?: DbType;
 }
+interface DatabaseSchemaQueryCounts {
+  [DbType.MySql]: number;
+  [DbType.Psql]: number;
+}
 
 export function defaultDatabaseSchemaQueries(): AxiosPromise<DatabaseSchemaQuery[]> {
   return api.get('/database_schema_queries/default');
+}
+
+export function databaseSchemaQueryCounts(): AxiosPromise<DatabaseSchemaQueryCounts> {
+  return api.get('/database_schema_queries/counts');
 }
 
 export function databaseSchemaQuery(id: string): AxiosPromise<DatabaseSchemaQuery> {

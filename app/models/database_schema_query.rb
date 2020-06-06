@@ -39,6 +39,25 @@ class DatabaseSchemaQuery < ApplicationRecord
     DatabaseSchemaQuery.where(db_type: db_type, is_default: true).first
   end
 
+  # @param db_type [DbServer::DB_TYPES], e.g :mysql or :psql
+  # @param user [User]
+  # @return [DatabaseSchemaQuery::ActiveRecord_Relation]
+  def self.available(db_type, user)
+    escaped_id = ActiveRecord::Base.connection.quote(user.id)
+    DatabaseSchemaQuery
+      .where(is_private: false, db_type: db_type)
+      .or(
+        DatabaseSchemaQuery.where(
+          is_private: true,
+          author_id: user.id,
+          db_type: db_type
+        )
+      )
+      .order(
+        "is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC"
+      )
+  end
+
   def default?
     is_default
   end
@@ -54,6 +73,23 @@ class DatabaseSchemaQuery < ApplicationRecord
   # @return [String] the content of the attached query
   def to_s
     query
+  end
+
+  # usage stats of this database schema query
+  # @return [Hash<Symbol, Integer>]
+  #   user_count: how many users other than the author use this schmea query for
+  #               at least one db server
+  #   reference_count: how many db servers use this schema query
+  # @example
+  #   {
+  #     public_user_count: 0,
+  #     reference_count: 7
+  #   }
+  def stats
+    {
+      public_user_count: db_servers.pluck(:user_id).uniq.reject { |id| id == author_id }.size,
+      reference_count: db_servers.size
+    }
   end
 
   def clone
@@ -106,7 +142,7 @@ class DatabaseSchemaQuery < ApplicationRecord
   def check_not_referenced_when_private
     return if public?
     return if db_servers.count.zero?
-    return if db_servers.all? { |db_server| db_server.user === author }
+    return if db_servers.all? { |db_server| db_server.user_id == author_id }
 
     errors.add(
       :database_schema_query,
