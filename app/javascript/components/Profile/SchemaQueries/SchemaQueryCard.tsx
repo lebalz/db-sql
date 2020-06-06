@@ -1,10 +1,10 @@
 import React from 'react';
-import { Button, Card, Label, Icon } from 'semantic-ui-react';
+import { Card, Label, Icon } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SchemaQueryStore from '../../stores/schema_query_store';
-import SchemaQuery from '../../models/SchemaQuery';
+import SchemaQueryStore from '../../../stores/schema_query_store';
+import SchemaQuery from '../../../models/SchemaQuery';
 import cx from 'classnames';
-import Tooltip from '../../shared/Tooltip';
+import Tooltip from '../../../shared/Tooltip';
 import { computed } from 'mobx';
 
 interface Props {

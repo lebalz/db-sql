@@ -1,22 +1,9 @@
-import React, { Fragment, SyntheticEvent } from 'react';
+import React, { Fragment } from 'react';
 import {
   Segment,
-  Form,
-  Grid,
   DropdownProps,
-  Button,
-  Card,
-  Label,
-  Icon,
-  Input,
-  InputOnChangeData,
-  TextArea,
-  TextAreaProps,
-  Modal,
-  Popup
-} from 'semantic-ui-react';
+  Button} from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import SessionStore from '../../stores/session_store';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import { computed } from 'mobx';
 import SchemaQuery from '../../models/SchemaQuery';
@@ -26,15 +13,17 @@ import { REST } from '../../declarations/REST';
 import cx from 'classnames';
 import Tooltip from '../../shared/Tooltip';
 import UserStore from '../../stores/user_store';
-import SchemaQueryCard from './SchemaQueryCard';
+import SchemaQueryCard from './SchemaQueries/SchemaQueryCard';
+import LoadMoreCard from './SchemaQueries/LoadMoreCard';
+import Actions from './SchemaQueries/Actions';
+import SchemaQueryProps from './SchemaQueries/SchemaQueryProps';
 
 interface InjectedProps {
-  sessionStore: SessionStore;
   schemaQueryStore: SchemaQueryStore;
   userStore: UserStore;
 }
 
-@inject('sessionStore', 'schemaQueryStore', 'userStore')
+@inject('schemaQueryStore', 'userStore')
 @observer
 export default class SchemaQueries extends React.Component {
   get injected() {
@@ -69,23 +58,8 @@ export default class SchemaQueries extends React.Component {
     return this.injected.schemaQueryStore.selectedSchemaQuery;
   }
 
-  onChangeName = (event: SyntheticEvent<HTMLInputElement>, data: InputOnChangeData) => {
-    event.preventDefault();
-    if (this.selectedSchemaQuery) {
-      this.selectedSchemaQuery.name = data.value;
-    }
-  };
-
-  onChangeDescription = (event: React.FormEvent<HTMLTextAreaElement>, data: TextAreaProps) => {
-    event.preventDefault();
-    if (this.selectedSchemaQuery) {
-      this.selectedSchemaQuery.description = data.value?.toString() ?? '';
-    }
-  };
-
   render() {
     const schemaQueryState = this.injected.schemaQueryStore.fetchRequestState[this.dbType];
-    const isLoading = schemaQueryState.state === REST.Requested;
     const canLoadMore = schemaQueryState.available !== schemaQueryState.loaded;
     return (
       <Segment style={{ width: '100%', height: '100%' }}>
@@ -116,32 +90,7 @@ export default class SchemaQueries extends React.Component {
               />
             </Tooltip>
           </div>
-          <div
-            className={cx('schema-name', {
-              ['dirty-right']: this.selectedSchemaQuery?.name !== this.selectedSchemaQuery?.pristineState.name
-            })}
-          >
-            <Input
-              value={this.selectedSchemaQuery?.name ?? ''}
-              onChange={this.onChangeName}
-              disabled={!this.selectedSchemaQuery?.canEdit}
-              placeholder="Title..."
-            />
-          </div>
-          <div
-            className={cx('schema-description', {
-              ['dirty-right']:
-                this.selectedSchemaQuery?.description !== this.selectedSchemaQuery?.pristineState.description
-            })}
-          >
-            <TextArea
-              value={this.selectedSchemaQuery?.description ?? ''}
-              onChange={this.onChangeDescription}
-              rows={Math.max(this.selectedSchemaQuery?.description?.split('\n').length ?? 0, 2)}
-              disabled={!this.selectedSchemaQuery?.canEdit}
-              placeholder="Description..."
-            />
-          </div>
+          <SchemaQueryProps schemaQuery={this.selectedSchemaQuery} />
           <div className="history">
             <div className="cards-container">
               {this.schemaQueries.map((rev) => (
@@ -151,19 +100,7 @@ export default class SchemaQueries extends React.Component {
                   isActive={this.selectedSchemaQuery?.id === rev.id}
                 />
               ))}
-              {canLoadMore && (
-                <Card
-                  onClick={() => this.injected.schemaQueryStore.loadNextBatch(this.dbType)}
-                  className="schema-query-card"
-                >
-                  <Card.Content>
-                    <Card.Header textAlign="center">
-                      <Icon name={isLoading ? 'circle notch' : 'plus'} circular loading={isLoading} />
-                    </Card.Header>
-                    <Card.Description>Load more Queries</Card.Description>
-                  </Card.Content>
-                </Card>
-              )}
+              {canLoadMore && <LoadMoreCard />}
             </div>
           </div>
           {this.selectedSchemaQuery && (
@@ -175,70 +112,10 @@ export default class SchemaQueries extends React.Component {
                 sql={this.selectedSchemaQuery}
                 readOnly={!this.selectedSchemaQuery.canEdit}
               />
-              <div className="actions">
-                {this.selectedSchemaQuery.isDirty && this.selectedSchemaQuery.isPersisted && (
-                  <Button
-                    icon="cancel"
-                    labelPosition="left"
-                    content="Cancel"
-                    color="black"
-                    onClick={() => this.selectedSchemaQuery?.restore()}
-                  />
-                )}
-                <Button
-                  className={cx('toggle-privacy', {
-                    ['dirty']:
-                      this.selectedSchemaQuery.isPrivate !== this.selectedSchemaQuery.pristineState.is_private
-                  })}
-                  icon={this.selectedSchemaQuery.isPrivate ? 'lock' : 'lock open'}
-                  labelPosition="left"
-                  color="yellow"
-                  disabled={
-                    !this.selectedSchemaQuery?.canEdit ||
-                    (this.selectedSchemaQuery.isPublic &&
-                      this.selectedSchemaQuery.stats.public_user_count > 0)
-                  }
-                  onClick={() => this.selectedSchemaQuery?.togglePrivacy()}
-                  content={this.selectedSchemaQuery.isPrivate ? 'Private' : 'Public'}
-                />
-
-                <Popup
-                  on="click"
-                  position="top right"
-                  trigger={
-                    <Button
-                      disabled={
-                        !this.selectedSchemaQuery?.canEdit ||
-                        this.selectedSchemaQuery.stats.public_user_count > 0
-                      }
-                      icon="trash"
-                      labelPosition="left"
-                      content="Remove"
-                      color="red"
-                    />
-                  }
-                  header="Confirm"
-                  content={
-                    <Button
-                      icon="trash"
-                      labelPosition="left"
-                      content="Yes Delete"
-                      color="red"
-                      onClick={() => this.selectedSchemaQuery?.destroy()}
-                    />
-                  }
-                />
-                <Button
-                  icon="save"
-                  labelPosition="left"
-                  color="green"
-                  loading={this.injected.schemaQueryStore.requestState === REST.Requested}
-                  disabled={!this.selectedSchemaQuery.isDirty}
-                  style={{ marginRight: 0 }}
-                  onClick={() => this.selectedSchemaQuery?.save()}
-                  content="Save"
-                />
-              </div>
+              <Actions
+                schemaQuery={this.selectedSchemaQuery}
+                isSaving={this.injected.schemaQueryStore.requestState === REST.Requested}
+              />
             </Fragment>
           )}
         </div>
