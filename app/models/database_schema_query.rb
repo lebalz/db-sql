@@ -30,6 +30,7 @@ class DatabaseSchemaQuery < ApplicationRecord
   enum db_type: DbServer::DB_TYPES
   validate :only_one_default_by_db_type
   validate :check_not_referenced_when_private
+  validate :default_is_not_private
   before_destroy :assert_not_default
   before_destroy :assert_not_referenced
 
@@ -162,6 +163,14 @@ class DatabaseSchemaQuery < ApplicationRecord
     return true if db_servers.count.zero?
 
     errors.add :base, "Cannot delete a database schema query which is referenced"
+    throw(:abort)
+  end
+
+  def default_is_not_private
+    return true unless default?
+    return true if public?
+
+    errors.add :base, "A private query can not be made default"
     throw(:abort)
   end
 

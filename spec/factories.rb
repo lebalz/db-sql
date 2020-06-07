@@ -25,6 +25,7 @@ FactoryBot.define do
     author { User.first || FactoryBot.create(:user, :admin) }
     is_default { false }
     db_type { :psql }
+    name { 'db schema query' }
     query { File.read(File.join(query_path(db_type: db_type), 'database_schema.sql')) }
   end
 

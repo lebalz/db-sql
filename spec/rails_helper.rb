@@ -51,28 +51,14 @@ RSpec.configure do |config|
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:transaction)
 
-    if DatabaseSchemaQuery.default(:psql).nil?
+    %i[mysql psql mariadb].each do |db_type|
+      next unless DatabaseSchemaQuery.default(db_type).nil?
+
       FactoryBot.create(
         :database_schema_query,
-        db_type: :psql,
+        db_type: db_type,
         is_default: true,
-        name: 'psql'
-      )
-    end
-    if DatabaseSchemaQuery.default(:mysql).nil?
-      FactoryBot.create(
-        :database_schema_query,
-        db_type: :mysql,
-        is_default: true,
-        name: 'mysql'
-      )
-    end
-    if DatabaseSchemaQuery.default(:mariadb).nil?
-      FactoryBot.create(
-        :database_schema_query,
-        db_type: :mariadb,
-        is_default: true,
-        name: 'mariadb'
+        name: db_type
       )
     end
     # only start spec dbs when integration or feature tests are requested
@@ -90,9 +76,10 @@ RSpec.configure do |config|
   config.after(:suite) do
     DatabaseSchemaQuery.default(:psql)&.send(:force_destroy!)
     DatabaseSchemaQuery.default(:mysql)&.send(:force_destroy!)
+    DatabaseSchemaQuery.default(:mariadb)&.send(:force_destroy!)
     # only shut down spec dbs when integration or feature tests were run
     if config.files_to_run.any? { |f| f.match(INTEGRATION_FEATURE_TEST_REGEXP) }
-      Rake::Task['db:stop_spec_dbs'].invoke unless ENV['KEEP_DBS_RUNNING']
+      Rake::Task['db:stop_spec_dbs'].invoke unless ENV['KEEP_DBS_RUNNING'] || ENV['SKIP_DB']
     end
   end
 

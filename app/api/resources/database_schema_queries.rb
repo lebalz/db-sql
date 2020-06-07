@@ -18,7 +18,7 @@ module Resources
       params do
         optional(:limit, type: Integer, default: 20, desc: 'maximal number of returned database schema queries')
         optional(:offset, type: Integer,  default: 0, desc: 'offset of returned database schema queries')
-        optional(:db_type, type: Symbol, default: %i[psql mysql], values: %i[psql mysql], desc: 'db type')
+        optional(:db_type, type: Symbol, default: %i[psql mysql mariadb], values: %i[psql mysql mariadb], desc: 'db type')
       end
       get do
         escaped_id = ActiveRecord::Base.connection.quote(current_user.id)
@@ -44,7 +44,7 @@ module Resources
       params do
         requires(:name, type: String, desc: 'Name')
         optional(:description, type: String, desc: 'description')
-        requires(:db_type, type: Symbol, values: %i[psql mysql], desc: 'db type')
+        requires(:db_type, type: Symbol, values: %i[psql mysql mariadb], desc: 'db type')
         optional(:is_private, type: Boolean, default: false, desc: 'is private')
         requires(:query, type: String, desc: 'database schema query')
       end
@@ -80,10 +80,13 @@ module Resources
         desc 'Delete a database schema query'
         delete do
           unless database_schema_query.author_id == current_user.id
-            error!('No permission to delete this query')
+            error!('No permission to delete this query', 401)
           end
-
-          database_schema_query.destroy!
+          begin
+            database_schema_query.destroy!
+          rescue StandardError
+            error!('A referenced query can not be destroyed', 403)
+          end
           status :no_content
         end
 
@@ -98,7 +101,7 @@ module Resources
         end
         put do
           unless database_schema_query.author_id == current_user.id
-            error!('No permission to update this query')
+            error!('No permission to update this query', 401)
           end
 
           change = ActionController::Parameters.new(params[:data])
@@ -115,9 +118,13 @@ module Resources
 
         desc 'make default'
         post :make_default do
-          error!("No permission") unless current_user.admin?
+          error!("No permission", 401) unless current_user.admin?
 
-          database_schema_query.make_default!
+          begin
+            database_schema_query.make_default!
+          rescue StandardError
+            error!('The default query can not be private', 403)
+          end
           database_schema_query.reload
           present(database_schema_query, with: Entities::DatabaseSchemaQuery)
         end
