@@ -33,7 +33,7 @@ class SeedDbServers
       { db_type: :mysql, username: 'root', port: 3356, version: '5.6' },
       { db_type: :mysql, username: 'root', port: 3357, version: '5.7' },
       { db_type: :mysql, username: 'root', port: 3380, version: '8.0' },
-      { db_type: :mariadb, username: 'root', port: 3410, version: '10.5.3' }
+      { db_type: :mysql, username: 'root', port: 3410, version: '10.5.3' } # using mariadb
     ].each do |config|
       DbServer.create!(
         name: "spec v#{config[:version]}",
