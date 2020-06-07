@@ -1,681 +1,733 @@
 # frozen_string_literal: true
 
 require_relative '../rails_helper.rb'
+require_relative './helpers'
+
+RSpec.configure do |c|
+  c.include Helpers
+end
 
 RSpec.describe "API::Resources::DbServer" do
-  before(:all) do
-    pw = Rails.configuration.database_configuration['test']['password']
-    sql_path = Rails.root.join(
-      'spec',
-      'fixtures',
-      'database',
-      'ninja_turtles_create.sql'
-    )
-    `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
-    @db_server = FactoryBot.create(:db_server)
+  RSpec.shared_examples 'common database specs' do
+    describe 'GET /api/db_servers' do
+      it 'can get all database servers of the current user' do
+        get(
+          "/api/db_servers",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(1)
 
-    @user = @db_server.user
-    login_token = FactoryBot.create(:login_token, user: @user)
-    @crypto_key = @user.crypto_key('asdfasdf')
-    @headers = {
-      'Authorization' => login_token.token,
-      'Crypto-Key' => @crypto_key
-    }
-  end
-  after(:all) do
-    pw = Rails.configuration.database_configuration['test']['password']
-    sql_path = Rails.root.join(
-      'spec',
-      'fixtures',
-      'database',
-      'ninja_turtles_drop.sql'
-    )
-    `env PGPASSWORD="#{pw}" bundle exec rails db < #{sql_path}`
-  end
+        expect(json[0]['db_type']).to eq(@db_server.db_type)
+        expect(json[0]['host']).to eq(@db_server.host)
+        expect(json[0]['initial_db']).to eq(nil)
+        expect(json[0]['initial_table']).to eq(nil)
+        expect(json[0]['initialization_vector']).not_to be_empty
+        expect(json[0]['name']).to eq(@db_server.name)
+        expect(json[0]['password_encrypted']).not_to eq("asdfasdf")
+        expect(json[0]['port']).to eq(@db_server.port)
+        expect(json[0]['user_id']).to eq(@db_server.user.id)
+        expect(json[0]['username']).to eq(@db_server.username)
+      end
+    end
 
-  describe 'GET /api/db_servers' do
-    it 'can get all database servers of the current user' do
-      get(
-        "/api/db_servers",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
-
-      expect(json[0]['db_type']).to eq(@db_server.db_type)
-      expect(json[0]['host']).to eq(@db_server.host)
-      expect(json[0]['initial_db']).to eq(nil)
-      expect(json[0]['initial_table']).to eq(nil)
-      expect(json[0]['initialization_vector']).not_to be_empty
-      expect(json[0]['name']).to eq(@db_server.name)
-      expect(json[0]['password_encrypted']).not_to eq("asdfasdf")
-      expect(json[0]['port']).to eq(@db_server.port)
-      expect(json[0]['user_id']).to eq(@db_server.user.id)
-      expect(json[0]['username']).to eq(@db_server.username)
-    end
-  end
-
-  describe 'POST /api/db_servers' do
-    let(:params) do
-      {
-        name: 'test db server',
-        db_type: 'mysql',
-        host: 'localhost',
-        port: 1234,
-        username: 'foobar',
-        password: 'retoholz'
-      }
-    end
-    it 'can create a new db server' do
-      expect(DbServer.all.size).to be(1)
-      post(
-        "/api/db_servers",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-
-      expect(json['db_type']).to eq("mysql")
-      expect(json['host']).to eq("localhost")
-      expect(json['initial_db']).to eq(nil)
-      expect(json['initial_table']).to eq(nil)
-      expect(json['initialization_vector']).not_to be_empty
-      expect(json['name']).to eq("test db server")
-      expect(json['password_encrypted']).not_to eq("retoholz")
-      expect(json['port']).to eq(1234)
-      expect(json['user_id']).to eq(@user.id)
-      expect(json['username']).to eq("foobar")
-      expect(DbServer.all.size).to be(2)
-      DbServer.find(json['id']).destroy!
-    end
-  end
-
-  describe 'PUT /api/db_servers/:id' do
-    it 'can update :name of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.name).not_to eq('funny-name')
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            name: 'funny-name'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['name']).to eq('funny-name')
-      db_server.reload
-      expect(db_server.name).to eq('funny-name')
-      db_server.destroy!
-    end
-    it 'can update :db_type of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.db_type).not_to eq('mariadb')
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            db_type: 'mariadb'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['db_type']).to eq('mariadb')
-      db_server.reload
-      expect(db_server.db_type).to eq('mariadb')
-      db_server.destroy!
-    end
-    it 'can update :host of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.host).to eq('localhost')
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            host: '192.168.1.1'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['host']).to eq('192.168.1.1')
-      db_server.reload
-      expect(db_server.host).to eq('192.168.1.1')
-      db_server.destroy!
-    end
-    it 'can update :initial_db of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.initial_db).to be_nil
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            initial_db: 'foobar'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['initial_db']).to eq('foobar')
-      db_server.reload
-      expect(db_server.initial_db).to eq('foobar')
-      db_server.destroy!
-    end
-    it 'can update :initial_table of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.initial_table).to be_nil
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            initial_table: 'foobar'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['initial_table']).to eq('foobar')
-      db_server.reload
-      expect(db_server.initial_table).to eq('foobar')
-      db_server.destroy!
-    end
-    it 'can update :port of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.port).to be(5432)
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            port: 1111
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['port']).to be(1111)
-      db_server.reload
-      expect(db_server.port).to eq(1111)
-      db_server.destroy!
-    end
-    it 'can update :username of a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(db_server.username).to eq('foo')
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            username: 'bar'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['username']).to eq('bar')
-      db_server.reload
-      expect(db_server.username).to eq('bar')
-      db_server.destroy!
-    end
-    it 'can update :password of a db server' do
-      db_server = FactoryBot.create(:db_server, user: @user)
-      expect(db_server.password(@crypto_key)).to eq('safe-db-password')
-      put(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers,
-        params: {
-          data: {
-            password: 'safer-pw$$1z^^'
-          }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['password']).to be_nil
-      db_server.reload
-      expect(db_server.password(@crypto_key)).to eq('safer-pw$$1z^^')
-      db_server.destroy!
-    end
-  end
-
-  describe 'DELETE /api/db_servers/:id' do
-    it 'can delete a db server' do
-      db_server = FactoryBot.create(:db_server)
-      expect(DbServer.all.size).to be(2)
-      delete(
-        "/api/db_servers/#{db_server.id}",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(DbServer.all.size).to be(1)
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/databases' do
-    it 'can list databases of a server' do
-      get(
-        "/api/db_servers/#{@db_server.id}/databases",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json).to include(
+    describe 'POST /api/db_servers' do
+      let(:params) do
         {
-          "name" => "ninja_turtles_db",
-          "db_server_id" => @db_server.id
+          name: 'test db server',
+          db_type: 'mysql',
+          host: 'localhost',
+          port: 1234,
+          username: 'foobar',
+          password: 'retoholz'
         }
-      )
-    end
-  end
+      end
+      it 'can create a new db server' do
+        expect(DbServer.all.size).to be(1)
+        post(
+          "/api/db_servers",
+          headers: @headers,
+          params: params
+        )
+        expect(response.successful?).to be_truthy
 
-  describe 'GET /api/db_servers/:id/database_names' do
-    it 'can list database names of a server' do
-      get(
-        "/api/db_servers/#{@db_server.id}/database_names",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json).to include("ninja_turtles_db")
+        expect(json['db_type']).to eq("mysql")
+        expect(json['host']).to eq("localhost")
+        expect(json['initial_db']).to eq(nil)
+        expect(json['initial_table']).to eq(nil)
+        expect(json['initialization_vector']).not_to be_empty
+        expect(json['name']).to eq("test db server")
+        expect(json['password_encrypted']).not_to eq("retoholz")
+        expect(json['port']).to eq(1234)
+        expect(json['user_id']).to eq(@user.id)
+        expect(json['username']).to eq("foobar")
+        expect(DbServer.all.size).to be(2)
+        DbServer.find(json['id']).destroy!
+      end
     end
-  end
 
-  describe 'GET /api/db_servers/:id/password' do
-    it 'can get cleartext password' do
-      get(
-        "/api/db_servers/#{@db_server.id}/password",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(response.body).to include("safe-db-password")
+    describe 'PUT /api/db_servers/:id' do
+      it 'can update :name of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.name).not_to eq('funny-name')
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              name: 'funny-name'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['name']).to eq('funny-name')
+        db_server.reload
+        expect(db_server.name).to eq('funny-name')
+        db_server.destroy!
+      end
+      it 'can update :db_type of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.db_type).not_to eq('mariadb')
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              db_type: 'mariadb'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['db_type']).to eq('mariadb')
+        db_server.reload
+        expect(db_server.db_type).to eq('mariadb')
+        db_server.destroy!
+      end
+      it 'can update :host of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.host).to eq('127.0.0.1')
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              host: '192.168.1.1'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['host']).to eq('192.168.1.1')
+        db_server.reload
+        expect(db_server.host).to eq('192.168.1.1')
+        db_server.destroy!
+      end
+      it 'can update :initial_db of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.initial_db).to be_nil
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              initial_db: 'foobar'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['initial_db']).to eq('foobar')
+        db_server.reload
+        expect(db_server.initial_db).to eq('foobar')
+        db_server.destroy!
+      end
+      it 'can update :initial_table of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.initial_table).to be_nil
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              initial_table: 'foobar'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['initial_table']).to eq('foobar')
+        db_server.reload
+        expect(db_server.initial_table).to eq('foobar')
+        db_server.destroy!
+      end
+      it 'can update :port of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.port).to be(5432)
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              port: 1111
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['port']).to be(1111)
+        db_server.reload
+        expect(db_server.port).to eq(1111)
+        db_server.destroy!
+      end
+      it 'can update :username of a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(db_server.username).to eq('foo')
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              username: 'bar'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['username']).to eq('bar')
+        db_server.reload
+        expect(db_server.username).to eq('bar')
+        db_server.destroy!
+      end
+      it 'can update :password of a db server' do
+        db_server = FactoryBot.create(:db_server, user: @user)
+        expect(db_server.password(@crypto_key)).to eq('safe-db-password')
+        put(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers,
+          params: {
+            data: {
+              password: 'safer-pw$$1z^^'
+            }
+          }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['password']).to be_nil
+        db_server.reload
+        expect(db_server.password(@crypto_key)).to eq('safer-pw$$1z^^')
+        db_server.destroy!
+      end
     end
-  end
 
-  describe 'POST /api/db_servers/:id/:database_name/query' do
-    let(:params) do
-      {
-        query: "SELECT * FROM ninja_turtles"
-      }
+    describe 'DELETE /api/db_servers/:id' do
+      it 'can delete a db server' do
+        db_server = FactoryBot.create(:db_server)
+        expect(DbServer.all.size).to be(2)
+        delete(
+          "/api/db_servers/#{db_server.id}",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(DbServer.all.size).to be(1)
+      end
     end
-    it 'can query the database' do
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/query",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(3)
-      expect(json[0]['name']).to eq('Ninja Reto')
-      expect(json[1]['name']).to eq('Warrior Maria')
-      expect(json[2]['name']).to eq('Mutant Holzkopf')
-    end
-  end
 
-  describe 'POST /api/db_servers/:id/:database_name/multi_query' do
-    let(:params) do
-      {
-        queries: [
-          "SELECT id FROM ninja_turtles",
-          "SELECT name FROM ninja_turtles"
-        ]
-      }
+    describe 'GET /api/db_servers/:id/databases' do
+      it 'can list databases of a server' do
+        get(
+          "/api/db_servers/#{@db_server.id}/databases",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json).to include(
+          {
+            "name" => "ninja_turtles_db",
+            "db_server_id" => @db_server.id
+          }
+        )
+      end
     end
-    it 'can exeute multiple queries on the database' do
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/multi_query",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
 
-      json.each do |query_result|
-        expect(query_result["type"]).to eq("success")
-        expect(query_result["result"].length).to be(3)
-        expect(query_result["time"]).to be > 0
+    describe 'GET /api/db_servers/:id/database_names' do
+      it 'can list database names of a server' do
+        get(
+          "/api/db_servers/#{@db_server.id}/database_names",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json).to include("ninja_turtles_db")
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/password' do
+      it 'can get cleartext password' do
+        get(
+          "/api/db_servers/#{@db_server.id}/password",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(response.body).to include("safe-db-password")
+      end
+    end
+
+    describe 'POST /api/db_servers/:id/:database_name/query' do
+      let(:params) do
+        {
+          query: "SELECT * FROM ninja_turtles"
+        }
+      end
+      it 'can query the database' do
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/query",
+          headers: @headers,
+          params: params
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(3)
+        expect(json[0]['name']).to eq('Ninja Reto')
+        expect(json[1]['name']).to eq('Warrior Maria')
+        expect(json[2]['name']).to eq('Mutant Holzkopf')
+      end
+    end
+
+    describe 'POST /api/db_servers/:id/:database_name/multi_query' do
+      let(:params) do
+        {
+          queries: [
+            "SELECT id FROM ninja_turtles",
+            "SELECT name FROM ninja_turtles"
+          ]
+        }
+      end
+      it 'can exeute multiple queries on the database' do
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/multi_query",
+          headers: @headers,
+          params: params
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+
+        json.each do |query_result|
+          expect(query_result["type"]).to eq("success")
+          expect(query_result["result"].length).to be(3)
+          expect(query_result["time"]).to be > 0
+        end
+
+        expect(json[0]["result"][0]).to eq({ "id" => 1 })
+        expect(json[0]["result"][1]).to eq({ "id" => 2 })
+        expect(json[0]["result"][2]).to eq({ "id" => 3 })
+
+        expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
       end
 
-      expect(json[0]["result"][0]).to eq({ "id" => 1 })
-      expect(json[0]["result"][1]).to eq({ "id" => 2 })
-      expect(json[0]["result"][2]).to eq({ "id" => 3 })
+      it 'can proceed after erroneous query' do
 
-      expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
-      expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
-      expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
+        params[:queries][0] = "SELECT no_row FROM ninja_turtles"
+
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/multi_query",
+          headers: @headers,
+          params: params
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+
+        expect(json[0]["type"]).to eq("error")
+        expect(json[0]["result"]).to be_nil
+        if @db_server.psql?
+          expect(json[0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
+        elsif @db_server.mysql? || @db_server.mariadb?
+          expect(json[0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
+        end
+        expect(json[0]["time"]).to be > 0
+
+        expect(json[1]["type"]).to eq("success")
+        expect(json[1]["result"].length).to be(3)
+        expect(json[1]["time"]).to be > 0
+        expect(json[1]["error"]).to be_nil
+
+        expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
+      end
+
+      it 'can skip query execution after erroneous query' do
+
+        params[:queries][2] = params[:queries][1]
+        params[:queries][1] = "SELECT no_row FROM ninja_turtles"
+
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/multi_query",
+          headers: @headers,
+          params: params.merge({ proceed_after_error: false })
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(3)
+
+        expect(json[0]["type"]).to eq("success")
+        expect(json[1]["type"]).to eq("error")
+        expect(json[2]["type"]).to eq("skipped")
+        expect(json[2]["result"]).to be_nil
+        expect(json[2]["error"]).to be_nil
+        expect(json[2]["time"]).to be(0)
+      end
     end
 
-    it 'can proceed after erroneous query' do
-
-      params[:queries][0] = "SELECT no_row FROM ninja_turtles"
-
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/multi_query",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-
-      expect(json[0]["type"]).to eq("error")
-      expect(json[0]["result"]).to be_nil
-      expect(json[0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
-      expect(json[0]["time"]).to be > 0
-
-      expect(json[1]["type"]).to eq("success")
-      expect(json[1]["result"].length).to be(3)
-      expect(json[1]["time"]).to be > 0
-      expect(json[1]["error"]).to be_nil
-
-      expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
-      expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
-      expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
-    end
-
-    it 'can skip query execution after erroneous query' do
-
-      params[:queries][2] = params[:queries][1]
-      params[:queries][1] = "SELECT no_row FROM ninja_turtles"
-
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/multi_query",
-        headers: @headers,
-        params: params.merge({ proceed_after_error: false })
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(3)
-
-      expect(json[0]["type"]).to eq("success")
-      expect(json[1]["type"]).to eq("error")
-      expect(json[2]["type"]).to eq("skipped")
-      expect(json[2]["result"]).to be_nil
-      expect(json[2]["error"]).to be_nil
-      expect(json[2]["time"]).to be(0)
-    end
-  end
-
-  describe 'POST /api/db_servers/:id/:database_name/raw_query' do
-    let(:params) do
-      {
-        query: "SELECT id FROM ninja_turtles; SELECT name FROM ninja_turtles"
-      }
-    end
-    it 'can exeute multiple queries on the database' do
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-
-      expect(json["type"]).to eq("success")
-      expect(json["result"].length).to be(2)
-      expect(json["time"]).to be > 0
-
-      expect(json["result"][0][0]).to eq({ "id" => 1 })
-      expect(json["result"][0][1]).to eq({ "id" => 2 })
-      expect(json["result"][0][2]).to eq({ "id" => 3 })
-
-      expect(json["result"][1][0]).to eq({ "name" => 'Ninja Reto' })
-      expect(json["result"][1][1]).to eq({ "name" => 'Warrior Maria' })
-      expect(json["result"][1][2]).to eq({ "name" => 'Mutant Holzkopf' })
-    end
-
-    it 'can exeute queries without result' do
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
-        headers: @headers,
-        params: { query: "CREATE TABLE raw_test ();" }
-      )
-      expect(response.successful?).to be_truthy
-
-      expect(json["type"]).to eq("success")
-      expect(json["result"].length).to be(1)
-      expect(json["result"][0].length).to be(0)
-      expect(json["time"]).to be > 0
-
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(3)
-      expect(json[0]).to eq('name' => 'fights')
-      expect(json[1]).to eq('name' => 'ninja_turtles')
-      expect(json[2]).to eq('name' => 'raw_test')
-
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
-        headers: @headers,
-        params: { query: "DROP TABLE raw_test;" }
-      )
-      expect(response.successful?).to be_truthy
-
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-      expect(json[0]).to eq('name' => 'fights')
-      expect(json[1]).to eq('name' => 'ninja_turtles')
-    end
-
-    it 'can not return result on error' do
-
-      params[:query] = "SELECT id FROM ninja_turtles; SELECT no_row FROM ninja_turtles"
-
-      post(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
-        headers: @headers,
-        params: params
-      )
-      expect(response.successful?).to be_truthy
-
-      expect(json["type"]).to eq("error")
-      expect(json["result"]).to be_nil
-      expect(json["error"]).to start_with 'ERROR:  column "no_row" does not exist'
-      expect(json["time"]).to be > 0
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/:database_name/table_names' do
-    it 'can get table names of a database' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/table_names",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-      expect(json[0]).to eq('fights')
-      expect(json[1]).to eq('ninja_turtles')
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/:database_name/tables' do
-    it 'can get tables of a database' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-      expect(json[0]).to eq('name' => 'fights')
-      expect(json[1]).to eq('name' => 'ninja_turtles')
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/:database_name/:table_name/indexes' do
-    it 'can get indexes of a table' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/indexes",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(0)
-
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/indexes",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
-      expect(json[0]['columns'][0]).to eq('badass_turtle_id')
-      expect(json[0]['name']).to eq('badass_idx')
-      expect(json[0]['table']).to eq('fights')
-      expect(json[0]['using']).to eq('btree')
-      expect(json[0]['unique']).to eq(false)
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/:database_name/:table_name/foreign_keys' do
-    it 'can get indexes of a table' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/foreign_keys",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(0)
-
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/foreign_keys",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-      # first foreign key
-      expect(json[0]['from_table']).to eq('fights')
-      expect(json[0]['to_table']).to eq('ninja_turtles')
-      options = json[0]['options']
-      expect(options['column']).to eq('badass_turtle_id')
-      expect(options['primary_key']).to eq('id')
-
-      # second foreign key
-      expect(json[1]['from_table']).to eq('fights')
-      expect(json[1]['to_table']).to eq('ninja_turtles')
-      options = json[1]['options']
-      expect(options['column']).to eq('kickass_turtle_id')
-      expect(options['primary_key']).to eq('id')
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/:database_name/:table_name/primary_key_names' do
-    it 'can get indexes of a table' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/primary_key_names",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
-      expect(json.first).to eq('id')
-
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/primary_key_names",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
-      expect(json.first).to eq('id')
-    end
-  end
-
-  describe 'GET /api/db_servers/:id/:database_name/:table_name/columns' do
-    it 'can get columns of a table' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/columns",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-      expect(json[0]).to eq(
-        "name" => "id",
-        "default_function" => "nextval('ninja_turtles_id_seq'::regclass)",
-        "is_primary" => true,
-        "null" => false,
-        "serial" => true,
-        "sql_type_metadata" => {
-          "limit" => 4,
-          "sql_type" => "integer",
-          "type" => "integer"
+    describe 'POST /api/db_servers/:id/:database_name/raw_query' do
+      let(:params) do
+        {
+          query: "SELECT id FROM ninja_turtles; SELECT name FROM ninja_turtles"
         }
-      )
-      expect(json[1]).to eq(
-        "is_primary" => false,
-        "name" => "name",
-        "null" => true,
-        "sql_type_metadata" => {
-          "sql_type" => "text",
-          "type" => "text"
-        }
-      )
+      end
+      it 'can exeute multiple queries on the database' do
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+          headers: @headers,
+          params: params
+        )
+        expect(response.successful?).to be_truthy
 
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/columns",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(4)
-      expect(json[0]).to eq(
-        "name" => "id",
-        "is_primary" => true,
-        "default_function" => "nextval('fights_id_seq'::regclass)",
-        "null" => false,
-        "serial" => true,
-        "sql_type_metadata" => {
-          "limit" => 4,
-          "sql_type" => "integer",
-          "type" => "integer"
-        }
-      )
-      expect(json[1]).to eq(
-        "name" => "date",
-        "is_primary" => false,
-        "null" => true,
-        "sql_type_metadata" => {
-          "sql_type" => "timestamp without time zone",
-          "type" => "datetime"
-        }
-      )
-      expect(json[2]).to eq(
-        "name" => "badass_turtle_id",
-        "null" => true,
-        "is_primary" => false,
-        "sql_type_metadata" => {
-          "limit" => 4,
-          "sql_type" => "integer",
-          "type" => "integer"
-        }
-      )
-      expect(json[3]).to eq(
-        "name" => "kickass_turtle_id",
-        "null" => true,
-        "is_primary" => false,
-        "sql_type_metadata" => {
-          "limit" => 4,
-          "sql_type" => "integer",
-          "type" => "integer"
-        }
-      )
+        expect(json["type"]).to eq("success")
+        expect(json["result"].length).to be(2)
+        expect(json["time"]).to be > 0
+
+        expect(json["result"][0][0]).to eq({ "id" => 1 })
+        expect(json["result"][0][1]).to eq({ "id" => 2 })
+        expect(json["result"][0][2]).to eq({ "id" => 3 })
+
+        expect(json["result"][1][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json["result"][1][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json["result"][1][2]).to eq({ "name" => 'Mutant Holzkopf' })
+      end
+
+      it 'can exeute queries without result' do
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+          headers: @headers,
+          params: { query: "CREATE TABLE raw_test ( id int primary key );" }
+        )
+        expect(response.successful?).to be_truthy
+        expect(json["type"]).to eq("success")
+        expect(json["result"].length).to be(1)
+        expect(json["result"][0].length).to be(0)
+        expect(json["time"]).to be > 0
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(3)
+        expect(json[0]).to eq('name' => 'fights')
+        expect(json[1]).to eq('name' => 'ninja_turtles')
+        expect(json[2]).to eq('name' => 'raw_test')
+
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+          headers: @headers,
+          params: { query: "DROP TABLE raw_test;" }
+        )
+        expect(response.successful?).to be_truthy
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+        expect(json[0]).to eq('name' => 'fights')
+        expect(json[1]).to eq('name' => 'ninja_turtles')
+      end
+
+      it 'can not return result on error' do
+
+        params[:query] = "SELECT id FROM ninja_turtles; SELECT no_row FROM ninja_turtles"
+
+        post(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
+          headers: @headers,
+          params: params
+        )
+        expect(response.successful?).to be_truthy
+
+        expect(json["type"]).to eq("error")
+        expect(json["result"]).to be_nil
+        if @db_server.psql?
+          expect(json["error"]).to start_with 'ERROR:  column "no_row" does not exist'
+        else
+          expect(json["error"]).to start_with "Unknown column 'no_row' in 'field list'"
+        end
+        expect(json["time"]).to be > 0
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/table_names' do
+      it 'can get table names of a database' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/table_names",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+        expect(json[0]).to eq('fights')
+        expect(json[1]).to eq('ninja_turtles')
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/tables' do
+      it 'can get tables of a database' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/tables",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+        expect(json[0]).to eq('name' => 'fights')
+        expect(json[1]).to eq('name' => 'ninja_turtles')
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/:table_name/indexes' do
+      it 'can get indexes of a table' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/indexes",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(0)
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/indexes",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to eq(2)
+
+        badass_idx = json.index { |meta| meta['name'] == 'badass_idx' }
+        kickass_idx = json.index { |meta| meta['name'] == 'kickass_idx' }
+
+        expect(json[kickass_idx]['columns'][0]).to eq('kickass_turtle_id')
+        expect(json[kickass_idx]['name']).to eq('kickass_idx')
+        expect(json[kickass_idx]['table']).to eq('fights')
+        expect(json[kickass_idx]['using']).to eq('btree')
+        expect(json[kickass_idx]['unique']).to eq(false)
+        expect(json[badass_idx]['columns'][0]).to eq('badass_turtle_id')
+        expect(json[badass_idx]['name']).to eq('badass_idx')
+        expect(json[badass_idx]['table']).to eq('fights')
+        expect(json[badass_idx]['using']).to eq('btree')
+        expect(json[badass_idx]['unique']).to eq(false)
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/:table_name/foreign_keys' do
+      it 'can get foreign keys of a table' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/foreign_keys",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(0)
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/foreign_keys",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+
+        badass_idx = json.index { |meta| meta['options']['column'] == 'badass_turtle_id' }
+        kickass_idx = json.index { |meta| meta['options']['column'] == 'kickass_turtle_id' }
+
+        # first foreign key
+        expect(json[badass_idx]['from_table']).to eq('fights')
+        expect(json[badass_idx]['to_table']).to eq('ninja_turtles')
+        options = json[badass_idx]['options']
+        expect(options['column']).to eq('badass_turtle_id')
+        expect(options['primary_key']).to eq('id')
+
+        # second foreign key
+        expect(json[kickass_idx]['from_table']).to eq('fights')
+        expect(json[kickass_idx]['to_table']).to eq('ninja_turtles')
+        options = json[kickass_idx]['options']
+        expect(options['column']).to eq('kickass_turtle_id')
+        expect(options['primary_key']).to eq('id')
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/:table_name/primary_key_names' do
+      it 'can get primary keys of a table' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/primary_key_names",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(1)
+        expect(json.first).to eq('id')
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/primary_key_names",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(1)
+        expect(json.first).to eq('id')
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/:table_name/columns' do
+      it 'can get columns of a table' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/columns",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+        expect(json[0]).to match(
+          hash_including("null" => false, "name" => "id", "is_primary" => true)
+        )
+        expect(json[0]["sql_type_metadata"]).to match(
+          hash_including("limit" => 4, "type" => "integer")
+        )
+        expect(json[1]).to match(
+          hash_including("is_primary" => false, "name" => "name", "null" => true)
+        )
+        expect(json[1]["sql_type_metadata"]).to match(
+          hash_including("type" => "text")
+        )
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/columns",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(4)
+
+        expect(json[0]).to match(
+          hash_including("name" => "id", "is_primary" => true, "null" => false)
+        )
+        expect(json[0]["sql_type_metadata"]).to match(
+          hash_including("limit" => 4, "type" => "integer")
+        )
+        expect(json[1]).to match(
+          hash_including("name" => "date", "is_primary" => false, "null" => true)
+        )
+        expect(json[1]["sql_type_metadata"]).to match(
+          hash_including("type" => "datetime")
+        )
+        expect(json[2]).to match(
+          hash_including("name" => "badass_turtle_id", "is_primary" => false, "null" => true)
+        )
+        expect(json[2]["sql_type_metadata"]).to match(
+          hash_including("limit" => 4, "type" => "integer")
+        )
+        expect(json[3]).to match(
+          hash_including("name" => "kickass_turtle_id", "is_primary" => false, "null" => true)
+        )
+        expect(json[3]["sql_type_metadata"]).to match(
+          hash_including("limit" => 4, "type" => "integer")
+        )
+      end
+    end
+
+    describe 'GET /api/db_servers/:id/:database_name/:table_name/column_names' do
+      it 'can get column names of a table' do
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/column_names",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(2)
+        expect(json[0]).to eq('id')
+        expect(json[1]).to eq('name')
+
+        get(
+          "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/column_names",
+          headers: @headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(4)
+        expect(json[0]).to eq('id')
+        expect(json[1]).to eq('date')
+        expect(json[2]).to eq('badass_turtle_id')
+        expect(json[3]).to eq('kickass_turtle_id')
+      end
     end
   end
 
-  describe 'GET /api/db_servers/:id/:database_name/:table_name/column_names' do
-    it 'can get column names of a table' do
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/ninja_turtles/column_names",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(2)
-      expect(json[0]).to eq('id')
-      expect(json[1]).to eq('name')
-
-      get(
-        "/api/db_servers/#{@db_server.id}/ninja_turtles_db/fights/column_names",
-        headers: @headers
-      )
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(4)
-      expect(json[0]).to eq('id')
-      expect(json[1]).to eq('date')
-      expect(json[2]).to eq('badass_turtle_id')
-      expect(json[3]).to eq('kickass_turtle_id')
+  describe 'with psql 9.3' do
+    before(:all) do
+      config_for(db_version: 'p9.3')
     end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with psql 10' do
+    before(:all) do
+      config_for(db_version: 'p10')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with psql 11' do
+    before(:all) do
+      config_for(db_version: 'p11')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with psql 12' do
+    before(:all) do
+      config_for(db_version: 'p12')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with mysql 5.6' do
+    before(:all) do
+      config_for(db_version: 'm5.6')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with mysql 5.7' do
+    before(:all) do
+      config_for(db_version: 'm5.7')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with mysql 8' do
+    before(:all) do
+      config_for(db_version: 'm8')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with mariadb 10.5.3' do
+    before(:all) do
+      config_for(db_version: 'mariadb_10.5.3')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
   end
 end

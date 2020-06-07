@@ -15,10 +15,13 @@ import 'ace-builds/src-noconflict/snippets/pgsql';
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
 import { computed } from 'mobx';
 import Query from '../../../models/Query';
+import Sql from '../../../models/Sql';
 
 interface Props {
-  query: Query;
-  height: number;
+  sql: Sql;
+  height?: number;
+  readOnly?: boolean;
+  className?: string;
 }
 
 interface Completion {
@@ -43,7 +46,7 @@ export default class SqlEditor extends React.Component<Props> {
         // commands is array of key bindings.
         name: EXECUTE_QUERY_COMMAND,
         bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-        exec: () => this.props.query.run()
+        exec: () => this.props.sql.run()
       });
     }
     addCompleter({
@@ -79,56 +82,61 @@ export default class SqlEditor extends React.Component<Props> {
 
   @computed
   get completers() {
-    const { database } = this.props.query;
-    const tables = database.tables.map((table) => ({
-      name: table.name,
-      value: table.name,
-      meta: 'TABLE',
-      score: 2
-    }));
-    const columns = database.tables.reduce((res, table) => {
-      const cols = table.columns.map(
-        (col) =>
-          ({
+    const completions: Completion[] = [];
+    const { database } = this.props.sql;
+
+    database?.schemas?.forEach((schema) => {
+      completions.push({
+        name: schema.name,
+        value: schema.name,
+        meta: 'SCHEMA',
+        score: 3
+      });
+      schema.tables.forEach((table) => {
+        completions.push({
+          name: table.name,
+          value: table.name,
+          meta: 'TABLE',
+          score: 2
+        });
+        table.columns.forEach((col) => {
+          completions.push({
             name: col.name,
             value: col.name,
             meta: 'COLUMN',
             score: 1
-          } as Completion)
-      );
-      return [...res, ...cols];
-    }, [] as Completion[]);
-    return [...tables, ...columns];
+          });
+        });
+      });
+    });
+    return completions;
   }
 
   onChange = (value: string, event?: any) => {
-    const { query } = this.props;
-    const modified = query.derivedExecutionMode !== query.executionMode;
-
-    this.props.query.query = value;
-
-    if (!modified) {
-      query.executionMode = query.derivedExecutionMode;
-    }
+    const { sql } = this.props;
+    sql.onSqlChange(value);
   };
 
+
   render() {
-    const { query } = this.props;
+    const { sql } = this.props;
 
     return (
       <AceEditor
-        style={{ width: '100%', height: `${this.props.height}px` }}
-        mode={query.databaseType}
+        readOnly={this.props.readOnly}
+        style={{ width: '100%', height: this.props.height ? `${this.props.height}px` : '100%' }}
+        mode={sql.databaseType}
         theme="github"
         onChange={this.onChange}
-        value={query.query}
-        defaultValue={query.query}
-        name={query.name}
+        value={sql.query}
+        defaultValue={sql.query}
+        name={sql.name}
         ref={this.editorRef}
         editorProps={{ $blockScrolling: true }}
         showPrintMargin={false}
         enableBasicAutocompletion
         enableLiveAutocompletion
+        className={this.props.className}
       />
     );
   }

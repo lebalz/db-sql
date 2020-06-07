@@ -4,7 +4,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '2.6.5'
 gem 'sassc-rails'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.2'
+gem 'rails', '~> 6.0.3'
 gem 'pg', '~> 0.18'
 gem 'mysql2', '~>0.5.2'
 
@@ -79,7 +79,14 @@ group :development do
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
 
+  # Annotate Rails classes with schema and routes info
   gem 'annotate'
+  # for performance measuring
+  #   time = Benchmark.measure {
+  #     code to test
+  #   }
+  #   puts time.real #or save it to logs
+  gem 'benchmark'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

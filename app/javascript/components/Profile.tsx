@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Divider, Menu } from 'semantic-ui-react';
+import { Divider, Menu, Checkbox, CheckboxProps } from 'semantic-ui-react';
 import NavBar from './Navigation/NavBar';
 import { inject, observer } from 'mobx-react';
 import SessionStore from '../stores/session_store';
@@ -10,6 +10,7 @@ import { RouterStore } from 'mobx-react-router';
 import UserStore from '../stores/user_store';
 import UserList from './Profile/UserList';
 import DeleteAccount from './Profile/DeleteAccount';
+import SchemaQueries from './Profile/SchemaQueries';
 
 interface MatchParams {
   part: string;
@@ -57,6 +58,17 @@ export default class Profile extends React.Component<ProfileProps> {
             active={part === 'delete_account'}
             onClick={() => router.push('./delete_account')}
           />
+          {this.injected.userStore.showAdvancedSettings && (
+            <Fragment>
+              <Divider horizontal content="Advanced" />
+              <Menu.Item
+                name="schema queries"
+                icon="edit"
+                active={part === 'schema_queries'}
+                onClick={() => router.push('./schema_queries')}
+              />
+            </Fragment>
+          )}
           {this.injected.sessionStore.currentUser.isAdmin && (
             <Fragment>
               <Divider horizontal content="Admin" />
@@ -68,6 +80,19 @@ export default class Profile extends React.Component<ProfileProps> {
               />
             </Fragment>
           )}
+          <div className="spacer" />
+          <Menu.Item
+            content={
+              <Checkbox
+                style={{}}
+                label="Show Advanced"
+                checked={this.injected.userStore.showAdvancedSettings}
+                onChange={(_e: React.FormEvent<HTMLInputElement>, data: CheckboxProps) => {
+                  this.injected.userStore.setShowAdvancedSettings(!!data.checked);
+                }}
+              />
+            }
+          />
         </Menu>
         <main style={{ alignItems: 'center' }}>
           {(() => {
@@ -80,6 +105,8 @@ export default class Profile extends React.Component<ProfileProps> {
                 return <DeleteAccount />;
               case 'users':
                 return <UserList />;
+              case 'schema_queries':
+                return <SchemaQueries />;
               default:
                 return '404';
             }

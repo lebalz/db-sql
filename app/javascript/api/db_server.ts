@@ -13,6 +13,7 @@ export interface DbServer {
   initial_table?: string;
   query_count: number;
   error_query_count: number;
+  database_schema_query_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -24,29 +25,26 @@ export interface SqlTypeMetadata {
   type: string;
 }
 
+export interface Constraint {
+  name: string;
+  schema?: string;
+}
+
+export interface ReferenceConstraint extends Constraint {
+  schema: string;
+  table: string;
+  column: string;
+}
+
 export interface Column {
   name: string;
-  collation: string;
+  position: number;
   default: string;
-  default_function: string;
   null: boolean;
-  serial: boolean;
   is_primary: boolean;
+  is_foreign: boolean;
   sql_type_metadata: SqlTypeMetadata;
-}
-
-export interface ForeignKeyOption {
-  column: string;
-  name: string;
-  primary_key: string;
-  on_update?: string;
-  on_delete?: string;
-}
-
-export interface ForeignKey {
-  from_table: string;
-  to_table: string;
-  options: ForeignKeyOption;
+  constraints: (Constraint | ReferenceConstraint)[];
 }
 
 export interface Index {
@@ -66,14 +64,17 @@ export interface Index {
 export interface DbTable {
   name: string;
   columns: Column[];
-  indices: Index[];
-  foreign_keys: ForeignKey[];
+}
+
+export interface Schema {
+  name: string;
+  tables: DbTable[];
 }
 
 export interface Database {
   name: string;
   db_server_id: string;
-  tables: DbTable[];
+  schemas: Schema[];
 }
 
 export interface DatabaseName {
@@ -153,6 +154,7 @@ export function updateDbServer(connection: UpdateProps, cancelToken: CancelToken
     { cancelToken: cancelToken.token }
   );
 }
+
 export function createDbServer(
   connection: CreateProps,
   cancelToken: CancelTokenSource
@@ -194,7 +196,7 @@ export function rawQuery(
   return api.post(
     `/db_servers/${id}/${databaseName}/raw_query`,
     {
-      query: query,
+      query: query
     },
     { cancelToken: cancelToken.token }
   );

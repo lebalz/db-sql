@@ -10,11 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_05_12_102511) do
+ActiveRecord::Schema.define(version: 2020_05_23_222631) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+  enable_extension "uuid-ossp"
+
+  create_table "database_schema_queries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", null: false
+    t.string "description"
+    t.integer "db_type", null: false
+    t.boolean "is_default", default: false, null: false
+    t.boolean "is_private", default: false, null: false
+    t.uuid "author_id", null: false
+    t.string "query", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["author_id"], name: "index_database_schema_queries_on_author_id"
+  end
 
   create_table "db_servers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id"
@@ -31,6 +45,8 @@ ActiveRecord::Schema.define(version: 2020_05_12_102511) do
     t.string "username"
     t.integer "query_count", default: 0
     t.integer "error_query_count", default: 0
+    t.uuid "database_schema_query_id"
+    t.index ["database_schema_query_id"], name: "index_db_servers_on_database_schema_query_id"
     t.index ["user_id"], name: "index_db_servers_on_user_id"
   end
 
@@ -56,6 +72,8 @@ ActiveRecord::Schema.define(version: 2020_05_12_102511) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "database_schema_queries", "users", column: "author_id"
+  add_foreign_key "db_servers", "database_schema_queries"
   add_foreign_key "db_servers", "users"
   add_foreign_key "login_tokens", "users"
 end

@@ -6,6 +6,7 @@ import axios, { CancelTokenSource } from 'axios';
 import RouterStore from './router_store';
 import StatusStore from './status_store';
 import ViewStateStore from './view_state_store';
+import SchemaQueryStore from './schema_query_store';
 
 export interface Store {
   cleanup: () => void;
@@ -21,6 +22,7 @@ export class RootStore implements Store {
   dbServer: DbServerStore;
   statusStore: StatusStore;
   viewStateStore: ViewStateStore;
+  schemaQueryStore: SchemaQueryStore;
 
   @observable initialized = false;
 
@@ -42,6 +44,9 @@ export class RootStore implements Store {
 
     this.viewStateStore = new ViewStateStore(this);
     this.stores.push(this.viewStateStore);
+
+    this.schemaQueryStore = new SchemaQueryStore(this);
+    this.stores.push(this.schemaQueryStore);
 
     this.initialized = true;
   }

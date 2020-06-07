@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 # This file is copied to spec/ when you run 'rails generate rspec:install'
-require 'spec_helper'
+require 'rake'
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
+require 'spec_helper'
+Rails.application.load_tasks
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
@@ -32,6 +34,8 @@ rescue ActiveRecord::PendingMigrationError => e
   puts e.to_s.strip
   exit 1
 end
+INTEGRATION_FEATURE_TEST_REGEXP = /\/integration|features\//i.freeze
+
 RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
@@ -46,12 +50,37 @@ RSpec.configure do |config|
   config.before(:suite) do
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:transaction)
+
+    %i[mysql psql mariadb].each do |db_type|
+      next unless DatabaseSchemaQuery.default(db_type).nil?
+
+      FactoryBot.create(
+        :database_schema_query,
+        db_type: db_type,
+        is_default: true,
+        name: db_type
+      )
+    end
+    # only start spec dbs when integration or feature tests are requested
+    if config.files_to_run.any? { |f| f.match(INTEGRATION_FEATURE_TEST_REGEXP) }
+      Rake::Task['db:start_spec_dbs'].invoke unless ENV['SKIP_DB']
+    end
   end
   config.before(:all) do
     DatabaseCleaner.start
   end
   config.after(:all) do
     DatabaseCleaner.clean
+    FileUtils.rm_rf(Rails.root.join('tmp', 'storage'))
+  end
+  config.after(:suite) do
+    DatabaseSchemaQuery.default(:psql)&.send(:force_destroy!)
+    DatabaseSchemaQuery.default(:mysql)&.send(:force_destroy!)
+    DatabaseSchemaQuery.default(:mariadb)&.send(:force_destroy!)
+    # only shut down spec dbs when integration or feature tests were run
+    if config.files_to_run.any? { |f| f.match(INTEGRATION_FEATURE_TEST_REGEXP) }
+      Rake::Task['db:stop_spec_dbs'].invoke unless ENV['KEEP_DBS_RUNNING'] || ENV['SKIP_DB']
+    end
   end
 
   # RSpec Rails can automatically mix in different behaviours to your tests

@@ -1,9 +1,10 @@
 import { observable, computed, action } from 'mobx';
-import { DbTable as DbTableProps, ForeignKey as ForeignKeyProps, Index } from '../api/db_server';
+import { DbTable as DbTableProps, Index, Schema, ReferenceConstraint } from '../api/db_server';
 import _ from 'lodash';
 import Database from './Database';
 import DbColumn, { Mark } from './DbColumn';
 import { REST } from '../declarations/REST';
+import DbSchema from './DbSchema';
 
 interface RequestState {
   columns: REST;
@@ -11,19 +12,29 @@ interface RequestState {
   indexes: REST;
 }
 export default class DbTable {
-  readonly database: Database;
+  readonly schema: DbSchema;
   readonly name: string;
   readonly columns: DbColumn[];
-  readonly indices: Index[];
-  readonly foreignKeys: ForeignKeyProps[];
   @observable show: boolean = false;
 
-  constructor(database: Database, props: DbTableProps) {
-    this.database = database;
-    this.name = props.name;
-    this.columns = props.columns.map((col) => new DbColumn(this, col));
-    this.indices = props.indices;
-    this.foreignKeys = props.foreign_keys;
+  constructor(schema: DbSchema, table: DbTableProps) {
+    this.schema = schema;
+    this.name = table.name;
+    const columns = table.columns.map((column) => new DbColumn(this, column));
+    this.columns = columns.sort((col_a, col_b) => col_a.position - col_b.position);
+  }
+
+  get foreignConstraints(): ReferenceConstraint[] {
+    return this.columns
+      .map((col) => col.foreignConstraints)
+      .reduce((prev, fks) => {
+        prev.push(...fks);
+        return prev;
+      }, []);
+  }
+
+  find(columnName: string): DbColumn | undefined {
+    return this.columns.find((c) => c.name === columnName);
   }
 
   @action

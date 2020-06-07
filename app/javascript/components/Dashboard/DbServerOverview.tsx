@@ -7,6 +7,7 @@ import { TempDbServer, TempDbServerRole } from '../../models/TempDbServer';
 import { action, computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import Tooltip from '../../shared/Tooltip';
+import SchemaQueryStore from '../../stores/schema_query_store';
 
 interface Props {
   dbConnection: DbServer;
@@ -16,9 +17,10 @@ interface Props {
 interface InjectedProps extends Props {
   dbServerStore: DbServerStore;
   routerStore: RouterStore;
+  schemaQueryStore: SchemaQueryStore;
 }
 
-@inject('dbServerStore', 'routerStore')
+@inject('dbServerStore', 'routerStore', 'schemaQueryStore')
 @observer
 export default class DbServerOverview extends React.Component<Props> {
   get injected() {
@@ -74,6 +76,7 @@ export default class DbServerOverview extends React.Component<Props> {
               const temp = new TempDbServer(
                 this.dbConnection.props,
                 this.injected.dbServerStore,
+                this.injected.schemaQueryStore,
                 TempDbServerRole.Update,
                 this.dbConnection.cancelToken
               );

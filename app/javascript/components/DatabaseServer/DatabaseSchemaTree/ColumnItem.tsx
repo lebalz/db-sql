@@ -9,6 +9,7 @@ import { SqlTypeMetadata } from '../../../api/db_server';
 
 interface Props {
   column: DbColumn;
+  indentLevel: 2 | 3;
 }
 
 @observer
@@ -38,11 +39,12 @@ export default class ColumnItem extends React.Component<Props> {
   }
 
   render() {
-    const { column } = this.injected;
+    const { column, indentLevel } = this.injected;
     const highlighted = column.mark !== Mark.None;
     return (
       <div
         className="column-item"
+        style={{marginLeft: `${indentLevel}em`}}
         onMouseOver={() => this.onMouseOver(column)}
         onMouseOut={() => this.onMouseOut(column)}
       >
@@ -64,7 +66,6 @@ interface MetaProps {
 const SqlMetaData = ({ column }: MetaProps) => {
   const metaData = [
     { name: 'Default', value: column.default || undefined },
-    { name: 'Serial?', value: column.isSerial ? <Icon name="check circle" color="green" /> : undefined },
     {
       name: 'Primary Key?',
       value: column.isPrimaryKey ? <Icon name="check circle" color="green" /> : undefined

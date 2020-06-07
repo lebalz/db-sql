@@ -8,23 +8,36 @@ end
 #
 # Table name: db_servers
 #
-#  id                    :uuid             not null, primary key
-#  user_id               :uuid
-#  name                  :string
-#  db_type               :integer
-#  host                  :string
-#  port                  :integer
-#  password_encrypted    :string
-#  initialization_vector :string
-#  initial_db            :string
-#  initial_table        :string
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
-#  username              :string
+#  id                       :uuid             not null, primary key
+#  db_type                  :integer
+#  error_query_count        :integer          default(0)
+#  host                     :string
+#  initial_db               :string
+#  initial_table            :string
+#  initialization_vector    :string
+#  name                     :string
+#  password_encrypted       :string
+#  port                     :integer
+#  query_count              :integer          default(0)
+#  username                 :string
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  database_schema_query_id :uuid
+#  user_id                  :uuid
+#
+# Indexes
+#
+#  index_db_servers_on_database_schema_query_id  (database_schema_query_id)
+#  index_db_servers_on_user_id                   (user_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (database_schema_query_id => database_schema_queries.id)
+#  fk_rails_...  (user_id => users.id)
 #
 
 class DbServer < ApplicationRecord
-  DB_TYPES = %i[psql mysql mariadb sqlite].freeze
+  DB_TYPES = %i[psql mysql mariadb].freeze
   enum db_type: DbServer::DB_TYPES
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
@@ -40,8 +53,7 @@ class DbServer < ApplicationRecord
   DEFAULT_AR_DB_ADAPTER = {
     'psql' => 'postgresql',
     'mysql' => 'mysql2',
-    'sqlite' => 'sqlite3',
-    'mariadb' => 'mariadb'
+    'mariadb' => 'mysql2'
   }.freeze
 
   DEFAULT_DATABASE_NAME = {
@@ -51,6 +63,9 @@ class DbServer < ApplicationRecord
   }.freeze
 
   belongs_to :user, touch: true
+  belongs_to :database_schema_query
+
+  before_validation :set_database_schema_query, on: :create
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [String] cleartext password for the db connection
@@ -259,71 +274,131 @@ class DbServer < ApplicationRecord
   # @return [Hash] full table structure
   # @example
   # {
-  #   name: "swissski",
-  #   db_server_id: "fd878c8a-0953-4165-add8-c37283e98900",
-  #   tables: [
+  #   name: 'swissski',
+  #   db_server_id: 'fd878c8a-0953-4165-add8-c37283e98900',
+  #   schemas: [
   #     {
-  #       "name": "athletes",
-  #       "columns": [
+  #       name: 'public',
+  #       tables: [
   #         {
-  #           "name": "id",
-  #           "null": false,
-  #           "serial": false,
-  #           "sql_type_metadata": {
-  #             "limit": 4,
-  #             "sql_type": "int(11)",
-  #             "type": "integer"
-  #           },
-  #           "is_primary": true
+  #           name: 'athletes'
+  #           columns: [
+  #             {
+  #               name: 'id',
+  #               null: false,
+  #               is_primary: true,
+  #               is_foreign: false,
+  #               default: 'auto_increment',
+  #               sql_type_metadata: {
+  #                 type: 'int',
+  #                 limit: nil,
+  #                 precision: 10,
+  #                 scale: nil,
+  #                 sql_type: 'int(4)'
+  #               },
+  #               constraints: [
+  #                 {
+  #                   name: '',
+  #                   database: '',
+  #                   schema: '',
+  #                   table: '',
+  #                   column: ''
+  #                 }
+  #               ]
+  #             },
+  #             ...
+  #           ]
   #         },
   #         ...
-  #       ],
-  #       "indices": [],
-  #       "foreign_keys": []
-  #     }
+  #       ]
+  #     },
+  #     ...
   #   ]
   # }
   def full_database(key:, database_name:)
-    reuse_connection do
-      table_names = table_names(key: key, database_name: database_name)
-      tables = table_names.map do |table_name|
-        pkeys = primary_key_names(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        )
-        cols = columns(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        ).map do |column|
-          column.merge(
-            is_primary: pkeys.include?(column[:name])
-          )
-        end
-        fkeys = foreign_keys(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        )
-        indices = indexes(
-          key: key,
-          database_name: database_name,
-          table_name: table_name
-        )
-        {
-          name: table_name,
-          columns: cols,
-          indices: indices,
-          foreign_keys: fkeys
-        }
+    result = exec_query(key: key, database_name: database_name) do
+      database_schema_query.to_s
+    end
+
+    columns = result.columns.map(&:downcase)
+
+    schema_idx = columns.index('schema')
+    table_idx = columns.index('table')
+    column_idx = columns.index('column')
+    sql_type_idx = columns.index('sql_type')
+    position_idx = columns.index('position')
+    limit_idx = columns.index('limit')
+    precision_idx = columns.index('precision')
+    scale_idx = columns.index('scale')
+    type_idx = columns.index('type')
+    default_idx = columns.index('default')
+    is_nullable_idx = columns.index('is_nullable')
+    is_primary_idx = columns.index('is_primary')
+    is_foreign_idx = columns.index('is_foreign')
+    constraint_idx = columns.index('constraint')
+    ref_database_idx = columns.index('referenced_database')
+    ref_schema_idx = columns.index('referenced_schema')
+    ref_table_idx = columns.index('referenced_table')
+    ref_column_idx = columns.index('referenced_column')
+
+    rows = result.rows
+    schemas = {}
+    rows.each do |row|
+      schemas[row[schema_idx]] ||= {}
+      schemas[row[schema_idx]][row[table_idx]] ||= {}
+      if schemas[row[schema_idx]][row[table_idx]][row[column_idx]].nil?
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]] = {
+          name: row[column_idx],
+          position: row[position_idx],
+          null: row[is_nullable_idx] == 'YES',
+          is_primary: row[is_primary_idx] == 'YES',
+          is_foreign: row[is_foreign_idx] == 'YES',
+          default: row[default_idx],
+          sql_type_metadata: {
+            type: row[type_idx],
+            limit: row[limit_idx],
+            precision: row[precision_idx],
+            scale: row[scale_idx],
+            sql_type: row[sql_type_idx]
+          }.compact,
+          constraints: [
+            row[constraint_idx].nil? ? nil : {
+              name: row[constraint_idx],
+              database: row[ref_database_idx],
+              schema: row[ref_schema_idx],
+              table: row[ref_table_idx],
+              column: row[ref_column_idx]
+            }.compact
+          ].compact
+        }.compact
+      elsif !row[constraint_idx].nil?
+        schemas[row[schema_idx]][row[table_idx]][row[column_idx]][:constraints] << {
+          name: row[constraint_idx],
+          database: row[ref_database_idx],
+          schema: row[ref_schema_idx],
+          table: row[ref_table_idx],
+          column: row[ref_column_idx]
+        }.compact
       end
-      {
-        name: database_name,
-        db_server_id: id,
-        tables: tables
+    end
+
+    # bring the schema in a grape api ready format
+    db_schemas = schemas.reduce([]) do |s_memo, (schema, tables)|
+      s_memo << {
+        name: schema,
+        tables: tables.reduce([]) do |t_memo, (table, cols)|
+          t_memo << {
+            name: table,
+            columns: cols.values
+          }
+        end
       }
     end
+    {
+      name: database_name,
+      db_server_id: id,
+      schemas: db_schemas
+    }
   end
 
   # @param key [String] base64 encoded crypto key from the user
@@ -482,6 +557,12 @@ class DbServer < ApplicationRecord
     else
       PSQL_CONNECTION_OPTIONS
     end
+  end
+
+  def set_database_schema_query
+    return unless database_schema_query.nil?
+
+    self.database_schema_query = DatabaseSchemaQuery.default(db_type)
   end
 
 end

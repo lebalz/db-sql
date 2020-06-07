@@ -6,7 +6,9 @@ module Resources
       def db_server
         db_server = DbServer.find(params[:id])
         error!('Db server not found', 302) unless db_server
-
+        unless db_server.user_id == current_user.id
+          error!('Invalid permission for this db server', 401)
+        end
         db_server
       end
 
@@ -31,7 +33,7 @@ module Resources
           :db_type,
           type: Symbol,
           default: :psql,
-          values: %i[psql mysql mariadb sqlite],
+          values: %i[psql mysql mariadb],
           desc: 'db type'
         )
         requires(:host, type: String, desc: 'host')
@@ -85,7 +87,7 @@ module Resources
             optional(
               :db_type,
               type: Symbol,
-              values: %i[psql mysql mariadb sqlite],
+              values: %i[psql mysql mariadb],
               desc: 'db type'
             )
             optional(:host, type: String, desc: 'host')
@@ -94,6 +96,7 @@ module Resources
             optional(:password, type: String, desc: 'db password')
             optional(:initial_db, type: String, desc: 'initial database')
             optional(:initial_table, type: String, desc: 'initial table')
+            optional(:database_schema_query_id, type: String, desc: 'id of the database schema query')
           end
         end
         put do
@@ -115,6 +118,7 @@ module Resources
               :host,
               :port,
               :username,
+              :database_schema_query_id,
               :initial_db,
               :initial_table
             )
@@ -148,8 +152,9 @@ module Resources
 
           desc 'Get full database structure'
           get do
+            full_db = db_server.full_database(key: crypto_key, database_name: params[:database_name])
             present(
-              db_server.full_database(key: crypto_key, database_name: params[:database_name]),
+              full_db,
               with: Entities::FullDatabase
             )
           end
@@ -279,7 +284,7 @@ module Resources
                 columns.map do |col|
                   col.merge({ is_primary: primary_keys.include?(col[:name]) })
                 end,
-                with: Entities::Column
+                with: Entities::RailsColumn
               )
             end
 
@@ -298,7 +303,7 @@ module Resources
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
-              ), with: Entities::ForeignKey
+              ), with: Entities::RailsForeignKey
             end
 
             desc "Get the table's indexes"
@@ -307,7 +312,7 @@ module Resources
                 key: crypto_key,
                 database_name: params[:database_name],
                 table_name: params[:table_name]
-              ), with: Entities::Index
+              ), with: Entities::RailsIndex
             end
           end
         end

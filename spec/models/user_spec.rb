@@ -4,16 +4,21 @@
 #
 # Table name: users
 #
-#  id                :uuid             not null, primary key
-#  email             :string
-#  password_digest   :string
-#  created_at        :datetime         not null
-#  updated_at        :datetime         not null
-#  login_count       :integer          default(0)
-#  role              :integer          default("user")
-#  activation_digest :string
-#  activated         :boolean          default(FALSE)
-#  activated_at      :datetime
+#  id                          :uuid             not null, primary key
+#  activated_at                :datetime
+#  activation_digest           :string
+#  email                       :string
+#  login_count                 :integer          default(0)
+#  password_digest             :string
+#  reset_password_digest       :string
+#  reset_password_mail_sent_at :datetime
+#  role                        :integer          default("user")
+#  created_at                  :datetime         not null
+#  updated_at                  :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_email  (email) UNIQUE
 #
 
 require_relative '../rails_helper'

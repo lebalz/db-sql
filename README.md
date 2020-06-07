@@ -111,10 +111,32 @@ will start swagger on [http://localhost:4000](http://localhost:4000).
 Run `bin/generate_docs`. This will generate the documentation of the rails models, located at `./doc/`.
 
 ## Testing
+Requirements:
+- [docker](https://docs.docker.com/engine/install/)
+- [docker-compose](https://docs.docker.com/compose/install/)
+
+Docker compose is for the integration tests to start mysql and psql databases with different versions each. [spec/docker-compose.yml](spec/docker-compose.yml) is used to start up the databases used within the specs. The [rails_helper.rb](spec/rails_helper.rb) is responsible to start and stop the containers for integration and feature tests.
 
 Run the tests with
+
 ```sh
 bundle exec rspec
+```
+
+The startup time can be reduced when the docker containers are not started and stopped on each test run. To skip the shutting down of the containers after the test, run
+
+```sh
+KEEP_DBS_RUNNING=1 bundle exec rspec
+```
+
+To start/stop the containers manually, run
+
+```sh
+# starting containers
+rake db:start_spec_dbs
+
+# stopping containers
+rake db:stop_spec_dbs
 ```
 
 ### Mails in Development

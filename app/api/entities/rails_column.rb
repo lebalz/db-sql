@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Entities
-  class ColumnSqlTypeMetadata < Grape::Entity
+  class RailsColumnSqlTypeMetadata < Grape::Entity
     with_options(expose_nil: false) do
       expose :limit
       expose :precision
@@ -10,7 +10,7 @@ module Entities
       expose :type
     end
   end
-  class Column < Grape::Entity
+  class RailsColumn < Grape::Entity
     with_options(expose_nil: false) do
       expose :name
       expose :collation
@@ -18,7 +18,7 @@ module Entities
       expose :default_function
       expose :null
       expose :serial
-      expose :sql_type_metadata, using: Entities::ColumnSqlTypeMetadata
+      expose :sql_type_metadata, using: Entities::RailsColumnSqlTypeMetadata
       expose :is_primary
     end
   end

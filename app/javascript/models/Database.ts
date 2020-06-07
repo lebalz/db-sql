@@ -1,27 +1,30 @@
 import { observable, computed, action } from 'mobx';
-import { Database as DatabaseProps } from '../api/db_server';
+import { Database as DatabaseProps, Column } from '../api/db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
 import DbTable from './DbTable';
 import Query from './Query';
+import DbSchema from './DbSchema';
+import DbColumn from './DbColumn';
 
 export default class Database {
   readonly dbServer: DbServer;
   readonly name: string;
   readonly dbServerId: string;
-  readonly tables: DbTable[];
+  readonly schemas: DbSchema[];
   queries = observable<Query>([]);
   @observable activeQueryId: number = 1;
 
   @observable show: boolean = false;
   @observable isLoading: boolean = false;
+  @observable loadError?: string;
 
   constructor(dbServer: DbServer, props: DatabaseProps) {
     this.dbServer = dbServer;
     this.addQuery();
     this.name = props.name;
     this.dbServerId = props.db_server_id;
-    this.tables = props.tables.map((table) => new DbTable(this, table));
+    this.schemas = props.schemas.map((schema) => new DbSchema(this, schema));
     this.connectForeignKeys();
   }
 
@@ -30,9 +33,14 @@ export default class Database {
     this.activeQueryId = id;
   }
 
+  @computed
+  get hasMultipleSchemas(): boolean {
+    return this.schemas.length > 1;
+  }
+
   @action
   replaceQuery(query: Query) {
-    const oldQuery = this.queries.find(q => q.id === query.id);
+    const oldQuery = this.queries.find((q) => q.id === query.id);
     if (oldQuery) {
       this.queries.remove(oldQuery);
     }
@@ -69,6 +77,21 @@ export default class Database {
     return this.queries.find((query) => query.id === this.activeQueryId);
   }
 
+  find(schemaName: string, tableName: string, columnName: string): DbColumn;
+  find(schemaName: string, tableName: string, columnName?: string): DbTable;
+  find(schemaName: string, tableName?: string, columnName?: string): DbSchema;
+  find(
+    schemaName: string,
+    tableName?: string,
+    columnName?: string
+  ): DbSchema | DbTable | DbColumn | undefined {
+    const dbSchema = this.schemas.find((s) => s.name === schemaName);
+    if (!tableName || !dbSchema) {
+      return dbSchema;
+    }
+    return dbSchema.find(tableName, columnName);
+  }
+
   @action
   addQuery() {
     const query = new Query(this, this.nextQueryId);
@@ -77,7 +100,7 @@ export default class Database {
   }
 
   table(name: string): DbTable | undefined {
-    return this.tables.find((table) => table.name === name);
+    return this.schemas[0].tables.find((table) => table.name === name);
   }
 
   @action
@@ -119,22 +142,17 @@ export default class Database {
   }
 
   private connectForeignKeys() {
-    this.tables.forEach((table) => {
-      table.foreignKeys.forEach((fkey) => {
-        const fromColumn = table.column(fkey.options.column);
-        const toTable = this.table(fkey.to_table);
-        const toColumn = toTable?.column(fkey.options.primary_key);
-        if (!toColumn || !toTable || !fromColumn) {
-          return;
-        }
-        fromColumn.references = toColumn;
-        toColumn.referencedBy.push(fromColumn);
+    this.schemas.forEach((schema) => {
+      schema.tables.forEach((table) => {
+        table.columns.forEach((column) => {
+          column.linkForeignKeys(this);
+        });
       });
     });
   }
 
   @computed
   private get nextQueryId(): number {
-    return this.queries.reduce((maxId, query) => ((maxId > query.id) ? maxId : query.id), 0) + 1;
+    return this.queries.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
   }
 }

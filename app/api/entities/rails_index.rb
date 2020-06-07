@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Entities
-  class Index < Grape::Entity
+  class RailsIndex < Grape::Entity
     expose :table
     expose :name
     expose :unique

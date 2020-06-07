@@ -7,16 +7,22 @@ import { Mark } from '../../../models/DbColumn';
 
 interface DatabaseItemProps {
   table: DbTable;
+  indentLevel: 1 | 2;
 }
 
 @observer
 export default class TableItem extends React.Component<DatabaseItemProps> {
   render() {
-    const { table } = this.props;
+    const { table, indentLevel } = this.props;
     const highlighted = table.mark !== Mark.None;
 
     return (
-      <List.Item as="a" className="table-item" onClick={(e) => table.toggleShow()}>
+      <List.Item
+        as="a"
+        className="table-item"
+        style={{ marginLeft: `${indentLevel}em` }}
+        onClick={(e) => table.toggleShow()}
+      >
         <List.Content>
           <div style={{ display: 'flex' }}>
             <Icon fitted name="table" color={highlighted ? 'yellow' : 'grey'} />

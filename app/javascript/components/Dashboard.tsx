@@ -11,11 +11,13 @@ import _ from 'lodash';
 import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
 import { DbServer } from '../api/db_server';
 import { DbType } from '../models/DbServer';
+import SchemaQueryStore from '../stores/schema_query_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   dbServerStore: DbServerStore;
+  schemaQueryStore: SchemaQueryStore;
 }
 
 const DEFAULT_DB_SERVER: DbServer = {
@@ -28,10 +30,11 @@ const DEFAULT_DB_SERVER: DbServer = {
   port: 5432,
   username: '',
   query_count: 0,
+  database_schema_query_id: '',
   error_query_count: 0
 };
 
-@inject('sessionStore', 'routerStore', 'dbServerStore')
+@inject('sessionStore', 'routerStore', 'dbServerStore', 'schemaQueryStore')
 @observer
 export default class Dashboard extends React.Component {
   get injected() {
@@ -79,6 +82,7 @@ export default class Dashboard extends React.Component {
               const temp = new TempDbServer(
                 DEFAULT_DB_SERVER,
                 this.injected.dbServerStore,
+                this.injected.schemaQueryStore,
                 TempDbServerRole.Create,
                 this.injected.dbServerStore.cancelToken
               );

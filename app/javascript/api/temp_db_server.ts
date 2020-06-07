@@ -11,6 +11,7 @@ export interface DbServer {
   initial_db?: string;
   initial_table?: string;
   password: string;
+  database_schema_query_id?: string;
 }
 
 export interface DatabaseName {

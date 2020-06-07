@@ -2,7 +2,14 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 import { Mark } from '../../../models/DbColumn';
-import { ItemKind, TreeItem, DbColumnItem, DbTableItem } from './DatabaseSchemaTree';
+import {
+  ItemKind,
+  TreeItem,
+  DbColumnItem,
+  DbTableItem,
+  DbSchemaItem,
+  LINKABLE_ITEMS
+} from './DatabaseSchemaTree';
 import { computed } from 'mobx';
 
 type Line = [number, number, number, number];
@@ -11,29 +18,31 @@ interface Props {
   menuItems: TreeItem[];
 }
 
+type LinkableItem = DbTableItem | DbColumnItem | DbSchemaItem;
+
 @observer
 class ForeignColumnLink extends React.Component<Props> {
   @computed
-  get linkableItems(): (DbTableItem | DbColumnItem)[] {
-    return this.props.menuItems.filter(
-      (item) => item.kind === ItemKind.Column || item.kind === ItemKind.Table
-    ) as (DbTableItem | DbColumnItem)[];
+  get linkableItems(): LinkableItem[] {
+    return this.props.menuItems.filter((item) => LINKABLE_ITEMS.includes(item.kind)) as LinkableItem[];
   }
+
   render() {
     const tos = this.linkableItems.filter((col) => col.value.mark === Mark.To);
-    const svgWidth = 36;
     const svgHeight = this.props.menuItems.length * 22;
-    if (tos.length < 1) {
-      return <svg height={svgHeight} width={svgWidth} />;
+    if (tos.length === 0) {
+      return <svg height={svgHeight} width={0} />;
     }
-    const to = tos[tos.length - 1] as DbColumnItem | DbTableItem;
+    const to = tos[tos.length - 1] as LinkableItem;
     const from = this.linkableItems.filter((item) => {
-      if (item.kind === ItemKind.Table && item.value.show) {
+      if (item.kind !== ItemKind.Column && item.value.show) {
         return false;
       }
       return item.value.mark === Mark.From;
-    }) as (DbColumnItem | DbTableItem)[];
+    }) as LinkableItem[];
 
+    const maxIndent = [...from, ...tos].reduce((max, v) => (max > v.indentLevel ? max : v.indentLevel), 2);
+    const svgWidth = maxIndent * 18;
     return (
       <svg height={svgHeight} width={svgWidth}>
         <defs>
@@ -58,8 +67,8 @@ class ForeignColumnLink extends React.Component<Props> {
 }
 
 interface LineProps {
-  from: DbColumnItem | DbTableItem;
-  to: DbColumnItem | DbTableItem;
+  from: DbColumnItem | DbTableItem | DbSchemaItem;
+  to: DbColumnItem | DbTableItem | DbSchemaItem;
 }
 
 const FROM_X_SHIFT = 18;
@@ -68,17 +77,17 @@ const TREE_ITEM_HEIGHT = 22;
 
 const Line = (props: LineProps) => {
   const { from, to } = props;
-  const fromX = from.kind === ItemKind.Column ? FROM_X_SHIFT * 2 : FROM_X_SHIFT;
-  const toX = to.kind === ItemKind.Column ? 2 * TO_X_SHIFT : TO_X_SHIFT;
+  const fromX = FROM_X_SHIFT * from.indentLevel;
+  const toX = to.indentLevel * TO_X_SHIFT;
   const fromY = TREE_ITEM_HEIGHT * from.treePosition + TREE_ITEM_HEIGHT / 2;
   const toY = TREE_ITEM_HEIGHT * to.treePosition + TREE_ITEM_HEIGHT / 2;
-  const dY = Math.sign(toY - fromY) * 0;
+  const shiftFactor = Math.max(to.indentLevel, from.indentLevel) > 2 ? 2 : 1;
 
   return (
     <path
-      d={`M${fromX} ${fromY} C ${fromX - FROM_X_SHIFT} ${fromY + dY}, ${
-        toX - FROM_X_SHIFT
-      } ${toY}, ${toX} ${toY}`}
+      d={`M${fromX} ${fromY} C ${fromX - shiftFactor * FROM_X_SHIFT} ${fromY},
+           ${toX - shiftFactor * FROM_X_SHIFT} ${toY},
+           ${toX} ${toY}`}
       stroke="red"
       strokeWidth="1"
       fill="transparent"

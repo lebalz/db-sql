@@ -1,30 +1,46 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
 import { DbType } from '../../models/DbServer';
-import { Label, Button, Modal, Form, Grid, DropdownProps, Message, Icon, Popup } from 'semantic-ui-react';
+import {
+  Label,
+  Button,
+  Modal,
+  Form,
+  Grid,
+  DropdownProps,
+  Message,
+  Icon,
+  Popup,
+  Accordion
+} from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
-import { computed, reaction, action } from 'mobx';
+import { computed, reaction, action, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
 import { ApiRequestState } from '../../stores/session_store';
 import { TempDbServerRole, TempDbServer as TempDbServerModel } from '../../models/TempDbServer';
 import { REST } from '../../declarations/REST';
+import SchemaQueryStore from '../../stores/schema_query_store';
+import SchemaQuerySelection from './SchemaQuerySelection';
 
 interface InjectedProps {
   dbServerStore: DbServerStore;
+  schemaQueryStore: SchemaQueryStore;
 }
 
-@inject('dbServerStore')
+@inject('dbServerStore', 'schemaQueryStore')
 @observer
 export class TempDbServer extends React.Component {
   state = {
     showPassword: false,
     showDeleteConfirm: true,
-    isOpen: false
+    isOpen: false,
+    showAdvanced: false
   };
+  reactionDisposer: IReactionDisposer;
 
   constructor(props: any) {
     super(props);
-    reaction(
+    this.reactionDisposer = reaction(
       () => this.injected.dbServerStore.saveState,
       (state) => {
         if (state === ApiRequestState.Success) {
@@ -32,6 +48,10 @@ export class TempDbServer extends React.Component {
         }
       }
     );
+  }
+
+  componentWillUnmount() {
+    this.reactionDisposer();
   }
 
   get injected() {
@@ -66,7 +86,7 @@ export class TempDbServer extends React.Component {
   }
 
   onClose() {
-    this.setState({ showPassword: false });
+    this.setState({ showPassword: false, showAdvanced: false });
     this.injected.dbServerStore.setTempDbServer();
   }
 
@@ -95,6 +115,7 @@ export class TempDbServer extends React.Component {
     const dup = new TempDbServerModel(
       this.dbServer.props,
       this.injected.dbServerStore,
+      this.injected.schemaQueryStore,
       TempDbServerRole.Create,
       this.dbServer.cancelToken
     );
@@ -137,6 +158,11 @@ export class TempDbServer extends React.Component {
       </Message>
     );
   }
+  @action
+  setDbType(dbType: DbType) {
+    this.dbServer.dbType = dbType;
+    this.injected.schemaQueryStore.setSelectedDbType(dbType);
+  }
 
   render() {
     const name = this.dbServer ? this.dbServer.name : '';
@@ -169,12 +195,12 @@ export class TempDbServer extends React.Component {
                       <Button
                         content="PostgreSQL"
                         active={this.dbServer.dbType === DbType.Psql}
-                        onClick={() => (this.dbServer.dbType = DbType.Psql)}
+                        onClick={() => this.setDbType(DbType.Psql)}
                       />
                       <Button
                         content="MySql"
                         active={this.dbServer.dbType === DbType.MySql}
-                        onClick={() => (this.dbServer.dbType = DbType.MySql)}
+                        onClick={() => this.setDbType(DbType.MySql)}
                       />
                     </Button.Group>
                   </div>
@@ -281,6 +307,18 @@ export class TempDbServer extends React.Component {
                 </Grid.Column>
               </Grid.Row>
             </Grid>
+            <Accordion style={{ marginTop: '1em' }}>
+              <Accordion.Title
+                active={this.state.showAdvanced}
+                onClick={() => this.setState({ showAdvanced: !this.state.showAdvanced })}
+              >
+                <Icon name="dropdown" />
+                Advanced
+              </Accordion.Title>
+              <Accordion.Content active={this.state.showAdvanced}>
+                <SchemaQuerySelection dbServer={this.dbServer} />
+              </Accordion.Content>
+            </Accordion>
           </Modal.Content>
         )}
         {this.dbServer && (
@@ -291,7 +329,10 @@ export class TempDbServer extends React.Component {
               content="Test"
               color="blue"
               loading={this.dbServer.testConnectionState === ApiRequestState.Waiting}
-              onClick={() => this.dbServer.testConnection()}
+              onClick={() => {
+                this.dbServer.testConnection.cancel();
+                this.dbServer.testConnection();
+              }}
             />
             <Button
               icon="copy"

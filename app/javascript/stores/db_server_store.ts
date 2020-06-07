@@ -133,7 +133,8 @@ class DbServerStore implements Store {
     dbServers(this.root.cancelToken)
       .then(({ data }) => {
         const dbServers = _.sortBy(data, ['name']).map(
-          (dbConnection) => new DbServer(dbConnection, this, this.root.cancelToken)
+          (dbConnection) =>
+            new DbServer(dbConnection, this, this.root.schemaQueryStore, this.root.cancelToken)
         );
         this.state.dbServers.replace(dbServers);
         this.state.loadState = LoadState.Success;
@@ -207,6 +208,9 @@ class DbServerStore implements Store {
     if (!dbServer) {
       return;
     }
+    const placeholderDb = new Database(dbServer, { db_server_id: dbServerId, name: dbName, schemas: [] });
+    placeholderDb.isLoading = true;
+    this.state.databases.get(dbServerId)?.set(dbName, placeholderDb);
 
     database(dbServerId, dbName, this.cancelToken)
       .then(({ data }) => {
@@ -222,9 +226,9 @@ class DbServerStore implements Store {
           }
         }
       })
-      .catch((e) => {
-        this.state.databases.delete(dbServerId);
-        this.state.activeDatabase.delete(dbServerId);
+      .catch((err) => {
+        placeholderDb.isLoading = false;
+        placeholderDb.loadError = err.message;
       });
   }
 
@@ -319,6 +323,11 @@ class DbServerStore implements Store {
     return this.dbServer(this.activeDbServerId);
   }
 
+  @action
+  routeToDbServer(id: string) {
+    this.root.routing.replace(`/connections/${id}`);
+  }
+
   setActiveDbServer(id: string) {
     this.state.activeDbServerId = id;
   }
@@ -358,14 +367,18 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
-  @action updateDbServer(dbConnection: TempDbServer) {
+  @action updateDbServer(dbConnection: DbServer): Promise<void> {
     this.state.saveState = ApiRequestState.Waiting;
-    updateDbServer(dbConnection.params, this.root.cancelToken)
+    return updateDbServer(dbConnection.params, this.root.cancelToken)
       .then(() => {
         const connection = this.state.dbServers.find((db) => db.id === dbConnection.id);
-        if (!connection) return;
+        if (!connection) {
+          return;
+        }
         this.state.dbServers.remove(connection);
-        this.state.dbServers.push(new DbServer(dbConnection.props, this, this.root.cancelToken));
+        this.state.dbServers.push(
+          new DbServer(dbConnection.props, this, this.root.schemaQueryStore, this.root.cancelToken)
+        );
         this.state.saveState = ApiRequestState.Success;
       })
       .catch(() => {
@@ -377,7 +390,9 @@ class DbServerStore implements Store {
     this.state.saveState = ApiRequestState.Waiting;
     createDbServer(dbConnection.tempDbPorps, this.root.cancelToken)
       .then(({ data }) => {
-        this.state.dbServers.push(new DbServer(data, this, this.root.cancelToken));
+        this.state.dbServers.push(
+          new DbServer(data, this, this.root.schemaQueryStore, this.root.cancelToken)
+        );
         this.state.saveState = ApiRequestState.Success;
       })
       .catch(() => {
@@ -411,6 +426,9 @@ class DbServerStore implements Store {
   @action
   setTempDbServer(tempDbServer?: TempDbServer) {
     this.state.tempDbServer = tempDbServer;
+    if (tempDbServer) {
+      this.root.schemaQueryStore.setSelectedDbType(tempDbServer.dbType);
+    }
   }
 }
 

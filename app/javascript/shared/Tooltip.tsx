@@ -1,5 +1,5 @@
 import React from 'react';
-import Popup from 'semantic-ui-react/dist/commonjs/modules/Popup/Popup';
+import Popup, { StrictPopupProps } from 'semantic-ui-react/dist/commonjs/modules/Popup/Popup';
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic';
 import { PopupContentProps } from 'semantic-ui-react';
 
@@ -18,7 +18,10 @@ interface Props {
   content: SemanticShorthandItem<PopupContentProps>;
   position?: PopupPosition;
   disabled?: boolean;
+  delayed?: boolean;
+  popupProps?: StrictPopupProps;
 }
+const DISPLAY_DELAY = 400;
 
 class Tooltip extends React.Component<Props> {
   render() {
@@ -32,6 +35,8 @@ class Tooltip extends React.Component<Props> {
         content={this.props.content}
         popperModifiers={{ preventOverflow: { boundariesElement: 'offsetParent' } }}
         position={this.props.position}
+        mouseEnterDelay={this.props.delayed ? DISPLAY_DELAY : 0}
+        {...this.props.popupProps}
       />
     );
   }

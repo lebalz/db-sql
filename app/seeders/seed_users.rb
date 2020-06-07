@@ -6,14 +6,14 @@ class SeedUsers
       email: 'test@user.ch',
       password: 'asdfasdf',
       password_confirmation: 'asdfasdf',
-      activated: DateTime.now - 2.days
+      role: 'admin',
+      activated_at: DateTime.now - 2.days
     )
     User.create!(
       email: 'admin@user.ch',
       password: 'asdfasdf',
       password_confirmation: 'asdfasdf',
       role: 'admin',
-      activated: true,
       activated_at: DateTime.now
     )
   end

@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+  postgres9:
+    image: postgres:9.3
+    environment:
+      - POSTGRES_PASSWORD=safe-db-password
+    ports:
+      - 5009:5432
+    volumes:
+      - ./fixtures/database/psql:/docker-entrypoint-initdb.d
+  postgres10:
+    image: postgres:10
+    environment:
+      - POSTGRES_PASSWORD=safe-db-password
+    ports:
+      - 5010:5432
+    volumes:
+      - ./fixtures/database/psql:/docker-entrypoint-initdb.d
+  postgres11:
+    image: postgres:11
+    environment:
+      - POSTGRES_PASSWORD=safe-db-password
+    ports:
+      - 5011:5432
+    volumes:
+      - ./fixtures/database/psql:/docker-entrypoint-initdb.d
+  postgres12:
+    image: postgres:12
+    environment:
+      - POSTGRES_PASSWORD=safe-db-password
+    ports:
+      - 5012:5432
+    volumes:
+      - ./fixtures/database/psql:/docker-entrypoint-initdb.d
+  mysql5_6:
+    image: mysql:5.6
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: safe-db-password
+    ports:
+      - 3356:3306
+    volumes:
+      - ./fixtures/database/mysql:/docker-entrypoint-initdb.d
+  mysql5_7:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: safe-db-password
+    ports:
+      - 3357:3306
+    volumes:
+      - ./fixtures/database/mysql:/docker-entrypoint-initdb.d
+  mysql8:
+    image: mysql:8
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: safe-db-password
+    ports:
+      - 3380:3306
+    volumes:
+      - ./fixtures/database/mysql:/docker-entrypoint-initdb.d
+      - ./fixtures/database/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+  mariadb10_5:
+    image: mariadb:10.5.3
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: safe-db-password
+    ports:
+      - 3410:3306
+    volumes:
+      - ./fixtures/database/mysql:/docker-entrypoint-initdb.d
+      - ./fixtures/database/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      

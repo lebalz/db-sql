@@ -16,8 +16,38 @@ class SeedDbServers
       username: Rails.configuration.database_configuration[Rails.env]['username'],
       password_encrypted: encrypted_password[:encrypted_password],
       initial_db: ActiveRecord::Base.connection_config[:database],
-      user: user
+      user: user,
+      database_schema_query: DatabaseSchemaQuery.default(:psql)
     )
+
+    encrypted_password = DbServer.encrypt(
+      key: user.crypto_key('asdfasdf'),
+      db_password: 'safe-db-password'
+    )
+    # setup test db instances from docker-compose.yml
+    [
+      { db_type: :psql, username: 'postgres', port: 5009, version: '9.3' },
+      { db_type: :psql, username: 'postgres', port: 5010, version: '10' },
+      { db_type: :psql, username: 'postgres', port: 5011, version: '11' },
+      { db_type: :psql, username: 'postgres', port: 5012, version: '12' },
+      { db_type: :mysql, username: 'root', port: 3356, version: '5.6' },
+      { db_type: :mysql, username: 'root', port: 3357, version: '5.7' },
+      { db_type: :mysql, username: 'root', port: 3380, version: '8.0' },
+      { db_type: :mysql, username: 'root', port: 3410, version: '10.5.3' } # using mariadb
+    ].each do |config|
+      DbServer.create!(
+        name: "spec v#{config[:version]}",
+        db_type: config[:db_type],
+        host: '127.0.0.1',
+        port: config[:port],
+        initialization_vector: encrypted_password[:initialization_vector],
+        username: config[:username],
+        password_encrypted: encrypted_password[:encrypted_password],
+        initial_db: 'ninja_turtles_db',
+        user: user,
+        database_schema_query: DatabaseSchemaQuery.default(config[:db_type])
+      )
+    end
     return unless File.exist? Rails.root.join('db_servers.yaml')
 
     db_servers = YAML.load_file(Rails.root.join('db_servers.yaml'))
@@ -40,7 +70,8 @@ class SeedDbServers
         password_encrypted: encrypted_password[:encrypted_password],
         initial_db: db_server['db_initial_db'],
         initial_table: db_server['db_initial_table'],
-        user: user
+        user: user,
+        database_schema_query: DatabaseSchemaQuery.default(db_server['db_type'])
       )
     end
   end
