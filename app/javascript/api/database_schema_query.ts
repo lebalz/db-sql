@@ -8,6 +8,7 @@ export enum Changeable {
   Description = 'description',
   IsPrivate = 'is_private',
 }
+
 export interface ChangeableProps {
   [Changeable.Query]: string;
   [Changeable.Name]: string;

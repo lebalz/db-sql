@@ -29,6 +29,7 @@ export interface Constraint {
   name: string;
   schema?: string;
 }
+
 export interface ReferenceConstraint extends Constraint {
   schema: string;
   table: string;
@@ -153,6 +154,7 @@ export function updateDbServer(connection: UpdateProps, cancelToken: CancelToken
     { cancelToken: cancelToken.token }
   );
 }
+
 export function createDbServer(
   connection: CreateProps,
   cancelToken: CancelTokenSource
