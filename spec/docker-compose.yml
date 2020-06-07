@@ -61,4 +61,15 @@ services:
     volumes:
       - ./fixtures/database/mysql:/docker-entrypoint-initdb.d
       - ./fixtures/database/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+  mariadb10_5:
+    image: mariadb:10.5.3
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: safe-db-password
+    ports:
+      - 3410:3306
+    volumes:
+      - ./fixtures/database/mysql:/docker-entrypoint-initdb.d
+      - ./fixtures/database/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
       

@@ -39,7 +39,7 @@ class DatabaseSchemaQuery < ApplicationRecord
     DatabaseSchemaQuery.where(db_type: db_type, is_default: true).first
   end
 
-  # @param db_type [DbServer::DB_TYPES], e.g :mysql or :psql
+  # @param db_type [DbServer::DB_TYPES], e.g :mysql, :mariadb or :psql
   # @param user [User]
   # @return [DatabaseSchemaQuery::ActiveRecord_Relation]
   def self.available(db_type, user)

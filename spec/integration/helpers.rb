@@ -38,7 +38,8 @@ module Helpers
     { db_type: :psql, username: 'postgres', port: 5012, version: 'p12' },
     { db_type: :mysql, username: 'root', port: 3356, version: 'm5.6' },
     { db_type: :mysql, username: 'root', port: 3357, version: 'm5.7' },
-    { db_type: :mysql, username: 'root', port: 3380, version: 'm8' }
+    { db_type: :mysql, username: 'root', port: 3380, version: 'm8' },
+    { db_type: :mariadb, username: 'root', port: 3410, version: 'mariadb_10.5.3' }
   ].freeze
 
   def db_server_for(version)

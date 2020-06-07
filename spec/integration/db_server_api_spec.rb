@@ -333,7 +333,7 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json[0]["result"]).to be_nil
         if @db_server.psql?
           expect(json[0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
-        elsif @db_server.mysql?
+        elsif @db_server.mysql? || @db_server.mariadb?
           expect(json[0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
         end
         expect(json[0]["time"]).to be > 0
@@ -714,6 +714,16 @@ RSpec.describe "API::Resources::DbServer" do
   describe 'with mysql 8' do
     before(:all) do
       config_for(db_version: 'm8')
+    end
+    after(:all) do
+      @db_server.destroy!
+    end
+    include_examples 'common database specs'
+  end
+
+  describe 'with mariadb 10.5.3' do
+    before(:all) do
+      config_for(db_version: 'mariadb_10.5.3')
     end
     after(:all) do
       @db_server.destroy!

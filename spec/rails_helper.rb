@@ -52,10 +52,28 @@ RSpec.configure do |config|
     DatabaseCleaner.clean_with(:transaction)
 
     if DatabaseSchemaQuery.default(:psql).nil?
-      FactoryBot.create(:database_schema_query, db_type: :psql, default: true)
+      FactoryBot.create(
+        :database_schema_query,
+        db_type: :psql,
+        is_default: true,
+        name: 'psql'
+      )
     end
     if DatabaseSchemaQuery.default(:mysql).nil?
-      FactoryBot.create(:database_schema_query, db_type: :mysql, default: true)
+      FactoryBot.create(
+        :database_schema_query,
+        db_type: :mysql,
+        is_default: true,
+        name: 'mysql'
+      )
+    end
+    if DatabaseSchemaQuery.default(:mariadb).nil?
+      FactoryBot.create(
+        :database_schema_query,
+        db_type: :mariadb,
+        is_default: true,
+        name: 'mariadb'
+      )
     end
     # only start spec dbs when integration or feature tests are requested
     if config.files_to_run.any? { |f| f.match(INTEGRATION_FEATURE_TEST_REGEXP) }
