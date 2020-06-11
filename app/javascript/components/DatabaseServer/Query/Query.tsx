@@ -1,12 +1,13 @@
 import React, { Fragment } from 'react';
-import { Button, Segment, Checkbox, SegmentProps } from 'semantic-ui-react';
+import { Button, Segment, Checkbox } from 'semantic-ui-react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 import SqlEditor from './SqlEditor';
 import SqlResults from '../SqlResults';
-import { default as QueryModel, QueryExecutionMode } from '../../../models/Query';
+import { default as QueryModel } from '../../../models/Query';
 import { REST } from '../../../declarations/REST';
 import Slider from '../../../shared/Slider';
+import { ResultType } from '../../../models/Result';
 
 interface Props {
   query: QueryModel;
@@ -58,13 +59,13 @@ export default class Query extends React.Component<Props> {
           <Checkbox
             toggle
             checked={this.props.query.proceedAfterError}
-            disabled={this.props.query.executionMode === QueryExecutionMode.Raw}
+            disabled={this.props.query.executionMode === ResultType.Raw}
             label="Proceed after sql error"
             onChange={() => this.props.query.toggleProceedAfterError()}
           />
           <Checkbox
             toggle
-            checked={this.props.query.executionMode === QueryExecutionMode.Raw}
+            checked={this.props.query.executionMode === ResultType.Raw}
             label="Execute raw query"
             onChange={() => this.props.query.toggleExecuteRawQuery()}
           />

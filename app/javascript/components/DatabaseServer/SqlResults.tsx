@@ -1,16 +1,17 @@
 import React, { Fragment } from 'react';
 import { Segment, Label, Popup, Header, Accordion, Button, Icon } from 'semantic-ui-react';
 import _ from 'lodash';
-import { ResultType } from '../../api/db_server';
+import { ResultState } from '../../api/db_server';
 import { computed, action } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
-import Query, { TableData } from '../../models/Query';
+import Query from '../../models/Query';
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
 import Tooltip from '../../shared/Tooltip';
 import { PrismCode } from './SqlResult/PrismCode';
 import { inject, observer } from 'mobx-react';
 import ViewStateStore from '../../stores/view_state_store';
 import Graph from './SqlResult/Graph';
+import { TableData } from '../../models/Result';
 
 interface Props {
   query: Query;
@@ -21,12 +22,12 @@ interface InjectedProps extends Props {
 }
 
 const labelColor = (result: TableData): SemanticCOLORS => {
-  switch (result.type) {
-    case ResultType.Error:
+  switch (result.state) {
+    case ResultState.Error:
       return 'red';
-    case ResultType.Skipped:
+    case ResultState.Skipped:
       return 'yellow';
-    case ResultType.Success:
+    case ResultState.Success:
       return 'green';
   }
 };
@@ -54,12 +55,12 @@ class SqlResults extends React.Component<Props> {
 
   @computed
   get errors() {
-    return this.results.filter((r) => r.type === ResultType.Error);
+    return this.results.filter((r) => r.state === ResultState.Error);
   }
 
   @computed
   get succeeded() {
-    return this.results.filter((r) => r.type === ResultType.Success);
+    return this.results.filter((r) => r.state === ResultState.Success);
   }
 
   @action
@@ -96,7 +97,7 @@ class SqlResults extends React.Component<Props> {
               </Tooltip>
               {<TimeLabel result={result} />}
               <div className="spacer" />
-              {result.type === ResultType.Success && (
+              {result.state === ResultState.Success && (
                 <Tooltip content="Show graph">
                   <Button
                     size="mini"
@@ -116,7 +117,7 @@ class SqlResults extends React.Component<Props> {
         content: {
           content: (
             <Fragment>
-              {result.type === ResultType.Success && this.viewState(idx).showGraph && (
+              {result.state === ResultState.Success && this.viewState(idx).showGraph && (
                 <Graph data={result} id={resultId} />
               )}
               <SqlResult result={result} viewStateKey={resultId} queryIndex={idx} key={idx} />
@@ -176,16 +177,16 @@ export const TimeLabel = ({ result }: { result: TableData }) => {
 
   let popup: string;
   let label: string;
-  switch (result.type) {
-    case ResultType.Error:
+  switch (result.state) {
+    case ResultState.Error:
       popup = `Time: ${time}s`;
       label = `${time.toFixed(2)}s`;
       break;
-    case ResultType.Success:
+    case ResultState.Success:
       popup = `Time: ${time}s`;
       label = `${result.result.length} in ${time.toFixed(2)}s`;
       break;
-    case ResultType.Skipped:
+    case ResultState.Skipped:
       popup = `Time: ${time}s`;
       label = `${time.toFixed(2)}s`;
       break;

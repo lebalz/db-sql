@@ -3,13 +3,13 @@ import { Word } from 'react-wordcloud';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../stores/view_state_store';
 import { computed } from 'mobx';
-import { SuccessTableData } from '../../../models/Query';
 import _ from 'lodash';
 import { Segment, Header, Icon, Button } from 'semantic-ui-react';
 import WordcloudGraph, { GraphType } from '../../../models/Graphs/WordcloudGraph';
 import {default as LineGraphModel } from '../../../models/Graphs/LineGraph';
 import WordCloud from './Graphs/WordCloud';
 import LineGraph from './Graphs/LineGraph';
+import { SuccessTableData } from '../../../models/Result';
 
 interface Props {
   id: string;
