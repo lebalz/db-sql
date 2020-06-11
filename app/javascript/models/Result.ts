@@ -1,6 +1,5 @@
 import { Result as ApiResult, ResultTable as ResultTableData, ResultState } from '../api/db_server';
-import { observer } from 'mobx-react';
-import { observable, action, reaction } from 'mobx';
+import { observable, action } from 'mobx';
 
 export enum ResultType {
   Multi = 'multi_query',
@@ -11,14 +10,17 @@ interface SqlTableData {
   state: ResultState;
   time?: number;
 }
+
 export interface SuccessTableData extends SqlTableData {
   state: ResultState.Success;
   result: ResultTableData;
 }
+
 interface ErrorTableData extends SqlTableData {
   state: ResultState.Error;
   error: string;
 }
+
 interface SkipTableData extends SqlTableData {
   state: ResultState.Skipped;
 }
@@ -31,6 +33,38 @@ export enum CopyState {
   Error,
   Success
 }
+
+/**
+ * @example for headers: ['hello', 'foo', 'baz'], maxChars: [8, 6, 3] and types: ['string', 'number', 'string']
+ *  it returns
+ * 
+ *    | hello    |    foo | baz |
+ *    |:---------|-------:|:----|
+ */
+const markdownHeader = (headers: string[], maxChars: number[], types: ('number' | 'string')[]): string => {
+  let mdHeader = '';
+  /* fill in the column names */
+  headers.forEach((val, idx) => {
+    if (types[idx] === 'number') {
+      mdHeader += `| ${val.padStart(maxChars[idx], ' ')} `;
+    } else {
+      mdHeader += `| ${val.padEnd(maxChars[idx], ' ')} `;
+    }
+  });
+  mdHeader += '|\n';
+
+  /* insert the markdown table descriptor */
+  headers.forEach((_, idx) => {
+    if (types[idx] === 'number') {
+      mdHeader += `|-${''.padEnd(maxChars[idx], '-')}:`;
+    } else {
+      mdHeader += `|:${''.padEnd(maxChars[idx], '-')}-`;
+    }
+  });
+  mdHeader += '|\n';
+
+  return mdHeader;
+};
 
 class Result<ResultData extends ApiResult> {
   data: ResultData;
@@ -87,6 +121,7 @@ class Result<ResultData extends ApiResult> {
   }
 
   get markdownTable() {
+    /* return message when no result table is present*/
     if (this.tableData.state === ResultState.Error) {
       return this.tableData.error;
     }
@@ -94,24 +129,33 @@ class Result<ResultData extends ApiResult> {
       return 'No result, execution skipped';
     }
     const headerCount = this.headers?.length;
-    if (!this.result || !headerCount || this.result.length === 0) {
+    if (!this.result || !this.headers || !headerCount || this.result.length === 0) {
       return 'Successful query execution without result data';
     }
 
+    /* one additional row for the header */
     const rowCount = this.result.length + 1;
-    const columns = this.headers!.map((c) => [c]);
+    const columns = this.headers.map((c) => [c]);
+
+    /* column based representaition */
     this.result.forEach((row) => {
       Object.values(row).forEach((val, idx) => {
         columns[idx].push((val ?? '').toString());
       });
     });
-    let mdTable = '';
+
+    /* get the maximal character count of each column  */
     const maxChars = columns.map((col) => Math.max(...col.map((val) => val.length)));
-    const types =
-      this.result.length === 0
-        ? []
-        : Object.values(this.result[0]).map((val) => (typeof val === 'number' ? 'number' : 'string'));
-    for (let i = 0; i < rowCount; i++) {
+
+    /* distinguish between text and numbers to align the values left or right sided */
+    const types = Object.values(this.result[0] ?? {}).map((val) =>
+      typeof val === 'number' ? 'number' : 'string'
+    );
+
+    let mdTable = markdownHeader(this.headers, maxChars, types);
+
+    /* fill in the table data */
+    for (let i = 1; i < rowCount; i++) {
       for (let j = 0; j < headerCount; j++) {
         if (types[j] === 'number') {
           mdTable += `| ${columns[j][i].padStart(maxChars[j], ' ')} `;
@@ -120,16 +164,6 @@ class Result<ResultData extends ApiResult> {
         }
       }
       mdTable += '|\n';
-      if (i === 0) {
-        for (let j = 0; j < headerCount; j++) {
-          if (types[j] === 'number') {
-            mdTable += `|-${''.padEnd(maxChars[j], '-')}:`;
-          } else {
-            mdTable += `|:${''.padEnd(maxChars[j], '-')}-`;
-          }
-        }
-        mdTable += '|\n';
-      }
     }
     return mdTable;
   }
