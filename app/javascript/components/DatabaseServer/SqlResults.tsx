@@ -124,25 +124,25 @@ class SqlResults extends React.Component<Props> {
               </Tooltip>
               {<TimeLabel result={result.data} />}
               <div className="spacer" />
-              {result.state === ResultState.Success && (
-                <Fragment>
-                  <Tooltip content="Copy Results as Markdown table" position="top right" delayed>
-                    <CopyToClipboard
-                      text={result.markdownTable}
-                      onCopy={(_, success) => result.onCopy(success)}
-                    >
-                      <Button
-                        size="mini"
-                        loading={result.copyState === CopyState.Copying}
-                        icon={
-                          <Icon.Group>
-                            <Icon name={copyIcon(result.copyState)} color={copyIconColor(result.copyState)} />
-                          </Icon.Group>
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </CopyToClipboard>
-                  </Tooltip>
+              <Fragment>
+                <Tooltip content="Copy Results as Markdown table" position="top right" delayed>
+                  <CopyToClipboard
+                    text={result.markdownTable}
+                    onCopy={(_, success) => result.onCopy(success)}
+                  >
+                    <Button
+                      size="mini"
+                      loading={result.copyState === CopyState.Copying}
+                      icon={
+                        <Icon.Group>
+                          <Icon name={copyIcon(result.copyState)} color={copyIconColor(result.copyState)} />
+                        </Icon.Group>
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </CopyToClipboard>
+                </Tooltip>
+                {result.state === ResultState.Success && (
                   <Tooltip content="Show graph" position="top right" delayed>
                     <Button
                       size="mini"
@@ -155,8 +155,8 @@ class SqlResults extends React.Component<Props> {
                       onClick={(e) => this.onShowGraph(e, idx)}
                     />
                   </Tooltip>
-                </Fragment>
-              )}
+                )}
+              </Fragment>
             </Fragment>
           )
         },

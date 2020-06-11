@@ -57,9 +57,9 @@ class Result<ResultData extends ApiResult> {
     return this.data.time;
   }
 
-  get headers(): string[] {
+  get headers(): string[] | undefined {
     if (!this.result || this.result.length === 0) {
-      return [];
+      return;
     }
     return Object.keys(this.result[0]);
   }
@@ -87,12 +87,19 @@ class Result<ResultData extends ApiResult> {
   }
 
   get markdownTable() {
-    const headerCount = this.headers.length;
-    if (!this.result || headerCount === 0) {
-      return '';
+    if (this.tableData.state === ResultState.Error) {
+      return this.tableData.error;
     }
+    if (this.tableData.state === ResultState.Skipped) {
+      return 'No result, execution skipped';
+    }
+    const headerCount = this.headers?.length;
+    if (!this.result || !headerCount || this.result.length === 0) {
+      return 'Successful query execution without result data';
+    }
+
     const rowCount = this.result.length + 1;
-    const columns = this.headers.map((c) => [c]);
+    const columns = this.headers!.map((c) => [c]);
     this.result.forEach((row) => {
       Object.values(row).forEach((val, idx) => {
         columns[idx].push((val ?? '').toString());
