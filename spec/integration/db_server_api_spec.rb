@@ -303,7 +303,7 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json.size).to be(2)
 
         json.each do |query_result|
-          expect(query_result["type"]).to eq("success")
+          expect(query_result["state"]).to eq("success")
           expect(query_result["result"].length).to be(3)
           expect(query_result["time"]).to be > 0
         end
@@ -329,7 +329,7 @@ RSpec.describe "API::Resources::DbServer" do
         expect(response.successful?).to be_truthy
         expect(json.size).to be(2)
 
-        expect(json[0]["type"]).to eq("error")
+        expect(json[0]["state"]).to eq("error")
         expect(json[0]["result"]).to be_nil
         if @db_server.psql?
           expect(json[0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
@@ -338,7 +338,7 @@ RSpec.describe "API::Resources::DbServer" do
         end
         expect(json[0]["time"]).to be > 0
 
-        expect(json[1]["type"]).to eq("success")
+        expect(json[1]["state"]).to eq("success")
         expect(json[1]["result"].length).to be(3)
         expect(json[1]["time"]).to be > 0
         expect(json[1]["error"]).to be_nil
@@ -361,9 +361,9 @@ RSpec.describe "API::Resources::DbServer" do
         expect(response.successful?).to be_truthy
         expect(json.size).to be(3)
 
-        expect(json[0]["type"]).to eq("success")
-        expect(json[1]["type"]).to eq("error")
-        expect(json[2]["type"]).to eq("skipped")
+        expect(json[0]["state"]).to eq("success")
+        expect(json[1]["state"]).to eq("error")
+        expect(json[2]["state"]).to eq("skipped")
         expect(json[2]["result"]).to be_nil
         expect(json[2]["error"]).to be_nil
         expect(json[2]["time"]).to be(0)
@@ -384,7 +384,7 @@ RSpec.describe "API::Resources::DbServer" do
         )
         expect(response.successful?).to be_truthy
 
-        expect(json["type"]).to eq("success")
+        expect(json["state"]).to eq("success")
         expect(json["result"].length).to be(2)
         expect(json["time"]).to be > 0
 
@@ -404,7 +404,7 @@ RSpec.describe "API::Resources::DbServer" do
           params: { query: "CREATE TABLE raw_test ( id int primary key );" }
         )
         expect(response.successful?).to be_truthy
-        expect(json["type"]).to eq("success")
+        expect(json["state"]).to eq("success")
         expect(json["result"].length).to be(1)
         expect(json["result"][0].length).to be(0)
         expect(json["time"]).to be > 0
@@ -447,7 +447,7 @@ RSpec.describe "API::Resources::DbServer" do
         )
         expect(response.successful?).to be_truthy
 
-        expect(json["type"]).to eq("error")
+        expect(json["state"]).to eq("error")
         expect(json["result"]).to be_nil
         if @db_server.psql?
           expect(json["error"]).to start_with 'ERROR:  column "no_row" does not exist'

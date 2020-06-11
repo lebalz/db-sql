@@ -6,7 +6,7 @@ module Entities
       expose :result
       expose :error
       expose :time
-      expose :type
+      expose :state
     end
   end
 end

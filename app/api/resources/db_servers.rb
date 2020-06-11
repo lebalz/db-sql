@@ -193,7 +193,7 @@ module Resources
 
                 if error_occured && !params[:proceed_after_error]
                   results << {
-                    type: :skipped,
+                    state: :skipped,
                     time: 0
                   }
                   next
@@ -206,7 +206,7 @@ module Resources
                     result: conn.exec_query(key: crypto_key, database_name: db_name) do
                       query
                     end.to_a,
-                    type: 'success',
+                    state: 'success',
                     time: Time.now - t0
                   }
                 rescue StandardError => e
@@ -214,7 +214,7 @@ module Resources
                   error_occured = true
                   results << {
                     error: e.message,
-                    type: 'error',
+                    state: 'error',
                     time: Time.now - t0
                   }
                 end
