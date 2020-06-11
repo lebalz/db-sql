@@ -114,9 +114,8 @@ export default class SqlEditor extends React.Component<Props> {
 
   onChange = (value: string, event?: any) => {
     const { sql } = this.props;
-    sql.onSqlChange(value);
+    sql.onSqlChange(value, this.editorRef.current?.editor.session.getLength() ?? 1);
   };
-
 
   render() {
     const { sql } = this.props;

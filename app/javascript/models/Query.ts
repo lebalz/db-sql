@@ -1,13 +1,9 @@
 import { observable, computed, action } from 'mobx';
 import { REST } from '../declarations/REST';
 import {
-  MultiQueryResult,
-  RawQueryResult,
   query as fetchQuery,
   rawQuery,
-  ResultState,
-  ResultTable as ResultTableData
-} from '../api/db_server';
+  ResultState} from '../api/db_server';
 import Database from './Database';
 import axios, { CancelTokenSource } from 'axios';
 import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexer';
@@ -16,9 +12,11 @@ import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import _ from 'lodash';
 import { DbType } from './DbServer';
 import Sql from './Sql';
-import Result, { ResultType, TableData } from './Result';
+import { ResultType, TableData } from './Result';
 import RawResult from './Results/RawResult';
 import MultiResult from './Results/MultiResult';
+
+const RAW_QUERY_THRESHOLD = 100;
 
 function identifyCommands(queryText: string) {
   const inputStream = new ANTLRInputStream(queryText);
@@ -54,7 +52,7 @@ export default class Query extends Sql {
 
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
-  constructor(database: Database, id: number, loading: boolean = false) {
+  constructor(database: Database, id: number) {
     super();
     this.database = database;
     this.id = id;
@@ -84,16 +82,17 @@ export default class Query extends Sql {
     // when more than 50 lines sql is written, the parsing
     // of the query can take a lot of time. In this case we
     // suggest to perform a raw sql query.
-    if (/(.*[\r\n|\r|\n]){50,}/.test(this.query)) {
+    if (this.lineCount > RAW_QUERY_THRESHOLD) {
       return ResultType.Raw;
     }
     return ResultType.Multi;
   }
 
-  onSqlChange(sql: string) {
+  onSqlChange(sql: string, lineCount: number) {
     const modified = this.derivedExecutionMode !== this.executionMode;
 
     this.query = sql;
+    this.lineCount = lineCount;
 
     if (!modified) {
       this.executionMode = this.derivedExecutionMode;
@@ -195,7 +194,7 @@ export default class Query extends Sql {
         this.requestState = REST.Success;
         return this.results;
       })
-      .catch((e) => {
+      .catch(() => {
         this.requestState = REST.Error;
       });
   }
@@ -216,7 +215,7 @@ export default class Query extends Sql {
         this.requestState = REST.Success;
         return this.results;
       })
-      .catch((e) => {
+      .catch(() => {
         this.requestState = REST.Error;
       });
   }
