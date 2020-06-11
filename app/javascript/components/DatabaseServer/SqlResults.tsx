@@ -1,16 +1,18 @@
 import React, { Fragment } from 'react';
 import { Segment, Label, Popup, Header, Accordion, Button, Icon } from 'semantic-ui-react';
 import _ from 'lodash';
-import { ResultType } from '../../api/db_server';
+import { ResultState } from '../../api/db_server';
 import { computed, action } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
-import Query, { TableData } from '../../models/Query';
-import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic';
+import Query from '../../models/Query';
+import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react/dist/commonjs/generic';
 import Tooltip from '../../shared/Tooltip';
 import { PrismCode } from './SqlResult/PrismCode';
 import { inject, observer } from 'mobx-react';
 import ViewStateStore from '../../stores/view_state_store';
 import Graph from './SqlResult/Graph';
+import { TableData, CopyState } from '../../models/Result';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 interface Props {
   query: Query;
@@ -21,13 +23,39 @@ interface InjectedProps extends Props {
 }
 
 const labelColor = (result: TableData): SemanticCOLORS => {
-  switch (result.type) {
-    case ResultType.Error:
+  switch (result.state) {
+    case ResultState.Error:
       return 'red';
-    case ResultType.Skipped:
+    case ResultState.Skipped:
       return 'yellow';
-    case ResultType.Success:
+    case ResultState.Success:
       return 'green';
+  }
+};
+
+const copyIconColor = (state: CopyState): SemanticCOLORS | undefined => {
+  switch (state) {
+    case CopyState.Error:
+      return 'red';
+    case CopyState.Success:
+      return 'green';
+    case CopyState.Ready:
+      return;
+    case CopyState.Copying:
+      return 'blue';
+  }
+};
+
+const copyIcon = (state: CopyState): SemanticICONS => {
+  switch (state) {
+    case CopyState.Error:
+      return 'close';
+    case CopyState.Success:
+      return 'check';
+    case CopyState.Ready:
+      return 'copy';
+    case CopyState.Copying:
+      return 'copy';
   }
 };
 
@@ -54,12 +82,12 @@ class SqlResults extends React.Component<Props> {
 
   @computed
   get errors() {
-    return this.results.filter((r) => r.type === ResultType.Error);
+    return this.results.filter((r) => r.state === ResultState.Error);
   }
 
   @computed
   get succeeded() {
-    return this.results.filter((r) => r.type === ResultType.Success);
+    return this.results.filter((r) => r.state === ResultState.Success);
   }
 
   @action
@@ -70,7 +98,7 @@ class SqlResults extends React.Component<Props> {
   }
 
   get resultPanels() {
-    return this.props.query.resultTableData.map((result, idx) => {
+    return this.props.query.results.map((result, idx) => {
       const resultId = `${this.props.query.name}#${idx}`;
       return {
         key: idx,
@@ -89,37 +117,56 @@ class SqlResults extends React.Component<Props> {
               >
                 <Label
                   size="large"
-                  color={labelColor(result)}
+                  color={labelColor(result.data)}
                   content={`Query #${idx + 1}`}
                   style={{ marginRight: '1em', color: 'black' }}
                 />
               </Tooltip>
-              {<TimeLabel result={result} />}
+              {<TimeLabel result={result.data} />}
               <div className="spacer" />
-              {result.type === ResultType.Success && (
-                <Tooltip content="Show graph">
-                  <Button
-                    size="mini"
-                    active={this.viewState(idx).showGraph}
-                    icon={
-                      <Icon.Group>
-                        <Icon name="area graph" color="blue" />
-                      </Icon.Group>
-                    }
-                    onClick={(e) => this.onShowGraph(e, idx)}
-                  />
+              <Fragment>
+                <Tooltip content="Copy Results as Markdown table" position="top right" delayed>
+                  <CopyToClipboard
+                    text={result.markdownTable}
+                    onCopy={(_, success) => result.onCopy(success)}
+                  >
+                    <Button
+                      size="mini"
+                      loading={result.copyState === CopyState.Copying}
+                      icon={
+                        <Icon.Group>
+                          <Icon name={copyIcon(result.copyState)} color={copyIconColor(result.copyState)} />
+                        </Icon.Group>
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </CopyToClipboard>
                 </Tooltip>
-              )}
+                {result.state === ResultState.Success && (
+                  <Tooltip content="Show graph" position="top right" delayed>
+                    <Button
+                      size="mini"
+                      active={this.viewState(idx).showGraph}
+                      icon={
+                        <Icon.Group>
+                          <Icon name="area graph" color="blue" />
+                        </Icon.Group>
+                      }
+                      onClick={(e) => this.onShowGraph(e, idx)}
+                    />
+                  </Tooltip>
+                )}
+              </Fragment>
             </Fragment>
           )
         },
         content: {
           content: (
             <Fragment>
-              {result.type === ResultType.Success && this.viewState(idx).showGraph && (
-                <Graph data={result} id={resultId} />
+              {result.data.state === ResultState.Success && this.viewState(idx).showGraph && (
+                <Graph data={result.data} id={resultId} />
               )}
-              <SqlResult result={result} viewStateKey={resultId} queryIndex={idx} key={idx} />
+              <SqlResult result={result.data} viewStateKey={resultId} queryIndex={idx} key={idx} />
             </Fragment>
           )
         }
@@ -176,16 +223,16 @@ export const TimeLabel = ({ result }: { result: TableData }) => {
 
   let popup: string;
   let label: string;
-  switch (result.type) {
-    case ResultType.Error:
+  switch (result.state) {
+    case ResultState.Error:
       popup = `Time: ${time}s`;
       label = `${time.toFixed(2)}s`;
       break;
-    case ResultType.Success:
+    case ResultState.Success:
       popup = `Time: ${time}s`;
       label = `${result.result.length} in ${time.toFixed(2)}s`;
       break;
-    case ResultType.Skipped:
+    case ResultState.Skipped:
       popup = `Time: ${time}s`;
       label = `${time.toFixed(2)}s`;
       break;

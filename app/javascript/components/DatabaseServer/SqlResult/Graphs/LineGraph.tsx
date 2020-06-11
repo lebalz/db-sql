@@ -2,13 +2,13 @@ import React from 'react';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
 import { computed } from 'mobx';
-import { SuccessTableData } from '../../../../models/Query';
 import _ from 'lodash';
 import LineGraphConfig from './LineGraphConfig';
 import { LineChart, Line, XAxis, Legend, YAxis, Tooltip } from 'recharts';
 import { GraphType } from '../../../../models/Graphs/WordcloudGraph';
 import { default as LineGraphModel } from '../../../../models/Graphs/LineGraph';
 import Slider from '../../../../shared/Slider';
+import { SuccessTableData } from '../../../../models/Result';
 
 interface Props {
   id: string;

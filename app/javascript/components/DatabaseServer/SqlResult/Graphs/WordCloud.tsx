@@ -3,11 +3,11 @@ import ReactWordcloud, { Word, Options, Optional } from 'react-wordcloud';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../../stores/view_state_store';
 import { computed } from 'mobx';
-import { SuccessTableData } from '../../../../models/Query';
 import _ from 'lodash';
 import WordCloudConfig from './WordCloudConfig';
 import WordcloudGraph, { GraphType } from '../../../../models/Graphs/WordcloudGraph';
 import Slider from '../../../../shared/Slider';
+import { SuccessTableData } from '../../../../models/Result';
 
 interface Props {
   id: string;

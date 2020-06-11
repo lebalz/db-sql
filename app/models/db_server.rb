@@ -218,14 +218,14 @@ class DbServer < ApplicationRecord
         rescue StandardError => e
           return {
             error: e,
-            type: :error
+            state: :error
           }
         ensure
           connection.raw_connection.abandon_results!
         end
         {
           result: results,
-          type: :success
+          state: :success
         }
       elsif psql?
         results = []
@@ -242,7 +242,7 @@ class DbServer < ApplicationRecord
         rescue StandardError => e
           return {
             error: e,
-            type: :error
+            state: :error
           }
         ensure
           connection.raw_connection.flush
@@ -250,12 +250,12 @@ class DbServer < ApplicationRecord
         unless error.nil?
           return {
             error: error,
-            type: :error
+            state: :error
           }
         end
         return {
           result: results,
-          type: :success
+          state: :success
         }
       end
     end

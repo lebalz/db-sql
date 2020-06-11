@@ -96,30 +96,30 @@ export type ResultRow = { [key: string]: string | number };
 
 export type ResultTable = ResultRow[];
 
-export enum ResultType {
+export enum ResultState {
   Success = 'success',
   Error = 'error',
   Skipped = 'skipped'
 }
-interface Result {
+export interface Result {
   time: number;
-  type: ResultType;
+  state: ResultState;
 }
 export interface SuccessQuery extends Result {
   result: ResultTable;
-  type: ResultType.Success;
+  state: ResultState.Success;
 }
 export interface ErrorQuery extends Result {
   error: string;
-  type: ResultType.Error;
+  state: ResultState.Error;
 }
 
 export interface SkippedQuery extends Result {
-  type: ResultType.Skipped;
+  state: ResultState.Skipped;
 }
 interface SuccessRawQuery extends Result {
   result: ResultTable[];
-  type: ResultType.Success;
+  state: ResultState.Success;
 }
 
 export type MultiQueryResult = SuccessQuery | ErrorQuery | SkippedQuery;

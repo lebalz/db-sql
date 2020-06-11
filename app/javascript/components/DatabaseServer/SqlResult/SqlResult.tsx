@@ -1,11 +1,11 @@
 import React from 'react';
 import _ from 'lodash';
 import { ErrorReport } from './ErrorReport';
-import { ResultType } from '../../../api/db_server';
+import { ResultState } from '../../../api/db_server';
 import { EmptyResult } from './EmptyResult';
 import { SkippedResult } from './SkippedResult';
 import ResultTable from './ResultTable';
-import { TableData } from '../../../models/Query';
+import { TableData } from '../../../models/Result';
 
 interface Props {
   result: TableData;
@@ -14,15 +14,15 @@ interface Props {
 }
 
 export const SqlResult = ({ result, queryIndex, viewStateKey }: Props) => {
-  switch (result.type) {
-    case ResultType.Error:
+  switch (result.state) {
+    case ResultState.Error:
       return <ErrorReport key={queryIndex} queryIndex={queryIndex} error={result.error} />;
-    case ResultType.Success:
+    case ResultState.Success:
       if (result.result.length === 0) {
         return <EmptyResult queryIndex={queryIndex} key={queryIndex} />;
       }
       return <ResultTable table={result.result} viewStateKey={viewStateKey} key={queryIndex} />;
-    case ResultType.Skipped:
+    case ResultState.Skipped:
       return <SkippedResult key={queryIndex} queryIndex={queryIndex} />;
   }
 };
