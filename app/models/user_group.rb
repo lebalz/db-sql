@@ -32,6 +32,6 @@ class UserGroup < ApplicationRecord
   end
 
   def crypto_key(private_key)
-    private_key.private_decrypt(crypto_key_encrypted)
+    private_key.private_decrypt(Base64.strict_decode64(crypto_key_encrypted))
   end
 end

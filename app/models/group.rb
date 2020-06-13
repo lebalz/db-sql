@@ -16,6 +16,18 @@ class Group < ApplicationRecord
 
   has_many :db_servers, dependent: :destroy
 
+  def self.random_crypto_key
+    hash = OpenSSL::Digest::SHA256.new
+    key = OpenSSL::KDF.pbkdf2_hmac(
+      OpenSSL::Digest::SHA256.new.to_s,
+      salt: Time.now.to_i.to_s,
+      iterations: 20_000,
+      length: hash.length,
+      hash: hash
+    )
+    Base64.strict_encode64(key)
+  end
+
   def private?
     is_private
   end
@@ -26,14 +38,15 @@ class Group < ApplicationRecord
   end
 
   # @param user [User]
-  # @param crypto_key [String] key used to decrypt the
+  # @param group_key [String] key used to decrypt the
   #   db server passwords of this group
   # @param is_admin [boolean]
-  def add_user(user:, crypto_key:, is_admin: false)
+  def add_user(user:, group_key:, is_admin: false)
     return if user_ids.include? user.id
 
+    key = Base64.strict_encode64(user.public_key.public_encrypt(group_key))
     UserGroup.create!(
-      crypto_key_encrypted: user.public_key.public_encrypt(crypto_key),
+      crypto_key_encrypted: key,
       group: self,
       user: user,
       is_admin: is_admin

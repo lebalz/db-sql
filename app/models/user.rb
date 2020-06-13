@@ -272,7 +272,7 @@ class User < ApplicationRecord
           )
         end
       end
-      # user_groups.up
+
       update!(
         private_key_pem: rsa_key.to_pem(cipher, crypto_key),
         public_key_pem: rsa_key.public_key.to_pem
