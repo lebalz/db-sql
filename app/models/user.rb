@@ -10,6 +10,8 @@
 #  email                       :string
 #  login_count                 :integer          default(0)
 #  password_digest             :string
+#  private_key_pem             :string
+#  public_key_pem              :string
 #  reset_password_digest       :string
 #  reset_password_mail_sent_at :datetime
 #  role                        :integer          default("user")
@@ -22,11 +24,14 @@
 #
 
 class User < ApplicationRecord
+  has_many :user_groups
+  has_many :groups, through: :user_groups
   has_secure_password
   has_many :database_schema_queries,
            class_name: 'DatabaseSchemaQuery',
            foreign_key: :author_id
   before_create :create_activation_digest
+  after_create  :create_key_pairs
   before_save   :downcase_email
 
   ROLES = %i[user admin].freeze
@@ -53,8 +58,14 @@ class User < ApplicationRecord
 
   attr_accessor :activation_token, :reset_password_token
 
+  def has_keypair?
+    !!private_key_pem && !!public_key_pem
+  end
+
   def login(password)
     return unless authenticate password
+
+    update_key_pairs!(crypto_key: crypto_key(password)) unless has_keypair?
 
     token = LoginToken.new
     login_tokens << token
@@ -94,9 +105,12 @@ class User < ApplicationRecord
       db_servers.each do |db_server|
         db_server.recrypt!(
           old_crypto_key: crypto_key(old_password),
-          new_crypto_key: crypto_key(new_password)
+          new_crypto_key: crypto_key(new_password),
+          reset_password_digest: nil,
+          reset_password_mail_sent_at: nil
         )
       end
+      update_key_pairs!(crypto_key: crypto_key(new_password))
       login_tokens.destroy_all
     end
   end
@@ -118,6 +132,7 @@ class User < ApplicationRecord
           new_crypto_key: crypto_key(password)
         )
       end
+      update_key_pairs!(crypto_key: crypto_key(password))
       login_tokens.destroy_all
     end
   end
@@ -180,6 +195,19 @@ class User < ApplicationRecord
     DateTime.now < reset_password_mail_sent_at + PASSWORD_RESET_PERIOD
   end
 
+  def public_key
+    return unless has_keypair?
+
+    OpenSSL::PKey::RSA.new(public_key_pem)
+  end
+
+  # @param crypto_key [String] the users secret crypto key
+  def private_key(crypto_key)
+    return unless has_keypair?
+
+    OpenSSL::PKey::RSA.new(private_key_pem, crypto_key)
+  end
+
   private
 
   def password_reset_authenticated?(token:)
@@ -215,6 +243,12 @@ class User < ApplicationRecord
     )
   end
 
+  def create_key_pairs
+    return unless password
+
+    update_key_pairs!(crypto_key: crypto_key(password))
+  end
+
   def create_reset_password_digest
     self.reset_password_token = SecureRandom.urlsafe_base64
     self.reset_password_mail_sent_at = DateTime.now
@@ -222,5 +256,27 @@ class User < ApplicationRecord
       @reset_password_token,
       cost: BCrypt::Engine.cost
     )
+  end
+
+  def update_key_pairs!(crypto_key:)
+    rsa_key = OpenSSL::PKey::RSA.new(2048)
+    cipher =  OpenSSL::Cipher.new('des3')
+    ActiveRecord::Base.transaction do
+      if has_keypair?
+        pkey = private_key(crypto_key)
+
+        user_groups.each do |user_group|
+          secret = user_group.secret(pkey)
+          user_group.update!(
+            crypto_key_encrypted: rsa_key.public_key.public_encrypt(secret)
+          )
+        end
+      end
+      # user_groups.up
+      update!(
+        private_key_pem: rsa_key.to_pem(cipher, crypto_key),
+        public_key_pem: rsa_key.public_key.to_pem
+      )
+    end
   end
 end

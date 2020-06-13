@@ -22,7 +22,7 @@ module Resources
       end
       get do
         escaped_id = ActiveRecord::Base.connection.quote(current_user.id)
-        order_query = "is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC"
+        order_query = Arel.sql("is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC")
         present(
           DatabaseSchemaQuery.available(params[:db_type], current_user)
                              .order(order_query)

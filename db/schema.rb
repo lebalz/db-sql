@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_05_23_222631) do
+ActiveRecord::Schema.define(version: 2020_06_13_181612) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -46,8 +46,17 @@ ActiveRecord::Schema.define(version: 2020_05_23_222631) do
     t.integer "query_count", default: 0
     t.integer "error_query_count", default: 0
     t.uuid "database_schema_query_id"
+    t.uuid "group_id"
     t.index ["database_schema_query_id"], name: "index_db_servers_on_database_schema_query_id"
+    t.index ["group_id"], name: "index_db_servers_on_group_id"
     t.index ["user_id"], name: "index_db_servers_on_user_id"
+  end
+
+  create_table "groups", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", null: false
+    t.boolean "is_private", default: true, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "login_tokens", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -69,11 +78,27 @@ ActiveRecord::Schema.define(version: 2020_05_23_222631) do
     t.datetime "activated_at"
     t.string "reset_password_digest"
     t.datetime "reset_password_mail_sent_at"
+    t.string "private_key_pem"
+    t.string "public_key_pem"
     t.index ["email"], name: "index_users_on_email", unique: true
+  end
+
+  create_table "users_groups", id: false, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.uuid "group_id", null: false
+    t.string "crypto_key_encrypted", null: false
+    t.boolean "is_admin", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["group_id"], name: "index_users_groups_on_group_id"
+    t.index ["user_id"], name: "index_users_groups_on_user_id"
   end
 
   add_foreign_key "database_schema_queries", "users", column: "author_id"
   add_foreign_key "db_servers", "database_schema_queries"
+  add_foreign_key "db_servers", "groups"
   add_foreign_key "db_servers", "users"
   add_foreign_key "login_tokens", "users"
+  add_foreign_key "users_groups", "groups"
+  add_foreign_key "users_groups", "users"
 end

@@ -23,16 +23,19 @@ end
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  database_schema_query_id :uuid
+#  group_id                 :uuid
 #  user_id                  :uuid
 #
 # Indexes
 #
 #  index_db_servers_on_database_schema_query_id  (database_schema_query_id)
+#  index_db_servers_on_group_id                  (group_id)
 #  index_db_servers_on_user_id                   (user_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (database_schema_query_id => database_schema_queries.id)
+#  fk_rails_...  (group_id => groups.id)
 #  fk_rails_...  (user_id => users.id)
 #
 
@@ -62,10 +65,12 @@ class DbServer < ApplicationRecord
     'mariadb' => 'information_schema'
   }.freeze
 
-  belongs_to :user, touch: true
+  belongs_to :user, touch: true, optional: true
+  belongs_to :group, touch: true, optional: true
   belongs_to :database_schema_query
 
   before_validation :set_database_schema_query, on: :create
+  validate :belongs_to_either_user_or_group
 
   # @param key [String] base64 encoded crypto key from the user
   # @return [String] cleartext password for the db connection
@@ -563,6 +568,12 @@ class DbServer < ApplicationRecord
     return unless database_schema_query.nil?
 
     self.database_schema_query = DatabaseSchemaQuery.default(db_type)
+  end
+
+  def belongs_to_either_user_or_group
+    return true if user_id || group_id
+
+    errors.add :db_server, 'A db server must belong to either a user ot a group'
   end
 
 end

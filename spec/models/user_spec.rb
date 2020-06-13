@@ -10,6 +10,8 @@
 #  email                       :string
 #  login_count                 :integer          default(0)
 #  password_digest             :string
+#  private_key_pem             :string
+#  public_key_pem              :string
 #  reset_password_digest       :string
 #  reset_password_mail_sent_at :datetime
 #  role                        :integer          default("user")
