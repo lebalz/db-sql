@@ -37,6 +37,55 @@ class Group < ApplicationRecord
     user_groups.pluck(:user_id)
   end
 
+  # when a user of this group had to reset it's password,
+  # the crypto key could not be updated correctly and the UserGroup
+  # is marked as outdated.
+  # @return [boolean]
+  def has_outdated_members?
+    user_groups.any?(&:outdated?)
+  end
+
+  def outdated_user_groups
+    user_groups.where(is_outdated: true)
+  end
+
+  # @param group_key [String] key used to decrypt the
+  #   db server passwords of this group
+  def update_outdated_members(group_key:)
+    outdated_user_groups.each do |user_group|
+      key = Base64.strict_encode64(
+        user_group.user.public_key.public_encrypt(group_key)
+      )
+      user_group.update!(
+        crypto_key_encrypted: key,
+        is_outdated: false
+      )
+    end
+  end
+
+  # !! all db server passwords will be useless!!
+  # A new crypto key is set without migrating the passwords of the
+  # related db servers.
+  def force_new_crypto_key!
+    ActiveRecord::Base.transaction do
+      new_key = Group.random_crypto_key
+      user_groups.each do |user_group|
+        key = Base64.strict_encode64(
+          user_group.user.public_key.public_encrypt(new_key)
+        )
+        user_group.update!(
+          crypto_key_encrypted: key,
+          is_outdated: false
+        )
+      end
+      db_servers.each do |db_server|
+        db_server.reset_crypto_key(
+          new_crypto_key: new_key
+        )
+      end
+    end
+  end
+
   # @param user [User]
   # @param group_key [String] key used to decrypt the
   #   db server passwords of this group

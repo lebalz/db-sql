@@ -205,11 +205,13 @@ class User < ApplicationRecord
     OpenSSL::PKey::RSA.new(public_key_pem)
   end
 
-  # @param crypto_key [String] the users secret crypto key
+  # @param crypto_key [String | nil] the users secret crypto key
   def private_key(crypto_key)
     return unless has_keypair?
 
-    OpenSSL::PKey::RSA.new(private_key_pem, crypto_key)
+    OpenSSL::PKey::RSA.new(private_key_pem, crypto_key || '')
+  rescue OpenSSL::PKey::RSAError
+    nil
   end
 
   private
@@ -267,13 +269,12 @@ class User < ApplicationRecord
     cipher =  OpenSSL::Cipher.new('des3')
     ActiveRecord::Base.transaction do
       if has_keypair?
-        if old_crypto_key.nil?
+        pkey = private_key(old_crypto_key)
+        if pkey.nil?
           user_groups.update_all(
             is_outdated: true
           )
         else
-          pkey = private_key(old_crypto_key)
-
           user_groups.each do |user_group|
             secret = user_group.secret(pkey)
             user_group.update!(
