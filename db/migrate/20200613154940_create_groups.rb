@@ -10,9 +10,11 @@ class CreateGroups < ActiveRecord::Migration[6.0]
     create_table :users_groups, :id => false do |t|
       t.references :user, type: :uuid, null: false, index: true
       t.references :group, type: :uuid, null: false, index: true
-      # crypto key for the db password, encrypted with the users public key 
+
+      # crypto key for the db password, encrypted with the users public key
       t.string :crypto_key_encrypted, null: false
       t.boolean :is_admin, default: false, null: false
+      t.boolean :is_outdated, default: false, null: false
       t.timestamps
     end
     add_foreign_key :users_groups, :users, column: :user_id

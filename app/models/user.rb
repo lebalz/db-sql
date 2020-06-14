@@ -65,6 +65,7 @@ class User < ApplicationRecord
   def login(password)
     return unless authenticate password
 
+    # TODO: remove once all users have a keypair
     update_key_pairs!(crypto_key: crypto_key(password)) unless has_keypair?
 
     token = LoginToken.new
@@ -100,17 +101,20 @@ class User < ApplicationRecord
     ActiveRecord::Base.transaction do
       update!(
         password: new_password,
-        password_confirmation: password_confirmation
+        password_confirmation: password_confirmation,
+        reset_password_digest: nil,
+        reset_password_mail_sent_at: nil
       )
       db_servers.each do |db_server|
         db_server.recrypt!(
           old_crypto_key: crypto_key(old_password),
-          new_crypto_key: crypto_key(new_password),
-          reset_password_digest: nil,
-          reset_password_mail_sent_at: nil
+          new_crypto_key: crypto_key(new_password)
         )
       end
-      update_key_pairs!(crypto_key: crypto_key(new_password))
+      update_key_pairs!(
+        crypto_key: crypto_key(new_password),
+        old_crypto_key: crypto_key(old_password)
+      )
       login_tokens.destroy_all
     end
   end
@@ -258,18 +262,24 @@ class User < ApplicationRecord
     )
   end
 
-  def update_key_pairs!(crypto_key:)
+  def update_key_pairs!(crypto_key:, old_crypto_key: nil)
     rsa_key = OpenSSL::PKey::RSA.new(2048)
     cipher =  OpenSSL::Cipher.new('des3')
     ActiveRecord::Base.transaction do
       if has_keypair?
-        pkey = private_key(crypto_key)
-
-        user_groups.each do |user_group|
-          secret = user_group.secret(pkey)
-          user_group.update!(
-            crypto_key_encrypted: rsa_key.public_key.public_encrypt(secret)
+        if old_crypto_key.nil?
+          user_groups.update_all(
+            is_outdated: true
           )
+        else
+          pkey = private_key(old_crypto_key)
+
+          user_groups.each do |user_group|
+            secret = user_group.secret(pkey)
+            user_group.update!(
+              crypto_key_encrypted: rsa_key.public_key.public_encrypt(secret)
+            )
+          end
         end
       end
 

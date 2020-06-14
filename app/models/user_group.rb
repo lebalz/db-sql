@@ -6,6 +6,7 @@
 #
 #  crypto_key_encrypted :string           not null
 #  is_admin             :boolean          default(FALSE), not null
+#  is_outdated          :boolean          default(FALSE), not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
 #  group_id             :uuid             not null
@@ -29,6 +30,10 @@ class UserGroup < ApplicationRecord
 
   def admin?
     is_admin
+  end
+
+  def outdated?
+    is_outdated
   end
 
   def crypto_key(private_key)
