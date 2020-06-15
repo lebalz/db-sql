@@ -22,14 +22,23 @@ module Resources
         has_key = request.headers.key?('Crypto-Key')
         error!('Crypto-Key is required', 400) unless has_key
 
-        request.headers['Crypto-Key']
+        user_key = request.headers['Crypto-Key']
+        return user_key unless params.key?(:id)
+
+        case db_server.owner_type
+        when :user
+          user_key
+        when :group
+          grp = db_server.owner
+          grp.crypto_key(current_user, current_user.private_key(user_key))
+        end
       end
     end
 
     resource :db_servers do
       desc 'Get all database servers'
       get do
-        present current_user.db_servers, with: Entities::DbServer
+        present current_user.all_db_servers, with: Entities::DbServer
       end
 
       desc 'Create a database server'
@@ -42,6 +51,17 @@ module Resources
           values: %i[psql mysql mariadb],
           desc: 'db type'
         )
+        requires(
+          :owner_type,
+          type: Symbol,
+          values: %i(user group),
+          desc: 'owner type'
+        )
+        optional(
+          :group_id,
+          type: String,
+          desc: 'group id, must be set for owner_type :group'
+        )
         requires(:host, type: String, desc: 'host')
         requires(:port, type: Integer, desc: 'port')
         requires(:username, type: String, desc: 'db user')
@@ -50,12 +70,23 @@ module Resources
         optional(:initial_table, type: String, desc: 'initial table')
       end
       post do
+        user_key = request.headers['Crypto-Key']
+        if params[:owner_type] == :user
+          key = user_key
+        else
+          grp = Group.find(params[:group_id])
+          error!('Group not found', 302) unless grp
+          error!('Missing privileg to add new servers', 401) unless grp.admin?(current_user)
+
+          key = grp.crypto_key(current_user, current_user.private_key(user_key))
+        end
         encrypted_password = DbServer.encrypt(
-          key: request.headers['Crypto-Key'],
+          key: key,
           db_password: params[:password]
         )
         db_server = DbServer.create!(
-          user: current_user,
+          user: params[:owner_type] == :user ? current_user : nil,
+          group_id: params[:group_id],
           name: params[:name],
           db_type: DbServer.db_types[params[:db_type]],
           host: params[:host],

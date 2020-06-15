@@ -72,6 +72,23 @@ class DbServer < ApplicationRecord
   before_validation :set_database_schema_query, on: :create
   validate :belongs_to_either_user_or_group
 
+  # @return [:user, :group]
+  def owner_type
+    return :user unless user_id.nil?
+    return :group unless group_id.nil?
+
+    throw 'no owner set'
+  end
+
+  def owner
+    case owner_type
+    when :user
+      user
+    when :group
+      group
+    end
+  end
+
   # @param key [String] base64 encoded crypto key from the user
   # @return [String] cleartext password for the db connection
   def password(key)

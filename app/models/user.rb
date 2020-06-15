@@ -62,6 +62,10 @@ class User < ApplicationRecord
     !!private_key_pem && !!public_key_pem
   end
 
+  def all_db_servers
+    [*db_servers, *groups.map(&:db_servers).flatten]
+  end
+
   def login(password)
     return unless authenticate password
 

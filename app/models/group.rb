@@ -11,7 +11,7 @@
 #  updated_at :datetime         not null
 #
 class Group < ApplicationRecord
-  has_many :user_groups
+  has_many :user_groups, dependent: :destroy
   has_many :users, through: :user_groups
 
   has_many :db_servers, dependent: :destroy
@@ -28,8 +28,34 @@ class Group < ApplicationRecord
     Base64.strict_encode64(key)
   end
 
+  # @param user [User]
+  # @return [Group::ActiveRecord_Relation]
+  def self.available(user)
+    escaped_id = ActiveRecord::Base.connection.quote(user.id)
+    Group
+      .left_outer_joins(:user_groups)
+      .where(is_private: false)
+      .or(
+        Group
+          .left_outer_joins(:user_groups)
+          .where("users_groups.user_id = ?", u.id)
+      )
+      .order(
+        Arel.sql("users_groups.user_id=#{escaped_id} DESC, updated_at DESC")
+      )
+  end
+
   def private?
     is_private
+  end
+
+  def public?
+    !private?
+  end
+
+  # @param user [User]
+  def member?(user)
+    users.include?(user)
   end
 
   # @return [Array<UUID>]
@@ -47,6 +73,16 @@ class Group < ApplicationRecord
 
   def outdated_user_groups
     user_groups.where(is_outdated: true)
+  end
+
+  def admins
+    user_groups.where(is_admin: true)
+  end
+
+  # @param user [User]
+  # @return [boolean]
+  def admin?(user)
+    admins.include?(user)
   end
 
   # @param group_key [String] key used to decrypt the
