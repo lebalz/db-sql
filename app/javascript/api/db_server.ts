@@ -2,10 +2,17 @@ import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
 import { DbType, UpdateProps } from '../models/DbServer';
 
+export enum OwnerType {
+  User = 'user',
+  Group = 'group'
+}
+
 export interface DbServer {
   id: string;
   name: string;
   db_type: DbType;
+  owner_type: OwnerType;
+  owner_id: string;
   host: string;
   port: number;
   username: string;
@@ -17,6 +24,7 @@ export interface DbServer {
   created_at: string;
   updated_at: string;
 }
+
 export interface SqlTypeMetadata {
   limit: number;
   precision?: number;

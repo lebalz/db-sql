@@ -9,7 +9,7 @@ import DbServerOverview from './Dashboard/DbServerOverview';
 import { TempDbServer as TempDbServerComponent } from './Dashboard/TempDbServer';
 import _ from 'lodash';
 import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
-import { DbServer } from '../api/db_server';
+import { DbServer, OwnerType } from '../api/db_server';
 import { DbType } from '../models/DbServer';
 import SchemaQueryStore from '../stores/schema_query_store';
 
@@ -23,6 +23,8 @@ interface InjectedProps {
 const DEFAULT_DB_SERVER: DbServer = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  owner_type: OwnerType.User,
+  owner_id: '',
   db_type: DbType.Psql,
   host: '',
   id: '',

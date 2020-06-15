@@ -1,5 +1,5 @@
 import { observable, computed, action } from 'mobx';
-import { DbServer as DbServerProps } from '../api/db_server';
+import { DbServer as DbServerProps, OwnerType } from '../api/db_server';
 import _ from 'lodash';
 import Database from './Database';
 import { REST } from '../declarations/REST';
@@ -45,6 +45,8 @@ export default class DbServer {
   @observable password?: string;
   @observable databaseSchemaQueryId: string;
   @observable queryState: QueryState = QueryState.None;
+  @observable ownerType: OwnerType;
+  @observable ownerId: string;
 
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
@@ -59,6 +61,8 @@ export default class DbServer {
     this.schemaQueryStore = schemaQueryStore;
     this.id = props.id;
     this.name = props.name;
+    this.ownerType = props.owner_type;
+    this.ownerId = props.owner_id;
     this.dbType = props.db_type;
     this.host = props.host;
     this.port = props.port;
@@ -108,6 +112,8 @@ export default class DbServer {
     return {
       id: this.id,
       name: this.name,
+      owner_type: this.ownerType,
+      owner_id: this.ownerId,
       db_type: this.dbType,
       host: this.host,
       port: this.port,

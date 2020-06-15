@@ -80,12 +80,28 @@ class DbServer < ApplicationRecord
     throw 'no owner set'
   end
 
+  # @return [User, Group]
   def owner
     case owner_type
     when :user
       user
     when :group
       group
+    end
+  end
+
+  # @return [UUID]
+  def owner_id
+    owner.id
+  end
+
+  # @param user [User]
+  def authorized?(user)
+    case owner_type
+    when :user
+      user_id == user.id
+    when :group
+      group.member?(user)
     end
   end
 

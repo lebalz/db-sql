@@ -4,8 +4,7 @@ module Entities
   class DbServer < Grape::Entity
     expose :id
     expose :owner_type
-    expose :user_id
-    expose :group_id
+    expose :owner_id
     expose :name
     expose :db_type
     expose :host
