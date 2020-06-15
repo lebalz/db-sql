@@ -2,15 +2,21 @@
 
 module Resources
   class DbServers < Grape::API
+    before do
+      load_db_server if params.key?(:id)
+    end
     helpers do
-      def db_server
-        db_server = DbServer.find(params[:id])
+      def load_db_server
+        db_server ||= DbServer.find(params[:id])
         error!('Db server not found', 302) unless db_server
+
         unless db_server.user_id == current_user.id
           error!('Invalid permission for this db server', 401)
         end
-        db_server
+
+        @db_server = db_server
       end
+      attr_reader :db_server
 
       def crypto_key
         has_key = request.headers.key?('Crypto-Key')
