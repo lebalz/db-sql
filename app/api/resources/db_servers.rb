@@ -38,7 +38,7 @@ module Resources
     resource :db_servers do
       desc 'Get all database servers'
       params do
-        requires(:include_shared, type: Boolean, default: false, desc: 'wheter to include shared db servers from groups')
+        optional(:include_shared, type: Boolean, default: false, desc: 'wheter to include shared db servers from groups')
       end
       get do
         if params[:include_shared]

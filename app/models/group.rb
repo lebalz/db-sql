@@ -11,10 +11,10 @@
 #  updated_at :datetime         not null
 #
 class Group < ApplicationRecord
-  has_many :user_groups, dependent: :destroy
+  has_many :user_groups, dependent: :delete_all
   has_many :users, through: :user_groups
 
-  has_many :db_servers, dependent: :destroy
+  has_many :db_servers, dependent: :delete_all
 
   scope :public_available, -> { where(is_private: false) }
 

@@ -3,18 +3,18 @@
 module Resources
   class Groups < Grape::API
     before do
-      load_db_server if params.key?(:id)
+      load_current_group if params.key?(:id)
     end
     helpers do
       def load_current_group
-        grp = Group.includes(:user_groups, :db_servers, :users).find(params[:id])
+        group = Group.includes(:user_groups, :db_servers, :users).find(params[:id])
 
-        error!('Group not found', 302) unless query
-        unless grp.public? || grp.member?(current_user)
+        error!('Group not found', 302) unless group
+        unless group.public? || group.member?(current_user)
           error!('You are not a member of this group', 401)
         end
 
-        @current_group = grp
+        @current_group = group
       end
 
       attr_reader :current_group
@@ -40,7 +40,8 @@ module Resources
         optional(:limit, type: Integer, default: 20, desc: 'maximal number of returned groups')
         optional(:offset, type: Integer,  default: 0, desc: 'offset of returned groups')
       end
-      get :public_groups do
+      route_setting :auth, disabled: true
+      get :public do
         present(
           Group.public_available
             .includes(:user_groups, :db_servers, :users)
@@ -51,8 +52,9 @@ module Resources
       end
 
       desc 'Get number of available groups'
+      route_setting :auth, disabled: true
       get :counts do
-        { count: current_user.user_groups.count }
+        { count: Group.public_available.count }
       end
 
       desc 'Create a new group'
