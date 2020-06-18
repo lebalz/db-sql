@@ -1,5 +1,8 @@
 .db-server-card {
   position: relative;
+  flex-basis: 250px;
+  margin-right: 14px !important;
+  flex-shrink: 0 !important;
   .query-count {
     position: absolute;
     top: 4px;

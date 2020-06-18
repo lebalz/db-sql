@@ -38,7 +38,7 @@ module Resources
     resource :db_servers do
       desc 'Get all database servers'
       get do
-        present current_user.all_db_servers, with: Entities::DbServer
+        present current_user.db_servers, with: Entities::DbServer
       end
 
       desc 'Create a database server'
@@ -58,9 +58,9 @@ module Resources
           desc: 'owner type'
         )
         optional(
-          :group_id,
+          :owner_id,
           type: String,
-          desc: 'group id, must be set for owner_type :group'
+          desc: 'owner id, must be set for owner_type :group'
         )
         requires(:host, type: String, desc: 'host')
         requires(:port, type: Integer, desc: 'port')
@@ -74,7 +74,7 @@ module Resources
         if params[:owner_type] == :user
           key = user_key
         else
-          grp = Group.find(params[:group_id])
+          grp = Group.find(params[:owner_id])
           error!('Group not found', 302) unless grp
           error!('Missing privileg to add new servers', 401) unless grp.admin?(current_user)
 
@@ -86,7 +86,7 @@ module Resources
         )
         db_server = DbServer.create!(
           user: params[:owner_type] == :user ? current_user : nil,
-          group_id: params[:group_id],
+          group_id: params[:owner_type] == :group ? params[:owner_id] : nil,
           name: params[:name],
           db_type: DbServer.db_types[params[:db_type]],
           host: params[:host],

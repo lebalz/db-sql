@@ -51,6 +51,11 @@ class UserStore implements Store {
     this.root = root;
   }
 
+  @computed
+  get loggedInUser() {
+    return this.root.session.currentUser;
+  }
+
   @action
   setUserFilter(filter: string) {
     this.state.userFilter = filter;

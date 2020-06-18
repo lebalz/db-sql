@@ -19,7 +19,7 @@ body {
   #sidebar-divider {
     grid-area: divider;
   }
-  .divider {
+  .divider:not(.ui) {
     z-index: 100;
     &.vertical {
       width: 100%;

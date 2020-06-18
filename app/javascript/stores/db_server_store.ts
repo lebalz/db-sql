@@ -7,7 +7,8 @@ import {
   createDbServer,
   remove as removeApi,
   databases,
-  database
+  database,
+  OwnerType
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
@@ -367,6 +368,16 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
+  @computed
+  get userDbServers() {
+    return this.dbServers.filter(dbServer => dbServer.ownerType === OwnerType.User)
+  }
+
+  @computed
+  get groupDbServers() {
+    return this.dbServers.filter(dbServer => dbServer.ownerType === OwnerType.Group)
+  }
+
   @action updateDbServer(dbConnection: DbServer): Promise<void> {
     this.state.saveState = ApiRequestState.Waiting;
     return updateDbServer(dbConnection.params, this.root.cancelToken)
@@ -393,6 +404,12 @@ class DbServerStore implements Store {
         this.state.dbServers.push(
           new DbServer(data, this, this.root.schemaQueryStore, this.root.cancelToken)
         );
+        if (data.owner_type === OwnerType.Group) {
+          const group = this.root.groupStore.groups.find(group => group.id === data.owner_id);
+          if (group) {
+            group.dbServerIds.add(data.id);
+          }
+        }
         this.state.saveState = ApiRequestState.Success;
       })
       .catch(() => {
@@ -406,6 +423,12 @@ class DbServerStore implements Store {
         const connection = this.state.dbServers.find((con) => con.id === dbServer.id);
         if (!connection) {
           return;
+        }
+        if (connection.ownerType === OwnerType.Group) {
+          const group = this.root.groupStore.groups.find(group => group.id === connection.id);
+          if (group) {
+            group.dbServerIds.delete(connection.id);
+          }
         }
         this.state.dbServers.remove(connection);
       })

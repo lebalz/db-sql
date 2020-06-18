@@ -112,6 +112,8 @@ export class TempDbServer extends DbServer {
     return {
       name: this.name,
       db_type: this.dbType,
+      owner_type: this.ownerType,
+      owner_id: this.ownerId,
       host: this.host,
       port: this.port,
       username: this.username,

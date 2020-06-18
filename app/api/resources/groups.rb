@@ -27,15 +27,22 @@ module Resources
       end
     end
     resource :groups do
-      desc 'Get groups, by default 20 with no offset'
+      desc 'Get all groups of the current user'
+      get do
+        present(
+          current_user.groups.includes(:user_groups, :db_servers, :users),
+          with: Entities::Group
+        )
+      end
+
+      desc 'Get public groups, by default 20 with no offset'
       params do
         optional(:limit, type: Integer, default: 20, desc: 'maximal number of returned groups')
         optional(:offset, type: Integer,  default: 0, desc: 'offset of returned groups')
       end
-      get do
+      get :public_groups do
         present(
-          Group
-            .available(current_user)
+          Group.public_available
             .includes(:user_groups, :db_servers, :users)
             .offset(params[:offset])
             .limit(params[:limit]),
@@ -45,7 +52,7 @@ module Resources
 
       desc 'Get number of available groups'
       get :counts do
-        { count: Group.available(current_user).count }
+        { count: current_user.user_groups.count }
       end
 
       desc 'Create a new group'

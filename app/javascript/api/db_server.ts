@@ -92,6 +92,8 @@ export interface DatabaseName {
 
 export interface CreateProps {
   name: string;
+  owner_type: OwnerType;
+  owner_id: string;
   db_type: DbType;
   host: string;
   port: number;
