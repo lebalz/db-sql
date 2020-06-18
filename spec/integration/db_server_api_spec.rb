@@ -26,7 +26,8 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json[0]['name']).to eq(@db_server.name)
         expect(json[0]['password_encrypted']).not_to eq("asdfasdf")
         expect(json[0]['port']).to eq(@db_server.port)
-        expect(json[0]['user_id']).to eq(@db_server.user.id)
+        expect(json[0]['owner_id']).to eq(@db_server.user.id)
+        expect(json[0]['owner_type']).to eq('user')
         expect(json[0]['username']).to eq(@db_server.username)
       end
     end
@@ -39,7 +40,8 @@ RSpec.describe "API::Resources::DbServer" do
           host: 'localhost',
           port: 1234,
           username: 'foobar',
-          password: 'retoholz'
+          password: 'retoholz',
+          owner_type: :user
         }
       end
       it 'can create a new db server' do
@@ -59,7 +61,8 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json['name']).to eq("test db server")
         expect(json['password_encrypted']).not_to eq("retoholz")
         expect(json['port']).to eq(1234)
-        expect(json['user_id']).to eq(@user.id)
+        expect(json['owner_id']).to eq(@user.id)
+        expect(json['owner_type']).to eq('user')
         expect(json['username']).to eq("foobar")
         expect(DbServer.all.size).to be(2)
         DbServer.find(json['id']).destroy!

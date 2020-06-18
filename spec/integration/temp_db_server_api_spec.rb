@@ -32,7 +32,8 @@ RSpec.describe "API::Resources::TempDbServer" do
           }
         )
         expect(response.successful?).to be_truthy
-        expect(json).to eq('success' => false, 'message' => "Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (2)")
+        expect(json['success']).to be_falsey
+        expect(json['message']).not_to be_empty
       end
     end
 
