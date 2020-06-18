@@ -29,13 +29,26 @@ FactoryBot.define do
     query { File.read(File.join(query_path(db_type: db_type), 'database_schema.sql')) }
   end
 
+  factory :group do
+    name { 'sharing is caring' }
+    is_private { true }
+  end
+
   factory :db_server do
     transient do
       user_password { 'asdfasdf' }
       db_password { 'safe-db-password' }
+      key do
+        if user
+          user.crypto_key(user_password)
+        elsif group
+          current_user = group.users.first
+          group.crypto_key(current_user, current_user.private_key(current_user.crypto_key(user_password)))
+        end
+      end
       crypt do
         DbServer.encrypt(
-          key: user.crypto_key(user_password),
+          key: key,
           db_password: db_password
         )
       end
@@ -60,6 +73,9 @@ FactoryBot.define do
     end
     trait :mysql do
       username { 'root' }
+    end
+    trait :group do
+      user { nil }
     end
   end
 end

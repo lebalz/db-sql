@@ -42,19 +42,43 @@ module Helpers
     { db_type: :mariadb, username: 'root', port: 3410, version: 'mariadb_10.5.3' }
   ].freeze
 
-  def db_server_for(version)
+  def db_server_for(version, owner_type:)
     config = DATABSE_CONFIGS.find { |conf| conf[:version] == version }
-    FactoryBot.create(
-      :db_server,
-      db_type: config[:db_type],
-      username: config[:username],
-      port: config[:port]
-    )
+    case owner_type
+    when :user
+      FactoryBot.create(
+        :db_server,
+        db_type: config[:db_type],
+        username: config[:username],
+        port: config[:port]
+      )
+    when :group
+      group = FactoryBot.create(:group)
+      user = User.find_by(email: 'sqler1@db.ch') ||
+               FactoryBot.create(:user, email: 'sqler1@db.ch')
+      group.add_user(user: user, group_key: Group.random_crypto_key, is_admin: true)
+      db_server = FactoryBot.create(
+        :db_server,
+        :group,
+        db_type: config[:db_type],
+        username: config[:username],
+        port: config[:port],
+        group: group
+      )
+      db_server
+    end
   end
 
-  def config_for(db_version:)
-    @db_server = db_server_for(db_version)
-    @user = @db_server.user
+  def config_for(db_version:, owner_type: :user)
+    @db_server = db_server_for(db_version, owner_type: owner_type)
+    @owner = @db_server.owner
+    case @db_server.owner_type
+    when :user
+      @user = @owner
+    when :group
+      @user = @owner.users.first
+    end
+
     login_token = FactoryBot.create(:login_token, user: @user)
     @crypto_key = @user.crypto_key('asdfasdf')
     @headers = {

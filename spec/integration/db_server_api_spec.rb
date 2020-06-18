@@ -10,9 +10,9 @@ end
 RSpec.describe "API::Resources::DbServer" do
   RSpec.shared_examples 'common database specs' do
     describe 'GET /api/db_servers' do
-      it 'can get all database servers of the current user' do
+      it 'can get all database servers of the current owner' do
         get(
-          "/api/db_servers",
+          "/api/db_servers?include_shared=true",
           headers: @headers
         )
         expect(response.successful?).to be_truthy
@@ -26,8 +26,8 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json[0]['name']).to eq(@db_server.name)
         expect(json[0]['password_encrypted']).not_to eq("asdfasdf")
         expect(json[0]['port']).to eq(@db_server.port)
-        expect(json[0]['owner_id']).to eq(@db_server.user.id)
-        expect(json[0]['owner_type']).to eq('user')
+        expect(json[0]['owner_id']).to eq(@db_server.owner.id)
+        expect(json[0]['owner_type']).to eq(@owner_type.to_s)
         expect(json[0]['username']).to eq(@db_server.username)
       end
     end
@@ -41,7 +41,8 @@ RSpec.describe "API::Resources::DbServer" do
           port: 1234,
           username: 'foobar',
           password: 'retoholz',
-          owner_type: :user
+          owner_type: @owner_type,
+          owner_id: @owner.id
         }
       end
       it 'can create a new db server' do
@@ -61,8 +62,8 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json['name']).to eq("test db server")
         expect(json['password_encrypted']).not_to eq("retoholz")
         expect(json['port']).to eq(1234)
-        expect(json['owner_id']).to eq(@user.id)
-        expect(json['owner_type']).to eq('user')
+        expect(json['owner_id']).to eq(@owner.id)
+        expect(json['owner_type']).to eq(@owner_type.to_s)
         expect(json['username']).to eq("foobar")
         expect(DbServer.all.size).to be(2)
         DbServer.find(json['id']).destroy!
@@ -654,83 +655,98 @@ RSpec.describe "API::Resources::DbServer" do
     end
   end
 
-  describe 'with psql 9.3' do
-    before(:all) do
-      config_for(db_version: 'p9.3')
+  RSpec.shared_examples 'common owner type specs' do
+    describe 'with psql 9.3' do
+      before(:all) do
+        config_for(db_version: 'p9.3', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
     end
-    after(:all) do
-      @db_server.destroy!
+
+    describe 'with psql 10' do
+      before(:all) do
+        config_for(db_version: 'p10', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
     end
-    include_examples 'common database specs'
+
+    describe 'with psql 11' do
+      before(:all) do
+        config_for(db_version: 'p11', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
+    end
+
+    describe 'with psql 12' do
+      before(:all) do
+        config_for(db_version: 'p12', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
+    end
+
+    describe 'with mysql 5.6' do
+      before(:all) do
+        config_for(db_version: 'm5.6', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
+    end
+
+    describe 'with mysql 5.7' do
+      before(:all) do
+        config_for(db_version: 'm5.7', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
+    end
+
+    describe 'with mysql 8' do
+      before(:all) do
+        config_for(db_version: 'm8', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
+    end
+
+    describe 'with mariadb 10.5.3' do
+      before(:all) do
+        config_for(db_version: 'mariadb_10.5.3', owner_type: @owner_type)
+      end
+      after(:all) do
+        @db_server.destroy!
+      end
+      include_examples 'common database specs'
+    end
   end
 
-  describe 'with psql 10' do
+  describe 'with owner_type :user' do
     before(:all) do
-      config_for(db_version: 'p10')
+      @owner_type = :user
     end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
+    include_examples 'common owner type specs'
   end
-
-  describe 'with psql 11' do
+  describe 'with owner_type :group' do
     before(:all) do
-      config_for(db_version: 'p11')
+      @owner_type = :group
     end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
-  end
-
-  describe 'with psql 12' do
-    before(:all) do
-      config_for(db_version: 'p12')
-    end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
-  end
-
-  describe 'with mysql 5.6' do
-    before(:all) do
-      config_for(db_version: 'm5.6')
-    end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
-  end
-
-  describe 'with mysql 5.7' do
-    before(:all) do
-      config_for(db_version: 'm5.7')
-    end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
-  end
-
-  describe 'with mysql 8' do
-    before(:all) do
-      config_for(db_version: 'm8')
-    end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
-  end
-
-  describe 'with mariadb 10.5.3' do
-    before(:all) do
-      config_for(db_version: 'mariadb_10.5.3')
-    end
-    after(:all) do
-      @db_server.destroy!
-    end
-    include_examples 'common database specs'
+    include_examples 'common owner type specs'
   end
 end

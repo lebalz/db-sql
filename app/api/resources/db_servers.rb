@@ -37,8 +37,15 @@ module Resources
 
     resource :db_servers do
       desc 'Get all database servers'
+      params do
+        requires(:include_shared, type: Boolean, default: false, desc: 'wheter to include shared db servers from groups')
+      end
       get do
-        present current_user.db_servers, with: Entities::DbServer
+        if params[:include_shared]
+          present current_user.all_db_servers, with: Entities::DbServer
+        else
+          present current_user.db_servers, with: Entities::DbServer
+        end
       end
 
       desc 'Create a database server'
