@@ -11,7 +11,6 @@ import SchemaQueryStore from '../../stores/schema_query_store';
 
 interface Props {
   dbConnection: DbServer;
-  style?: React.CSSProperties;
 }
 
 interface InjectedProps extends Props {
@@ -50,7 +49,7 @@ export default class DbServerOverview extends React.Component<Props> {
   render() {
     const { name, host, port, dbType, queryCount, errorQueryCount } = this.dbConnection;
     return (
-      <Card style={this.props.style} className="db-server-card">
+      <Card className="db-server-card">
         <Card.Content>
           <Card.Header content={name} />
           <Card.Meta content={`${host}:${port}`} />

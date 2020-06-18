@@ -47,9 +47,8 @@ export default class AddDbServer extends React.Component<Props> {
     return (
       <Button
         style={{
-          alignSelf: 'flex-end',
-          marginBottom: '1em',
-          marginLeft: '0.5em'
+          justifySelf: 'start',
+          alignSelf: 'end'
         }}
         icon="add"
         size="large"
