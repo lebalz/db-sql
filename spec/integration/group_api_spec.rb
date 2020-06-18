@@ -47,6 +47,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     FactoryBot.create(
       :db_server,
       :group,
+      name: 'db_server1',
       db_type: :psql,
       username: 'foobar',
       port: 5432,
@@ -56,6 +57,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     FactoryBot.create(
       :db_server,
       :group,
+      name: 'db_server2',
       db_type: :mysql,
       username: 'chocolate',
       port: 5432,
@@ -65,6 +67,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     FactoryBot.create(
       :db_server,
       :group,
+      name: 'db_server3',
       db_type: :psql,
       username: 'bliblablu',
       port: 5432,
@@ -78,16 +81,18 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         "/api/groups",
         headers: @user1_headers
       )
-      # queries are ordered
+
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
       expect(json[0]["name"]).to eq("Random SQL")
       expect(json[0]["admin_ids"]).to include(@user1.id)
-      expect(json[0]["db_servers"].count).to be(2)
-      expect(json[0]["db_servers"][0]['username']).to eq("foobar")
-      expect(json[0]["db_servers"][0]['name']).to eq("db_server1")
-      expect(json[0]["db_servers"][1]['username']).to eq("chocolate")
-      expect(json[0]["db_servers"][1]['name']).to eq("db_server2")
+
+      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
+      expect(db_servers.count).to be(2)
+      expect(db_servers[0]['name']).to eq("db_server1")
+      expect(db_servers[0]['username']).to eq("foobar")
+      expect(db_servers[1]['name']).to eq("db_server2")
+      expect(db_servers[1]['username']).to eq("chocolate")
 
       expect(json[1]["name"]).to eq("Fancy Pancy")
       expect(json[1]["db_servers"].count).to be(1)
@@ -99,16 +104,18 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         "/api/groups",
         headers: @user2_headers
       )
-      # queries are ordered
+    
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
       expect(json[0]["admin_ids"]).not_to include(@user2.id)
       expect(json[0]["name"]).to eq("Random SQL")
-      expect(json[0]["db_servers"].count).to be(2)
-      expect(json[0]["db_servers"][0]['name']).to eq("db_server1")
-      expect(json[0]["db_servers"][0]['username']).to eq("foobar")
-      expect(json[0]["db_servers"][1]['username']).to eq("chocolate")
-      expect(json[0]["db_servers"][1]['name']).to eq("db_server2")
+
+      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
+      expect(db_servers.count).to be(2)
+      expect(db_servers[0]['name']).to eq("db_server1")
+      expect(db_servers[0]['username']).to eq("foobar")
+      expect(db_servers[1]['name']).to eq("db_server2")
+      expect(db_servers[1]['username']).to eq("chocolate")
 
       get(
         "/api/groups",
