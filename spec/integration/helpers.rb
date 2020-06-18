@@ -42,7 +42,7 @@ module Helpers
     { db_type: :mariadb, username: 'root', port: 3410, version: 'mariadb_10.5.3' }
   ].freeze
 
-  def db_server_for(version, owner_type:)
+  def db_server_for(version, owner_type:, is_admin: true)
     config = DATABSE_CONFIGS.find { |conf| conf[:version] == version }
     case owner_type
     when :user
@@ -69,8 +69,8 @@ module Helpers
     end
   end
 
-  def config_for(db_version:, owner_type: :user)
-    @db_server = db_server_for(db_version, owner_type: owner_type)
+  def config_for(db_version:, owner_type: :user, read_only_access: false)
+    @db_server = db_server_for(db_version, owner_type: owner_type, is_admin: read_only_access)
     @owner = @db_server.owner
     case @db_server.owner_type
     when :user
