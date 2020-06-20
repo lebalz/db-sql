@@ -85,7 +85,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
       expect(json[0]["name"]).to eq("Random SQL")
-      expect(json[0]["admin_ids"]).to include(@user1.id)
+      expect(json[0]["members"].find { |u| u['user']['id'] == @user1.id }['is_admin']).to be_truthy
 
       db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
       expect(db_servers.count).to be(2)
@@ -98,7 +98,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(json[1]["db_servers"].count).to be(1)
       expect(json[1]["db_servers"][0]['name']).to eq("db_server3")
       expect(json[1]["db_servers"][0]['username']).to eq("bliblablu")
-      expect(json[1]["admin_ids"]).not_to include(@user1.id)
+      expect(json[1]["members"].find { |u| u['user']['id'] == @user1.id }['is_admin']).to be_falsey
 
       get(
         "/api/groups",
@@ -107,7 +107,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json[0]["admin_ids"]).not_to include(@user2.id)
+      expect(json[0]["members"].find { |u| u['user']['id'] == @user2.id }['is_admin']).to be_falsey
       expect(json[0]["name"]).to eq("Random SQL")
 
       db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
@@ -128,7 +128,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(json[0]["db_servers"].count).to be(1)
       expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
       expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
-      expect(json[0]["admin_ids"]).to include(@user3.id)
+      expect(json[0]["members"].find { |u| u['user']['id'] == @user3.id }['is_admin']).to be_truthy
     end
 
     it 'returns all public available groups' do
