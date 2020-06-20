@@ -9,6 +9,7 @@ import Tooltip from '../../shared/Tooltip';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import { OwnerType, DbServer } from '../../api/db_server';
 import { DbType } from '../../models/DbServer';
+import AddEntityButton from '../../shared/AddEntityButton';
 
 const DEFAULT_DB_SERVER: DbServer = {
   created_at: new Date().toISOString(),
@@ -45,15 +46,7 @@ export default class AddDbServer extends React.Component<Props> {
   }
   render() {
     return (
-      <Button
-        style={{
-          justifySelf: 'start',
-          alignSelf: 'end'
-        }}
-        icon="add"
-        size="large"
-        title="Add new db server"
-        circular
+      <AddEntityButton
         onClick={() => {
           const temp = new TempDbServer(
             { ...DEFAULT_DB_SERVER, owner_type: this.props.ownerType, owner_id: this.props.ownerId },
@@ -64,6 +57,7 @@ export default class AddDbServer extends React.Component<Props> {
           );
           this.injected.dbServerStore.setTempDbServer(temp);
         }}
+        title="Add new db server"
       />
     );
   }
