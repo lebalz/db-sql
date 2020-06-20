@@ -7,7 +7,7 @@ module Resources
     end
     helpers do
       def load_current_group
-        group = Group.includes(:user_groups, :db_servers, :users).find(params[:id])
+        group = Group.includes(:group_members, :db_servers, :users).find(params[:id])
 
         error!('Group not found', 302) unless group
         unless group.public? || group.member?(current_user)
@@ -30,7 +30,7 @@ module Resources
       desc 'Get all groups of the current user'
       get do
         present(
-          current_user.groups.includes(:user_groups, :db_servers, :users),
+          current_user.groups.includes(:group_members, :db_servers, :users),
           with: Entities::Group
         )
       end
@@ -44,7 +44,7 @@ module Resources
       get :public do
         present(
           Group.public_available
-            .includes(:user_groups, :db_servers, :users)
+            .includes(:group_members, :db_servers, :users)
             .offset(params[:offset])
             .limit(params[:limit]),
           with: Entities::Group
@@ -82,6 +82,27 @@ module Resources
         desc 'Get a specific group'
         get do
           present(current_group, with: Entities::Group)
+        end
+        
+        desc 'Change permission for user'
+        params do
+          requires(:user_id, type: String, desc: 'user id')
+          requires(:is_admin, type: Boolean, desc: 'is admin')
+        end
+        post :set_admin_permission do
+          unless current_group.admin?(current_user)
+            error!('No permission to delete this group', 401)
+          end
+          error!('Admin can not revoke it\'s admin rights User not found', 302) if current_user.id == params[:user_id]
+
+          group_member = current_group.group_members.find_by(user_id: params[:user_id])
+          error!('User not found', 302) unless group_member
+
+          group_member.update!(
+            is_admin: params[:is_admin]
+          )
+          
+          present(group_member, with: Entities::GroupMember)
         end
 
         desc 'Delete a group'

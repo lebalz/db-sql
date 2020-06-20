@@ -46,6 +46,9 @@ gem 'bootsnap', '>= 1.4.2', require: false
 # run tests from github
 gem 'travis'
 
+# support composite primary keys, e.g. for group members
+gem 'composite_primary_keys', '~> 12'
+
 group :development, :test do
   gem 'pry'
   gem 'pry-doc'

@@ -24,8 +24,8 @@
 #
 
 class User < ApplicationRecord
-  has_many :user_groups
-  has_many :groups, through: :user_groups
+  has_many :group_members
+  has_many :groups, through: :group_members
   has_secure_password
   has_many :database_schema_queries,
            class_name: 'DatabaseSchemaQuery',
@@ -275,13 +275,13 @@ class User < ApplicationRecord
       if has_keypair?
         pkey = private_key(old_crypto_key)
         if pkey.nil?
-          user_groups.update_all(
+          group_members.update_all(
             is_outdated: true
           )
         else
-          user_groups.each do |user_group|
-            secret = user_group.secret(pkey)
-            user_group.update!(
+          group_members.each do |member|
+            secret = member.secret(pkey)
+            member.update!(
               crypto_key_encrypted: rsa_key.public_key.public_encrypt(secret)
             )
           end

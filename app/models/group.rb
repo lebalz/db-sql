@@ -11,8 +11,9 @@
 #  updated_at :datetime         not null
 #
 class Group < ApplicationRecord
-  has_many :user_groups, dependent: :delete_all
-  has_many :users, through: :user_groups
+  has_many :group_members, dependent: :delete_all
+  alias members group_members
+  has_many :users, through: :group_members
 
   has_many :db_servers, dependent: :delete_all
 
@@ -45,23 +46,23 @@ class Group < ApplicationRecord
 
   # @return [Array<UUID>]
   def user_ids
-    user_groups.pluck(:user_id)
+    group_members.pluck(:user_id)
   end
 
   # when a user of this group had to reset it's password,
-  # the crypto key could not be updated correctly and the UserGroup
+  # the crypto key could not be updated correctly and the GroupMember
   # is marked as outdated.
   # @return [boolean]
   def has_outdated_members?
-    user_groups.any?(&:outdated?)
+    group_members.any?(&:outdated?)
   end
 
-  def outdated_user_groups
-    user_groups.where(is_outdated: true)
+  def outdated_members
+    group_members.where(is_outdated: true)
   end
 
   def admins
-    user_groups.where(is_admin: true).map(&:user)
+    group_members.where(is_admin: true).map(&:user)
   end
 
   # @param user [User]
@@ -73,11 +74,11 @@ class Group < ApplicationRecord
   # @param group_key [String] key used to decrypt the
   #   db server passwords of this group
   def update_outdated_members(group_key:)
-    outdated_user_groups.each do |user_group|
+    outdated_members.each do |member|
       key = Base64.strict_encode64(
-        user_group.user.public_key.public_encrypt(group_key)
+        member.user.public_key.public_encrypt(group_key)
       )
-      user_group.update!(
+      member.update!(
         crypto_key_encrypted: key,
         is_outdated: false
       )
@@ -90,11 +91,11 @@ class Group < ApplicationRecord
   def force_new_crypto_key!
     ActiveRecord::Base.transaction do
       new_key = Group.random_crypto_key
-      user_groups.each do |user_group|
+      group_members.each do |member|
         key = Base64.strict_encode64(
-          user_group.user.public_key.public_encrypt(new_key)
+          member.user.public_key.public_encrypt(new_key)
         )
-        user_group.update!(
+        member.update!(
           crypto_key_encrypted: key,
           is_outdated: false
         )
@@ -115,7 +116,7 @@ class Group < ApplicationRecord
     return if user_ids.include? user.id
 
     key = Base64.strict_encode64(user.public_key.public_encrypt(group_key))
-    UserGroup.create!(
+    GroupMember.create!(
       crypto_key_encrypted: key,
       group: self,
       user: user,
@@ -128,7 +129,7 @@ class Group < ApplicationRecord
   #   db server passwords of this group
   # @param private_key [OpenSSL::PKey::RSA]
   def crypto_key(user, private_key)
-    rel = user_groups.find_by(user: user)
+    rel = group_members.find_by(user: user)
     return unless rel
 
     rel.crypto_key(private_key)
@@ -136,7 +137,7 @@ class Group < ApplicationRecord
 
   # @return [Integer]
   def user_count
-    user_groups.size
+    group_members.size
   end
 
   # @return [Integer]
@@ -146,7 +147,7 @@ class Group < ApplicationRecord
 
   # @param user [User]
   def remove_user(user:)
-    user_groups.find_by(user_id: user.id)&.destroy
+    group_members.find_by(user_id: user.id)&.destroy
     reload!
     return unless user_count.zero?
 

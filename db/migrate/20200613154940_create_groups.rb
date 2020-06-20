@@ -7,7 +7,7 @@ class CreateGroups < ActiveRecord::Migration[6.0]
     end
 
     # join table
-    create_table :users_groups, :id => false do |t|
+    create_table :group_members, primary_key: %i[user_id group_id] do |t|
       t.references :user, type: :uuid, null: false, index: true
       t.references :group, type: :uuid, null: false, index: true
 
@@ -17,8 +17,8 @@ class CreateGroups < ActiveRecord::Migration[6.0]
       t.boolean :is_outdated, default: false, null: false
       t.timestamps
     end
-    add_foreign_key :users_groups, :users, column: :user_id
-    add_foreign_key :users_groups, :groups, column: :group_id
+    add_foreign_key :group_members, :users, column: :user_id
+    add_foreign_key :group_members, :groups, column: :group_id
 
     add_reference :db_servers, :group, type: :uuid, index: true
     add_foreign_key :db_servers, :groups
