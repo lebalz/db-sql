@@ -3,13 +3,14 @@ import { RootStore, Store } from './root_store';
 import _ from 'lodash';
 import { getGroups } from '../api/group';
 import DbServer from '../models/DbServer';
-import User from '../models/User';
 import Group from '../models/Group';
+import { GroupUser } from '../api/user';
 
 class State {
   groups = observable<Group>([]);
   expandedGroups = observable(new Set<string>([]));
   @observable activeGroupCardId?: string;
+  @observable userFilter?: string;
 }
 
 class GroupStore implements Store {
@@ -36,12 +37,29 @@ class GroupStore implements Store {
 
   @computed
   get activeGroup(): Group | undefined {
-    return this.groups.find(group => group.id === this.activeGroupId);
+    return this.groups.find((group) => group.id === this.activeGroupId);
   }
 
   @action
   setActiveGroupId(id: string) {
     this.state.activeGroupCardId = id;
+  }
+
+  @computed
+  get userFilter(): string {
+    return this.state.userFilter || '';
+  }
+
+  @computed
+  get filteredGroupUsers(): GroupUser[] {
+    const escapedFilter = _.escapeRegExp(this.userFilter);
+    const regexp = new RegExp(escapedFilter, 'i');
+
+    const filtered = this.root.user.groupUsers
+      .filter((user) => !this.activeGroup?.userIds.includes(user.id))
+      .filter((user) => regexp.test(user.email));
+
+    return _.orderBy(filtered, 'email', 'asc');
   }
 
   @computed
@@ -51,12 +69,12 @@ class GroupStore implements Store {
 
   @computed
   get publicGroups(): Group[] {
-    return this.state.groups.filter(group => !group.isMember);
+    return this.state.groups.filter((group) => !group.isMember);
   }
 
   @computed
   get myGroups(): Group[] {
-    return this.state.groups.filter(group => group.isMember);
+    return this.state.groups.filter((group) => group.isMember);
   }
 
   @computed
@@ -72,32 +90,29 @@ class GroupStore implements Store {
       this.expandedGroups.add(groupId);
     }
   }
-  
+
   @action
   addNewGroup() {
     const tempId = `${Date.now()}`;
     this.groups.push(
-      new Group(
-        this,
-        this.root.dbServer,
-        this.root.user,
-        {
-          id: tempId,
-          created_at: new Date().toISOString(),
-          members: [{
+      new Group(this, this.root.dbServer, this.root.user, {
+        id: tempId,
+        created_at: new Date().toISOString(),
+        members: [
+          {
             created_at: new Date().toISOString(),
             group_id: tempId,
             is_admin: true,
             is_outdated: false,
             updated_at: new Date().toISOString(),
-            user: this.root.session.currentUser
-          }],
-          db_servers: [],
-          is_private: true,
-          name: 'New Group'
-        }
-      )
-    )
+            user_id: this.root.session.currentUser.id
+          }
+        ],
+        db_servers: [],
+        is_private: true,
+        name: 'New Group'
+      })
+    );
     this.setActiveGroupId(tempId);
   }
 
@@ -106,7 +121,7 @@ class GroupStore implements Store {
     getGroups(this.root.cancelToken).then(({ data }) => {
       data.forEach((group) => {
         group.db_servers.forEach((dbServer) => {
-          if (!this.root.dbServer.dbServers.find(db => db.id === dbServer.id)) {
+          if (!this.root.dbServer.dbServers.find((db) => db.id === dbServer.id)) {
             this.root.dbServer.dbServers.push(
               new DbServer(dbServer, this.root.dbServer, this.root.schemaQueryStore, this.root.cancelToken)
             );

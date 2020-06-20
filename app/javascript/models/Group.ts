@@ -1,6 +1,6 @@
 import { observable, computed, action } from 'mobx';
 import _ from 'lodash';
-import { Group as GroupProps, GroupUser } from '../api/group';
+import { Group as GroupProps } from '../api/group';
 import DbServerStore from '../stores/db_server_store';
 import UserStore from '../stores/user_store';
 import DbServer from './DbServer';
@@ -8,6 +8,7 @@ import { rejectUndefined } from '../utils/listFilters';
 import User from './User';
 import GroupStore from '../stores/group_store';
 import GroupMember from './GroupMember';
+import { GroupUser } from '../api/user';
 
 export enum Mark {
   From = 'from',
@@ -33,16 +34,19 @@ export default class Group {
     this.id = props.id;
     this.isPrivate = props.is_private;
     this.createdAt = props.created_at;
-    this.members.replace(
-      props.members.map((member) => new GroupMember(groupStore, member))
-    );
+    this.members.replace(props.members.map((member) => new GroupMember(groupStore, userStore, member)));
     this.dbServerIds.replace(new Set(props.db_servers.map((dbServer) => dbServer.id)));
     this.name = props.name;
   }
 
   @computed
   get users(): GroupUser[] {
-    return Array.from(this.members).map((member) => member.user);
+    return rejectUndefined(Array.from(this.members).map((member) => member.user));
+  }
+
+  @computed
+  get userIds(): string[] {
+    return this.members.map((member) => member.userId);
   }
 
   @computed
@@ -54,9 +58,11 @@ export default class Group {
 
   @computed
   get admins(): GroupUser[] {
-    return Array.from(this.members)
-      .filter((member) => member.isAdmin)
-      .map((member) => member.user);
+    return rejectUndefined(
+      Array.from(this.members)
+        .filter((member) => member.isAdmin)
+        .map((member) => member.user)
+    );
   }
 
   @action
@@ -66,7 +72,7 @@ export default class Group {
 
   @computed
   get isAdmin(): boolean {
-    return this.admins.some(user => user.id === this.userStore.loggedInUser.id);
+    return this.admins.some((user) => user.id === this.userStore.loggedInUser.id);
   }
 
   @action
@@ -76,7 +82,7 @@ export default class Group {
 
   @computed
   get isMember(): boolean {
-    return this.users.some(user => user.id === this.userStore.loggedInUser.id);
+    return this.users.some((user) => user.id === this.userStore.loggedInUser.id);
   }
 
   @computed
@@ -86,12 +92,12 @@ export default class Group {
 
   @computed
   get currentMember(): GroupMember | undefined {
-    return this.members.find((member) => member.user.id === this.userStore.loggedInUser.id);
+    return this.members.find((member) => member.user?.id === this.userStore.loggedInUser.id);
   }
 
   @computed
   get outdatedMembers(): GroupUser[] {
-    return this.members.filter((member) => member.isOutdated).map((member) => member.user);
+    return rejectUndefined(this.members.filter((member) => member.isOutdated).map((member) => member.user));
   }
 
   @action

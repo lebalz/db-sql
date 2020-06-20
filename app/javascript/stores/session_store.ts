@@ -339,6 +339,7 @@ class SessionStore implements Store {
     } else {
       this.root.user.cleanup();
     }
+    this.root.user.loadGroupUsers();
 
     this.navigateToNextOrDefaultPage();
   }

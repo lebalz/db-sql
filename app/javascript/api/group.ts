@@ -1,20 +1,15 @@
 import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
 import { DbServer } from './db_server';
-
-export interface GroupUser {
-  id: string;
-  email: string;
-}
+import { GroupUser } from './user';
 
 export interface GroupMember {
   is_admin: boolean;
   is_outdated: boolean;
   group_id: string;
-  user: GroupUser;
+  user_id: string;
   created_at: string;
   updated_at: string;
-
 }
 
 export interface Group {
@@ -41,11 +36,20 @@ export function getPublicGroups(
   });
 }
 
-export function setAdminPermission(groupId: string, memberId: string, isAdmin: boolean): AxiosPromise<GroupMember> {
-  return api.post(
-    `groups/${groupId}/set_admin_permission`,
-    {
-      user_id: memberId,
-      is_admin: isAdmin
-    });
+export function setAdminPermission(
+  groupId: string,
+  userId: string,
+  isAdmin: boolean
+): AxiosPromise<GroupMember> {
+  return api.post(`groups/${groupId}/members/${userId}/set_admin_permission`, {
+    is_admin: isAdmin
+  });
+}
+
+export function removeMember(groupId: string, userId: string): AxiosPromise<void> {
+  return api.delete(`groups/${groupId}/members/${userId}`);
+}
+
+export function addGroupMember(groupId: string, newMemberId: string): AxiosPromise<GroupMember> {
+  return api.post(`groups/${groupId}/members`, { user_id: newMemberId});
 }

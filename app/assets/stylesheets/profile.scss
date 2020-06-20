@@ -128,6 +128,16 @@
     .member-list {
       .member {
         display: flex;
+        padding: 0.3em;
+        &:nth-child(even) {
+          background: var(--highlight-grey-20);
+        }
+        &:nth-child(odd) {
+          background: var(--highlight-grey-10);
+        }
+        &:hover {
+          background: var(--highlight-grey-50);
+        }
       }
     }
   }

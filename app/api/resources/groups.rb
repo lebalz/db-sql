@@ -83,32 +83,11 @@ module Resources
         get do
           present(current_group, with: Entities::Group)
         end
-        
-        desc 'Change permission for user'
-        params do
-          requires(:user_id, type: String, desc: 'user id')
-          requires(:is_admin, type: Boolean, desc: 'is admin')
-        end
-        post :set_admin_permission do
-          unless current_group.admin?(current_user)
-            error!('No permission to delete this group', 401)
-          end
-          error!('Admin can not revoke it\'s admin rights User not found', 302) if current_user.id == params[:user_id]
-
-          group_member = current_group.group_members.find_by(user_id: params[:user_id])
-          error!('User not found', 302) unless group_member
-
-          group_member.update!(
-            is_admin: params[:is_admin]
-          )
-          
-          present(group_member, with: Entities::GroupMember)
-        end
 
         desc 'Delete a group'
         delete do
           unless current_group.admin?(current_user)
-            error!('No permission to delete this group', 401)
+            error!('No permission to delete this group', 302)
           end
 
           begin
@@ -128,7 +107,7 @@ module Resources
         end
         put do
           unless current_group.admin?(current_user)
-            error!('No permission to update this group', 401)
+            error!('No permission to update this group', 302)
           end
 
           change = ActionController::Parameters.new(params[:data])
@@ -140,6 +119,67 @@ module Resources
           )
           present(current_group, with: Entities::Group)
         end
+
+        resource :members do
+          desc 'add a member'
+          params do
+            requires(:user_id, type: String, desc: 'user id of the new member')
+          end
+          post do
+            unless current_group.admin?(current_user)
+              error!('No permission to remove members from this group', 302)
+            end
+
+            new_member = User.find(params[:user_id])
+            group_member = current_group.add_user(
+              user: new_member,
+              group_key: current_group.crypto_key(
+                current_user,
+                current_user.private_key(crypto_key)
+              )
+            )
+            present(group_member, with: Entities::GroupMember)
+          end
+
+          route_param :user_id, type: String, desc: 'Group ID' do
+
+            desc 'remove member'
+            delete do
+              unless current_group.admin?(current_user)
+                error!('No permission to remove members from this group', 302)
+              end
+              error!('Admin can not remove itself', 302) if current_user.id == params[:user_id]
+
+              group_member = current_group.group_members.find_by(user_id: params[:user_id])
+              error!('User not found', 302) unless group_member
+
+              group_member.destroy
+              status :no_content
+            end
+
+            desc 'Change permission for user'
+            params do
+              requires(:is_admin, type: Boolean, desc: 'is admin')
+            end
+            post :set_admin_permission do
+              unless current_group.admin?(current_user)
+                error!('No permission to delete this group', 302)
+              end
+              error!('Admin can not revoke it\'s admin rights User not found', 302) if current_user.id == params[:user_id]
+
+              group_member = current_group.group_members.find_by(user_id: params[:user_id])
+              error!('User not found', 302) unless group_member
+
+              group_member.update!(
+                is_admin: params[:is_admin]
+              )
+              
+              present(group_member, with: Entities::GroupMember)
+            end
+          end
+
+        end
+
       end
     end
   end
