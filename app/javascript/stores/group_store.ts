@@ -9,6 +9,7 @@ import Group from '../models/Group';
 class State {
   groups = observable<Group>([]);
   expandedGroups = observable(new Set<string>([]));
+  @observable activeGroupCardId?: string;
 }
 
 class GroupStore implements Store {
@@ -26,6 +27,21 @@ class GroupStore implements Store {
         }
       }
     );
+  }
+
+  @computed
+  get activeGroupId(): string | undefined {
+    return this.state.activeGroupCardId;
+  }
+
+  @computed
+  get activeGroup(): Group | undefined {
+    return this.groups.find(group => group.id === this.activeGroupId);
+  }
+
+  @action
+  setActiveGroupId(id: string) {
+    this.state.activeGroupCardId = id;
   }
 
   @computed
@@ -56,6 +72,34 @@ class GroupStore implements Store {
       this.expandedGroups.add(groupId);
     }
   }
+  
+  @action
+  addNewGroup() {
+    const tempId = `${Date.now()}`;
+    this.groups.push(
+      new Group(
+        this,
+        this.root.dbServer,
+        this.root.user,
+        {
+          id: tempId,
+          created_at: new Date().toISOString(),
+          members: [{
+            created_at: new Date().toISOString(),
+            group_id: tempId,
+            is_admin: true,
+            is_outdated: false,
+            updated_at: new Date().toISOString(),
+            user: this.root.session.currentUser
+          }],
+          db_servers: [],
+          is_private: true,
+          name: 'New Group'
+        }
+      )
+    )
+    this.setActiveGroupId(tempId);
+  }
 
   @action
   loadGroups() {
@@ -68,13 +112,8 @@ class GroupStore implements Store {
             );
           }
         });
-        group.users.forEach((user) => {
-          if (!this.root.user.users.find(u => u.id === user.id)) {
-            this.root.user.users.push(new User(user));
-          }
-        });
 
-        this.groups.push(new Group(this.root.dbServer, this.root.user, group));
+        this.groups.push(new Group(this, this.root.dbServer, this.root.user, group));
       });
     });
   }

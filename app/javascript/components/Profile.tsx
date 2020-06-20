@@ -11,6 +11,7 @@ import UserStore from '../stores/user_store';
 import UserList from './Profile/UserList';
 import DeleteAccount from './Profile/DeleteAccount';
 import SchemaQueries from './Profile/SchemaQueries';
+import Groups from './Profile/Groups';
 
 interface MatchParams {
   part: string;
@@ -57,6 +58,13 @@ export default class Profile extends React.Component<ProfileProps> {
             icon="trash"
             active={part === 'delete_account'}
             onClick={() => router.push('./delete_account')}
+          />
+          <Divider horizontal content="Groups" />
+          <Menu.Item
+            name="My Groups"
+            icon="group"
+            active={part === 'my_groups'}
+            onClick={() => router.push('./my_groups')}
           />
           {this.injected.userStore.showAdvancedSettings && (
             <Fragment>
@@ -107,6 +115,8 @@ export default class Profile extends React.Component<ProfileProps> {
                 return <UserList />;
               case 'schema_queries':
                 return <SchemaQueries />;
+              case 'my_groups':
+                return <Groups />;
               default:
                 return '404';
             }

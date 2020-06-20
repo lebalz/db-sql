@@ -1,34 +1,36 @@
 @import 'colors';
+
+.cards-container {
+  height: max-content;
+  padding: 2px;
+  .db-sql-card {
+    position: relative;
+    display: flex;
+    .main-label {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      display: flex;
+    }
+    .stats {
+      display: flex;
+    }
+    &.active {
+      background: var(--highlight-teal-50);
+    }
+    &:hover {
+      background: var(--highlight-grey-50) !important;
+      -webkit-transform: unset !important;
+      transform: unset !important;
+    }
+  }
+}
+
 .history {
   grid-area: history;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  .cards-container {
-    height: max-content;
-    padding: 2px;
-    .schema-query-card {
-      position: relative;
-      display: flex;
-      .default-label {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        display: flex;
-      }
-      .usage-stats {
-        display: flex;
-      }
-      &.active {
-        background: var(--highlight-teal-50);
-      }
-      &:hover {
-        background: var(--highlight-grey-50);
-        -webkit-transform: unset !important;
-        transform: unset !important;
-      }
-    }
-  }
 }
 #schema-query-grid {
   height: 100%;
@@ -105,5 +107,28 @@
     top: 1px;
     right: 3px;
     z-index: 999;
+  }
+}
+
+#groups-grid {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-areas: "groups configuration";
+  column-gap: 1em;
+
+  .groups {
+    grid-area: groups;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .configuration {
+    grid-area: configuration;
+    .member-list {
+      .member {
+        display: flex;
+      }
+    }
   }
 }

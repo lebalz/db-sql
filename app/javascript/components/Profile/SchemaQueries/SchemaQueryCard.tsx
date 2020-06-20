@@ -44,13 +44,13 @@ export default class SchemaQueryCard extends React.Component<Props> {
         key={rev.id}
         color={this.props.isActive ? 'teal' : undefined}
         onClick={() => this.props.onSelect()}
-        className={cx('schema-query-card', { active: this.props.isActive, dirty: this.schemaQuery.isDirty })}
+        className={cx('db-sql-card', { active: this.props.isActive, dirty: this.schemaQuery.isDirty })}
       >
         <Card.Content>
           <div className="card-labels">
             {rev.isDefault && (
               <Tooltip delayed content="This query is used by default to load the database schema.">
-                <Label content="default" color="teal" size="mini" className="default-label" />
+                <Label content="default" color="teal" size="mini" className="main-label" />
               </Tooltip>
             )}
           </div>
@@ -60,7 +60,7 @@ export default class SchemaQueryCard extends React.Component<Props> {
           <Card.Meta>{rev.createdAt.toLocaleString()}</Card.Meta>
           <Card.Description>{rev.description}</Card.Description>
         </Card.Content>
-        <Card.Content extra className="usage-stats">
+        <Card.Content extra className="stats">
           {rev.isPublic && (
             <Tooltip delayed content={`Used by ${rev.stats.public_user_count} other users.`}>
               <Label size="mini" color="blue" icon="user" content={rev.stats.public_user_count} />

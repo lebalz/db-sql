@@ -178,6 +178,7 @@ export class TempDbServer extends React.Component {
                   <Label as="a" color="teal" ribbon content="Display Name" />
                   <Form.Input
                     fluid
+                    placeholder="Display Name"
                     value={name}
                     onChange={(e) => (this.dbServer.name = e.target.value)}
                     type="text"
@@ -213,6 +214,7 @@ export class TempDbServer extends React.Component {
                       <Label as="a" color="teal" ribbon content="Host" />
                       <Form.Input
                         required
+                        placeholder="IP Address or host name"
                         value={this.dbServer.host}
                         onChange={(e) => (this.dbServer.host = e.target.value)}
                         type="text"

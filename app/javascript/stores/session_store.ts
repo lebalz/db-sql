@@ -203,7 +203,7 @@ class SessionStore implements Store {
     return null;
   }
 
-  @computed get currentUser() {
+  @computed get currentUser(): User {
     if (!this.user) {
       throw new Error('No logged in User');
     }
