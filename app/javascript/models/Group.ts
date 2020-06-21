@@ -1,6 +1,6 @@
 import { observable, computed, action } from 'mobx';
 import _ from 'lodash';
-import { Group as GroupProps } from '../api/group';
+import { Group as GroupProps, ChangeableProps, Changeable } from '../api/group';
 import DbServerStore from '../stores/db_server_store';
 import UserStore from '../stores/user_store';
 import DbServer from './DbServer';
@@ -21,22 +21,55 @@ export default class Group {
   private readonly dbServerStore: DbServerStore;
   private readonly userStore: UserStore;
   readonly id: string;
-  readonly createdAt: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly pristineState: ChangeableProps;
+  readonly isPersisted: boolean;
   @observable isPrivate: boolean;
   @observable name: string;
   members = observable<GroupMember>([]);
   dbServerIds = observable(new Set<string>());
 
-  constructor(groupStore: GroupStore, dbServerStore: DbServerStore, userStore: UserStore, props: GroupProps) {
+  constructor(
+    groupStore: GroupStore,
+    dbServerStore: DbServerStore,
+    userStore: UserStore,
+    props: GroupProps,
+    persisted: boolean = true
+  ) {
+    this.isPersisted = persisted;
     this.groupStore = groupStore;
     this.userStore = userStore;
     this.dbServerStore = dbServerStore;
     this.id = props.id;
     this.isPrivate = props.is_private;
-    this.createdAt = props.created_at;
+    this.createdAt = new Date(props.created_at);
+    this.updatedAt = new Date(props.updated_at);
     this.members.replace(props.members.map((member) => new GroupMember(groupStore, userStore, member)));
     this.dbServerIds.replace(new Set(props.db_servers.map((dbServer) => dbServer.id)));
     this.name = props.name;
+    this.pristineState = {
+      is_private: props.is_private,
+      name: props.name
+    };
+  }
+
+  @computed
+  get changeablProps(): ChangeableProps {
+    return {
+      name: this.name,
+      is_private: this.isPrivate
+    };
+  }
+
+  @computed
+  get isDirty(): boolean {
+    if (!this.isPersisted) {
+      return true;
+    }
+    return Object.values(Changeable).some((val) => {
+      return this.changeablProps[val] !== this.pristineState[val];
+    });
   }
 
   @computed
@@ -111,5 +144,25 @@ export default class Group {
   @computed
   get dbServerCount(): number {
     return this.dbServerIds.size;
+  }
+
+  @action
+  save() {
+    if (this.isPersisted) {
+      this.groupStore.save(this);
+    } else {
+      this.groupStore.create(this);
+    }
+  }
+
+  @action
+  restore() {
+    this.isPrivate = this.pristineState.is_private;
+    this.name = this.pristineState.name;
+  }
+
+  @action
+  destroy() {
+    this.groupStore.destroy(this);
   }
 }

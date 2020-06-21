@@ -7,6 +7,7 @@ module Entities
       expose :is_private
       expose :name
       expose :created_at
+      expose :updated_at
       expose :members, with: Entities::GroupMember
       expose :db_servers, with: Entities::DbServer
     end

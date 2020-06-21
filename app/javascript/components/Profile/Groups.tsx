@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, SyntheticEvent } from 'react';
 import {
   Segment,
   Checkbox,
@@ -9,7 +9,9 @@ import {
   Icon,
   Dropdown,
   DropdownItemProps,
-  DropdownProps
+  DropdownProps,
+  Input,
+  InputOnChangeData
 } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import UserStore from '../../stores/user_store';
@@ -22,6 +24,11 @@ import { groupBy } from 'lodash';
 import ClickableIcon from '../../shared/ClickableIcon';
 import { addGroupMember } from '../../api/group';
 import GroupMember from '../../models/GroupMember';
+import cx from 'classnames';
+import Tooltip from '../../shared/Tooltip';
+import Actions from './SchemaQueries/Actions';
+import { REST } from '../../declarations/REST';
+import _ from 'lodash';
 
 interface InjectedProps {
   groupStore: GroupStore;
@@ -65,6 +72,25 @@ export default class Groups extends React.Component {
     });
   }
 
+  @computed
+  get groups(): Group[] {
+    const escapedFilter = _.escapeRegExp(this.injected.groupStore.groupFilter);
+    const regexp = new RegExp(escapedFilter, 'i');
+
+    return this.injected.groupStore.myGroups.filter((group) => regexp.test(group.name));
+  }
+
+  onChangeName = (event: SyntheticEvent<HTMLInputElement>, data: InputOnChangeData) => {
+    event.preventDefault();
+    if (this.activeGroup) {
+      this.activeGroup.name = data.value;
+    }
+  };
+  onChangeGroupFilter = (event: SyntheticEvent<HTMLInputElement>, data: InputOnChangeData) => {
+    event.preventDefault();
+    this.injected.groupStore.setGroupFilter(data.value);
+  };
+
   addMember = action((event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
     const { activeGroup } = this;
     if (!activeGroup) {
@@ -78,10 +104,10 @@ export default class Groups extends React.Component {
   render() {
     return (
       <Segment style={{ width: '100%', height: '100%' }}>
-        <div id="groups-grid">
-          <div className="groups">
+        <div className="card-grid group-config">
+          <div className="cards">
             <div className="cards-container">
-              {this.injected.groupStore.myGroups.map((group) => {
+              {this.groups.map((group) => {
                 return (
                   <GroupCard
                     key={group.id}
@@ -90,23 +116,44 @@ export default class Groups extends React.Component {
                   />
                 );
               })}
-              <AddEntityButton
-                onClick={() => {
-                  this.injected.groupStore.addNewGroup();
-                }}
-                title="Add new group"
-              />
             </div>
           </div>
-          <div className="configuration">
-            {this.activeGroup && (
-              <Fragment>
-                <Header as="h2" content={this.activeGroup.name} />
+          <div className="selection">
+            <Input
+              size="mini"
+              value={this.injected.groupStore.groupFilter}
+              onChange={this.onChangeGroupFilter}
+              placeholder="Filter Groups..."
+            />
+            <Tooltip delayed content="Refresh schema query list">
+              <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh()} />
+            </Tooltip>
+            <Tooltip delayed content="Add a new schema query">
+              <Button icon="add" size="mini" onClick={() => this.injected.groupStore.addNewGroup()} />
+            </Tooltip>
+          </div>
+          {this.activeGroup && (
+            <Fragment>
+              <div
+                className={cx('name', {
+                  ['dirty-right']: this.activeGroup.name !== this.activeGroup.pristineState.name
+                })}
+              >
+                <Input
+                  value={this.activeGroup.name ?? ''}
+                  onChange={this.onChangeName}
+                  disabled={!this.activeGroup.isAdmin}
+                  placeholder="Group Name..."
+                />
+              </div>
+              <div className="editable">
                 <Button
                   onClick={() => this.activeGroup?.togglePublicPrivate()}
                   icon={this.activeGroup.isPrivate ? 'lock' : 'lock open'}
                   color={this.activeGroup.isPrivate ? 'black' : 'yellow'}
                   size="mini"
+                  label={this.activeGroup.isPrivate ? 'Private Group' : 'Public Group'}
+                  labelPosition="left"
                 />
                 {this.isGroupAdmin && (
                   <Dropdown
@@ -154,9 +201,14 @@ export default class Groups extends React.Component {
                     );
                   })}
                 </div>
-              </Fragment>
-            )}
-          </div>
+              </div>
+              <Actions
+                for={this.activeGroup}
+                isSaving={this.injected.groupStore.requestState === REST.Requested}
+                size="mini"
+              />
+            </Fragment>
+          )}
         </div>
       </Segment>
     );

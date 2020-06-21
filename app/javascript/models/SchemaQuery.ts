@@ -31,7 +31,12 @@ export default class SchemaQuery extends Sql {
   @observable isPrivate: boolean;
   @observable query: string;
 
-  constructor(store: SchemaQueryStore, props: DatabaseSchemaQuery, orderPosition: number, persisted: boolean = true) {
+  constructor(
+    store: SchemaQueryStore,
+    props: DatabaseSchemaQuery,
+    orderPosition: number,
+    persisted: boolean = true
+  ) {
     super();
     this.orderPosition = orderPosition;
     this.isPersisted = persisted;

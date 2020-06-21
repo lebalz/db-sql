@@ -31,7 +31,7 @@ export default class SchemaQueryProps extends React.Component<Props> {
     return (
       <Fragment>
         <div
-          className={cx('schema-name', {
+          className={cx('name', {
             ['dirty-right']: this.selectedSchemaQuery?.name !== this.selectedSchemaQuery?.pristineState.name
           })}
         >
@@ -43,7 +43,7 @@ export default class SchemaQueryProps extends React.Component<Props> {
           />
         </div>
         <div
-          className={cx('schema-description', {
+          className={cx('description', {
             ['dirty-right']:
               this.selectedSchemaQuery?.description !== this.selectedSchemaQuery?.pristineState.description
           })}

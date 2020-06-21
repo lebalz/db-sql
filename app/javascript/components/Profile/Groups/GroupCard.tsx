@@ -44,7 +44,7 @@ export default class GroupCard extends React.Component<Props> {
         key={this.group.id}
         color={this.props.isActive ? 'teal' : undefined}
         onClick={() => this.group.setAsActiveCard()}
-        className={cx('db-sql-card', { active: this.props.isActive })}
+        className={cx('db-sql-card', { active: this.props.isActive, dirty: this.group.isDirty })}
       >
         <Card.Content>
           <div className="card-labels">
@@ -59,11 +59,6 @@ export default class GroupCard extends React.Component<Props> {
           </Card.Header>
         </Card.Content>
         <Card.Content extra className="stats">
-          {this.group.isPublic && (
-            <Tooltip delayed content={`Used by ${this.group.memberCount} other users.`}>
-              <Label size="mini" color="blue" icon="user" content={this.group.memberCount} />
-            </Tooltip>
-          )}
           <Tooltip delayed content={`Used for ${this.group.dbServerCount} database server connections.`}>
             <Label size="mini" color="blue" icon="database" content={this.group.dbServerCount} />
           </Tooltip>

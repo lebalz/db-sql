@@ -1,16 +1,19 @@
 import { observable, action, computed, reaction } from 'mobx';
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
-import { getGroups } from '../api/group';
+import { getGroups, create, update, remove } from '../api/group';
 import DbServer from '../models/DbServer';
 import Group from '../models/Group';
 import { GroupUser } from '../api/user';
+import { REST } from '../declarations/REST';
 
 class State {
   groups = observable<Group>([]);
   expandedGroups = observable(new Set<string>([]));
   @observable activeGroupCardId?: string;
   @observable userFilter?: string;
+  @observable groupFilter: string = '';
+  @observable requestState: REST = REST.None;
 }
 
 class GroupStore implements Store {
@@ -31,6 +34,11 @@ class GroupStore implements Store {
   }
 
   @computed
+  get requestState(): REST {
+    return this.state.requestState;
+  }
+
+  @computed
   get activeGroupId(): string | undefined {
     return this.state.activeGroupCardId;
   }
@@ -41,13 +49,29 @@ class GroupStore implements Store {
   }
 
   @action
-  setActiveGroupId(id: string) {
+  setActiveGroupId(id?: string) {
+    if (!this.groups.find((group) => group.id === id)) {
+      if (this.myGroups.length > 0) {
+        this.state.activeGroupCardId = this.myGroups[0].id;
+      }
+      return;
+    }
     this.state.activeGroupCardId = id;
   }
 
   @computed
   get userFilter(): string {
     return this.state.userFilter || '';
+  }
+
+  @computed
+  get groupFilter(): string {
+    return this.state.groupFilter;
+  }
+
+  @action
+  setGroupFilter(filter: string) {
+    this.state.groupFilter = filter;
   }
 
   @computed
@@ -64,17 +88,17 @@ class GroupStore implements Store {
 
   @computed
   get groups(): Group[] {
-    return this.state.groups;
+    return _.orderBy(this.state.groups, ['updatedAt'], 'desc');
   }
 
   @computed
   get publicGroups(): Group[] {
-    return this.state.groups.filter((group) => !group.isMember);
+    return this.groups.filter((group) => !group.isMember);
   }
 
   @computed
   get myGroups(): Group[] {
-    return this.state.groups.filter((group) => group.isMember);
+    return this.groups.filter((group) => group.isMember);
   }
 
   @computed
@@ -93,33 +117,22 @@ class GroupStore implements Store {
 
   @action
   addNewGroup() {
-    const tempId = `${Date.now()}`;
-    this.groups.push(
-      new Group(this, this.root.dbServer, this.root.user, {
-        id: tempId,
-        created_at: new Date().toISOString(),
-        members: [
-          {
-            created_at: new Date().toISOString(),
-            group_id: tempId,
-            is_admin: true,
-            is_outdated: false,
-            updated_at: new Date().toISOString(),
-            user_id: this.root.session.currentUser.id
-          }
-        ],
-        db_servers: [],
-        is_private: true,
-        name: 'New Group'
+    this.state.requestState = REST.Requested;
+    create('New Group', true)
+      .then(({ data }) => {
+        this.groups.push(new Group(this, this.root.dbServer, this.root.user, data));
+        this.setActiveGroupId(data.id);
+        this.state.requestState = REST.Success;
       })
-    );
-    this.setActiveGroupId(tempId);
+      .catch((error) => {
+        this.state.requestState = REST.Error;
+      });
   }
 
   @action
-  loadGroups() {
-    getGroups(this.root.cancelToken).then(({ data }) => {
-      data.forEach((group) => {
+  loadGroups(): Promise<boolean> {
+    return getGroups(this.root.cancelToken).then(({ data }) => {
+      _.orderBy(data, ['updated_at'], 'desc').forEach((group) => {
         group.db_servers.forEach((dbServer) => {
           if (!this.root.dbServer.dbServers.find((db) => db.id === dbServer.id)) {
             this.root.dbServer.dbServers.push(
@@ -128,9 +141,71 @@ class GroupStore implements Store {
           }
         });
 
-        this.groups.push(new Group(this, this.root.dbServer, this.root.user, group));
+        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, group));
       });
+      if (this.myGroups.length > 0) {
+        this.setActiveGroupId(this.myGroups[0].id);
+      }
+      return true;
     });
+  }
+
+  @action
+  create(group: Group) {
+    if (group.isPersisted) {
+      return;
+    }
+    this.state.requestState = REST.Requested;
+    create(group.name, group.isPrivate)
+      .then(({ data }) => {
+        this.state.groups.remove(group);
+        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, data));
+        this.setActiveGroupId(data.id);
+        this.state.requestState = REST.Success;
+      })
+      .catch((error) => {
+        this.state.requestState = REST.Error;
+      });
+  }
+
+  @action
+  save(group: Group) {
+    if (!group.isDirty || !group.isPersisted) {
+      return;
+    }
+    update(group.id, group.changeablProps)
+      .then(({ data }) => {
+        this.state.groups.remove(group);
+        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, data));
+        this.setActiveGroupId(data.id);
+        this.state.requestState = REST.Success;
+      })
+      .catch((error) => {
+        this.state.requestState = REST.Error;
+      });
+  }
+
+  @action
+  refresh() {
+    const currentId = this.activeGroupId;
+    this.state = new State();
+    this.loadGroups().then(() => {
+      this.setActiveGroupId(currentId);
+    });
+  }
+
+  @action
+  destroy(group: Group) {
+    this.state.requestState = REST.Requested;
+    remove(group.id)
+      .then(() => {
+        this.state.requestState = REST.Success;
+        this.state.groups.remove(group);
+        this.setActiveGroupId();
+      })
+      .catch(() => {
+        this.state.requestState = REST.Error;
+      });
   }
 
   @action cleanup() {
