@@ -13,21 +13,21 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     @user1_key = @user1.crypto_key('asdfasdf')
     @user1_headers = {
       'Authorization' => @user1_token.token,
-      'Crypto-Key' => @user1_headers
+      'Crypto-Key' => @user1_key
     }
     
     @user2_token = FactoryBot.create(:login_token, user: @user2)
     @user2_key = @user2.crypto_key('asdfasdf')
     @user2_headers = {
       'Authorization' => @user2_token.token,
-      'Crypto-Key' => @user2_headers
+      'Crypto-Key' => @user2_key
     }
 
     @user3_token = FactoryBot.create(:login_token, user: @user3)
     @user3_key = @user3.crypto_key('asdfasdf')
     @user3_headers = {
       'Authorization' => @user3_token.token,
-      'Crypto-Key' => @user3_headers
+      'Crypto-Key' => @user3_key
     }
 
 
@@ -85,7 +85,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
       expect(json[0]["name"]).to eq("Random SQL")
-      expect(json[0]["members"].find { |u| u['user']['id'] == @user1.id }['is_admin']).to be_truthy
+      expect(json[0]["members"].find { |u| u['user_id'] == @user1.id }['is_admin']).to be_truthy
 
       db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
       expect(db_servers.count).to be(2)
@@ -98,7 +98,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(json[1]["db_servers"].count).to be(1)
       expect(json[1]["db_servers"][0]['name']).to eq("db_server3")
       expect(json[1]["db_servers"][0]['username']).to eq("bliblablu")
-      expect(json[1]["members"].find { |u| u['user']['id'] == @user1.id }['is_admin']).to be_falsey
+      expect(json[1]["members"].find { |u| u['user_id'] == @user1.id }['is_admin']).to be_falsey
 
       get(
         "/api/groups",
@@ -107,7 +107,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json[0]["members"].find { |u| u['user']['id'] == @user2.id }['is_admin']).to be_falsey
+      expect(json[0]["members"].find { |u| u['user_id'] == @user2.id }['is_admin']).to be_falsey
       expect(json[0]["name"]).to eq("Random SQL")
 
       db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
@@ -128,7 +128,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(json[0]["db_servers"].count).to be(1)
       expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
       expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
-      expect(json[0]["members"].find { |u| u['user']['id'] == @user3.id }['is_admin']).to be_truthy
+      expect(json[0]["members"].find { |u| u['user_id'] == @user3.id }['is_admin']).to be_truthy
     end
 
     it 'returns all public available groups' do
