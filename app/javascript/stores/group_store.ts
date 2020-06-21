@@ -102,16 +102,21 @@ class GroupStore implements Store {
   }
 
   @computed
-  get reducedGroups(): IObservableArray<string> {
+  get myAdminGroups(): Group[] {
+    return this.groups.filter((group) => group.isAdmin);
+  }
+
+  @computed
+  get reducedDashboardGroups(): IObservableArray<string> {
     return this.state.reducedGroups;
   }
 
   @action
   toggleExpanded(groupId: string) {
-    if (this.reducedGroups.includes(groupId)) {
-      this.reducedGroups.remove(groupId);
+    if (this.reducedDashboardGroups.includes(groupId)) {
+      this.reducedDashboardGroups.remove(groupId);
     } else {
-      this.reducedGroups.push(groupId);
+      this.reducedDashboardGroups.push(groupId);
     }
   }
 

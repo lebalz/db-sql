@@ -67,31 +67,6 @@
 
   .cards {
     grid-area: cards;
-    .cards-container {
-      height: max-content;
-      padding: 2px;
-      .db-sql-card {
-        position: relative;
-        display: flex;
-        .main-label {
-          position: absolute;
-          top: 4px;
-          right: 4px;
-          display: flex;
-        }
-        .stats {
-          display: flex;
-        }
-        &.active {
-          background: var(--highlight-teal-50);
-        }
-        &:hover {
-          background: var(--highlight-grey-50) !important;
-          -webkit-transform: unset !important;
-          transform: unset !important;
-        }
-      }
-    }
   }
 
   .actions {
@@ -104,6 +79,32 @@
       &.toggle-privacy {
         position: relative;
       }
+    }
+  }
+}
+
+.cards-container {
+  height: max-content;
+  padding: 2px;
+  .db-sql-card {
+    position: relative;
+    display: flex;
+    .main-label {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      display: flex;
+    }
+    .stats {
+      display: flex;
+    }
+    &.active {
+      background: var(--highlight-teal-50);
+    }
+    &:hover {
+      background: var(--highlight-grey-50) !important;
+      -webkit-transform: unset !important;
+      transform: unset !important;
     }
   }
 }

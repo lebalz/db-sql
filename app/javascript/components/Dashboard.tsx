@@ -79,7 +79,7 @@ export default class Dashboard extends React.Component {
           />
           <Accordion fluid styled exclusive={false}>
             {this.injected.groupStore.myGroups.map((group) => {
-              const isActive = !this.injected.groupStore.reducedGroups.includes(group.id);
+              const isActive = !this.injected.groupStore.reducedDashboardGroups.includes(group.id);
               return (
                 <Fragment key={group.id}>
                   <Accordion.Title
@@ -111,7 +111,7 @@ export default class Dashboard extends React.Component {
               />
               <Accordion fluid styled exclusive={false}>
                 {this.injected.groupStore.publicGroups.map((group) => {
-                  const isActive = !this.injected.groupStore.reducedGroups.includes(group.id);
+                  const isActive = !this.injected.groupStore.reducedDashboardGroups.includes(group.id);
                   return (
                     <Fragment key={group.id}>
                       <Accordion.Title
