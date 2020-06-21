@@ -137,7 +137,7 @@ class DbServerStore implements Store {
           (dbConnection) =>
             new DbServer(dbConnection, this, this.root.schemaQueryStore, this.root.cancelToken)
         );
-        this.state.dbServers.replace(dbServers);
+        this.state.dbServers.replace(_.uniq([...dbServers, ...this.state.dbServers]));
         this.state.loadState = LoadState.Success;
       })
       .catch(() => {
@@ -407,7 +407,7 @@ class DbServerStore implements Store {
         if (data.owner_type === OwnerType.Group) {
           const group = this.root.groupStore.groups.find(group => group.id === data.owner_id);
           if (group) {
-            group.dbServerIds.add(data.id);
+            group.dbServerIds.push(data.id);
           }
         }
         this.state.saveState = ApiRequestState.Success;
@@ -427,7 +427,7 @@ class DbServerStore implements Store {
         if (connection.ownerType === OwnerType.Group) {
           const group = this.root.groupStore.groups.find(group => group.id === connection.id);
           if (group) {
-            group.dbServerIds.delete(connection.id);
+            group.dbServerIds.remove(connection.id);
           }
         }
         this.state.dbServers.remove(connection);

@@ -55,7 +55,7 @@ ActiveRecord::Schema.define(version: 2020_06_13_181612) do
   create_table "group_members", primary_key: ["user_id", "group_id"], force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "group_id", null: false
-    t.string "crypto_key_encrypted", null: false
+    t.string "crypto_key_encrypted"
     t.boolean "is_admin", default: false, null: false
     t.boolean "is_outdated", default: false, null: false
     t.datetime "created_at", precision: 6, null: false
@@ -66,6 +66,7 @@ ActiveRecord::Schema.define(version: 2020_06_13_181612) do
 
   create_table "groups", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
+    t.string "public_crypto_key"
     t.boolean "is_private", default: true, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false

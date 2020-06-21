@@ -28,7 +28,7 @@ export default class Group {
   @observable isPrivate: boolean;
   @observable name: string;
   members = observable<GroupMember>([]);
-  dbServerIds = observable(new Set<string>());
+  dbServerIds = observable<string>([]);
 
   constructor(
     groupStore: GroupStore,
@@ -46,7 +46,7 @@ export default class Group {
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.members.replace(props.members.map((member) => new GroupMember(groupStore, userStore, member)));
-    this.dbServerIds.replace(new Set(props.db_servers.map((dbServer) => dbServer.id)));
+    this.dbServerIds.replace(props.db_servers.map((dbServer) => dbServer.id));
     this.name = props.name;
     this.pristineState = {
       is_private: props.is_private,
@@ -74,7 +74,7 @@ export default class Group {
 
   @computed
   get users(): GroupUser[] {
-    return rejectUndefined(Array.from(this.members).map((member) => member.user));
+    return rejectUndefined(this.members.map((member) => member.user));
   }
 
   @computed
@@ -85,14 +85,14 @@ export default class Group {
   @computed
   get dbServers(): DbServer[] {
     return rejectUndefined(
-      Array.from(this.dbServerIds).map((id) => this.dbServerStore.dbServers.find((u) => u.id === id))
+      this.dbServerIds.map((id) => this.dbServerStore.dbServers.find((u) => u.id === id))
     );
   }
 
   @computed
   get admins(): GroupUser[] {
     return rejectUndefined(
-      Array.from(this.members)
+      this.members
         .filter((member) => member.isAdmin)
         .map((member) => member.user)
     );
@@ -143,7 +143,7 @@ export default class Group {
 
   @computed
   get dbServerCount(): number {
-    return this.dbServerIds.size;
+    return this.dbServerIds.length;
   }
 
   @action

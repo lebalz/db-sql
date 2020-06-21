@@ -2,6 +2,7 @@ class CreateGroups < ActiveRecord::Migration[6.0]
   def change
     create_table :groups, id: :uuid do |t|
       t.string :name, null: false
+      t.string :public_crypto_key
       t.boolean :is_private, default: true, null: false
       t.timestamps
     end
@@ -12,7 +13,7 @@ class CreateGroups < ActiveRecord::Migration[6.0]
       t.references :group, type: :uuid, null: false, index: true
 
       # crypto key for the db password, encrypted with the users public key
-      t.string :crypto_key_encrypted, null: false
+      t.string :crypto_key_encrypted
       t.boolean :is_admin, default: false, null: false
       t.boolean :is_outdated, default: false, null: false
       t.timestamps

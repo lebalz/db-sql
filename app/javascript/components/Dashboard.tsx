@@ -79,7 +79,7 @@ export default class Dashboard extends React.Component {
           />
           <Accordion fluid styled exclusive={false}>
             {this.injected.groupStore.myGroups.map((group) => {
-              const isActive = this.injected.groupStore.expandedGroups.has(group.id);
+              const isActive = !this.injected.groupStore.reducedGroups.includes(group.id);
               return (
                 <Fragment key={group.id}>
                   <Accordion.Title
@@ -89,7 +89,7 @@ export default class Dashboard extends React.Component {
                   />
                   <Accordion.Content active={isActive}>
                     <div className="db-server-overview">
-                      {_.sortBy(group.dbServers, ['name']).map((dbConnection) => {
+                      {group.dbServers.map((dbConnection) => {
                         return <DbServerOverview key={dbConnection.id} dbConnection={dbConnection} />;
                       })}
                       {group.isAdmin && <AddDbServer ownerType={OwnerType.Group} ownerId={group.id} />}
@@ -111,7 +111,7 @@ export default class Dashboard extends React.Component {
               />
               <Accordion fluid styled exclusive={false}>
                 {this.injected.groupStore.publicGroups.map((group) => {
-                  const isActive = this.injected.groupStore.expandedGroups.has(group.id);
+                  const isActive = !this.injected.groupStore.reducedGroups.includes(group.id);
                   return (
                     <Fragment key={group.id}>
                       <Accordion.Title

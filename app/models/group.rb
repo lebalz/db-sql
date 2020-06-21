@@ -4,18 +4,19 @@
 #
 # Table name: groups
 #
-#  id         :uuid             not null, primary key
-#  is_private :boolean          default(TRUE), not null
-#  name       :string           not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id                :uuid             not null, primary key
+#  is_private        :boolean          default(TRUE), not null
+#  name              :string           not null
+#  public_crypto_key :string
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
 #
 class Group < ApplicationRecord
   has_many :group_members, dependent: :delete_all
   alias members group_members
   has_many :users, through: :group_members
-
   has_many :db_servers, dependent: :delete_all
+  before_create :create_public_crypto_key
 
   scope :public_available, -> { where(is_private: false) }
 
@@ -108,6 +109,33 @@ class Group < ApplicationRecord
     end
   end
 
+  # @old_crypto_key [string] Base64 encoded crypto key
+  # @new_crypto_key [string] Base64 encoded crypto key
+  def recrypt!(old_crypto_key:, new_crypto_key:)
+    ActiveRecord::Base.transaction do
+      group_members.each do |member|
+        key = if is_private
+                Base64.strict_encode64(
+                  member.user.public_key.public_encrypt(new_crypto_key)
+                )
+              else 
+                nil
+              end
+
+        member.update!(
+          crypto_key_encrypted: key,
+          is_outdated: false
+        )
+      end
+      db_servers.each do |db_server|
+        db_server.recrypt!(
+          old_crypto_key: old_crypto_key,
+          new_crypto_key: new_crypto_key
+        )
+      end
+    end
+  end
+
   # @param user [User]
   # @param group_key [String] key used to decrypt the
   #   db server passwords of this group
@@ -128,7 +156,10 @@ class Group < ApplicationRecord
   # @return [String] key used to decrypt the
   #   db server passwords of this group
   # @param private_key [OpenSSL::PKey::RSA]
+  # @return [string] decrypted, Base64 encoded, crypto key
   def crypto_key(user, private_key)
+    return public_crypto_key unless is_private
+
     rel = group_members.find_by(user: user)
     return unless rel
 
@@ -152,5 +183,11 @@ class Group < ApplicationRecord
     return unless user_count.zero?
 
     destroy!
+  end
+
+  private
+
+  def create_public_crypto_key
+    self.public_crypto_key = Group.random_crypto_key
   end
 end

@@ -1,4 +1,4 @@
-import { observable, action, computed, reaction } from 'mobx';
+import { observable, action, computed, reaction, IObservableArray } from 'mobx';
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
 import { getGroups, create, update, remove } from '../api/group';
@@ -9,7 +9,7 @@ import { REST } from '../declarations/REST';
 
 class State {
   groups = observable<Group>([]);
-  expandedGroups = observable(new Set<string>([]));
+  reducedGroups = observable<string>([]);
   @observable activeGroupCardId?: string;
   @observable userFilter?: string;
   @observable groupFilter: string = '';
@@ -102,16 +102,16 @@ class GroupStore implements Store {
   }
 
   @computed
-  get expandedGroups(): Set<string> {
-    return this.state.expandedGroups;
+  get reducedGroups(): IObservableArray<string> {
+    return this.state.reducedGroups;
   }
 
   @action
   toggleExpanded(groupId: string) {
-    if (this.expandedGroups.has(groupId)) {
-      this.expandedGroups.delete(groupId);
+    if (this.reducedGroups.includes(groupId)) {
+      this.reducedGroups.remove(groupId);
     } else {
-      this.expandedGroups.add(groupId);
+      this.reducedGroups.push(groupId);
     }
   }
 
@@ -132,7 +132,7 @@ class GroupStore implements Store {
   @action
   loadGroups(): Promise<boolean> {
     return getGroups(this.root.cancelToken).then(({ data }) => {
-      _.orderBy(data, ['updated_at'], 'desc').forEach((group) => {
+      data.forEach((group) => {
         group.db_servers.forEach((dbServer) => {
           if (!this.root.dbServer.dbServers.find((db) => db.id === dbServer.id)) {
             this.root.dbServer.dbServers.push(

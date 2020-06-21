@@ -111,12 +111,41 @@ module Resources
           end
 
           change = ActionController::Parameters.new(params[:data])
-          current_group.update!(
-            change.permit(
-              :is_private,
-              :name
+          privacy_changed = change[:is_private] != current_group.private?
+
+          ActiveRecord::Base.transaction do
+
+            # get the current crypto key when privacy changed to public
+            if privacy_changed && !change[:is_private]
+              old_crypto_key = current_group.crypto_key(
+                current_user, current_user.private_key(crypto_key)
+              )
+            end
+
+            # make the updates to the group
+            current_group.update!(
+              change.permit(
+                :is_private,
+                :name
+              )
             )
-          )
+
+            # change the groups crypto key
+            if privacy_changed
+              if change[:is_private]
+                current_group.recrypt!(
+                  old_crypto_key: current_group.public_crypto_key,
+                  new_crypto_key: Group.random_crypto_key
+                )
+              else
+                current_group.recrypt!(
+                  old_crypto_key: old_crypto_key,
+                  new_crypto_key: current_group.public_crypto_key
+                )
+              end
+            end
+          end
+
           present(current_group, with: Entities::Group)
         end
 

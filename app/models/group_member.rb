@@ -4,13 +4,13 @@
 #
 # Table name: group_members
 #
-#  crypto_key_encrypted :string           not null
+#  crypto_key_encrypted :string
 #  is_admin             :boolean          default(FALSE), not null
 #  is_outdated          :boolean          default(FALSE), not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
-#  group_id             :uuid             not null
-#  user_id              :uuid             not null
+#  group_id             :uuid             not null, primary key
+#  user_id              :uuid             not null, primary key
 #
 # Indexes
 #
@@ -37,6 +37,8 @@ class GroupMember < ApplicationRecord
     is_outdated
   end
 
+  # @param private_key [OpenSSL::PKey::RSA]
+  # @return [string] decrypted, Base64 encoded, crypto key
   def crypto_key(private_key)
     private_key.private_decrypt(Base64.strict_decode64(crypto_key_encrypted))
   end

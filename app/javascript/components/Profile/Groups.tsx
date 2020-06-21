@@ -202,11 +202,13 @@ export default class Groups extends React.Component {
                   })}
                 </div>
               </div>
-              <Actions
-                for={this.activeGroup}
-                isSaving={this.injected.groupStore.requestState === REST.Requested}
-                size="mini"
-              />
+              {this.isGroupAdmin && (
+                <Actions
+                  for={this.activeGroup}
+                  isSaving={this.injected.groupStore.requestState === REST.Requested}
+                  size="mini"
+                />
+              )}
             </Fragment>
           )}
         </div>
