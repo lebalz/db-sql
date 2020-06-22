@@ -66,6 +66,7 @@ ActiveRecord::Schema.define(version: 2020_06_13_181612) do
 
   create_table "groups", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
+    t.string "description", default: ""
     t.string "public_crypto_key"
     t.boolean "is_private", default: true, null: false
     t.datetime "created_at", precision: 6, null: false

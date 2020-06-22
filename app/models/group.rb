@@ -5,6 +5,7 @@
 # Table name: groups
 #
 #  id                :uuid             not null, primary key
+#  description       :string           default("")
 #  is_private        :boolean          default(TRUE), not null
 #  name              :string           not null
 #  public_crypto_key :string
@@ -13,10 +14,11 @@
 #
 class Group < ApplicationRecord
   has_many :group_members, dependent: :delete_all
-  alias members group_members
   has_many :users, through: :group_members
   has_many :db_servers, dependent: :delete_all
   before_create :create_public_crypto_key
+  
+  alias members group_members
 
   scope :public_available, -> { where(is_private: false) }
 

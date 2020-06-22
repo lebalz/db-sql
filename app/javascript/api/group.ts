@@ -1,12 +1,10 @@
 import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
 import { DbServer } from './db_server';
-import { GroupUser } from './user';
 
 export interface GroupMember {
   is_admin: boolean;
   is_outdated: boolean;
-  group_id: string;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -14,12 +12,14 @@ export interface GroupMember {
 
 export enum Changeable {
   IsPrivate = 'is_private',
-  Name = 'name'
+  Name = 'name',
+  Description = 'description'
 }
 
 export interface ChangeableProps {
   [Changeable.IsPrivate]: boolean;
   [Changeable.Name]: string;
+  [Changeable.Description]: string;
 }
 
 export interface Group extends ChangeableProps {
@@ -27,7 +27,7 @@ export interface Group extends ChangeableProps {
   updated_at: string;
   created_at: string;
   db_servers: DbServer[];
-  members: GroupMember[];
+  members?: GroupMember[];
 }
 
 export function getGroups(cancelToken: CancelTokenSource): AxiosPromise<Group[]> {
@@ -38,8 +38,8 @@ export function getPublicGroups(
   offset: number,
   limit: number,
   cancelToken: CancelTokenSource
-): AxiosPromise<Group> {
-  return api.get('public_groups', {
+): AxiosPromise<Group[]> {
+  return api.get('groups/public', {
     cancelToken: cancelToken.token,
     params: { offset: offset, limit: limit }
   });
@@ -73,9 +73,10 @@ export function remove(groupId: string): AxiosPromise<void> {
   return api.delete(`groups/${groupId}`);
 }
 
-export function create(name: string, isPrivate: boolean): AxiosPromise<Group> {
+export function create(name: string, description: string, isPrivate: boolean): AxiosPromise<Group> {
   return api.post('groups', {
     name: name,
+    description: description,
     is_private: isPrivate
   })
 }

@@ -12,6 +12,8 @@ import UserList from './Profile/UserList';
 import DeleteAccount from './Profile/DeleteAccount';
 import SchemaQueries from './Profile/SchemaQueries';
 import Groups from './Profile/Groups';
+import PublicGroups from './Profile/PublicGroups';
+import GroupStore from '../stores/group_store';
 
 interface MatchParams {
   part: string;
@@ -23,9 +25,10 @@ interface InjectedProps extends ProfileProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   userStore: UserStore;
+  groupStore: GroupStore;
 }
 
-@inject('sessionStore', 'routerStore', 'userStore')
+@inject('sessionStore', 'routerStore', 'userStore', 'groupStore')
 @observer
 export default class Profile extends React.Component<ProfileProps> {
   get injected() {
@@ -66,6 +69,14 @@ export default class Profile extends React.Component<ProfileProps> {
             active={part === 'my_groups'}
             onClick={() => router.push('./my_groups')}
           />
+          {this.injected.groupStore.publicGroups.length > 0 && (
+            <Menu.Item
+              name="Public Groups"
+              icon="group"
+              active={part === 'public_groups'}
+              onClick={() => router.push('./public_groups')}
+            />
+          )}
           {this.injected.userStore.showAdvancedSettings && (
             <Fragment>
               <Divider horizontal content="Advanced" />
@@ -117,6 +128,8 @@ export default class Profile extends React.Component<ProfileProps> {
                 return <SchemaQueries />;
               case 'my_groups':
                 return <Groups />;
+              case 'public_groups':
+                return <PublicGroups />;
               default:
                 return '404';
             }

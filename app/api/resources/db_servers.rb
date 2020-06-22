@@ -104,7 +104,7 @@ module Resources
           initial_db: params[:initial_db],
           initial_table: params[:initial_table]
         )
-        present db_server, with: Entities::DbServer
+        present(db_server, with: Entities::DbServer)
       end
 
       route_param :id, type: String, desc: 'Database server ID' do
@@ -167,7 +167,7 @@ module Resources
               :initial_table
             )
           )
-          present db_server, with: Entities::DbServer
+          present(db_server, with: Entities::DbServer)
         end
 
         desc 'Delete a database server connection'

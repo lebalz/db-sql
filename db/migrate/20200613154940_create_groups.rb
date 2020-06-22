@@ -2,6 +2,7 @@ class CreateGroups < ActiveRecord::Migration[6.0]
   def change
     create_table :groups, id: :uuid do |t|
       t.string :name, null: false
+      t.string :description, default: ''
       t.string :public_crypto_key
       t.boolean :is_private, default: true, null: false
       t.timestamps

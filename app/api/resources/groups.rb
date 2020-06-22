@@ -31,23 +31,32 @@ module Resources
       get do
         present(
           current_user.groups.includes(:group_members, :db_servers, :users),
-          with: Entities::Group
+          with: Entities::Group,
+          user: current_user
         )
       end
 
       desc 'Get public groups, by default 20 with no offset'
       params do
-        optional(:limit, type: Integer, default: 20, desc: 'maximal number of returned groups')
+        optional(:limit, type: Integer, default: -1, desc: 'maximal number of returned groups, -1 returns all groups')
         optional(:offset, type: Integer,  default: 0, desc: 'offset of returned groups')
       end
-      route_setting :auth, disabled: true
       get :public do
+        public_groups = Group.public_available
+                             .left_outer_joins(:group_members)
+                             .where.not(group_members: { user_id: current_user&.id })
+                             .includes(:group_members, :db_servers, :users)
+
+        if (params[:limit] || 0) < 0
+          return present(public_groups, with: Entities::Group, user: current_user)
+        end
+
         present(
-          Group.public_available
-            .includes(:group_members, :db_servers, :users)
+          public_groups
             .offset(params[:offset])
             .limit(params[:limit]),
-          with: Entities::Group
+          with: Entities::Group,
+          user: current_user
         )
       end
 
@@ -60,6 +69,7 @@ module Resources
       desc 'Create a new group'
       params do
         requires(:name, type: String, desc: 'Name')
+        optional(:description, type: String, default: '', desc: 'description or purpose of the group')
         optional(:is_private, type: Boolean, default: true, desc: 'is a private group')
       end
       post do
@@ -67,6 +77,7 @@ module Resources
         ActiveRecord::Base.transaction do
           new_group = Group.create(
             name: params[:name],
+            description: params[:description],
             is_private: params[:is_private]
           )
           new_group.add_user(
@@ -75,13 +86,13 @@ module Resources
             is_admin: true
           )
         end
-        present(new_group, with: Entities::Group)
+        present(new_group, with: Entities::Group, user: current_user)
       end
 
       route_param :id, type: String, desc: 'Group ID' do
         desc 'Get a specific group'
         get do
-          present(current_group, with: Entities::Group)
+          present(current_group, with: Entities::Group, user: current_user)
         end
 
         desc 'Delete a group'
@@ -103,6 +114,7 @@ module Resources
           requires :data, type: Hash do
             optional(:is_private, type: Boolean, desc: 'is_private')
             optional(:name, type: String, desc: 'name')
+            optional(:description, type: String, desc: 'name')
           end
         end
         put do
@@ -126,7 +138,8 @@ module Resources
             current_group.update!(
               change.permit(
                 :is_private,
-                :name
+                :name,
+                :description
               )
             )
 
@@ -146,7 +159,7 @@ module Resources
             end
           end
 
-          present(current_group, with: Entities::Group)
+          present(current_group, with: Entities::Group, user: current_user)
         end
 
         resource :members do

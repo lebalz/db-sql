@@ -8,6 +8,7 @@ import { rejectUndefined } from '../utils/listFilters';
 import User from './User';
 import GroupStore from '../stores/group_store';
 import GroupMember from './GroupMember';
+import { GroupMember as GroupMemberProps } from '../api/group';
 import { GroupUser } from '../api/user';
 
 export enum Mark {
@@ -25,8 +26,10 @@ export default class Group {
   readonly updatedAt: Date;
   readonly pristineState: ChangeableProps;
   readonly isPersisted: boolean;
+  readonly isMember: boolean;
   @observable isPrivate: boolean;
   @observable name: string;
+  @observable description: string;
   members = observable<GroupMember>([]);
   dbServerIds = observable<string>([]);
 
@@ -34,6 +37,7 @@ export default class Group {
     groupStore: GroupStore,
     dbServerStore: DbServerStore,
     userStore: UserStore,
+    isMember: boolean,
     props: GroupProps,
     persisted: boolean = true
   ) {
@@ -43,13 +47,18 @@ export default class Group {
     this.dbServerStore = dbServerStore;
     this.id = props.id;
     this.isPrivate = props.is_private;
+    this.isMember = isMember;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
-    this.members.replace(props.members.map((member) => new GroupMember(groupStore, userStore, member)));
+    this.members.replace(
+      (props.members ?? []).map((member) => new GroupMember(groupStore, userStore, props.id, member))
+    );
     this.dbServerIds.replace(props.db_servers.map((dbServer) => dbServer.id));
     this.name = props.name;
+    this.description = props.description;
     this.pristineState = {
       is_private: props.is_private,
+      description: props.description,
       name: props.name
     };
   }
@@ -58,7 +67,8 @@ export default class Group {
   get changeablProps(): ChangeableProps {
     return {
       name: this.name,
-      is_private: this.isPrivate
+      is_private: this.isPrivate,
+      description: this.description
     };
   }
 
@@ -91,16 +101,16 @@ export default class Group {
 
   @computed
   get admins(): GroupUser[] {
-    return rejectUndefined(
-      this.members
-        .filter((member) => member.isAdmin)
-        .map((member) => member.user)
-    );
+    return rejectUndefined(this.members.filter((member) => member.isAdmin).map((member) => member.user));
   }
 
   @action
   setAsActiveCard() {
-    this.groupStore.setActiveGroupId(this.id);
+    if (this.isMember) {
+      this.groupStore.setActiveGroupId(this.id);
+    } else {
+      this.groupStore.setActivePublicGroupId(this.id);
+    }
   }
 
   @computed
@@ -114,18 +124,8 @@ export default class Group {
   }
 
   @computed
-  get isMember(): boolean {
-    return this.users.some((user) => user.id === this.userStore.loggedInUser.id);
-  }
-
-  @computed
   get isPublic(): boolean {
     return !this.isPrivate;
-  }
-
-  @computed
-  get currentMember(): GroupMember | undefined {
-    return this.members.find((member) => member.user?.id === this.userStore.loggedInUser.id);
   }
 
   @computed
@@ -147,6 +147,11 @@ export default class Group {
   }
 
   @action
+  addMember(groupMember: GroupMemberProps) {
+    this.members.push(new GroupMember(this.groupStore, this.userStore, this.id, groupMember));
+  }
+
+  @action
   save() {
     if (this.isPersisted) {
       this.groupStore.save(this);
@@ -159,6 +164,7 @@ export default class Group {
   restore() {
     this.isPrivate = this.pristineState.is_private;
     this.name = this.pristineState.name;
+    this.description = this.pristineState.description;
   }
 
   @action

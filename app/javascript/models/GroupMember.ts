@@ -27,12 +27,12 @@ export default class GroupMember {
   readonly created_at: string;
   readonly updated_at: string;
 
-  constructor(groupStore: GroupStore, userStore: UserStore, props: GroupMemberProps) {
+  constructor(groupStore: GroupStore, userStore: UserStore, groupId: string, props: GroupMemberProps) {
     this.groupStore = groupStore;
     this.userStore = userStore;
     this.isAdmin = props.is_admin;
     this.isOutdated = props.is_outdated;
-    this.groupId = props.group_id;
+    this.groupId = groupId;
     this.created_at = props.created_at;
     this.updated_at = props.updated_at;
     this.userId = props.user_id;
@@ -46,6 +46,11 @@ export default class GroupMember {
   @computed
   get user(): GroupUser | undefined {
     return this.userStore.groupUsers.find((user) => user.id === this.userId)!;
+  }
+
+  @computed
+  get isCurrentUser(): boolean {
+    return this.userId === this.userStore.loggedInUser.id;
   }
 
   @action
