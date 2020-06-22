@@ -76,7 +76,7 @@ export default class PublicGroups extends React.Component {
               <GroupProps group={this.activeGroup} isReadonly />
               <div className="editable">
                 <Button
-                  // onClick={() => this.activeGroup.togglePublicPrivate()}
+                  onClick={() => this.activeGroup?.join()}
                   color="blue"
                   size="mini"
                   content="Join"

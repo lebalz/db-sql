@@ -34,6 +34,10 @@ export function getGroups(cancelToken: CancelTokenSource): AxiosPromise<Group[]>
   return api.get('groups', { cancelToken: cancelToken.token });
 }
 
+export function getGroup(id: string): AxiosPromise<Group> {
+  return api.get(`groups/${id}`);
+}
+
 export function getPublicGroups(
   offset: number,
   limit: number,

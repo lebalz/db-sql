@@ -1,11 +1,13 @@
 import { observable, action, computed, reaction, IObservableArray } from 'mobx';
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
-import { getGroups, create, update, remove, getPublicGroups } from '../api/group';
+import { getGroups, create, update, remove, getPublicGroups, addGroupMember, getGroup } from '../api/group';
 import DbServer from '../models/DbServer';
 import Group from '../models/Group';
 import { GroupUser } from '../api/user';
 import { REST } from '../declarations/REST';
+import User from '../models/User';
+import GroupMember from '../models/GroupMember';
 
 class State {
   groups = observable<Group>([]);
@@ -205,6 +207,44 @@ class GroupStore implements Store {
       }
       return true;
     });
+  }
+
+  @action
+  addMemberToGroup(group: Group, user: User) {
+    addGroupMember(group.id, user.id).then(({ data }) => {
+      if (group.isMember) {
+        const oldGroup = group.members.find(member => member.userId === user.id && member.groupId === group.id);
+        if (oldGroup) {
+          group.members.remove(oldGroup);
+        }
+        group.members.push(new GroupMember(this, this.root.user, group.id, data));
+      } else {
+        this.reloadGroup(group.id).then(() => {
+          this.root.routing.push('my_groups');
+          this.setActiveGroupId(group.id);
+        });
+      }
+    });
+  }
+
+  @action
+  reloadGroup(id: string): Promise<void> {
+    return getGroup(id).then(({data}) => {
+      data.db_servers.forEach((dbServer) => {
+        const oldDbServer = this.root.dbServer.dbServers.find((db) => db.id === dbServer.id);
+        if (oldDbServer) {
+          this.root.dbServer.dbServers.remove(oldDbServer);
+        }
+        this.root.dbServer.dbServers.push(
+          new DbServer(dbServer, this.root.dbServer, this.root.schemaQueryStore, this.root.cancelToken)
+        );
+      });
+      const oldGroup = this.state.groups.find(group => group.id);
+      if (oldGroup) {
+        this.state.groups.remove(oldGroup);
+      }
+      this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, true, data));
+    })
   }
 
   @action

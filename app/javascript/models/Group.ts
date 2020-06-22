@@ -147,8 +147,13 @@ export default class Group {
   }
 
   @action
-  addMember(groupMember: GroupMemberProps) {
+  addMemberClientSide(groupMember: GroupMemberProps) {
     this.members.push(new GroupMember(this.groupStore, this.userStore, this.id, groupMember));
+  }
+
+  @action
+  join() {
+    this.groupStore.addMemberToGroup(this, this.userStore.loggedInUser);
   }
 
   @action

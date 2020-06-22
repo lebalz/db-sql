@@ -168,7 +168,7 @@ module Resources
             requires(:user_id, type: String, desc: 'user id of the new member')
           end
           post do
-            unless current_group.admin?(current_user)
+            if current_group.private? && !current_group.admin?(current_user)
               error!('No permission to remove members from this group', 302)
             end
 

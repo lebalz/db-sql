@@ -35,7 +35,7 @@ export default class Editable extends React.Component<Props> {
 
   addMember = action((event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
     addGroupMember(this.group.id, data.value as string).then(({ data }) => {
-      this.group.addMember(data);
+      this.group.addMemberClientSide(data);
     });
   });
 
