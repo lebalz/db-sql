@@ -98,7 +98,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(json[1]["db_servers"].count).to be(1)
       expect(json[1]["db_servers"][0]['name']).to eq("db_server3")
       expect(json[1]["db_servers"][0]['username']).to eq("bliblablu")
-      expect(json[1]["members"].find { |u| u['user_id'] == @user1.id }['is_admin']).to be_falsey
+      expect(json[1]["members"]).to be_nil
 
       get(
         "/api/groups",
@@ -107,7 +107,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
-      expect(json[0]["members"].find { |u| u['user_id'] == @user2.id }['is_admin']).to be_falsey
+      expect(json[0]["members"]).to be_nil
       expect(json[0]["name"]).to eq("Random SQL")
 
       db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
@@ -133,11 +133,13 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
 
     it 'returns all public available groups' do
       get(
-        "/api/groups/public"
+        "/api/groups/public",
+        headers: @user1_headers
       )
       # queries are ordered
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
+      expect(json.first['is_member']).to be_falsey
     end
 
     it 'returns count of the public available groups' do
