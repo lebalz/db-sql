@@ -1,7 +1,5 @@
 import React, { Fragment } from 'react';
 import { Button, Popup } from 'semantic-ui-react';
-import SchemaQuery from '../../../models/SchemaQuery';
-import cx from 'classnames';
 import { observer } from 'mobx-react';
 import { SemanticSIZES } from 'semantic-ui-react/dist/commonjs/generic';
 
@@ -45,19 +43,6 @@ export default class Actions extends React.Component<Props> {
   render() {
     return (
       <div className="actions">
-        {this.actionableModel.isDirty && this.actionableModel.isPersisted && (
-          <Button
-            icon="cancel"
-            labelPosition="left"
-            content="Cancel"
-            color="black"
-            size={this.props.size}
-            onClick={() => this.actionableModel.restore()}
-            disabled={this.disabled.includes(ActionTypes.Discard)}
-          />
-        )}
-        {this.props.additionalActions &&
-          this.props.additionalActions.map((action, idx) => <Fragment key={idx}>{action}</Fragment>)}
         <Popup
           on="click"
           position="top right"
@@ -83,6 +68,20 @@ export default class Actions extends React.Component<Props> {
             />
           }
         />
+        <div className="spacer" />
+        {this.actionableModel.isDirty && this.actionableModel.isPersisted && (
+          <Button
+            icon="cancel"
+            labelPosition="left"
+            content="Cancel"
+            color="black"
+            size={this.props.size}
+            onClick={() => this.actionableModel.restore()}
+            disabled={this.disabled.includes(ActionTypes.Discard)}
+          />
+        )}
+        {this.props.additionalActions &&
+          this.props.additionalActions.map((action, idx) => <Fragment key={idx}>{action}</Fragment>)}
         <Button
           icon="save"
           labelPosition="left"

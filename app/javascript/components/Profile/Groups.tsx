@@ -1,9 +1,5 @@
 import React, { Fragment, SyntheticEvent } from 'react';
-import {
-  Segment,
-  Button,
-  Input,
-  InputOnChangeData} from 'semantic-ui-react';
+import { Segment, Button, Input, InputOnChangeData } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import UserStore from '../../stores/user_store';
 import GroupStore, { MemberType } from '../../stores/group_store';
@@ -78,9 +74,14 @@ export default class Groups extends React.Component {
               value={this.injected.groupStore.groupFilter}
               onChange={this.onChangeGroupFilter}
               placeholder="Filter Groups..."
+              style={{ flexGrow: 1, marginRight: '0.5em' }}
             />
             <Tooltip delayed content="Refresh groups">
-              <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh(MemberType.Joined)} />
+              <Button
+                icon="refresh"
+                size="mini"
+                onClick={() => this.injected.groupStore.refresh(MemberType.Joined)}
+              />
             </Tooltip>
             <Tooltip delayed content="Add a new schema query">
               <Button icon="add" size="mini" onClick={() => this.injected.groupStore.addNewGroup()} />

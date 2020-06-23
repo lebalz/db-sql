@@ -67,6 +67,7 @@
 
   .cards {
     grid-area: cards;
+    overflow-y: auto;
   }
 
   .actions {

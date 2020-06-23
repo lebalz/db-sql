@@ -47,16 +47,18 @@ export default class Editable extends React.Component<Props> {
   render() {
     return (
       <div className="editable">
-        <div style={{ display: 'flex' }}>
-          <Button
-            onClick={() => this.group.togglePublicPrivate()}
-            icon={this.group.isPrivate ? 'lock' : 'lock open'}
-            color={this.group.isPrivate ? 'black' : 'yellow'}
-            size="mini"
-            content={this.group.isPrivate ? 'Private Group' : 'Public Group'}
-            disabled={!this.group.isAdmin}
-            labelPosition="right"
-          />
+        <div style={{ display: 'flex', marginBottom: '0.5em' }}>
+          {this.group.isAdmin && (
+            <Button
+              onClick={() => this.group.togglePublicPrivate()}
+              icon={this.group.isPrivate ? 'lock' : 'lock open'}
+              color={this.group.isPrivate ? 'black' : 'yellow'}
+              size="mini"
+              content={this.group.isPrivate ? 'Private Group' : 'Public Group'}
+              disabled={!this.group.isAdmin}
+              labelPosition="right"
+            />
+          )}
           {this.group.canLeave && (
             <Popup
               on="click"
@@ -123,9 +125,7 @@ export default class Editable extends React.Component<Props> {
                   <ClickableIcon
                     icon="minus circle"
                     color="red"
-                    onClick={() =>
-                      this.injected.groupStore.removeMemberFromGroup(this.group, member.userId)
-                    }
+                    onClick={() => this.injected.groupStore.removeMemberFromGroup(this.group, member.userId)}
                     disabled={member.isCurrentUser}
                   />
                 )}

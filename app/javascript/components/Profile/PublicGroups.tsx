@@ -65,19 +65,19 @@ export default class PublicGroups extends React.Component {
                   value={this.injected.groupStore.publicGroupFilter}
                   onChange={this.onChangeGroupFilter}
                   placeholder="Filter Groups..."
+                  style={{ flexGrow: 1, marginRight: '0.5em' }}
                 />
                 <Tooltip delayed content="Refresh public groups">
-                  <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh(MemberType.Public)} />
+                  <Button
+                    icon="refresh"
+                    size="mini"
+                    onClick={() => this.injected.groupStore.refresh(MemberType.Public)}
+                  />
                 </Tooltip>
               </div>
               <GroupProps group={this.activeGroup} isReadonly />
               <div className="editable">
-                <Button
-                  onClick={() => this.activeGroup?.join()}
-                  color="blue"
-                  size="mini"
-                  content="Join"
-                />
+                <Button onClick={() => this.activeGroup?.join()} color="blue" size="mini" content="Join" />
               </div>
             </Fragment>
           )}
