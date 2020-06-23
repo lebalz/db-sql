@@ -2,9 +2,13 @@ import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
 import { Role } from '../models/User';
 
-export interface User {
+
+export interface UserProfile {
   id: string;
   email: string;
+}
+
+export interface User extends UserProfile {
   login_count: number;
   role: Role;
   activated: boolean;
@@ -13,11 +17,6 @@ export interface User {
   created_at: string;
   updated_at: string;
   password_reset_requested: boolean;
-}
-
-export interface GroupUser {
-  id: string;
-  email: string;
 }
 
 export interface LoginUser extends User {
@@ -40,7 +39,7 @@ export function user(): AxiosPromise<User> {
   return api.get('users/current');
 }
 
-export function groupUsers(cancelToken: CancelTokenSource): AxiosPromise<GroupUser[]> {
+export function groupUsers(cancelToken: CancelTokenSource): AxiosPromise<UserProfile[]> {
   return api.get('users/group_users', {
     cancelToken: cancelToken.token
   });

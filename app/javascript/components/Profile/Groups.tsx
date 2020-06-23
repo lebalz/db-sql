@@ -6,7 +6,7 @@ import {
   InputOnChangeData} from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import UserStore from '../../stores/user_store';
-import GroupStore from '../../stores/group_store';
+import GroupStore, { MemberType } from '../../stores/group_store';
 import GroupCard from './Groups/GroupCard';
 import { computed } from 'mobx';
 import Group from '../../models/Group';
@@ -47,7 +47,7 @@ export default class Groups extends React.Component {
     const escapedFilter = _.escapeRegExp(this.injected.groupStore.groupFilter);
     const regexp = new RegExp(escapedFilter, 'i');
 
-    return this.injected.groupStore.myGroups.filter((group) => regexp.test(group.name));
+    return this.injected.groupStore.joinedGroups.filter((group) => regexp.test(group.name));
   }
 
   onChangeGroupFilter = (event: SyntheticEvent<HTMLInputElement>, data: InputOnChangeData) => {
@@ -66,7 +66,7 @@ export default class Groups extends React.Component {
                   <GroupCard
                     key={group.id}
                     group={group}
-                    isActive={this.injected.groupStore.activeGroupId === group.id}
+                    isActive={this.injected.groupStore.activeGroup === group}
                   />
                 );
               })}
@@ -79,8 +79,8 @@ export default class Groups extends React.Component {
               onChange={this.onChangeGroupFilter}
               placeholder="Filter Groups..."
             />
-            <Tooltip delayed content="Refresh schema query list">
-              <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh()} />
+            <Tooltip delayed content="Refresh groups">
+              <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh(MemberType.Joined)} />
             </Tooltip>
             <Tooltip delayed content="Add a new schema query">
               <Button icon="add" size="mini" onClick={() => this.injected.groupStore.addNewGroup()} />

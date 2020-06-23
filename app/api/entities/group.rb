@@ -9,6 +9,9 @@ module Entities
       expose :description
       expose :created_at
       expose :updated_at
+      expose :is_member do |instance, options|
+        instance.member?(options[:user])
+      end
       expose :members, with: Entities::GroupMember, if: lambda { |instance, options| instance.admin?(options[:user]) }
       expose :db_servers, with: Entities::DbServer
     end

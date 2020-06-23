@@ -3,7 +3,7 @@ import { RootStore, Store } from './root_store';
 import User from '../models/User';
 import _ from 'lodash';
 import { users, deleteUser, updateUser as apiUpdate, user as apiUser } from '../api/admin';
-import { groupUsers, GroupUser } from '../api/user';
+import { groupUsers, UserProfile } from '../api/user';
 
 export enum ReloadState {
   None,
@@ -36,7 +36,7 @@ export const DEFAULT_SORT_ORDER: { [key in SortableUserColumns]: 'asc' | 'desc' 
 
 class State {
   users = observable<User>([]);
-  groupUsers = observable<GroupUser>([]);
+  userProfiles = observable<UserProfile>([]);
   @observable userFilter: string = '';
   @observable sortColumn: SortableUserColumns = SortableUserColumns.Email;
   @observable order: 'asc' | 'desc' = 'asc';
@@ -116,13 +116,13 @@ class UserStore implements Store {
   @action
   loadGroupUsers() {
     groupUsers(this.root.cancelToken).then(({ data }) => {
-      this.state.groupUsers.replace(data);
+      this.state.userProfiles.replace(data);
     });
   }
 
   @computed
-  get groupUsers(): GroupUser[] {
-    return this.state.groupUsers;
+  get groupUsers(): UserProfile[] {
+    return this.state.userProfiles;
   }
 
   @action

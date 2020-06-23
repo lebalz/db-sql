@@ -42,10 +42,9 @@ module Resources
         optional(:offset, type: Integer,  default: 0, desc: 'offset of returned groups')
       end
       get :public do
-        public_groups = Group.public_available
-                             .left_outer_joins(:group_members)
-                             .where.not(group_members: { user_id: current_user&.id })
-                             .includes(:group_members, :db_servers, :users)
+        public_groups = Group.public_available.where.not(
+                          'id in (?)', current_user.groups.select(:id)
+                        ).includes(:group_members, :db_servers, :users)
 
         if (params[:limit] || 0) < 0
           return present(public_groups, with: Entities::Group, user: current_user)
@@ -184,13 +183,16 @@ module Resources
           end
 
           route_param :user_id, type: String, desc: 'Group ID' do
-
             desc 'remove member'
             delete do
-              unless current_group.admin?(current_user)
+              # current_user can leave public groups without admin rights
+              if current_group.public? && current_group.member?(current_user) && !current_group.admin?(current_user)
+                'leaving is allowed'
+              elsif !current_group.admin?(current_user)
                 error!('No permission to remove members from this group', 302)
+              elsif current_group.admin?(current_user) && current_user.id == params[:user_id]
+                error!('Admin can not remove itself', 302)
               end
-              error!('Admin can not remove itself', 302) if current_user.id == params[:user_id]
 
               group_member = current_group.group_members.find_by(user_id: params[:user_id])
               error!('User not found', 302) unless group_member

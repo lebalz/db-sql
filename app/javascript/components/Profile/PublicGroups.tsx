@@ -2,7 +2,7 @@ import React, { Fragment, SyntheticEvent } from 'react';
 import { Segment, Button, Input, InputOnChangeData } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import UserStore from '../../stores/user_store';
-import GroupStore from '../../stores/group_store';
+import GroupStore, { MemberType } from '../../stores/group_store';
 import GroupCard from './Groups/GroupCard';
 import { computed } from 'mobx';
 import Group from '../../models/Group';
@@ -51,7 +51,7 @@ export default class PublicGroups extends React.Component {
                   <GroupCard
                     key={group.id}
                     group={group}
-                    isActive={this.injected.groupStore.activePublicGroupId === group.id}
+                    isActive={this.injected.groupStore.activePublicGroup === group}
                   />
                 );
               })}
@@ -66,11 +66,8 @@ export default class PublicGroups extends React.Component {
                   onChange={this.onChangeGroupFilter}
                   placeholder="Filter Groups..."
                 />
-                <Tooltip delayed content="Refresh schema query list">
-                  <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh()} />
-                </Tooltip>
-                <Tooltip delayed content="Add a new schema query">
-                  <Button icon="add" size="mini" onClick={() => this.injected.groupStore.addNewGroup()} />
+                <Tooltip delayed content="Refresh public groups">
+                  <Button icon="refresh" size="mini" onClick={() => this.injected.groupStore.refresh(MemberType.Public)} />
                 </Tooltip>
               </div>
               <GroupProps group={this.activeGroup} isReadonly />

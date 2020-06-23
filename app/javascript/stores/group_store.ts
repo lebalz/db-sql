@@ -1,19 +1,34 @@
 import { observable, action, computed, reaction, IObservableArray } from 'mobx';
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
-import { getGroups, create, update, remove, getPublicGroups, addGroupMember, getGroup } from '../api/group';
+import {
+  getGroups,
+  create,
+  update,
+  remove,
+  getPublicGroups,
+  addGroupMember,
+  getGroup,
+  removeMember
+} from '../api/group';
 import DbServer from '../models/DbServer';
 import Group from '../models/Group';
-import { GroupUser } from '../api/user';
+import { UserProfile } from '../api/user';
 import { REST } from '../declarations/REST';
 import User from '../models/User';
 import GroupMember from '../models/GroupMember';
+import { computedFn } from 'mobx-utils';
+
+export enum MemberType {
+  Public,
+  Joined
+}
 
 class State {
-  groups = observable<Group>([]);
+  joinedGroups = observable<Group>([]);
+  publicGroups = observable<Group>([]);
   reducedGroups = observable<string>([]);
-  @observable activeGroupCardId?: string;
-  @observable activePublicGroupId?: string;
+  @observable activeGroup: { [key in MemberType]?: string } = {};
   @observable userFilter?: string;
   @observable groupFilter: string = '';
   @observable publicGroupFilter: string = '';
@@ -39,50 +54,43 @@ class GroupStore implements Store {
   }
 
   @computed
+  get groups(): Group[] {
+    return [...this.joinedGroups, ...this.publicGroups];
+  }
+
+  find = computedFn(
+    function (this: GroupStore, id?: string): Group | undefined {
+      if (!id) {
+        return;
+      }
+      return this.groups.find((group) => group.id === id);
+    },
+    { keepAlive: true }
+  );
+
+  @computed
   get requestState(): REST {
     return this.state.requestState;
   }
 
   @computed
-  get activeGroupId(): string | undefined {
-    return this.state.activeGroupCardId ?? this.myGroups[0]?.id;
-  }
-
-  @computed
-  get activePublicGroupId(): string | undefined {
-    return this.state.activePublicGroupId ?? this.publicGroups[0]?.id;
+  get activeGroups(): { [key in MemberType]?: string } {
+    return this.state.activeGroup;
   }
 
   @computed
   get activeGroup(): Group | undefined {
-    return this.groups.find((group) => group.id === this.activeGroupId) ?? this.myGroups[0];
+    return this.find(this.activeGroups[MemberType.Joined]) ?? this.joinedGroups[0];
   }
 
   @computed
   get activePublicGroup(): Group | undefined {
-    return this.groups.find((group) => group.id === this.activePublicGroupId)?? this.publicGroups[0];
+    return this.find(this.activeGroups[MemberType.Public]) ?? this.publicGroups[0];
   }
 
   @action
-  setActiveGroupId(id?: string) {
-    if (!this.groups.find((group) => group.id === id)) {
-      if (this.myGroups.length > 0) {
-        this.state.activeGroupCardId = this.myGroups[0].id;
-      }
-      return;
-    }
-    this.state.activeGroupCardId = id;
-  }
-
-  @action
-  setActivePublicGroupId(id?: string) {
-    if (!this.groups.find((group) => group.id === id)) {
-      if (this.publicGroups.length > 0) {
-        this.state.activePublicGroupId = this.publicGroups[0].id;
-      }
-      return;
-    }
-    this.state.activePublicGroupId = id;
+  setActiveGroupId(type: MemberType, id?: string) {
+    this.state.activeGroup[type] = id;
   }
 
   @computed
@@ -111,7 +119,7 @@ class GroupStore implements Store {
   }
 
   @computed
-  get filteredGroupUsers(): GroupUser[] {
+  get filteredUserProfiles(): UserProfile[] {
     const escapedFilter = _.escapeRegExp(this.userFilter);
     const regexp = new RegExp(escapedFilter, 'i');
 
@@ -123,23 +131,18 @@ class GroupStore implements Store {
   }
 
   @computed
-  get groups(): Group[] {
-    return _.orderBy(this.state.groups, ['updatedAt'], 'desc');
-  }
-
-  @computed
   get publicGroups(): Group[] {
-    return this.groups.filter((group) => !group.isMember);
+    return _.orderBy(this.state.publicGroups, 'updatedAt', 'desc');
   }
 
   @computed
-  get myGroups(): Group[] {
-    return this.groups.filter((group) => group.isMember);
+  get joinedGroups(): Group[] {
+    return _.orderBy(this.state.joinedGroups, 'updatedAt', 'desc');
   }
 
   @computed
-  get myAdminGroups(): Group[] {
-    return this.groups.filter((group) => group.isAdmin);
+  get adminGroups(): Group[] {
+    return this.joinedGroups.filter((group) => group.isAdmin);
   }
 
   @computed
@@ -161,8 +164,8 @@ class GroupStore implements Store {
     this.state.requestState = REST.Requested;
     create('New Group', '', true)
       .then(({ data }) => {
-        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, true, data));
-        this.setActiveGroupId(data.id);
+        this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, data));
+        this.setActiveGroupId(MemberType.Joined, data.id);
         this.state.requestState = REST.Success;
       })
       .catch((error) => {
@@ -171,19 +174,55 @@ class GroupStore implements Store {
   }
 
   @action
-  loadPublicGroups(): Promise<boolean> {
-    return getPublicGroups(0, -1, this.root.cancelToken).then(({data}) => {
-      data.forEach((group) => {
-        group.db_servers.forEach((dbServer) => {
-          if (!this.root.dbServer.dbServers.find((db) => db.id === dbServer.id)) {
-            this.root.dbServer.dbServers.push(
-              new DbServer(dbServer, this.root.dbServer, this.root.schemaQueryStore, this.root.cancelToken)
-            );
-          }
-        });
+  addMemberToGroup(group: Group, user: User) {
+    addGroupMember(group.id, user.id).then(({ data }) => {
+      if (group.isMember) {
+        const oldGroup = group.members.find(
+          (member) => member.userId === user.id && member.groupId === group.id
+        );
+        if (oldGroup) {
+          group.members.remove(oldGroup);
+        }
+        group.members.push(new GroupMember(this, this.root.user, group.id, data));
+      } else {
+        this.state.publicGroups.remove(group);
+        this.reloadGroup(group.id);
+      }
+    });
+  }
 
-        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, false, group));
-      })
+  @action
+  removeMemberFromGroup(group: Group, userId: string) {
+    removeMember(group.id, userId).then(() => {
+      if (userId === this.root.session.currentUser.id) {
+        this.state.joinedGroups.remove(group);
+        if (group.isPublic) {
+          this.reloadGroup(group.id);
+        }
+      } else {
+        const member = group.members.find((member) => member.userId === userId);
+        if (member) {
+          group.members.remove(member);
+        }
+      }
+    });
+  }
+
+  @action
+  loadPublicGroups(): Promise<boolean> {
+    return getPublicGroups(0, -1, this.root.cancelToken).then(({ data }) => {
+      data.forEach((group) => {
+        this.root.dbServer.addDbServers(group.db_servers);
+        const oldGroup = this.find(group.id);
+        if (oldGroup) {
+          if (oldGroup.isMember) {
+            this.state.joinedGroups.remove(oldGroup);
+          } else {
+            this.state.publicGroups.remove(oldGroup);
+          }
+        }
+        this.state.publicGroups.push(new Group(this, this.root.dbServer, this.root.user, group));
+      });
       return true;
     });
   }
@@ -192,59 +231,57 @@ class GroupStore implements Store {
   loadGroups(): Promise<boolean> {
     return getGroups(this.root.cancelToken).then(({ data }) => {
       data.forEach((group) => {
-        group.db_servers.forEach((dbServer) => {
-          if (!this.root.dbServer.dbServers.find((db) => db.id === dbServer.id)) {
-            this.root.dbServer.dbServers.push(
-              new DbServer(dbServer, this.root.dbServer, this.root.schemaQueryStore, this.root.cancelToken)
-            );
+        this.root.dbServer.addDbServers(group.db_servers);
+        const oldGroup = this.find(group.id);
+        if (oldGroup) {
+          if (oldGroup.isMember) {
+            this.state.joinedGroups.remove(oldGroup);
+          } else {
+            this.state.publicGroups.remove(oldGroup);
           }
-        });
-
-        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, true, group));
+        }
+        this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, group));
       });
-      if (this.myGroups.length > 0) {
-        this.setActiveGroupId(this.myGroups[0].id);
+      if (this.joinedGroups.length > 0) {
+        this.setActiveGroupId(MemberType.Joined, this.joinedGroups[0].id);
       }
       return true;
     });
   }
 
   @action
-  addMemberToGroup(group: Group, user: User) {
-    addGroupMember(group.id, user.id).then(({ data }) => {
-      if (group.isMember) {
-        const oldGroup = group.members.find(member => member.userId === user.id && member.groupId === group.id);
+  reloadGroup(id: string, showAfterFetch: boolean = true) {
+    getGroup(id)
+      .then(({ data }) => {
+        const oldGroup = this.find(id);
         if (oldGroup) {
-          group.members.remove(oldGroup);
+          if (oldGroup.isMember) {
+            this.state.joinedGroups.remove(oldGroup);
+          } else {
+            this.state.publicGroups.remove(oldGroup);
+          }
         }
-        group.members.push(new GroupMember(this, this.root.user, group.id, data));
-      } else {
-        this.reloadGroup(group.id).then(() => {
-          this.root.routing.push('my_groups');
-          this.setActiveGroupId(group.id);
-        });
-      }
-    });
-  }
+        this.root.dbServer.addDbServers(data.db_servers);
 
-  @action
-  reloadGroup(id: string): Promise<void> {
-    return getGroup(id).then(({data}) => {
-      data.db_servers.forEach((dbServer) => {
-        const oldDbServer = this.root.dbServer.dbServers.find((db) => db.id === dbServer.id);
-        if (oldDbServer) {
-          this.root.dbServer.dbServers.remove(oldDbServer);
+        const newGroup = new Group(this, this.root.dbServer, this.root.user, data);
+        if (newGroup.isMember) {
+          this.state.joinedGroups.push(newGroup);
+        } else {
+          this.state.publicGroups.push(newGroup);
         }
-        this.root.dbServer.dbServers.push(
-          new DbServer(dbServer, this.root.dbServer, this.root.schemaQueryStore, this.root.cancelToken)
-        );
+        return newGroup;
+      })
+      .then((group) => {
+        if (showAfterFetch) {
+          if (group.isMember) {
+            this.root.routing.push('my_groups');
+            this.setActiveGroupId(MemberType.Joined, group.id);
+          } else {
+            this.root.routing.push('public_groups');
+            this.setActiveGroupId(MemberType.Public, group.id);
+          }
+        }
       });
-      const oldGroup = this.state.groups.find(group => group.id);
-      if (oldGroup) {
-        this.state.groups.remove(oldGroup);
-      }
-      this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, true, data));
-    })
   }
 
   @action
@@ -255,9 +292,9 @@ class GroupStore implements Store {
     this.state.requestState = REST.Requested;
     create(group.name, group.description, group.isPrivate)
       .then(({ data }) => {
-        this.state.groups.remove(group);
-        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, true, data));
-        this.setActiveGroupId(data.id);
+        this.state.joinedGroups.remove(group);
+        this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, data));
+        this.setActiveGroupId(MemberType.Joined, data.id);
         this.state.requestState = REST.Success;
       })
       .catch((error) => {
@@ -272,9 +309,9 @@ class GroupStore implements Store {
     }
     update(group.id, group.changeablProps)
       .then(({ data }) => {
-        this.state.groups.remove(group);
-        this.state.groups.push(new Group(this, this.root.dbServer, this.root.user, true, data));
-        this.setActiveGroupId(data.id);
+        this.state.joinedGroups.remove(group);
+        this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, data));
+        this.setActiveGroupId(MemberType.Joined, data.id);
         this.state.requestState = REST.Success;
       })
       .catch((error) => {
@@ -283,12 +320,17 @@ class GroupStore implements Store {
   }
 
   @action
-  refresh() {
-    const currentId = this.activeGroupId;
-    this.state = new State();
-    this.loadGroups().then(() => {
-      this.setActiveGroupId(currentId);
-    });
+  refresh(memberType: MemberType) {
+    const currentId = this.activeGroups[memberType];
+    if (memberType === MemberType.Joined) {
+      this.loadGroups().then(() => {
+        this.setActiveGroupId(MemberType.Joined, currentId);
+      });
+    } else {
+      this.loadPublicGroups().then(() => {
+        this.setActiveGroupId(MemberType.Public, currentId);
+      });
+    }
   }
 
   @action
@@ -297,8 +339,8 @@ class GroupStore implements Store {
     remove(group.id)
       .then(() => {
         this.state.requestState = REST.Success;
-        this.state.groups.remove(group);
-        this.setActiveGroupId();
+        this.state.joinedGroups.remove(group);
+        this.setActiveGroupId(MemberType.Joined);
       })
       .catch(() => {
         this.state.requestState = REST.Error;

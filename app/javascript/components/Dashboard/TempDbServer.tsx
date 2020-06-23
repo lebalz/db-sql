@@ -72,7 +72,7 @@ export class TempDbServer extends React.Component {
 
   @computed
   get groupOwner(): Group | undefined {
-    return this.injected.groupStore.groups.find((group) => group.id === this.dbServer.ownerId);
+    return this.injected.groupStore.joinedGroups.find((group) => group.id === this.dbServer.ownerId);
   }
 
   @computed
@@ -369,7 +369,7 @@ export class TempDbServer extends React.Component {
               }}
               size="mini"
             />
-            {this.injected.groupStore.myAdminGroups.length === 0 ? (
+            {this.injected.groupStore.adminGroups.length === 0 ? (
               <Button
                 icon="copy"
                 labelPosition="left"
@@ -394,7 +394,7 @@ export class TempDbServer extends React.Component {
                       basic
                       color={this.dbServer.ownerType === OwnerType.User ? 'blue' : 'grey'}
                     />
-                    {this.injected.groupStore.myAdminGroups.map((group) => {
+                    {this.injected.groupStore.adminGroups.map((group) => {
                       return (
                         <Button
                           key={group.id}

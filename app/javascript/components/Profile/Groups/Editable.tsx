@@ -1,11 +1,5 @@
-import React, {  } from 'react';
-import {
-  Label,
-  Button,
-  Dropdown,
-  DropdownProps,
-  DropdownItemProps
-} from 'semantic-ui-react';
+import React from 'react';
+import { Label, Button, Dropdown, DropdownProps, DropdownItemProps, Popup } from 'semantic-ui-react';
 import { observer, inject } from 'mobx-react';
 import { computed, action } from 'mobx';
 import Group from '../../../models/Group';
@@ -41,7 +35,7 @@ export default class Editable extends React.Component<Props> {
 
   @computed
   get memberOptions(): DropdownItemProps[] {
-    return this.injected.groupStore.filteredGroupUsers.map((user) => {
+    return this.injected.groupStore.filteredUserProfiles.map((user) => {
       return {
         key: user.id,
         value: user.id,
@@ -53,14 +47,44 @@ export default class Editable extends React.Component<Props> {
   render() {
     return (
       <div className="editable">
-        <Button
-          onClick={() => this.group.togglePublicPrivate()}
-          icon={this.group.isPrivate ? 'lock' : 'lock open'}
-          color={this.group.isPrivate ? 'black' : 'yellow'}
-          size="mini"
-          label={this.group.isPrivate ? 'Private Group' : 'Public Group'}
-          labelPosition="left"
-        />
+        <div style={{ display: 'flex' }}>
+          <Button
+            onClick={() => this.group.togglePublicPrivate()}
+            icon={this.group.isPrivate ? 'lock' : 'lock open'}
+            color={this.group.isPrivate ? 'black' : 'yellow'}
+            size="mini"
+            content={this.group.isPrivate ? 'Private Group' : 'Public Group'}
+            disabled={!this.group.isAdmin}
+            labelPosition="right"
+          />
+          {this.group.canLeave && (
+            <Popup
+              on="click"
+              position="top right"
+              trigger={
+                <Button
+                  icon="sign-out alternate"
+                  color="red"
+                  size="mini"
+                  content="Leave"
+                  labelPosition="right"
+                />
+              }
+              header="Confirm"
+              size="mini"
+              content={
+                <Button
+                  icon="sign-out alternate"
+                  labelPosition="left"
+                  content="Yes Leave"
+                  color="red"
+                  onClick={() => this.group.leave()}
+                  size="mini"
+                />
+              }
+            />
+          )}
+        </div>
         {this.group.isAdmin && (
           <Dropdown
             placeholder="Add User"
@@ -99,7 +123,9 @@ export default class Editable extends React.Component<Props> {
                   <ClickableIcon
                     icon="minus circle"
                     color="red"
-                    onClick={() => member.remove()}
+                    onClick={() =>
+                      this.injected.groupStore.removeMemberFromGroup(this.group, member.userId)
+                    }
                     disabled={member.isCurrentUser}
                   />
                 )}

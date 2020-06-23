@@ -78,7 +78,7 @@ export default class Dashboard extends React.Component {
             }
           />
           <Accordion fluid styled exclusive={false}>
-            {this.injected.groupStore.myGroups.map((group) => {
+            {this.injected.groupStore.joinedGroups.map((group) => {
               const isActive = !this.injected.groupStore.reducedDashboardGroups.includes(group.id);
               return (
                 <Fragment key={group.id}>

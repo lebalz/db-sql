@@ -6,10 +6,10 @@ import UserStore from '../stores/user_store';
 import DbServer from './DbServer';
 import { rejectUndefined } from '../utils/listFilters';
 import User from './User';
-import GroupStore from '../stores/group_store';
+import GroupStore, { MemberType } from '../stores/group_store';
 import GroupMember from './GroupMember';
 import { GroupMember as GroupMemberProps } from '../api/group';
-import { GroupUser } from '../api/user';
+import { UserProfile } from '../api/user';
 
 export enum Mark {
   From = 'from',
@@ -37,7 +37,6 @@ export default class Group {
     groupStore: GroupStore,
     dbServerStore: DbServerStore,
     userStore: UserStore,
-    isMember: boolean,
     props: GroupProps,
     persisted: boolean = true
   ) {
@@ -47,7 +46,7 @@ export default class Group {
     this.dbServerStore = dbServerStore;
     this.id = props.id;
     this.isPrivate = props.is_private;
-    this.isMember = isMember;
+    this.isMember = props.is_member;
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.members.replace(
@@ -83,7 +82,7 @@ export default class Group {
   }
 
   @computed
-  get users(): GroupUser[] {
+  get users(): UserProfile[] {
     return rejectUndefined(this.members.map((member) => member.user));
   }
 
@@ -100,16 +99,16 @@ export default class Group {
   }
 
   @computed
-  get admins(): GroupUser[] {
+  get admins(): UserProfile[] {
     return rejectUndefined(this.members.filter((member) => member.isAdmin).map((member) => member.user));
   }
 
   @action
   setAsActiveCard() {
     if (this.isMember) {
-      this.groupStore.setActiveGroupId(this.id);
+      this.groupStore.setActiveGroupId(MemberType.Joined, this.id);
     } else {
-      this.groupStore.setActivePublicGroupId(this.id);
+      this.groupStore.setActiveGroupId(MemberType.Public, this.id);
     }
   }
 
@@ -129,7 +128,7 @@ export default class Group {
   }
 
   @computed
-  get outdatedMembers(): GroupUser[] {
+  get outdatedMembers(): UserProfile[] {
     return rejectUndefined(this.members.filter((member) => member.isOutdated).map((member) => member.user));
   }
 
@@ -154,6 +153,20 @@ export default class Group {
   @action
   join() {
     this.groupStore.addMemberToGroup(this, this.userStore.loggedInUser);
+  }
+
+  @computed
+  get canLeave(): boolean {
+    return !this.isAdmin && this.isMember && this.isPublic;
+  }
+
+  @action
+  leave() {
+    if (!this.canLeave) {
+      return;
+    }
+
+    this.groupStore.removeMemberFromGroup(this, this.userStore.loggedInUser.id);
   }
 
   @action

@@ -7,7 +7,7 @@ import {
 } from '../api/group';
 import GroupStore from '../stores/group_store';
 import Group from './Group';
-import { GroupUser } from '../api/user';
+import { UserProfile } from '../api/user';
 import UserStore from '../stores/user_store';
 
 export enum Mark {
@@ -40,11 +40,11 @@ export default class GroupMember {
 
   @computed
   get group(): Group {
-    return this.groupStore.groups.find((group) => group.id === this.groupId)!;
+    return this.groupStore.joinedGroups.find((group) => group.id === this.groupId)!;
   }
 
   @computed
-  get user(): GroupUser | undefined {
+  get user(): UserProfile | undefined {
     return this.userStore.groupUsers.find((user) => user.id === this.userId)!;
   }
 
@@ -60,16 +60,6 @@ export default class GroupMember {
     }
     changeAdminPermission(this.groupId, this.user.id, isAdmin).then(({ data }) => {
       this.isAdmin = data.is_admin;
-    });
-  }
-
-  @action
-  remove() {
-    if (!this.user) {
-      return;
-    }
-    removeMember(this.groupId, this.user.id).then(() => {
-      this.group.members.remove(this);
     });
   }
 }

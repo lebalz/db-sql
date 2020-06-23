@@ -143,7 +143,7 @@ class Group < ApplicationRecord
   #   db server passwords of this group
   # @param is_admin [boolean]
   def add_user(user:, group_key:, is_admin: false)
-    return if user_ids.include? user.id
+    return members.find_by(user_id: user.id) if user_ids.include? user.id
 
     key = Base64.strict_encode64(user.public_key.public_encrypt(group_key))
     GroupMember.create!(

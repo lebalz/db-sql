@@ -24,6 +24,7 @@ export interface ChangeableProps {
 
 export interface Group extends ChangeableProps {
   id: string;
+  is_member: boolean;
   updated_at: string;
   created_at: string;
   db_servers: DbServer[];
