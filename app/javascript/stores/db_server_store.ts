@@ -114,7 +114,11 @@ class DbServerStore implements Store {
 
   @computed
   get loadedDbServers(): DbServer[] {
-    return Array.from(this.state.databaseIndex.keys()).map((id) => this.find(id)!);
+    return _.orderBy(
+      Array.from(this.state.databaseIndex.keys()).map((id) => this.find(id)!),
+      'name',
+      'asc'
+    )
   }
 
   @computed

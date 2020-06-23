@@ -94,7 +94,11 @@ export default class Group {
   @computed
   get dbServers(): DbServer[] {
     return rejectUndefined(
-      this.dbServerIds.map((id) => this.dbServerStore.dbServers.find((u) => u.id === id))
+      _.orderBy(
+        this.dbServerIds.map((id) => this.dbServerStore.dbServers.find((u) => u.id === id)),
+        'name',
+        'asc'
+      )
     );
   }
 
