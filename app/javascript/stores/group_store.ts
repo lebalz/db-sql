@@ -11,7 +11,6 @@ import {
   getGroup,
   removeMember
 } from '../api/group';
-import DbServer from '../models/DbServer';
 import Group from '../models/Group';
 import { UserProfile } from '../api/user';
 import { REST } from '../declarations/REST';
@@ -168,7 +167,7 @@ class GroupStore implements Store {
         this.setActiveGroupId(MemberType.Joined, data.id);
         this.state.requestState = REST.Success;
       })
-      .catch((error) => {
+      .catch(() => {
         this.state.requestState = REST.Error;
       });
   }
@@ -232,6 +231,9 @@ class GroupStore implements Store {
     return getGroups(this.root.cancelToken).then(({ data }) => {
       data.forEach((group) => {
         this.root.dbServer.addDbServers(group.db_servers);
+        if (group.db_servers.length === 0 && !this.reducedDashboardGroups.includes(group.id)) {
+          this.reducedDashboardGroups.push(group.id)
+        }
         const oldGroup = this.find(group.id);
         if (oldGroup) {
           if (oldGroup.isMember) {
@@ -297,7 +299,7 @@ class GroupStore implements Store {
         this.setActiveGroupId(MemberType.Joined, data.id);
         this.state.requestState = REST.Success;
       })
-      .catch((error) => {
+      .catch(() => {
         this.state.requestState = REST.Error;
       });
   }
@@ -314,7 +316,7 @@ class GroupStore implements Store {
         this.setActiveGroupId(MemberType.Joined, data.id);
         this.state.requestState = REST.Success;
       })
-      .catch((error) => {
+      .catch(() => {
         this.state.requestState = REST.Error;
       });
   }

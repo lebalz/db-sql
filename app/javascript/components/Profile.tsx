@@ -11,7 +11,7 @@ import UserStore from '../stores/user_store';
 import UserList from './Profile/UserList';
 import DeleteAccount from './Profile/DeleteAccount';
 import SchemaQueries from './Profile/SchemaQueries';
-import Groups from './Profile/Groups';
+import Groups from './Profile/JoinedGroups';
 import PublicGroups from './Profile/PublicGroups';
 import GroupStore from '../stores/group_store';
 
