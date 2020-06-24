@@ -271,6 +271,21 @@ class DbServerStore implements Store {
     return queries;
   }
 
+  isOutdated(dbServerId: string): boolean {
+    const dbServer = this.find(dbServerId);
+    if (!dbServer) {
+      return true;
+    }
+
+    if (dbServer.ownerType === OwnerType.Group) {
+      const group = this.root.groupStore.find(dbServer.ownerId);
+      if (group) {
+        return group.isOutdated;
+      }
+    }
+    return (dbServer.password ?? '').length === 0;
+  }
+
   database(dbServerId: string, dbName: string): Database | undefined {
     if (!this.state.databases.has(dbServerId)) {
       return;

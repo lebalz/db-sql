@@ -176,6 +176,11 @@ export default class DbServer {
     return this.dbServerStore.loadedDatabases(this.id);
   }
 
+  @computed
+  get isOutdated(): boolean {
+    return this.dbServerStore.isOutdated(this.id);
+  }
+
   @action
   reload() {
     this.dbServerStore.reloadDbServer(this.id);

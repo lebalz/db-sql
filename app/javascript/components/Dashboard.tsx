@@ -12,6 +12,10 @@ import { OwnerType } from '../api/db_server';
 import SchemaQueryStore from '../stores/schema_query_store';
 import AddDbServer from './Dashboard/AddDbServer';
 import GroupStore from '../stores/group_store';
+import User from '../models/User';
+import { computed } from 'mobx';
+import Tooltip from '../shared/Tooltip';
+import ClickableIcon from '../shared/ClickableIcon';
 
 interface InjectedProps {
   sessionStore: SessionStore;
@@ -26,6 +30,11 @@ interface InjectedProps {
 export default class Dashboard extends React.Component {
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  @computed
+  get currentUser(): User {
+    return this.injected.sessionStore.currentUser;
   }
 
   render() {
@@ -65,11 +74,20 @@ export default class Dashboard extends React.Component {
               return (
                 <Fragment key={group.id}>
                   <Accordion.Title
-                    style={{ display: 'flex' }}
+                    style={{ display: 'flex', alignItems: "baseline" }}
                     content={
                       <Fragment>
                         {group.name}
                         <div className="spacer" />
+                        {group.isOutdated && (
+                          <Tooltip content="Your password was reset and your group key is outdated." position="right center">
+                            <ClickableIcon
+                              icon="warning sign"
+                              color="yellow"
+                              onClick={() => this.injected.routerStore.push(`/profile/my_groups/${group.id}`)}
+                            />
+                          </Tooltip>
+                        )}
                         <Label content={group.dbServerCount} />
                       </Fragment>
                     }

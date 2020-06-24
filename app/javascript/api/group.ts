@@ -74,6 +74,11 @@ export function update(groupId: string, data: ChangeableProps): AxiosPromise<Gro
   });
 }
 
+export function generateNewCryptoKey(groupId: string): AxiosPromise<Group> {
+  return api.post(`groups/${groupId}/generate_new_crypto_key`);
+}
+
+
 export function remove(groupId: string): AxiosPromise<void> {
   return api.delete(`groups/${groupId}`);
 }

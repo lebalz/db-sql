@@ -90,7 +90,7 @@ export default class Groups extends React.Component {
           {this.activeGroup && (
             <Fragment>
               <GroupProps group={this.activeGroup} />
-              <Editable group={this.activeGroup} />
+              <Editable group={this.activeGroup} currentUserId={this.injected.userStore.loggedInUser.id} />
               {this.isGroupAdmin && (
                 <Actions
                   for={this.activeGroup}

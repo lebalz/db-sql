@@ -117,6 +117,11 @@ export default class Group {
   }
 
   @computed
+  get isOutdated(): boolean {
+    return this.outdatedMembers.some((user) => user.id === this.userStore.loggedInUser.id);
+  }
+
+  @computed
   get isAdmin(): boolean {
     return this.admins.some((user) => user.id === this.userStore.loggedInUser.id);
   }
@@ -135,9 +140,6 @@ export default class Group {
   get outdatedMembers(): UserProfile[] {
     return rejectUndefined(this.members.filter((member) => member.isOutdated).map((member) => member.user));
   }
-
-  @action
-  setAdminRights(member: User, isAdmin: boolean) {}
 
   @computed
   get memberCount(): number {
@@ -180,6 +182,11 @@ export default class Group {
     } else {
       this.groupStore.create(this);
     }
+  }
+
+  @action
+  resetCryptoKey(): void {
+    this.groupStore.generateNewCryptoKey(this.id);
   }
 
   @action

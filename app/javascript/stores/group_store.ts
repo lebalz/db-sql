@@ -9,7 +9,9 @@ import {
   getPublicGroups,
   addGroupMember,
   getGroup,
-  removeMember
+  removeMember,
+  generateNewCryptoKey as requestNewCryptoKey,
+  Group as GroupProps
 } from '../api/group';
 import Group from '../models/Group';
 import { UserProfile } from '../api/user';
@@ -230,19 +232,15 @@ class GroupStore implements Store {
   loadGroups(): Promise<boolean> {
     return getGroups(this.root.cancelToken).then(({ data }) => {
       data.forEach((group) => {
-        this.root.dbServer.addDbServers(group.db_servers);
-        if (group.db_servers.length === 0 && !this.reducedDashboardGroups.includes(group.id)) {
-          this.reducedDashboardGroups.push(group.id)
+        const hasDbServers = group.db_servers.length > 0;
+        const isOutdated = group.members?.some(
+          (member) => member.is_outdated && member.user_id === this.root.user.loggedInUser.id
+        );
+        if ((!hasDbServers || isOutdated) && !this.reducedDashboardGroups.includes(group.id)) {
+          this.reducedDashboardGroups.push(group.id);
         }
-        const oldGroup = this.find(group.id);
-        if (oldGroup) {
-          if (oldGroup.isMember) {
-            this.state.joinedGroups.remove(oldGroup);
-          } else {
-            this.state.publicGroups.remove(oldGroup);
-          }
-        }
-        this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, group));
+        
+        this.replaceGroup(group);
       });
       if (this.joinedGroups.length > 0) {
         this.setActiveGroupId(MemberType.Joined, this.joinedGroups[0].id);
@@ -252,26 +250,17 @@ class GroupStore implements Store {
   }
 
   @action
+  generateNewCryptoKey(id: string) {
+    requestNewCryptoKey(id).then(({data}) => {
+      return this.replaceGroup(data);
+    })
+  }
+
+  @action
   reloadGroup(id: string, showAfterFetch: boolean = true) {
     getGroup(id)
       .then(({ data }) => {
-        const oldGroup = this.find(id);
-        if (oldGroup) {
-          if (oldGroup.isMember) {
-            this.state.joinedGroups.remove(oldGroup);
-          } else {
-            this.state.publicGroups.remove(oldGroup);
-          }
-        }
-        this.root.dbServer.addDbServers(data.db_servers);
-
-        const newGroup = new Group(this, this.root.dbServer, this.root.user, data);
-        if (newGroup.isMember) {
-          this.state.joinedGroups.push(newGroup);
-        } else {
-          this.state.publicGroups.push(newGroup);
-        }
-        return newGroup;
+        return this.replaceGroup(data);
       })
       .then((group) => {
         if (showAfterFetch) {
@@ -284,6 +273,27 @@ class GroupStore implements Store {
           }
         }
       });
+  }
+
+  @action
+  private replaceGroup(group: GroupProps) {
+    const oldGroup = this.find(group.id);
+    if (oldGroup) {
+      if (oldGroup.isMember) {
+        this.state.joinedGroups.remove(oldGroup);
+      } else {
+        this.state.publicGroups.remove(oldGroup);
+      }
+    }
+    this.root.dbServer.addDbServers(group.db_servers);
+
+    const newGroup = new Group(this, this.root.dbServer, this.root.user, group);
+    if (newGroup.isMember) {
+      this.state.joinedGroups.push(newGroup);
+    } else {
+      this.state.publicGroups.push(newGroup);
+    }
+    return newGroup;
   }
 
   @action

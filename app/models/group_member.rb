@@ -41,5 +41,7 @@ class GroupMember < ApplicationRecord
   # @return [string] decrypted, Base64 encoded, crypto key
   def crypto_key(private_key)
     private_key.private_decrypt(Base64.strict_decode64(crypto_key_encrypted))
+  rescue StandardError
+    nil
   end
 end

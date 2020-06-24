@@ -110,6 +110,13 @@ module Resources
           status :no_content
         end
 
+        desc 'force the current group to generate a new crypto key. All db server passwords of this group will be lost!'
+        post :generate_new_crypto_key do
+          current_group.force_new_crypto_key!
+          current_group.reload
+          present(current_group, with: Entities::Group, user: current_user)
+        end
+
         desc 'update a group'
         params do
           requires :data, type: Hash do

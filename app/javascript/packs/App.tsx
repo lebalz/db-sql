@@ -35,7 +35,7 @@ const AppContent = observer(() => (
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/about" component={About} />
         <Route path="/connections/:id/:db_name?" component={DbServer} />
-        <Route path="/profile/:part" component={Profile} />
+        <Route path="/profile/:part/:id?" component={Profile} />
         <Route path="/users/:id/reset_password" component={ResetPassword} />
         <Route path="/users/:id/activate" component={ActivateAccount} />
         <Redirect from="/" exact to="/dashboard" />

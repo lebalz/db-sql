@@ -8,6 +8,9 @@ import { action, computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
 import Tooltip from '../../shared/Tooltip';
 import SchemaQueryStore from '../../stores/schema_query_store';
+import GroupStore from '../../stores/group_store';
+import { OwnerType } from '../../api/db_server';
+import Group from '../../models/Group';
 
 interface Props {
   dbConnection: DbServer;
@@ -17,9 +20,10 @@ interface InjectedProps extends Props {
   dbServerStore: DbServerStore;
   routerStore: RouterStore;
   schemaQueryStore: SchemaQueryStore;
+  groupStore: GroupStore;
 }
 
-@inject('dbServerStore', 'routerStore', 'schemaQueryStore')
+@inject('dbServerStore', 'routerStore', 'schemaQueryStore', 'groupStore')
 @observer
 export default class DbServerOverview extends React.Component<Props> {
   get injected() {
@@ -44,6 +48,13 @@ export default class DbServerOverview extends React.Component<Props> {
       return `${(queryCount / 1000).toFixed(1)}K`;
     }
     return `${(queryCount / 1000000).toFixed(2)}M`;
+  }
+
+  @computed
+  get owner(): Group | undefined {
+    if (this.dbConnection.ownerType === OwnerType.Group) {
+      return this.injected.groupStore.find(this.dbConnection.ownerId);
+    }
   }
 
   render() {
@@ -81,7 +92,9 @@ export default class DbServerOverview extends React.Component<Props> {
               );
               this.injected.dbServerStore.setTempDbServer(temp);
             }}
+            disabled={this.dbConnection.ownerType === OwnerType.Group && this.dbConnection.isOutdated}
           />
+
           <Button
             basic
             color="green"
@@ -89,6 +102,7 @@ export default class DbServerOverview extends React.Component<Props> {
             content="Connect"
             icon="plug"
             onClick={() => this.connect()}
+            disabled={this.dbConnection.isOutdated}
           />
         </Card.Content>
       </Card>
