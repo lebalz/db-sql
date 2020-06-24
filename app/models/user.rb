@@ -24,7 +24,7 @@
 #
 
 class User < ApplicationRecord
-  has_many :group_members
+  has_many :group_members, dependent: :delete_all
   has_many :groups, through: :group_members
   has_secure_password
   has_many :database_schema_queries,
@@ -38,7 +38,7 @@ class User < ApplicationRecord
 
   enum role: ROLES
 
-  has_many :login_tokens, dependent: :destroy
+  has_many :login_tokens, dependent: :delete_all
   has_many :db_servers, dependent: :destroy
 
   ACTIVATION_PERIOD = 7.days

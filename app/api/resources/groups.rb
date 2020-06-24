@@ -93,6 +93,10 @@ module Resources
       route_param :id, type: String, desc: 'Group ID' do
         desc 'Get a specific group'
         get do
+          current_group.update_outdated_members(
+            group_key: current_group.crypto_key(current_user, current_user.private_key(crypto_key))
+          )
+
           present(current_group, with: Entities::Group, user: current_user)
         end
 

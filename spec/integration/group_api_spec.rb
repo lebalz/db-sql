@@ -4,7 +4,6 @@ require_relative '../rails_helper.rb'
 
 RSpec.describe "API::Resources::DatabaseSchemaQuery" do
   before(:all) do
-
     @user1 = FactoryBot.create(:user)
     @user2 = FactoryBot.create(:user)
     @user3 = FactoryBot.create(:user)
@@ -75,6 +74,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
     )
 
   end
+
   describe 'GET /api/groups' do
     it 'returns all groups of a user' do
       get(
@@ -150,6 +150,78 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
     end
+
+    describe 'can update outdated group members' do
+      before(:each) do
+        user = FactoryBot.create(:user)
+
+        @group1.reload
+        expect(@group1.members.length).to be(2)
+
+        post(
+          "/api/groups/#{@group1.id}/members",
+          headers: @user1_headers,
+          params: {
+            user_id: user.id
+          }
+        )
+        @group1.reload
+        expect(@group1.members.length).to be(3)
+        expect(@group1.members.map(&:user_id)).to include(user.id)
+
+        user.request_password_reset
+        token = user.reset_password_token
+        user.reset_password(
+          reset_token: token,
+          password: '12341234',
+          password_confirmation: '12341234'
+        )
+        @group_user = user
+      end
+
+      after(:each) do
+        @group_user&.destroy
+      end
+
+      it 'updates outdated group members' do
+        user = @group_user
+        @group1.reload
+        member = @group1.members.find { |m| m.user_id == user.id }
+        expect(member.is_outdated).to be_truthy
+  
+        get(
+          "/api/groups/#{@group1.id}",
+          headers: @user2_headers
+        )
+        @group1.reload
+        member = @group1.members.find { |m| m.user_id == user.id }
+        expect(member.is_outdated).to be_falsey
+      end
+
+      it 'can not update itself' do
+        user = @group_user        
+        user_token = FactoryBot.create(:login_token, user: user)
+        user_key = user.crypto_key('12341234')
+        user_headers = {
+          'Authorization' => user_token.token,
+          'Crypto-Key' => user_key
+        }
+        @group1.reload
+        member = @group1.members.find { |m| m.user_id == user.id }
+        expect(member.is_outdated).to be_truthy
+  
+        get(
+          "/api/groups/#{@group1.id}",
+          headers: user_headers
+        )
+        expect(response.successful?).to be_truthy
+        @group1.reload
+        member = @group1.members.find { |m| m.user_id == user.id }
+        expect(member.is_outdated).to be_truthy
+  
+      end
+    end
+
   end
 
   describe 'POST /api/groups' do
