@@ -29,8 +29,10 @@ module Resources
     resource :groups do
       desc 'Get all groups of the current user'
       get do
+        groups = current_user.groups.includes(:group_members, :db_servers, :users)
+        Group.update_outdated_group_members(user: current_user, pkey: current_user.private_key(crypto_key))
         present(
-          current_user.groups.includes(:group_members, :db_servers, :users),
+          groups,
           with: Entities::Group,
           user: current_user
         )

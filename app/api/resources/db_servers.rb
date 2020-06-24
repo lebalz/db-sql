@@ -29,8 +29,8 @@ module Resources
         when :user
           user_key
         when :group
-          grp = db_server.owner
-          grp.crypto_key(current_user, current_user.private_key(user_key))
+          group = db_server.owner
+          group.crypto_key(current_user, current_user.private_key(user_key))
         end
       end
     end

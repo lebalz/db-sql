@@ -77,6 +77,8 @@ class Group < ApplicationRecord
   # @param group_key [String] key used to decrypt the
   #   db server passwords of this group
   def update_outdated_members(group_key:)
+    return if group_key.nil?
+
     outdated_members.each do |member|
       key = Base64.strict_encode64(
         member.user.public_key.public_encrypt(group_key)
@@ -85,6 +87,13 @@ class Group < ApplicationRecord
         crypto_key_encrypted: key,
         is_outdated: false
       )
+    end
+  end
+
+  def self.update_outdated_group_members(user:, pkey:)
+    user.groups.each do |group|
+      group_key = group.crypto_key(user, pkey)
+      group.update_outdated_members(group_key: group_key)
     end
   end
 
