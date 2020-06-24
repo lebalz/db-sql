@@ -57,6 +57,7 @@ group :development, :test do
 
   gem 'dotenv-rails'
   gem 'simplecov'
+  gem 'codecov'
 
   gem 'rspec-rails'
 
