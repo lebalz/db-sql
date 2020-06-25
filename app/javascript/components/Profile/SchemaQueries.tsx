@@ -12,7 +12,7 @@ import Tooltip from '../../shared/Tooltip';
 import UserStore from '../../stores/user_store';
 import SchemaQueryCard from './SchemaQueries/SchemaQueryCard';
 import LoadMoreCard from './SchemaQueries/LoadMoreCard';
-import Actions from './SchemaQueries/Actions';
+import Actions, { ActionTypes } from './SchemaQueries/Actions';
 import SchemaQueryProps from './SchemaQueries/SchemaQueryProps';
 
 interface InjectedProps {
@@ -55,12 +55,24 @@ export default class SchemaQueries extends React.Component {
     return this.injected.schemaQueryStore.selectedSchemaQuery;
   }
 
+  @computed
+  get disabledActions(): ActionTypes[] {
+    const disabled = [];
+    if (!this.selectedSchemaQuery?.canEdit || this.selectedSchemaQuery.stats.public_user_count > 0) {
+      disabled.push(ActionTypes.Destroy);
+    }
+    if (!this.selectedSchemaQuery?.isDirty) {
+      disabled.push(ActionTypes.Save);
+    }
+    return disabled;
+  }
+
   render() {
     const schemaQueryState = this.injected.schemaQueryStore.fetchRequestState[this.dbType];
     const canLoadMore = schemaQueryState.available !== schemaQueryState.loaded;
     return (
       <Segment style={{ width: '100%', height: '100%' }}>
-        <div id="schema-query-grid">
+        <div className="card-grid">
           <div className="selection">
             <div>
               <Button.Group color="teal" size="mini">
@@ -88,7 +100,7 @@ export default class SchemaQueries extends React.Component {
             </Tooltip>
           </div>
           <SchemaQueryProps schemaQuery={this.selectedSchemaQuery} />
-          <div className="history">
+          <div className="cards">
             <div className="cards-container">
               {this.schemaQueries.map((rev) => (
                 <SchemaQueryCard
@@ -104,15 +116,37 @@ export default class SchemaQueries extends React.Component {
           {this.selectedSchemaQuery && (
             <Fragment>
               <SqlEditor
-                className={cx('editor', {
+                className={cx('editable', {
                   ['dirty']: this.selectedSchemaQuery.query !== this.selectedSchemaQuery.pristineState.query
                 })}
                 sql={this.selectedSchemaQuery}
                 readOnly={!this.selectedSchemaQuery.canEdit}
               />
               <Actions
-                schemaQuery={this.selectedSchemaQuery}
+                for={this.selectedSchemaQuery}
                 isSaving={this.injected.schemaQueryStore.requestState === REST.Requested}
+                disabled={this.disabledActions}
+                size="mini"
+                additionalActions={[
+                  <Button
+                    className={cx('toggle-privacy', {
+                      ['dirty']:
+                        this.selectedSchemaQuery.isPrivate !==
+                        this.selectedSchemaQuery.pristineState.is_private
+                    })}
+                    size="mini"
+                    icon={this.selectedSchemaQuery.isPrivate ? 'lock' : 'lock open'}
+                    labelPosition="left"
+                    color="yellow"
+                    disabled={
+                      !this.selectedSchemaQuery?.canEdit ||
+                      (this.selectedSchemaQuery.isPublic &&
+                        this.selectedSchemaQuery.stats.public_user_count > 0)
+                    }
+                    onClick={() => this.selectedSchemaQuery?.togglePrivacy()}
+                    content={this.selectedSchemaQuery.isPrivate ? 'Private' : 'Public'}
+                  />
+                ]}
               />
             </Fragment>
           )}

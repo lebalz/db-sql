@@ -19,16 +19,19 @@
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  database_schema_query_id :uuid
+#  group_id                 :uuid
 #  user_id                  :uuid
 #
 # Indexes
 #
 #  index_db_servers_on_database_schema_query_id  (database_schema_query_id)
+#  index_db_servers_on_group_id                  (group_id)
 #  index_db_servers_on_user_id                   (user_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (database_schema_query_id => database_schema_queries.id)
+#  fk_rails_...  (group_id => groups.id)
 #  fk_rails_...  (user_id => users.id)
 #
 

@@ -1,10 +1,14 @@
 import api from './base';
-import { AxiosPromise } from 'axios';
+import { AxiosPromise, CancelTokenSource } from 'axios';
 import { Role } from '../models/User';
 
-export interface User {
+
+export interface UserProfile {
   id: string;
   email: string;
+}
+
+export interface User extends UserProfile {
   login_count: number;
   role: Role;
   activated: boolean;
@@ -33,6 +37,12 @@ export function logout() {
 
 export function user(): AxiosPromise<User> {
   return api.get('users/current');
+}
+
+export function groupUsers(cancelToken: CancelTokenSource): AxiosPromise<UserProfile[]> {
+  return api.get('users/group_users', {
+    cancelToken: cancelToken.token
+  });
 }
 
 export function newPassword(

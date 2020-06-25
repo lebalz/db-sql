@@ -10,6 +10,8 @@
 #  email                       :string
 #  login_count                 :integer          default(0)
 #  password_digest             :string
+#  private_key_pem             :string
+#  public_key_pem              :string
 #  reset_password_digest       :string
 #  reset_password_mail_sent_at :datetime
 #  role                        :integer          default("user")
@@ -22,18 +24,21 @@
 #
 
 class User < ApplicationRecord
+  has_many :group_members, dependent: :delete_all
+  has_many :groups, through: :group_members
   has_secure_password
   has_many :database_schema_queries,
            class_name: 'DatabaseSchemaQuery',
            foreign_key: :author_id
   before_create :create_activation_digest
+  after_create  :create_key_pairs
   before_save   :downcase_email
 
   ROLES = %i[user admin].freeze
 
   enum role: ROLES
 
-  has_many :login_tokens, dependent: :destroy
+  has_many :login_tokens, dependent: :delete_all
   has_many :db_servers, dependent: :destroy
 
   ACTIVATION_PERIOD = 7.days
@@ -53,8 +58,19 @@ class User < ApplicationRecord
 
   attr_accessor :activation_token, :reset_password_token
 
+  def has_keypair?
+    !!private_key_pem && !!public_key_pem
+  end
+
+  def all_db_servers
+    [*db_servers, *groups.map(&:db_servers).flatten]
+  end
+
   def login(password)
     return unless authenticate password
+
+    # TODO: remove once all users have a keypair
+    update_key_pairs!(crypto_key: crypto_key(password)) unless has_keypair?
 
     token = LoginToken.new
     login_tokens << token
@@ -89,7 +105,9 @@ class User < ApplicationRecord
     ActiveRecord::Base.transaction do
       update!(
         password: new_password,
-        password_confirmation: password_confirmation
+        password_confirmation: password_confirmation,
+        reset_password_digest: nil,
+        reset_password_mail_sent_at: nil
       )
       db_servers.each do |db_server|
         db_server.recrypt!(
@@ -97,6 +115,10 @@ class User < ApplicationRecord
           new_crypto_key: crypto_key(new_password)
         )
       end
+      update_key_pairs!(
+        crypto_key: crypto_key(new_password),
+        old_crypto_key: crypto_key(old_password)
+      )
       login_tokens.destroy_all
     end
   end
@@ -118,6 +140,7 @@ class User < ApplicationRecord
           new_crypto_key: crypto_key(password)
         )
       end
+      update_key_pairs!(crypto_key: crypto_key(password))
       login_tokens.destroy_all
     end
   end
@@ -180,6 +203,21 @@ class User < ApplicationRecord
     DateTime.now < reset_password_mail_sent_at + PASSWORD_RESET_PERIOD
   end
 
+  def public_key
+    return unless has_keypair?
+
+    OpenSSL::PKey::RSA.new(public_key_pem)
+  end
+
+  # @param crypto_key [String | nil] the users secret crypto key
+  def private_key(crypto_key)
+    return unless has_keypair?
+
+    OpenSSL::PKey::RSA.new(private_key_pem, crypto_key || '')
+  rescue OpenSSL::PKey::RSAError
+    nil
+  end
+
   private
 
   def password_reset_authenticated?(token:)
@@ -215,6 +253,12 @@ class User < ApplicationRecord
     )
   end
 
+  def create_key_pairs
+    return unless password
+
+    update_key_pairs!(crypto_key: crypto_key(password))
+  end
+
   def create_reset_password_digest
     self.reset_password_token = SecureRandom.urlsafe_base64
     self.reset_password_mail_sent_at = DateTime.now
@@ -222,5 +266,32 @@ class User < ApplicationRecord
       @reset_password_token,
       cost: BCrypt::Engine.cost
     )
+  end
+
+  def update_key_pairs!(crypto_key:, old_crypto_key: nil)
+    rsa_key = OpenSSL::PKey::RSA.new(2048)
+    cipher =  OpenSSL::Cipher.new('des3')
+    ActiveRecord::Base.transaction do
+      if has_keypair?
+        pkey = private_key(old_crypto_key)
+        if pkey.nil?
+          group_members.update_all(
+            is_outdated: true
+          )
+        else
+          group_members.each do |member|
+            secret = member.secret(pkey)
+            member.update!(
+              crypto_key_encrypted: rsa_key.public_key.public_encrypt(secret)
+            )
+          end
+        end
+      end
+
+      update!(
+        private_key_pem: rsa_key.to_pem(cipher, crypto_key),
+        public_key_pem: rsa_key.public_key.to_pem
+      )
+    end
   end
 end

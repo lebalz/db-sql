@@ -1,0 +1,25 @@
+.clickable-icon {
+  -webkit-user-select: none; /* Safari */
+  user-select: none;
+  &:hover {
+    text-shadow: 0px 0px 4px;
+  }
+}
+
+.flipable-icon {
+  .clickable-icon {
+    &.back {
+      display: none;
+    }
+  }
+  &:hover {
+    .clickable-icon {
+      &.front {
+        display: none;
+      }
+      &.back {
+        display: inherit;
+      }
+    }
+  }
+}

@@ -2,28 +2,50 @@
 
 module Resources
   class DbServers < Grape::API
+    before do
+      load_db_server if params.key?(:id)
+    end
     helpers do
-      def db_server
-        db_server = DbServer.find(params[:id])
+      def load_db_server
+        db_server ||= DbServer.find(params[:id])
         error!('Db server not found', 302) unless db_server
-        unless db_server.user_id == current_user.id
+
+        unless db_server.authorized? current_user
           error!('Invalid permission for this db server', 401)
         end
-        db_server
+
+        @db_server = db_server
       end
+      attr_reader :db_server
 
       def crypto_key
         has_key = request.headers.key?('Crypto-Key')
         error!('Crypto-Key is required', 400) unless has_key
 
-        request.headers['Crypto-Key']
+        user_key = request.headers['Crypto-Key']
+        return user_key unless params.key?(:id)
+
+        case db_server.owner_type
+        when :user
+          user_key
+        when :group
+          group = db_server.owner
+          group.crypto_key(current_user, current_user.private_key(user_key))
+        end
       end
     end
 
     resource :db_servers do
       desc 'Get all database servers'
+      params do
+        optional(:include_shared, type: Boolean, default: false, desc: 'wheter to include shared db servers from groups')
+      end
       get do
-        present current_user.db_servers, with: Entities::DbServer
+        if params[:include_shared]
+          present current_user.all_db_servers, with: Entities::DbServer
+        else
+          present current_user.db_servers, with: Entities::DbServer
+        end
       end
 
       desc 'Create a database server'
@@ -36,6 +58,17 @@ module Resources
           values: %i[psql mysql mariadb],
           desc: 'db type'
         )
+        requires(
+          :owner_type,
+          type: Symbol,
+          values: %i(user group),
+          desc: 'owner type'
+        )
+        optional(
+          :owner_id,
+          type: String,
+          desc: 'owner id, must be set for owner_type :group'
+        )
         requires(:host, type: String, desc: 'host')
         requires(:port, type: Integer, desc: 'port')
         requires(:username, type: String, desc: 'db user')
@@ -44,12 +77,23 @@ module Resources
         optional(:initial_table, type: String, desc: 'initial table')
       end
       post do
+        user_key = request.headers['Crypto-Key']
+        if params[:owner_type] == :user
+          key = user_key
+        else
+          grp = Group.find(params[:owner_id])
+          error!('Group not found', 302) unless grp
+          error!('Missing privileg to add new servers', 401) unless grp.admin?(current_user)
+
+          key = grp.crypto_key(current_user, current_user.private_key(user_key))
+        end
         encrypted_password = DbServer.encrypt(
-          key: request.headers['Crypto-Key'],
+          key: key,
           db_password: params[:password]
         )
         db_server = DbServer.create!(
-          user: current_user,
+          user: params[:owner_type] == :user ? current_user : nil,
+          group_id: params[:owner_type] == :group ? params[:owner_id] : nil,
           name: params[:name],
           db_type: DbServer.db_types[params[:db_type]],
           host: params[:host],
@@ -60,7 +104,7 @@ module Resources
           initial_db: params[:initial_db],
           initial_table: params[:initial_table]
         )
-        present db_server, with: Entities::DbServer
+        present(db_server, with: Entities::DbServer)
       end
 
       route_param :id, type: String, desc: 'Database server ID' do
@@ -123,7 +167,7 @@ module Resources
               :initial_table
             )
           )
-          present db_server, with: Entities::DbServer
+          present(db_server, with: Entities::DbServer)
         end
 
         desc 'Delete a database server connection'
@@ -170,7 +214,7 @@ module Resources
           post :query do
             db_name = params[:database_name]
             db_server.increment!(:query_count, 1)
-            db_server.user.touch
+            db_server.owner.touch
             db_server.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
             end.to_a
@@ -185,7 +229,7 @@ module Resources
             db_name = params[:database_name]
             results = []
             error_occured = false
-            db_server.user.touch
+            db_server.owner.touch
 
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
@@ -228,7 +272,7 @@ module Resources
             requires(:query, type: String)
           end
           post :raw_query do
-            db_server.user.touch
+            db_server.owner.touch
             db_name = params[:database_name]
             t0 = Time.now
             db_server.increment!(:query_count, 1)

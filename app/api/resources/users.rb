@@ -38,6 +38,11 @@ module Resources
         )
       end
 
+      desc 'get all users available to build groups'
+      get :group_users do
+        present(User.all, with: Entities::GroupUser)
+      end
+
       route_setting :auth, disabled: true
       params do
         requires :email, type: String

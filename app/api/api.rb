@@ -61,6 +61,7 @@ class API < Grape::API
   mount Resources::TempDbServer
   mount Resources::Status
   mount Resources::DatabaseSchemaQueries
+  mount Resources::Groups
 
   # This needs to happen at the very end of this file.
   add_swagger_documentation(

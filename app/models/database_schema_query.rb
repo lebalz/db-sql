@@ -55,7 +55,7 @@ class DatabaseSchemaQuery < ApplicationRecord
         )
       )
       .order(
-        "is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC"
+        Arel.sql("is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC")
       )
   end
 

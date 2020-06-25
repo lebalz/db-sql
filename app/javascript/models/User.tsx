@@ -36,6 +36,22 @@ export default class User {
   }
 
   static formatDate(date: Date) {
-    return date.toLocaleString('de-CH');
+    return date.toLocaleString();
+  }
+
+  @computed
+  get props(): UserProps {
+    return {
+      id: this.id,
+      email: this.email,
+      login_count: this.loginCount,
+      created_at: this.createdAt.toISOString(),
+      updated_at: this.updatedAt.toISOString(),
+      activated: this.activated,
+      role: this.role,
+      query_count: this.queryCount,
+      error_query_count: this.errorQueryCount,
+      password_reset_requested: this.passwordResetRequested
+    };
   }
 }

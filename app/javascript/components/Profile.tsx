@@ -11,9 +11,13 @@ import UserStore from '../stores/user_store';
 import UserList from './Profile/UserList';
 import DeleteAccount from './Profile/DeleteAccount';
 import SchemaQueries from './Profile/SchemaQueries';
+import Groups from './Profile/JoinedGroups';
+import PublicGroups from './Profile/PublicGroups';
+import GroupStore, { MemberType } from '../stores/group_store';
 
 interface MatchParams {
   part: string;
+  id?: string;
 }
 
 interface ProfileProps extends RouteComponentProps<MatchParams> {}
@@ -22,9 +26,10 @@ interface InjectedProps extends ProfileProps {
   sessionStore: SessionStore;
   routerStore: RouterStore;
   userStore: UserStore;
+  groupStore: GroupStore;
 }
 
-@inject('sessionStore', 'routerStore', 'userStore')
+@inject('sessionStore', 'routerStore', 'userStore', 'groupStore')
 @observer
 export default class Profile extends React.Component<ProfileProps> {
   get injected() {
@@ -44,20 +49,35 @@ export default class Profile extends React.Component<ProfileProps> {
             name="account"
             icon="address card"
             active={part === 'account'}
-            onClick={() => router.push('./account')}
+            onClick={() => router.push('/profile/account')}
           />
           <Menu.Item
             name="new password"
             icon="key"
             active={part === 'change_password'}
-            onClick={() => router.push('./change_password')}
+            onClick={() => router.push('/profile/change_password')}
           />
           <Menu.Item
             name="delete account"
             icon="trash"
             active={part === 'delete_account'}
-            onClick={() => router.push('./delete_account')}
+            onClick={() => router.push('/profile/delete_account')}
           />
+          <Divider horizontal content="Groups" />
+          <Menu.Item
+            name="My Groups"
+            icon="group"
+            active={part === 'my_groups'}
+            onClick={() => router.push('/profile/my_groups')}
+          />
+          {this.injected.groupStore.publicGroups.length > 0 && (
+            <Menu.Item
+              name="Public Groups"
+              icon="group"
+              active={part === 'public_groups'}
+              onClick={() => router.push('/profile/public_groups')}
+            />
+          )}
           {this.injected.userStore.showAdvancedSettings && (
             <Fragment>
               <Divider horizontal content="Advanced" />
@@ -65,7 +85,7 @@ export default class Profile extends React.Component<ProfileProps> {
                 name="schema queries"
                 icon="edit"
                 active={part === 'schema_queries'}
-                onClick={() => router.push('./schema_queries')}
+                onClick={() => router.push('/profile/schema_queries')}
               />
             </Fragment>
           )}
@@ -76,7 +96,7 @@ export default class Profile extends React.Component<ProfileProps> {
                 name="users"
                 icon="users"
                 active={part === 'users'}
-                onClick={() => router.push('./users')}
+                onClick={() => router.push('/profile/users')}
               />
             </Fragment>
           )}
@@ -107,6 +127,13 @@ export default class Profile extends React.Component<ProfileProps> {
                 return <UserList />;
               case 'schema_queries':
                 return <SchemaQueries />;
+              case 'my_groups':
+                if (this.props.match.params.id) {
+                  this.injected.groupStore.setActiveGroupId(MemberType.Joined, this.props.match.params.id);
+                }
+                return <Groups />;
+              case 'public_groups':
+                return <PublicGroups />;
               default:
                 return '404';
             }

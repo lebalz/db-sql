@@ -7,6 +7,7 @@ import RouterStore from './router_store';
 import StatusStore from './status_store';
 import ViewStateStore from './view_state_store';
 import SchemaQueryStore from './schema_query_store';
+import GroupStore from './group_store';
 
 export interface Store {
   cleanup: () => void;
@@ -23,6 +24,7 @@ export class RootStore implements Store {
   statusStore: StatusStore;
   viewStateStore: ViewStateStore;
   schemaQueryStore: SchemaQueryStore;
+  groupStore: GroupStore;
 
   @observable initialized = false;
 
@@ -47,6 +49,9 @@ export class RootStore implements Store {
 
     this.schemaQueryStore = new SchemaQueryStore(this);
     this.stores.push(this.schemaQueryStore);
+
+    this.groupStore = new GroupStore(this);
+    this.stores.push(this.groupStore);
 
     this.initialized = true;
   }

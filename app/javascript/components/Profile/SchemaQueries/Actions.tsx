@@ -1,60 +1,59 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Button, Popup } from 'semantic-ui-react';
-import SchemaQuery from '../../../models/SchemaQuery';
-import cx from 'classnames';
 import { observer } from 'mobx-react';
+import { SemanticSIZES } from 'semantic-ui-react/dist/commonjs/generic';
+
+export enum ActionTypes {
+  Save = 'save',
+  Destroy = 'destroy',
+  Discard = 'discard'
+}
+
+interface ActionableModel {
+  isDirty: boolean;
+  isPersisted: boolean;
+  restore: () => void;
+  save: () => void;
+  destroy: () => void;
+}
 
 interface Props {
-  schemaQuery: SchemaQuery;
+  for: ActionableModel;
   isSaving: boolean;
+  actions?: ActionTypes[];
+  disabled?: ActionTypes[];
+  size?: SemanticSIZES;
+  additionalActions?: React.ReactNode[];
 }
 
 @observer
 export default class Actions extends React.Component<Props> {
-  get selectedSchemaQuery(): SchemaQuery {
-    return this.props.schemaQuery;
+  get actionableModel(): ActionableModel {
+    return this.props.for;
+  }
+
+  get disabled() {
+    return this.props.disabled ?? [];
+  }
+
+  get actions() {
+    return this.props.actions ?? [];
   }
 
   render() {
     return (
       <div className="actions">
-        {this.selectedSchemaQuery.isDirty && this.selectedSchemaQuery.isPersisted && (
-          <Button
-            icon="cancel"
-            labelPosition="left"
-            content="Cancel"
-            color="black"
-            onClick={() => this.selectedSchemaQuery?.restore()}
-          />
-        )}
-        <Button
-          className={cx('toggle-privacy', {
-            ['dirty']:
-              this.selectedSchemaQuery.isPrivate !== this.selectedSchemaQuery.pristineState.is_private
-          })}
-          icon={this.selectedSchemaQuery.isPrivate ? 'lock' : 'lock open'}
-          labelPosition="left"
-          color="yellow"
-          disabled={
-            !this.selectedSchemaQuery?.canEdit ||
-            (this.selectedSchemaQuery.isPublic && this.selectedSchemaQuery.stats.public_user_count > 0)
-          }
-          onClick={() => this.selectedSchemaQuery?.togglePrivacy()}
-          content={this.selectedSchemaQuery.isPrivate ? 'Private' : 'Public'}
-        />
-
         <Popup
           on="click"
           position="top right"
           trigger={
             <Button
-              disabled={
-                !this.selectedSchemaQuery?.canEdit || this.selectedSchemaQuery.stats.public_user_count > 0
-              }
+              disabled={this.disabled.includes(ActionTypes.Destroy)}
               icon="trash"
               labelPosition="left"
               content="Remove"
               color="red"
+              size={this.props.size}
             />
           }
           header="Confirm"
@@ -64,19 +63,35 @@ export default class Actions extends React.Component<Props> {
               labelPosition="left"
               content="Yes Delete"
               color="red"
-              onClick={() => this.selectedSchemaQuery?.destroy()}
+              onClick={() => this.actionableModel?.destroy()}
+              size={this.props.size}
             />
           }
         />
+        <div className="spacer" />
+        {this.actionableModel.isDirty && this.actionableModel.isPersisted && (
+          <Button
+            icon="cancel"
+            labelPosition="left"
+            content="Cancel"
+            color="black"
+            size={this.props.size}
+            onClick={() => this.actionableModel.restore()}
+            disabled={this.disabled.includes(ActionTypes.Discard)}
+          />
+        )}
+        {this.props.additionalActions &&
+          this.props.additionalActions.map((action, idx) => <Fragment key={idx}>{action}</Fragment>)}
         <Button
           icon="save"
           labelPosition="left"
           color="green"
           loading={this.props.isSaving}
-          disabled={!this.selectedSchemaQuery.isDirty}
+          disabled={!this.actionableModel.isDirty || this.disabled.includes(ActionTypes.Save)}
           style={{ marginRight: 0 }}
-          onClick={() => this.selectedSchemaQuery?.save()}
+          onClick={() => this.actionableModel?.save()}
           content="Save"
+          size={this.props.size}
         />
       </div>
     );

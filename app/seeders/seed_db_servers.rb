@@ -20,10 +20,14 @@ class SeedDbServers
       database_schema_query: DatabaseSchemaQuery.default(:psql)
     )
 
+    ## Add test db server instances to shared group
+    group = Group.find_by(name: 'Sharing is caring')
+    key = group.crypto_key(user, user.private_key(user.crypto_key('asdfasdf')))
     encrypted_password = DbServer.encrypt(
-      key: user.crypto_key('asdfasdf'),
+      key: key,
       db_password: 'safe-db-password'
     )
+
     # setup test db instances from docker-compose.yml
     [
       { db_type: :psql, username: 'postgres', port: 5009, version: '9.3' },
@@ -44,7 +48,7 @@ class SeedDbServers
         username: config[:username],
         password_encrypted: encrypted_password[:encrypted_password],
         initial_db: 'ninja_turtles_db',
-        user: user,
+        group: group,
         database_schema_query: DatabaseSchemaQuery.default(config[:db_type])
       )
     end

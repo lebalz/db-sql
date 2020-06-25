@@ -1,10 +1,13 @@
 import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
 import { DbType } from '../models/DbServer';
+import { OwnerType } from './db_server';
 
 export interface DbServer {
   name: string;
   db_type: DbType;
+  owner_type: OwnerType,
+  owner_id: string,
   host: string;
   port: number;
   username: string;

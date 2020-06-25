@@ -6,5 +6,6 @@ require 'active_support/core_ext/digest/uuid'
 return unless Rails.env == 'development'
 
 SeedUsers.perform
+SeedGroups.perform
 SeedDatabaseSchemaQueries.perform
 SeedDbServers.perform

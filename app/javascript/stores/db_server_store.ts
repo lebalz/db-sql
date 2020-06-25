@@ -7,7 +7,9 @@ import {
   createDbServer,
   remove as removeApi,
   databases,
-  database
+  database,
+  OwnerType,
+  DbServer as DbServerProps
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
@@ -15,6 +17,7 @@ import 'regenerator-runtime/runtime';
 import { ApiRequestState } from './session_store';
 import Database from '../models/Database';
 import Query, { PlaceholderQuery } from '../models/Query';
+import { computedFn } from 'mobx-utils';
 
 export enum LoadState {
   Loading,
@@ -111,11 +114,11 @@ class DbServerStore implements Store {
 
   @computed
   get loadedDbServers(): DbServer[] {
-    return Array.from(this.state.databaseIndex.keys()).map((id) => this.dbServer(id)!);
-  }
-
-  dbServer(id: string): DbServer | undefined {
-    return this.state.dbServers.find((c) => c.id === id);
+    return _.orderBy(
+      Array.from(this.state.databaseIndex.keys()).map((id) => this.find(id)!),
+      'name',
+      'asc'
+    )
   }
 
   @computed
@@ -132,11 +135,7 @@ class DbServerStore implements Store {
 
     dbServers(this.root.cancelToken)
       .then(({ data }) => {
-        const dbServers = _.sortBy(data, ['name']).map(
-          (dbConnection) =>
-            new DbServer(dbConnection, this, this.root.schemaQueryStore, this.root.cancelToken)
-        );
-        this.state.dbServers.replace(dbServers);
+        this.addDbServers(data);
         this.state.loadState = LoadState.Success;
       })
       .catch(() => {
@@ -204,7 +203,7 @@ class DbServerStore implements Store {
   }
 
   @action loadDatabase(dbServerId: string, dbName: string) {
-    const dbServer = this.dbServer(dbServerId);
+    const dbServer = this.find(dbServerId);
     if (!dbServer) {
       return;
     }
@@ -219,8 +218,8 @@ class DbServerStore implements Store {
         db.toggleShow();
         this.setActiveDatabase(dbServerId, dbName);
         this.setActiveDbServer(dbServerId);
-        if (this.dbServer(dbServerId)?.initialTable) {
-          const initTable = this.dbServer(dbServerId)!.initialTable;
+        if (this.find(dbServerId)?.initialTable) {
+          const initTable = this.find(dbServerId)!.initialTable;
           if (initTable) {
             initTable.toggleShow();
           }
@@ -233,7 +232,7 @@ class DbServerStore implements Store {
   }
 
   @action reloadDatabase(dbServerId: string, dbName: string) {
-    const dbServer = this.dbServer(dbServerId);
+    const dbServer = this.find(dbServerId);
     if (!dbServer) {
       return;
     }
@@ -272,6 +271,21 @@ class DbServerStore implements Store {
     return queries;
   }
 
+  isOutdated(dbServerId: string): boolean {
+    const dbServer = this.find(dbServerId);
+    if (!dbServer) {
+      return true;
+    }
+
+    if (dbServer.ownerType === OwnerType.Group) {
+      const group = this.root.groupStore.find(dbServer.ownerId);
+      if (group) {
+        return group.isOutdated;
+      }
+    }
+    return (dbServer.password ?? '').length === 0;
+  }
+
   database(dbServerId: string, dbName: string): Database | undefined {
     if (!this.state.databases.has(dbServerId)) {
       return;
@@ -307,7 +321,7 @@ class DbServerStore implements Store {
   }
 
   initialDb(dbServerId: string): string | undefined {
-    return this.dbServer(dbServerId)?.defaultDatabaseName;
+    return this.find(dbServerId)?.defaultDatabaseName;
   }
 
   @computed
@@ -320,7 +334,7 @@ class DbServerStore implements Store {
     if (!this.activeDbServerId) {
       return;
     }
-    return this.dbServer(this.activeDbServerId);
+    return this.find(this.activeDbServerId);
   }
 
   @action
@@ -334,7 +348,7 @@ class DbServerStore implements Store {
 
   @action
   closeDbServer(dbServerId: string) {
-    const dbServer = this.dbServer(dbServerId);
+    const dbServer = this.find(dbServerId);
     if (!dbServer) {
       return;
     }
@@ -367,6 +381,16 @@ class DbServerStore implements Store {
     return this.state.saveState;
   }
 
+  @computed
+  get userDbServers() {
+    return this.dbServers.filter((dbServer) => dbServer.ownerType === OwnerType.User);
+  }
+
+  @computed
+  get groupDbServers() {
+    return this.dbServers.filter((dbServer) => dbServer.ownerType === OwnerType.Group);
+  }
+
   @action updateDbServer(dbConnection: DbServer): Promise<void> {
     this.state.saveState = ApiRequestState.Waiting;
     return updateDbServer(dbConnection.params, this.root.cancelToken)
@@ -393,6 +417,12 @@ class DbServerStore implements Store {
         this.state.dbServers.push(
           new DbServer(data, this, this.root.schemaQueryStore, this.root.cancelToken)
         );
+        if (data.owner_type === OwnerType.Group) {
+          const group = this.root.groupStore.joinedGroups.find((group) => group.id === data.owner_id);
+          if (group) {
+            group.dbServerIds.push(data.id);
+          }
+        }
         this.state.saveState = ApiRequestState.Success;
       })
       .catch(() => {
@@ -407,11 +437,42 @@ class DbServerStore implements Store {
         if (!connection) {
           return;
         }
+        if (connection.ownerType === OwnerType.Group) {
+          const group = this.root.groupStore.joinedGroups.find((group) => group.id === connection.id);
+          if (group) {
+            group.dbServerIds.remove(connection.id);
+          }
+        }
         this.state.dbServers.remove(connection);
       })
       .catch((e) => {
         console.log(e);
       });
+  }
+
+  find = computedFn(
+    function (this: DbServerStore, id?: string): DbServer | undefined {
+      if (!id) {
+        return;
+      }
+      return this.state.dbServers.find((dbServer) => dbServer.id === id);
+    },
+    { keepAlive: true }
+  );
+
+  @action
+  addDbServers(dbServerProps: DbServerProps[]) {
+    dbServerProps.forEach((dbServer) => {
+      const oldDbServer = this.find(dbServer.id);
+      if (oldDbServer) {
+        this.state.dbServers.remove(oldDbServer);
+      }
+    });
+    dbServerProps.forEach;
+    const dbServers = dbServerProps.map(
+      (dbConnection) => new DbServer(dbConnection, this, this.root.schemaQueryStore, this.root.cancelToken)
+    );
+    this.state.dbServers.push(...dbServers);
   }
 
   @action cleanup() {

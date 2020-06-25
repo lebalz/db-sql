@@ -11,23 +11,30 @@ import {
   Message,
   Icon,
   Popup,
-  Accordion
+  Accordion,
+  ButtonGroup
 } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { computed, reaction, action, IReactionDisposer } from 'mobx';
 import _ from 'lodash';
-import { ApiRequestState } from '../../stores/session_store';
+import SessionStore, { ApiRequestState } from '../../stores/session_store';
 import { TempDbServerRole, TempDbServer as TempDbServerModel } from '../../models/TempDbServer';
 import { REST } from '../../declarations/REST';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import SchemaQuerySelection from './SchemaQuerySelection';
+import GroupStore from '../../stores/group_store';
+import { OwnerType } from '../../api/db_server';
+import User from '../../models/User';
+import Group from '../../models/Group';
 
 interface InjectedProps {
   dbServerStore: DbServerStore;
   schemaQueryStore: SchemaQueryStore;
+  groupStore: GroupStore;
+  sessionStore: SessionStore;
 }
 
-@inject('dbServerStore', 'schemaQueryStore')
+@inject('dbServerStore', 'schemaQueryStore', 'groupStore', 'sessionStore')
 @observer
 export class TempDbServer extends React.Component {
   state = {
@@ -58,7 +65,18 @@ export class TempDbServer extends React.Component {
     return this.props as InjectedProps;
   }
 
-  @computed get isModalOpen() {
+  @computed
+  get currentUser(): User {
+    return this.injected.sessionStore.currentUser;
+  }
+
+  @computed
+  get groupOwner(): Group | undefined {
+    return this.injected.groupStore.joinedGroups.find((group) => group.id === this.dbServer.ownerId);
+  }
+
+  @computed
+  get isModalOpen() {
     return !!this.injected.dbServerStore.tempDbServer;
   }
 
@@ -67,7 +85,8 @@ export class TempDbServer extends React.Component {
     return this.injected.dbServerStore.tempDbServer!;
   }
 
-  @computed get dbNameOptions() {
+  @computed
+  get dbNameOptions() {
     return _.uniq([undefined, ...this.dbServer.databases.map((db) => db.name), this.dbServer.initDb]).map(
       (name) => {
         return { key: `db-${name}`, text: name, value: name };
@@ -75,7 +94,8 @@ export class TempDbServer extends React.Component {
     );
   }
 
-  @computed get dbTableOptions() {
+  @computed
+  get dbTableOptions() {
     return _.uniq([
       undefined,
       ...this.dbServer.tables.map((table) => table.name),
@@ -111,9 +131,14 @@ export class TempDbServer extends React.Component {
     }
   }
 
-  @action duplicate() {
+  @action
+  duplicate(groupId: string, ownerType: OwnerType) {
     const dup = new TempDbServerModel(
-      this.dbServer.props,
+      {
+        ...this.dbServer.props,
+        owner_id: groupId,
+        owner_type: ownerType
+      },
       this.injected.dbServerStore,
       this.injected.schemaQueryStore,
       TempDbServerRole.Create,
@@ -129,7 +154,8 @@ export class TempDbServer extends React.Component {
     this.onClose();
   }
 
-  @computed get message() {
+  @computed
+  get message() {
     let icon: 'circle notched' | 'check' | 'times' = 'check';
     const { validConnection, message } = this.dbServer;
     let header = 'Success';
@@ -167,17 +193,24 @@ export class TempDbServer extends React.Component {
   render() {
     const name = this.dbServer ? this.dbServer.name : '';
     return (
-      <Modal open={this.isModalOpen} onClose={() => this.onClose()}>
+      <Modal open={this.isModalOpen} onClose={() => this.onClose()} style={{ position: 'relative' }}>
         <Modal.Header content={`Database Connection: ${name}`} />
         {this.isModalOpen && this.dbServer.message && this.message}
         {this.isModalOpen && (
           <Modal.Content id="db-connection-modal">
+            <Label
+              icon={this.dbServer.ownerType === OwnerType.Group ? 'group' : 'user'}
+              content={this.dbServer.ownerType === OwnerType.Group ? this.groupOwner?.name : 'Personal'}
+              color={this.dbServer.ownerType === OwnerType.Group ? 'violet' : 'teal'}
+              style={{ position: 'absolute', top: '8px', right: '8px' }}
+            />
             <Grid stackable columns={2}>
               <Grid.Row>
                 <Grid.Column>
                   <Label as="a" color="teal" ribbon content="Display Name" />
                   <Form.Input
                     fluid
+                    placeholder="Display Name"
                     value={name}
                     onChange={(e) => (this.dbServer.name = e.target.value)}
                     type="text"
@@ -213,6 +246,7 @@ export class TempDbServer extends React.Component {
                       <Label as="a" color="teal" ribbon content="Host" />
                       <Form.Input
                         required
+                        placeholder="IP Address or host name"
                         value={this.dbServer.host}
                         onChange={(e) => (this.dbServer.host = e.target.value)}
                         type="text"
@@ -333,19 +367,55 @@ export class TempDbServer extends React.Component {
                 this.dbServer.testConnection.cancel();
                 this.dbServer.testConnection();
               }}
+              size="mini"
             />
-            <Button
-              icon="copy"
-              labelPosition="left"
-              content="Duplicate"
-              color="grey"
-              onClick={() => this.duplicate()}
-            />
+            {this.injected.groupStore.adminGroups.length === 0 ? (
+              <Button
+                icon="copy"
+                labelPosition="left"
+                content="Duplicate"
+                color="grey"
+                onClick={() => this.duplicate(this.currentUser.id, OwnerType.User)}
+                size="mini"
+              />
+            ) : (
+              <Popup
+                on="click"
+                position="top center"
+                trigger={
+                  <Button icon="copy" labelPosition="left" content="Duplicate" color="grey" size="mini" />
+                }
+                content={
+                  <Button.Group size="mini" style={{ maxWidth: '250px', overflowX: 'auto' }}>
+                    <Button
+                      onClick={() => this.duplicate(this.currentUser.id, OwnerType.User)}
+                      content="Personal"
+                      size="mini"
+                      basic
+                      color={this.dbServer.ownerType === OwnerType.User ? 'blue' : 'grey'}
+                    />
+                    {this.injected.groupStore.adminGroups.map((group) => {
+                      return (
+                        <Button
+                          key={group.id}
+                          onClick={() => this.duplicate(group.id, OwnerType.Group)}
+                          content={group.name}
+                          size="mini"
+                          color={this.dbServer.ownerId === group.id ? 'blue' : 'grey'}
+                          basic
+                        />
+                      );
+                    })}
+                  </Button.Group>
+                }
+              />
+            )}
             <Popup
               on="click"
               position="top right"
-              trigger={<Button icon="trash" labelPosition="left" content="Remove" color="red" />}
+              trigger={<Button icon="trash" labelPosition="left" content="Remove" color="red" size="mini" />}
               header="Confirm"
+              size="mini"
               content={
                 <Button
                   icon="trash"
@@ -353,6 +423,7 @@ export class TempDbServer extends React.Component {
                   content="Yes Delete"
                   color="red"
                   onClick={() => this.delete()}
+                  size="mini"
                 />
               }
             />
@@ -362,6 +433,7 @@ export class TempDbServer extends React.Component {
               content="Cancel"
               color="black"
               onClick={() => this.onClose()}
+              size="mini"
             />
             <Button
               icon="save"
@@ -369,6 +441,7 @@ export class TempDbServer extends React.Component {
               content="Save"
               color="green"
               onClick={() => this.onSave()}
+              size="mini"
             />
           </Modal.Actions>
         )}

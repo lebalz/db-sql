@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/lebalz/db-sql.svg?branch=master)](https://travis-ci.com/lebalz/db-sql)
+[![codecov](https://codecov.io/gh/lebalz/db-sql/branch/master/graph/badge.svg)](https://codecov.io/gh/lebalz/db-sql)
 
 # [DB-SQL](https://db-sql.ch)
 ![db-sql](docs/db-sql.gif)

@@ -2,16 +2,20 @@
 
 module Resources
   class DatabaseSchemaQueries < Grape::API
+    before do
+      load_database_schema_query if params.key?(:id)
+    end
     helpers do
-      def database_schema_query
+      def load_database_schema_query
         query = DatabaseSchemaQuery.includes(:db_servers).find(params[:id])
         error!('Database schema query not found', 302) unless query
         unless query.public? || query.author_id == current_user.id
           error!('Invalid permission for this database schema query', 401)
         end
 
-        query
+        @database_schema_query = query
       end
+      attr_reader :database_schema_query
     end
     resource :database_schema_queries do
       desc 'Get database schema queries, by default 20 with no offset'
@@ -22,7 +26,7 @@ module Resources
       end
       get do
         escaped_id = ActiveRecord::Base.connection.quote(current_user.id)
-        order_query = "is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC"
+        order_query = Arel.sql("is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC")
         present(
           DatabaseSchemaQuery.available(params[:db_type], current_user)
                              .order(order_query)
