@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.6.5'
+ruby '2.7.1'
 gem 'sassc-rails'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.0.3'
@@ -24,7 +24,7 @@ gem 'rack-cors', require: 'rack/cors'
 gem 'oj'
 
 # A generic swappable back-end for JSON handling that choose the fastest available JSON coder
-gem 'multi_json', '~>1.13.1'
+gem 'multi_json', '~>1.14.1'
 
 # DSL for writing APIs
 gem 'grape'
