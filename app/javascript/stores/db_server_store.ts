@@ -283,7 +283,7 @@ class DbServerStore implements Store {
         return group.isOutdated;
       }
     }
-    return (dbServer.password ?? '').length === 0;
+    return false;
   }
 
   database(dbServerId: string, dbName: string): Database | undefined {
