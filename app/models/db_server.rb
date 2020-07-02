@@ -182,6 +182,7 @@ class DbServer < ApplicationRecord
         database: database_name,
         name: @conn_key,
         flags: ["MULTI_STATEMENTS"],
+        sslmode: :prefer,
         **db_specific_connection_options
       )
     end
