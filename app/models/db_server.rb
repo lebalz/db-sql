@@ -69,6 +69,8 @@ class DbServer < ApplicationRecord
   belongs_to :group, touch: true, optional: true
   belongs_to :database_schema_query
 
+  has_many :sql_queries, dependent: :delete_all
+
   before_validation :set_database_schema_query, on: :create
   validate :belongs_to_either_user_or_group
 

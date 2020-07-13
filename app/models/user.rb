@@ -26,6 +26,8 @@
 class User < ApplicationRecord
   has_many :group_members, dependent: :delete_all
   has_many :groups, through: :group_members
+  has_many :sql_queries, dependent: :delete_all
+
   has_secure_password
   has_many :database_schema_queries,
            class_name: 'DatabaseSchemaQuery',

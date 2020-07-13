@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_07_13_091436) do
+ActiveRecord::Schema.define(version: 2020_07_13_091437) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -103,6 +103,20 @@ ActiveRecord::Schema.define(version: 2020_07_13_091436) do
     t.index ["user_id"], name: "index_login_tokens_on_user_id"
   end
 
+  create_table "sql_queries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "db_server_id", null: false
+    t.uuid "user_id", null: false
+    t.string "db_name"
+    t.string "description"
+    t.boolean "is_valid", default: false
+    t.boolean "is_favorite", default: false
+    t.boolean "is_private", default: true
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["db_server_id"], name: "index_sql_queries_on_db_server_id"
+    t.index ["user_id"], name: "index_sql_queries_on_user_id"
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
@@ -127,4 +141,6 @@ ActiveRecord::Schema.define(version: 2020_07_13_091436) do
   add_foreign_key "group_members", "groups"
   add_foreign_key "group_members", "users"
   add_foreign_key "login_tokens", "users"
+  add_foreign_key "sql_queries", "db_servers"
+  add_foreign_key "sql_queries", "users"
 end

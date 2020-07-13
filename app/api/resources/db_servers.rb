@@ -213,11 +213,14 @@ module Resources
           end
           post :query do
             db_name = params[:database_name]
+
             db_server.increment!(:query_count, 1)
             db_server.owner.touch
-            db_server.exec_query(key: crypto_key, database_name: db_name) do
+            result = db_server.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
-            end.to_a
+            end
+
+            result.to_a
           end
 
           desc 'Query the database with mutliple statements'
@@ -230,6 +233,9 @@ module Resources
             results = []
             error_occured = false
             db_server.owner.touch
+
+            query = SqlQuery.new(db_server: db_server, user: current_user, db_name: db_name)
+            query.query = params[:queries].join("\n")
 
             db_server.reuse_connection do |conn|
               params[:queries].each do |query|
@@ -264,6 +270,9 @@ module Resources
                 end
               end
             end
+            query.is_valid = !error_occured
+            query.save!
+
             present(results, with: Entities::QueryResult)
           end
 
@@ -274,14 +283,22 @@ module Resources
           post :raw_query do
             db_server.owner.touch
             db_name = params[:database_name]
+
+            query = SqlQuery.new(db_server: db_server, user: current_user, db_name: db_name)
+            query.query = params[:queries].join("\n")
+
             t0 = Time.now
             db_server.increment!(:query_count, 1)
             results = db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
               params[:query]
             end
-            db_server.increment!(:error_query_count, 1) if results[:type] == :error
+            t_end = Time.now - t0
 
-            results.merge({ time: Time.now - t0 })
+            db_server.increment!(:error_query_count, 1) if results[:type] == :error
+            query.is_valid = results[:type] != :error
+            query.save!
+
+            results.merge({ time: t_end })
           end
 
           desc "Get the database's tables"
