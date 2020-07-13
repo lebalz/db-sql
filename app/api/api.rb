@@ -62,6 +62,7 @@ class API < Grape::API
   mount Resources::Status
   mount Resources::DatabaseSchemaQueries
   mount Resources::Groups
+  mount Resources::SqlQueries
 
   # This needs to happen at the very end of this file.
   add_swagger_documentation(

@@ -285,7 +285,7 @@ module Resources
             db_name = params[:database_name]
 
             query = SqlQuery.new(db_server: db_server, user: current_user, db_name: db_name)
-            query.query = params[:queries].join("\n")
+            query.query = params[:query]
 
             t0 = Time.now
             db_server.increment!(:query_count, 1)
