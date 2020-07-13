@@ -8,6 +8,7 @@ import StatusStore from './status_store';
 import ViewStateStore from './view_state_store';
 import SchemaQueryStore from './schema_query_store';
 import GroupStore from './group_store';
+import SqlQueryStore from './sql_query_store';
 
 export interface Store {
   cleanup: () => void;
@@ -25,6 +26,7 @@ export class RootStore implements Store {
   viewStateStore: ViewStateStore;
   schemaQueryStore: SchemaQueryStore;
   groupStore: GroupStore;
+  sqlQueryStore: SqlQueryStore;
 
   @observable initialized = false;
 
@@ -52,6 +54,9 @@ export class RootStore implements Store {
 
     this.groupStore = new GroupStore(this);
     this.stores.push(this.groupStore);
+
+    this.sqlQueryStore = new SqlQueryStore(this);
+    this.stores.push(this.sqlQueryStore);
 
     this.initialized = true;
   }

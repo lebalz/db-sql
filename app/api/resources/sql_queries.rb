@@ -26,7 +26,26 @@ module Resources
         )
       end
 
+      params do
+        requires(:group_id, type: String, desc: 'group id')
+      end
+      get :shared do
+        group = Group.find(params[:group_id])
+        error!('Group not found', 302) unless group
+        
+        present(
+          group.sql_queries,
+          with: Entities::SqlQuery
+        )
+      end
+
       route_param :id, type: String, desc: 'update sql query id' do
+
+        desc 'get sql query'
+        get do
+          present(sql_query, with: Entities::SqlQuery)
+        end
+
         desc 'update the description of a sql query'
         params do
           requires :data, type: Hash do
