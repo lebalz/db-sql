@@ -99,9 +99,11 @@ class SessionStore implements Store {
       () => this.loginState.state,
       (state) => {
         if (
-          ![ApiRequestState.None, ApiRequestState.Waiting, ApiLoginRequestState.ActivationPeriodExpired].includes(
-            state
-          )
+          ![
+            ApiRequestState.None,
+            ApiRequestState.Waiting,
+            ApiLoginRequestState.ActivationPeriodExpired
+          ].includes(state)
         ) {
           this.loginState.state = ApiRequestState.None;
         }
@@ -193,6 +195,13 @@ class SessionStore implements Store {
     }
     this.locationHistory.push(toJS(location));
   };
+
+  lastRouteContext(route: string, alternativeRoute?: string): string {
+    return (
+      this.locationHistory.slice().reverse().find((location) => location.pathname.startsWith(route))?.pathname ??
+      `${route}/${alternativeRoute}`
+    );
+  }
 
   get fetchFromLocalStorage(): ApiLoginUser | null {
     const user = localStorage.getItem(LocalStorageKey.User);

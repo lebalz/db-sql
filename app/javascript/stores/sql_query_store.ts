@@ -1,11 +1,13 @@
-import { observable, action, reaction } from 'mobx';
+import { observable, action, reaction, computed } from 'mobx';
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
 import { getSqlQueries } from '../api/sql_query';
 import SqlQuery from '../models/SqlQuery';
+import { computedFn } from 'mobx-utils';
 
 class State {
   sqlQueries = observable<SqlQuery>([]);
+  @observable selectedQueryId?: string;
 }
 
 class SqlQueryStore implements Store {
@@ -23,6 +25,41 @@ class SqlQueryStore implements Store {
         }
       }
     );
+  }
+
+  @computed
+  get sqlQueries(): SqlQuery[] {
+    return _.orderBy(this.state.sqlQueries, ['createdAt'], 'desc');
+  }
+
+  find = computedFn(
+    function (this: SqlQueryStore, id?: string): SqlQuery | undefined {
+      if (!id) {
+        return;
+      }
+      return this.state.sqlQueries.find((q) => q.id === id);
+    },
+    { keepAlive: true }
+  );
+
+
+  @action
+  setSelectedSqlQueryId(id: string | undefined) {
+    this.state.selectedQueryId = id;
+  }
+
+  @action
+  refresh() {
+    this.state = new State();
+    this.loadSqlQueries();
+  }
+
+  @computed
+  get selectedSqlQuery(): SqlQuery | undefined {
+    if (!this.state.selectedQueryId) {
+      return this.sqlQueries[0];
+    }
+    return this.find(this.state.selectedQueryId);
   }
 
   @action

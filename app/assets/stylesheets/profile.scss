@@ -84,12 +84,35 @@
   }
 }
 
+.cards {
+  .sql-query {
+    border: 1px solid var(--semantic-lightgrey);
+    border-radius: 4px;
+    margin: 0.5em 0px;
+    padding: 1em;
+    box-shadow: 0 1px 2px var(--semantic-lightgrey);
+    .card-labels {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 0.4em;
+    }
+    .meta {
+      color: gray;
+      margin-bottom: 0.4em;
+      font-style: italic;
+    }
+  }
+}
+
 .cards-container {
   height: max-content;
   padding: 2px;
   .db-sql-card {
     position: relative;
     display: flex;
+    width: 100% !important;
     .main-label {
       position: absolute;
       top: 4px;

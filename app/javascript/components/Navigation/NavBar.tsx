@@ -22,11 +22,12 @@ export default class NavBar extends React.Component {
 
   render() {
     const router = this.injected.routerStore;
-    const { resendActivationLinkState } = this.injected.sessionStore;
+    const session = this.injected.sessionStore;
+    const { resendActivationLinkState } = session;
     return (
       <Fragment>
         <Menu secondary pointing>
-          <Menu.Item onClick={() => router.push('/dashboard')}>
+          <Menu.Item onClick={() => router.push(session.lastRouteContext('/dashboard'))}>
             <DbSqlIcon size="large" />
             <Header as="h2" content="DB SQL" style={{ marginLeft: '0.5rem' }} />
           </Menu.Item>
@@ -34,7 +35,7 @@ export default class NavBar extends React.Component {
             style={{ marginLeft: '2em' }}
             name="Dashboard"
             active={router.location.pathname === '/dashboard'}
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push(session.lastRouteContext('/dashboard'))}
           >
             <Icon name="database" />
             Dashboard
@@ -43,7 +44,7 @@ export default class NavBar extends React.Component {
             style={{ marginLeft: '2em' }}
             name="Profile"
             active={router.location.pathname.startsWith('/profile/')}
-            onClick={() => router.push('/profile/account')}
+            onClick={() => router.push(session.lastRouteContext('/profile', 'account'))}
           >
             <Icon name="user" />
             Profile

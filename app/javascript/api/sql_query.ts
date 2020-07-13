@@ -2,9 +2,16 @@ import api from './base';
 import { AxiosPromise, CancelTokenSource } from 'axios';
 import { DbServer } from './db_server';
 
+
+
+export enum Changeable {
+  Description = 'description',
+  IsPrivate = 'is_private',
+}
+
 export interface ChangeableProps {
-  description?: string;
-  is_private: boolean;
+  [Changeable.Description]?: string;
+  [Changeable.IsPrivate]: boolean;
 }
 
 export interface SqlQuery extends ChangeableProps {
@@ -13,6 +20,7 @@ export interface SqlQuery extends ChangeableProps {
   db_server_id: string;
   db_name: string;
   query: string;
+  is_valid: boolean;
   created_at: string;
   updated_at: string;
 }

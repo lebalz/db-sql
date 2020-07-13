@@ -1,9 +1,6 @@
 import { observable, computed, action } from 'mobx';
 import { REST } from '../declarations/REST';
-import {
-  query as fetchQuery,
-  rawQuery,
-  ResultState} from '../api/db_server';
+import { query as fetchQuery, rawQuery, ResultState } from '../api/db_server';
 import Database from './Database';
 import axios, { CancelTokenSource } from 'axios';
 import { QuerySeparationGrammarLexer } from '../antlr/QuerySeparationGrammarLexer';
@@ -185,7 +182,13 @@ export default class Query extends Sql {
     const t0 = Date.now();
     const queries = identifyCommands(rawInput);
     console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    return fetchQuery(this.database.dbServerId, this.name, queries, this.proceedAfterError, this.cancelToken)
+    return fetchQuery(
+      this.database.dbServerId,
+      this.database.name,
+      queries,
+      this.proceedAfterError,
+      this.cancelToken
+    )
       .then(({ data }) => {
         const results = data.map((res, idx) => new MultiResult(res, idx));
         console.log('Got result: ', (Date.now() - t0) / 1000.0);
@@ -202,7 +205,7 @@ export default class Query extends Sql {
   private runRawQuery(): Promise<QueryResult[] | void> {
     this.queries.clear();
     this.requestState = REST.Requested;
-    return rawQuery(this.database.dbServerId, this.name, this.query, this.cancelToken)
+    return rawQuery(this.database.dbServerId, this.database.name, this.query, this.cancelToken)
       .then(({ data }) => {
         if (data.state === ResultState.Error) {
           this.results.replace([new RawResult(data, 0)]);

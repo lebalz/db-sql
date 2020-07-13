@@ -1,5 +1,5 @@
 import { observable, computed, action } from 'mobx';
-import { Database as DatabaseProps, Column } from '../api/db_server';
+import { Database as DatabaseProps } from '../api/db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
 import DbTable from './DbTable';
@@ -72,6 +72,15 @@ export default class Database {
     return `${this.dbServer.link}/${this.name}`;
   }
 
+  /**
+   * returns a unique identifier for this db
+   * !!! but it is NOT a uuid !!!
+   */
+  @computed
+  get id() {
+    return `${this.dbServer.id}-${this.name}`;
+  }
+
   @computed
   get activeQuery() {
     return this.queries.find((query) => query.id === this.activeQueryId);
@@ -93,10 +102,11 @@ export default class Database {
   }
 
   @action
-  addQuery() {
+  addQuery(): Query {
     const query = new Query(this, this.nextQueryId);
     this.queries.push(query);
     this.setActiveQuery(query.id);
+    return query;
   }
 
   table(name: string): DbTable | undefined {

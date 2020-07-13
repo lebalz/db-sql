@@ -140,6 +140,10 @@ export function newDbServer(dbServer: CreateProps, cancelToken: CancelTokenSourc
   return api.post('/db_servers', dbServer, { cancelToken: cancelToken.token });
 }
 
+export function dbServer(id: string, cancelToken: CancelTokenSource): AxiosPromise<DbServer> {
+  return api.get(`/db_servers/${id}`, { cancelToken: cancelToken.token });
+}
+
 export function dbServers(cancelToken: CancelTokenSource): AxiosPromise<DbServer[]> {
   return api.get('/db_servers', { cancelToken: cancelToken.token });
 }

@@ -1,8 +1,9 @@
 import { observable, computed } from 'mobx';
 import Database from './Database';
+import { AceSqlType } from '../components/DatabaseServer/Query/SqlEditor';
 
 export default class Sql {
-  database: Database | undefined = undefined;
+  database?: Database;
 
   @observable query: string = '';
   @observable lineCount: number = 0;
@@ -15,7 +16,7 @@ export default class Sql {
     return '';
   }
 
-  get databaseType(): 'sql' | 'mysql' | 'pgsql' {
+  get databaseType(): AceSqlType {
     return 'sql';
   }
 }

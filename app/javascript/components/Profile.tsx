@@ -14,6 +14,7 @@ import SchemaQueries from './Profile/SchemaQueries';
 import Groups from './Profile/JoinedGroups';
 import PublicGroups from './Profile/PublicGroups';
 import GroupStore, { MemberType } from '../stores/group_store';
+import QueryLog from './Profile/QueryLog';
 
 interface MatchParams {
   part: string;
@@ -62,6 +63,12 @@ export default class Profile extends React.Component<ProfileProps> {
             icon="trash"
             active={part === 'delete_account'}
             onClick={() => router.push('/profile/delete_account')}
+          />
+          <Menu.Item
+            name="Query Log"
+            icon="file alternate"
+            active={part === 'query_log'}
+            onClick={() => router.push('/profile/query_log')}
           />
           <Divider horizontal content="Groups" />
           <Menu.Item
@@ -123,6 +130,8 @@ export default class Profile extends React.Component<ProfileProps> {
                 return <ChangePassword />;
               case 'delete_account':
                 return <DeleteAccount />;
+              case 'query_log':
+                return <QueryLog />;
               case 'users':
                 return <UserList />;
               case 'schema_queries':

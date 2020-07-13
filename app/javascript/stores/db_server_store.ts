@@ -9,7 +9,8 @@ import {
   databases,
   database,
   OwnerType,
-  DbServer as DbServerProps
+  DbServer as DbServerProps,
+  dbServer
 } from '../api/db_server';
 import DbServer from '../models/DbServer';
 import { TempDbServer } from '../models/TempDbServer';
@@ -32,6 +33,7 @@ class State {
   databaseIndex = observable(new Map<string, string[]>());
   activeDatabase = observable(new Map<string, string>());
   databases = observable(new Map<string, Map<string, Database>>());
+  onDatabaseLoaded = observable(new Map<string, ((db: Database) => void)[]>());
 
   databaseTreeViewFilter = observable(new Map<string, string>());
 
@@ -87,7 +89,14 @@ class DbServerStore implements Store {
 
           const dbName = this.state.activeDatabase.get(activeDbServerId);
           if (dbName) {
-            this.loadDatabase(activeDbServerId, dbName);
+            this.loadDatabase(activeDbServerId, dbName).then((db) => {
+              if (!db) {
+                return;
+              }
+              const tasks = this.state.onDatabaseLoaded.get(db.id)?.slice() ?? [];
+              this.state.onDatabaseLoaded.delete(db.id);
+              tasks.forEach((task) => task(db));
+            });
           }
         }
       }
@@ -108,6 +117,16 @@ class DbServerStore implements Store {
   }
 
   @action
+  addOnDbLoadTask(dbServerId: string, dbName: string, task: (db: Database) => void) {
+    const id = `${dbServerId}-${dbName}`;
+    if (!this.state.onDatabaseLoaded.has(id)) {
+      this.state.onDatabaseLoaded.set(id, [task]);
+    } else {
+      this.state.onDatabaseLoaded.get(id)!.push(task);
+    }
+  }
+
+  @action
   setDatabaseTreeViewFilter(dbServerId: string, filter: string) {
     this.state.databaseTreeViewFilter.set(dbServerId, filter);
   }
@@ -118,7 +137,7 @@ class DbServerStore implements Store {
       Array.from(this.state.databaseIndex.keys()).map((id) => this.find(id)!),
       'name',
       'asc'
-    )
+    );
   }
 
   @computed
@@ -202,16 +221,16 @@ class DbServerStore implements Store {
       });
   }
 
-  @action loadDatabase(dbServerId: string, dbName: string) {
+  @action loadDatabase(dbServerId: string, dbName: string): Promise<Database | undefined> {
     const dbServer = this.find(dbServerId);
     if (!dbServer) {
-      return;
+      return new Promise((resolve) => resolve(undefined));
     }
     const placeholderDb = new Database(dbServer, { db_server_id: dbServerId, name: dbName, schemas: [] });
     placeholderDb.isLoading = true;
     this.state.databases.get(dbServerId)?.set(dbName, placeholderDb);
 
-    database(dbServerId, dbName, this.cancelToken)
+    return database(dbServerId, dbName, this.cancelToken)
       .then(({ data }) => {
         const db = new Database(dbServer, data);
         this.state.databases.get(dbServerId)!.set(dbName, db);
@@ -224,10 +243,12 @@ class DbServerStore implements Store {
             initTable.toggleShow();
           }
         }
+        return db;
       })
       .catch((err) => {
         placeholderDb.isLoading = false;
         placeholderDb.loadError = err.message;
+        return new Promise((resolve) => resolve(undefined));
       });
   }
 
@@ -459,6 +480,17 @@ class DbServerStore implements Store {
     },
     { keepAlive: true }
   );
+
+  @action
+  findOrLoad(id: string): DbServer | undefined {
+    const server = this.find(id);
+    if (server) {
+      return server;
+    }
+    dbServer(id, this.cancelToken).then(({ data }) => {
+      this.addDbServers([data]);
+    });
+  }
 
   @action
   addDbServers(dbServerProps: DbServerProps[]) {
