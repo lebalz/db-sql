@@ -63,6 +63,8 @@ class App extends React.Component {
           defaultSize={DEFAULT_SIDEBAR_WIDTH}
           shift={-GRID_COLUMN_GAP_WIDTH}
           minSize={MIN_SIDEBAR_WIDTH}
+          collapseDirecrtion="left"
+          hideIcon
         />
       </div>
     );

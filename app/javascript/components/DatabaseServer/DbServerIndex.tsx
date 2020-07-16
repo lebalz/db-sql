@@ -11,6 +11,7 @@ import { string } from 'prop-types';
 
 interface Props {
   activeId: string;
+  className?: string;
 }
 
 interface InjectedProps extends Props {
@@ -37,7 +38,15 @@ export default class DbServerIndex extends React.Component<Props> {
     const activeDbServerLoading = activeDbServer && !loadedDbServers.includes(activeDbServer);
 
     return (
-      <Menu stackable secondary compact size="mini" color="teal" style={{ paddingLeft: '1em' }}>
+      <Menu
+        className={this.props.className}
+        stackable
+        secondary
+        compact
+        size="mini"
+        color="teal"
+        style={{ paddingLeft: '1em' }}
+      >
         {loadedDbServers.map((dbServer, i) => {
           return (
             <Menu.Item

@@ -14,7 +14,7 @@ import SchemaQueries from './Profile/SchemaQueries';
 import Groups from './Profile/JoinedGroups';
 import PublicGroups from './Profile/PublicGroups';
 import GroupStore, { MemberType } from '../stores/group_store';
-import QueryLog from './Profile/QueryLog';
+import QueryLog from './QueryLog';
 
 interface MatchParams {
   part: string;

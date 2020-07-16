@@ -1,17 +1,16 @@
 import React from 'react';
 import { Label, Icon } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import Tooltip from '../../../shared/Tooltip';
+import Tooltip from '../../shared/Tooltip';
 import { computed } from 'mobx';
-import SqlQueryStore from '../../../stores/sql_query_store';
-import SqlQuery from '../../../models/SqlQuery';
-import { DbType } from '../../../models/DbServer';
-import SqlEditor from '../../DatabaseServer/Query/SqlEditor';
-import RouterStore from '../../../stores/router_store';
-import DbServerStore from '../../../stores/db_server_store';
-import Database from '../../../models/Database';
-import ClickableIcon from '../../../shared/ClickableIcon';
-import { OwnerType } from '../../../api/db_server';
+import SqlQueryStore from '../../stores/sql_query_store';
+import SqlQuery from '../../models/SqlQuery';
+import { DbType } from '../../models/DbServer';
+import SqlEditor from '../DatabaseServer/Query/SqlEditor';
+import RouterStore from '../../stores/router_store';
+import DbServerStore from '../../stores/db_server_store';
+import { OwnerType } from '../../api/db_server';
+import ClickableIcon from '../../shared/ClickableIcon';
 
 interface Props {
   sqlQuery: SqlQuery;

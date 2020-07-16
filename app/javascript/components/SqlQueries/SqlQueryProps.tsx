@@ -2,7 +2,7 @@ import React, { Fragment, SyntheticEvent } from 'react';
 import { InputOnChangeData } from 'semantic-ui-react';
 import { observer } from 'mobx-react';
 import cx from 'classnames';
-import SqlQuery from '../../../models/SqlQuery';
+import SqlQuery from '../../models/SqlQuery';
 
 interface Props {
   sqlQuery?: SqlQuery;

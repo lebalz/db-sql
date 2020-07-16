@@ -2,11 +2,11 @@ import React from 'react';
 import { DropdownProps, Button } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
-import Tooltip from '../../shared/Tooltip';
-import UserStore from '../../stores/user_store';
-import SqlQueryStore from '../../stores/sql_query_store';
-import DbServerStore from '../../stores/db_server_store';
-import SqlQuery from '../../models/SqlQuery';
+import Tooltip from '../shared/Tooltip';
+import UserStore from '../stores/user_store';
+import SqlQueryStore from '../stores/sql_query_store';
+import DbServerStore from '../stores/db_server_store';
+import SqlQuery from '../models/SqlQuery';
 import SqlQueryProps from './SqlQueries/SqlQueryProps';
 import SqlQueryCard from './SqlQueries/SqlQueryCard';
 
