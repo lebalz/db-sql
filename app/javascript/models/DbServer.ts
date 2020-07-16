@@ -157,7 +157,7 @@ export default class DbServer {
     this.close();
     this.databaseSchemaQueryId = this.schemaQueryStore.default(this.dbType).id;
     this.save().then(() => {
-      this.dbServerStore.routeToDbServer(this.id);
+      this.dbServerStore.routeToDbServer(this.id, { replace: true });
     });
   }
 
@@ -229,6 +229,11 @@ export default class DbServer {
       return;
     }
     return this.dbServerStore.database(this.id, this.activeDatabaseName);
+  }
+
+  @action
+  show(dbName?: string) {
+    this.dbServerStore.routeToDbServer(this.id, { dbName: dbName });
   }
 
   @action

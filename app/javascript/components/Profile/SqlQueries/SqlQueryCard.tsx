@@ -48,26 +48,7 @@ export default class SqlQueryCard extends React.Component<Props> {
             basic
             size="mini"
             as="a"
-            onClick={() => {
-              this.injected.routerStore.push(
-                `/connections/${this.sqlQuery.dbServerId}/${this.sqlQuery.dbName}`
-              );
-              if (this.sqlQuery.database) {
-                const query = this.sqlQuery.database.addQuery();
-                query.query = this.sqlQuery.query;
-                query.setActive();
-              } else {
-                this.injected.dbServerStore.addOnDbLoadTask(
-                  this.sqlQuery.dbServerId,
-                  this.sqlQuery.dbName,
-                  (db: Database) => {
-                    const query = db.addQuery();
-                    query.query = this.sqlQuery.query;
-                    query.setActive();
-                  }
-                );
-              }
-            }}
+            onClick={() => this.sqlQuery.showInEditor()}
           />
           <div className="spacer" />
           {ownerType === OwnerType.User ||
@@ -82,7 +63,9 @@ export default class SqlQueryCard extends React.Component<Props> {
             <ClickableIcon
               icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
               onClick={() => this.sqlQuery.toggleIsPrivate()}
-              tooltip={this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'}
+              tooltip={
+                this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'
+              }
               delayed
               tooltipPosition="top right"
             />

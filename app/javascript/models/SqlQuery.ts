@@ -92,7 +92,7 @@ export default class SqlQuery extends Sql {
 
   @computed
   get database(): Database | undefined {
-    return this.dbServer?.database(this.dbName)
+    return this.dbServer?.database(this.dbName);
   }
 
   @computed
@@ -135,6 +135,22 @@ export default class SqlQuery extends Sql {
   toggleIsFavorite() {
     this.isFavorite = !this.isFavorite;
     this.save();
+  }
+
+  @action
+  showInEditor() {
+    if (this.database) {
+      const query = this.database.addQuery();
+      query.query = this.query;
+      query.setActive();
+    } else {
+      this.dbServerStore.addOnDbLoadTask(this.dbServerId, this.dbName, (db: Database) => {
+        const query = db.addQuery();
+        query.query = this.query;
+        query.setActive();
+      });
+    }
+    this.dbServerStore.routeToDbServer(this.dbServerId, { dbName: this.dbName });
   }
 
   // @computed

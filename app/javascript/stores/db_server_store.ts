@@ -30,9 +30,29 @@ export enum LoadState {
 class State {
   dbServers = observable<DbServer>([]);
   @observable activeDbServerId: string = '';
+
+  /**
+   * mapping "db server id <-> db names"
+   */
   databaseIndex = observable(new Map<string, string[]>());
+
+  /**
+   * mapping "db server id <-> active database"
+   */
   activeDatabase = observable(new Map<string, string>());
+
+  /**
+   * mapping "db server id <-> 'db name <-> database id'"
+   */
   databases = observable(new Map<string, Map<string, Database>>());
+
+  /**
+   * mapping "database id <-> onLoadFunctions(db)"
+   *
+   * when a database is loaded, all functions for a database will be called.
+   * @see SqlQuery#showInEditor as an example, where a task to set the initial
+   *  sql statement is defined.
+   */
   onDatabaseLoaded = observable(new Map<string, ((db: Database) => void)[]>());
 
   databaseTreeViewFilter = observable(new Map<string, string>());
@@ -359,8 +379,20 @@ class DbServerStore implements Store {
   }
 
   @action
-  routeToDbServer(id: string) {
-    this.root.routing.replace(`/connections/${id}`);
+  routeToDbServer(id: string, options?: { dbName?: string, replace?: boolean }) {
+    if (options?.replace) {      
+      if (options.dbName) {
+        this.root.routing.replace(`/connections/${id}/${options.dbName}`);
+      } else {
+        this.root.routing.replace(`/connections/${id}`);
+      }
+    } else {
+      if (options?.dbName) {
+        this.root.routing.push(`/connections/${id}/${options.dbName}`);
+      } else {
+        this.root.routing.push(`/connections/${id}`);
+      }
+    }
   }
 
   setActiveDbServer(id: string) {
