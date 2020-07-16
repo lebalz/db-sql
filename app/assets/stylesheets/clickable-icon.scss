@@ -6,6 +6,14 @@
   }
 }
 
+i.clickable-icon.icon {
+  height: unset;
+}
+
+i.centered.icon {
+  height: unset;
+}
+
 .flipable-icon {
   .clickable-icon {
     &.back {

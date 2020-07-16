@@ -10,6 +10,8 @@ import SqlEditor from '../../DatabaseServer/Query/SqlEditor';
 import RouterStore from '../../../stores/router_store';
 import DbServerStore from '../../../stores/db_server_store';
 import Database from '../../../models/Database';
+import ClickableIcon from '../../../shared/ClickableIcon';
+import { OwnerType } from '../../../api/db_server';
 
 interface Props {
   sqlQuery: SqlQuery;
@@ -34,6 +36,7 @@ export default class SqlQueryCard extends React.Component<Props> {
   }
 
   render() {
+    const ownerType = this.sqlQuery.dbServerOwnerType;
     return (
       <div key={this.sqlQuery.id} className="sql-query">
         <div className="card-labels">
@@ -67,16 +70,45 @@ export default class SqlQueryCard extends React.Component<Props> {
             }}
           />
           <div className="spacer" />
+          {ownerType === OwnerType.User ||
+            (this.sqlQuery.isOwner && this.sqlQuery.isPrivate && (
+              <ClickableIcon
+                icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
+                color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
+                onClick={() => this.sqlQuery.toggleIsFavorite()}
+              />
+            ))}
+          {ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
+            <ClickableIcon
+              icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
+              onClick={() => this.sqlQuery.toggleIsPrivate()}
+              tooltip={this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'}
+              delayed
+              tooltipPosition="top right"
+            />
+          )}
+          {ownerType && (
+            <Tooltip
+              delayed
+              position="top right"
+              content={
+                ownerType === OwnerType.Group
+                  ? 'Executed on a shared db connection'
+                  : 'Executed on a personal db connection'
+              }
+            >
+              <Icon className="centered" name={ownerType === OwnerType.Group ? 'group' : 'user'} />
+            </Tooltip>
+          )}
           <Tooltip
             delayed
             position="top right"
             content={this.sqlQuery.isValid ? 'Successful executed' : 'Execution resulted in errors'}
           >
             <Icon
+              className="centered"
               name={this.sqlQuery.isValid ? 'check' : 'close'}
               color={this.sqlQuery.isValid ? 'green' : 'red'}
-              circular
-              size="tiny"
             />
           </Tooltip>
           <Label
@@ -87,6 +119,7 @@ export default class SqlQueryCard extends React.Component<Props> {
         </div>
         <div className="meta">{this.sqlQuery.createdAt.toLocaleString()}</div>
         <SqlEditor
+          key={`${this.sqlQuery.id}-${this.sqlQuery.updatedAt}`}
           sql={this.sqlQuery}
           readOnly={true}
           className="editable"

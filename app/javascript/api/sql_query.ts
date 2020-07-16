@@ -7,11 +7,13 @@ import { DbServer } from './db_server';
 export enum Changeable {
   Description = 'description',
   IsPrivate = 'is_private',
+  IsFavorite = 'is_favorite'
 }
 
 export interface ChangeableProps {
   [Changeable.Description]?: string;
   [Changeable.IsPrivate]: boolean;
+  [Changeable.IsFavorite]: boolean;
 }
 
 export interface SqlQuery extends ChangeableProps {

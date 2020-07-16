@@ -1,7 +1,7 @@
 import { observable, action, reaction, computed } from 'mobx';
 import { RootStore, Store } from './root_store';
 import _ from 'lodash';
-import { getSqlQueries } from '../api/sql_query';
+import { getSqlQueries, update, SqlQuery as SqlQueryProps } from '../api/sql_query';
 import SqlQuery from '../models/SqlQuery';
 import { computedFn } from 'mobx-utils';
 
@@ -42,7 +42,6 @@ class SqlQueryStore implements Store {
     { keepAlive: true }
   );
 
-
   @action
   setSelectedSqlQueryId(id: string | undefined) {
     this.state.selectedQueryId = id;
@@ -65,10 +64,31 @@ class SqlQueryStore implements Store {
   @action
   loadSqlQueries(): Promise<boolean> {
     return getSqlQueries(this.root.cancelToken).then(({ data }) => {
-      const queries = data.map((sqlQuery) => new SqlQuery(this, this.root.dbServer, this.root.user, sqlQuery));
+      const queries = data.map(
+        (sqlQuery) => new SqlQuery(this, this.root.dbServer, this.root.user, sqlQuery)
+      );
       this.state.sqlQueries.replace(queries);
       return true;
     });
+  }
+
+  @action
+  updateSqlQuery(sqlQuery: SqlQuery) {
+    if (!sqlQuery.isDirty) {
+      return;
+    }
+    update(sqlQuery.id, sqlQuery.changeablProps).then(({ data }) => {
+      this.addSqlQuery(data);
+    });
+  }
+
+  @action
+  addSqlQuery(sqlQuery: SqlQueryProps) {
+    const oldQuery = this.find(sqlQuery.id);
+    if (oldQuery) {
+      this.state.sqlQueries.remove(oldQuery);
+    }
+    this.state.sqlQueries.push(new SqlQuery(this, this.root.dbServer, this.root.user, sqlQuery));
   }
 
   @action

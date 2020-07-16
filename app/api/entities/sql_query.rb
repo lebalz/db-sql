@@ -11,6 +11,7 @@ module Entities
       expose :description
       expose :query
       expose :is_private
+      expose :is_favorite
       expose :is_valid
       expose :created_at
       expose :updated_at

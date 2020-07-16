@@ -3,7 +3,7 @@ import _ from 'lodash';
 import SqlQueryStore from '../stores/sql_query_store';
 import DbServerStore from '../stores/db_server_store';
 import UserStore from '../stores/user_store';
-import { SqlQuery as SqlQueryProps, ChangeableProps, Changeable } from '../api/sql_query';
+import { SqlQuery as SqlQueryProps, ChangeableProps, Changeable, update } from '../api/sql_query';
 import DbServer, { DbType } from './DbServer';
 import { OwnerType } from '../api/db_server';
 import Sql from './Sql';
@@ -26,6 +26,7 @@ export default class SqlQuery extends Sql {
   readonly isValid: boolean;
   @observable description: string;
   @observable isPrivate: boolean;
+  @observable isFavorite: boolean;
   readonly pristineState: ChangeableProps;
 
   constructor(
@@ -50,8 +51,10 @@ export default class SqlQuery extends Sql {
 
     this.description = props.description ?? '';
     this.isPrivate = props.is_private;
+    this.isFavorite = props.is_favorite;
     this.pristineState = {
       is_private: props.is_private,
+      is_favorite: props.is_favorite,
       description: props.description ?? ''
     };
   }
@@ -70,7 +73,8 @@ export default class SqlQuery extends Sql {
   get changeablProps(): ChangeableProps {
     return {
       description: this.description,
-      is_private: this.isPrivate
+      is_private: this.isPrivate,
+      is_favorite: this.isFavorite
     };
   }
 
@@ -107,8 +111,30 @@ export default class SqlQuery extends Sql {
   }
 
   @computed
-  get dbServerOwnerType(): string | undefined {
+  get dbServerOwnerType(): OwnerType | undefined {
     return this.dbServer?.ownerType;
+  }
+
+  @computed
+  get isOwner(): boolean {
+    return this.userId === this.userStore.loggedInUser.id;
+  }
+
+  @action
+  save() {
+    this.sqlQueryStore.updateSqlQuery(this);
+  }
+
+  @action
+  toggleIsPrivate() {
+    this.isPrivate = !this.isPrivate;
+    this.save();
+  }
+
+  @action
+  toggleIsFavorite() {
+    this.isFavorite = !this.isFavorite;
+    this.save();
   }
 
   // @computed

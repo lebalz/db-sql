@@ -50,6 +50,7 @@ module Resources
         params do
           requires :data, type: Hash do
             optional(:is_private, type: Boolean, desc: 'is_private')
+            optional(:is_favorite, type: String, desc: 'is_faforite')
             optional(:description, type: String, desc: 'name')
           end
         end
@@ -65,6 +66,7 @@ module Resources
           sql_query.update!(
             change.permit(
               :is_private,
+              :is_favorite,
               :description
             )
           )
