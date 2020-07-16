@@ -82,25 +82,15 @@ export default class DbServerOverview extends React.Component<Props> {
             floated="left"
             circular
             icon="settings"
-            onClick={() => {
-              const temp = new TempDbServer(
-                this.dbConnection.props,
-                this.injected.dbServerStore,
-                this.injected.schemaQueryStore,
-                TempDbServerRole.Update,
-                this.dbConnection.cancelToken
-              );
-              this.injected.dbServerStore.setTempDbServer(temp);
-            }}
+            onClick={() => this.dbConnection.edit()}
             disabled={this.dbConnection.ownerType === OwnerType.Group && this.dbConnection.isOutdated}
           />
-
           <Button
             basic
-            color="green"
+            color={this.dbConnection.isOutdated ? 'red' : 'green'}
             floated="right"
             content="Connect"
-            icon="plug"
+            icon={this.dbConnection.isOutdated ? 'warning' : 'plug'}
             onClick={() => this.connect()}
             disabled={this.dbConnection.isOutdated}
           />

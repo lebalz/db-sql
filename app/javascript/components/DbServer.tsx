@@ -9,7 +9,7 @@ import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSche
 import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
 import DbServerIndex from './DatabaseServer/DbServerIndex';
-import { Dimmer, Loader, Segment } from 'semantic-ui-react';
+import { Dimmer, Loader, Segment, Button, Header, Icon } from 'semantic-ui-react';
 import QueryIndex from './DatabaseServer/QueryIndex';
 import Query from './DatabaseServer/Query/Query';
 
@@ -79,7 +79,12 @@ export default class DbServer extends React.Component<DbConnectionProps> {
   }
 
   render() {
-    const query = this.injected.dbServerStore.activeDbServer?.activeDatabase?.activeQuery;
+    const { dbServerStore } = this.injected;
+    const { activeDbServer } = dbServerStore;
+
+    const connectionError = dbServerStore.find(this.id)?.connectionError;
+
+    const query = activeDbServer?.activeDatabase?.activeQuery;
     return (
       <Fragment>
         <header>
@@ -89,13 +94,34 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           <DatabaseSchemaTree />
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
-          <DbServerIndex />
-          <Segment>
-            <QueryIndex queries={this.injected.dbServerStore.activeDbServer?.queries ?? []} />
-            {query && <Query query={query} />}
-          </Segment>
+          <DbServerIndex activeId={this.id} />
+          {connectionError ? (
+            <Segment placeholder>
+              <Header icon>
+                <Icon name="close" color="red" />
+                Error connecting to this database server
+              </Header>
+              <Segment color="red">
+                <code>
+                  {connectionError}
+                </code>
+              </Segment>
+              <Button
+                size="mini"
+                content="Edit this connection"
+                onClick={() => this.injected.dbServerStore.editDbServer(this.id)}
+              />
+            </Segment>
+          ) : (
+            <Fragment>
+              <Segment>
+                <QueryIndex queries={activeDbServer?.queries ?? []} />
+                {query && <Query query={query} />}
+              </Segment>
+            </Fragment>
+          )}
         </main>
-        <Dimmer active={this.injected.dbServerStore.dbIndexLoadState === LoadState.Loading}>
+        <Dimmer active={dbServerStore.dbIndexLoadState === LoadState.Loading}>
           <Loader indeterminate content="Loading Databases" />
         </Dimmer>
       </Fragment>

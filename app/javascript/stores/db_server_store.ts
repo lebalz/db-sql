@@ -12,8 +12,8 @@ import {
   DbServer as DbServerProps,
   dbServer
 } from '../api/db_server';
-import DbServer from '../models/DbServer';
-import { TempDbServer } from '../models/TempDbServer';
+import DbServer, { DEFAULT_DB_SERVER } from '../models/DbServer';
+import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
 import { ApiRequestState } from './session_store';
 import Database from '../models/Database';
@@ -219,6 +219,10 @@ class DbServerStore implements Store {
     if (this.state.databaseIndex.has(dbServerId) && !force) {
       return;
     }
+    const dbServer = this.find(dbServerId)
+    if (dbServer) {
+      dbServer.connectionError = undefined;
+    }
     this.state.dbIndexLoadState = LoadState.Loading;
     databases(dbServerId, this.cancelToken)
       .then(({ data }) => {
@@ -234,7 +238,11 @@ class DbServerStore implements Store {
         }
         this.state.dbIndexLoadState = LoadState.Success;
       })
-      .catch((e) => {
+      .catch((e: Error) => {
+        const dbServer = this.find(dbServerId)
+        if (dbServer) {
+          dbServer.connectionError = e.message;
+        }
         this.state.databaseIndex.delete(dbServerId);
         this.state.activeDbServerId = '';
         this.state.dbIndexLoadState = LoadState.Error;
@@ -553,6 +561,22 @@ class DbServerStore implements Store {
     this.state.tempDbServer = tempDbServer;
     if (tempDbServer) {
       this.root.schemaQueryStore.setSelectedDbType(tempDbServer.dbType);
+    }
+  }
+
+  @action
+  editDbServer(dbServerId: string) {
+    const dbServer = this.find(dbServerId);
+    const temp = new TempDbServer(
+      dbServer?.props ?? { ...DEFAULT_DB_SERVER, owner_type: OwnerType.User, owner_id: this.root.session.currentUser.id },
+      this.root.dbServer,
+      this.root.schemaQueryStore,
+      dbServer ? TempDbServerRole.Update : TempDbServerRole.Create,
+      this.cancelToken
+    );
+    this.setTempDbServer(temp);
+    if (!this.root.routing.location.pathname.startsWith('/dashboard')) {
+      this.root.routing.push('/dashboard');
     }
   }
 }

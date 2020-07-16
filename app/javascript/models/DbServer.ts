@@ -22,6 +22,22 @@ export enum QueryState {
   Error
 }
 
+export const DEFAULT_DB_SERVER: DbServerProps = {
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  owner_type: OwnerType.User,
+  owner_id: '',
+  db_type: DbType.Psql,
+  host: '',
+  id: '',
+  name: '',
+  port: 5432,
+  username: '',
+  query_count: 0,
+  database_schema_query_id: '',
+  error_query_count: 0
+};
+
 export interface UpdateProps extends Partial<DbServerProps> {
   id: string;
   password?: string;
@@ -47,6 +63,7 @@ export default class DbServer {
   @observable queryState: QueryState = QueryState.None;
   @observable ownerType: OwnerType;
   @observable ownerId: string;
+  @observable connectionError?: string;
 
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
@@ -178,7 +195,7 @@ export default class DbServer {
 
   @computed
   get isOutdated(): boolean {
-    return this.dbServerStore.isOutdated(this.id);
+    return (this.connectionError ?? '').length > 0 || this.dbServerStore.isOutdated(this.id);
   }
 
   @action
@@ -252,6 +269,11 @@ export default class DbServer {
     if (dbNames.length > 0) {
       return dbNames[dbNames.length - 1];
     }
+  }
+
+  @action
+  edit() {
+    this.dbServerStore.editDbServer(this.id);
   }
 
   @action
