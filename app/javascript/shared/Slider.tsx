@@ -10,7 +10,7 @@ interface Props {
   defaultSize: number;
   shift?: number;
   hideIcon?: boolean;
-  collapseDirecrtion?: CollapseDirection;
+  collapseDirection?: CollapseDirection;
   /**
    * position relative to the divider line
    */
@@ -90,7 +90,7 @@ class Slider extends React.Component<Props> {
     e.preventDefault();
     e.stopPropagation();
     let newState = { share: this.state.share, oldShare: this.state.share };
-    if (this.isCollapsed()) {
+    if (this.isCollapsed) {
       newState.share = this.state.oldShare ?? this.minSize;
     } else {
       newState.share = 0;
@@ -144,20 +144,20 @@ class Slider extends React.Component<Props> {
   }
 
   get canCollapse(): boolean {
-    return this.props.collapseDirecrtion !== undefined;
+    return this.props.collapseDirection !== undefined;
   }
 
-  isCollapsed(): boolean {
+  get isCollapsed(): boolean {
     return this.state.share === 0;
   }
 
   collapseIconName() {
-    if (!this.props.collapseDirecrtion) {
+    if (!this.props.collapseDirection) {
       throw new Error('No collapse direction given');
     }
-    return this.isCollapsed()
-      ? flippedCollapseIconMap[this.props.collapseDirecrtion]
-      : collapseIconMap[this.props.collapseDirecrtion];
+    return this.isCollapsed
+      ? flippedCollapseIconMap[this.props.collapseDirection]
+      : collapseIconMap[this.props.collapseDirection];
   }
 
   render() {
@@ -169,14 +169,14 @@ class Slider extends React.Component<Props> {
         onPointerDown={this.beginSliding}
         onPointerUp={this.stopSliding}
       >
-        {!this.props.hideIcon && !this.isCollapsed() && (
+        {!this.props.hideIcon && !this.isCollapsed && (
           <Icon circular name={this.iconName} style={this.iconStyle('1em')} className="resizeIcon" />
         )}
         {this.canCollapse && (
           <Icon
             name={this.collapseIconName()}
             style={this.iconStyle(this.props.hideIcon ? '1em' : '3em', 'start')}
-            className={`toggleIcon ${this.props.collapseDirecrtion}`}
+            className={`toggleIcon ${this.props.collapseDirection}`}
             onClick={(e: PointerEvent) => this.toggleCollapse(e)}
           />
         )}

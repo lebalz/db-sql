@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Label, Icon } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import Tooltip from '../../shared/Tooltip';
@@ -14,6 +14,7 @@ import ClickableIcon from '../../shared/ClickableIcon';
 
 interface Props {
   sqlQuery: SqlQuery;
+  basic?: boolean;
 }
 
 interface InjectedProps extends Props {
@@ -36,21 +37,26 @@ export default class SqlQueryCard extends React.Component<Props> {
 
   render() {
     const ownerType = this.sqlQuery.dbServerOwnerType;
+    const isBasic = this.props.basic === true;
     return (
       <div key={this.sqlQuery.id} className="sql-query">
         <div className="card-labels">
-          <Label content={this.sqlQuery.dbServerName} color="blue" basic size="mini" pointing="right" />
-          <Label
-            icon="database"
-            content={this.sqlQuery.dbName}
-            color="blue"
-            basic
-            size="mini"
-            as="a"
-            onClick={() => this.sqlQuery.showInEditor()}
-          />
+          {!isBasic && (
+            <Fragment>
+              <Label content={this.sqlQuery.dbServerName} color="blue" basic size="mini" pointing="right" />
+              <Label
+                icon="database"
+                content={this.sqlQuery.dbName}
+                color="blue"
+                basic
+                size="mini"
+                as="a"
+                onClick={() => this.sqlQuery.showInEditor()}
+              />
+            </Fragment>
+          )}
           <div className="spacer" />
-          {ownerType === OwnerType.User ||
+          {(!isBasic && ownerType === OwnerType.User) ||
             (this.sqlQuery.isOwner && this.sqlQuery.isPrivate && (
               <ClickableIcon
                 icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
@@ -58,7 +64,7 @@ export default class SqlQueryCard extends React.Component<Props> {
                 onClick={() => this.sqlQuery.toggleIsFavorite()}
               />
             ))}
-          {ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
+          {!isBasic && ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
             <ClickableIcon
               icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
               onClick={() => this.sqlQuery.toggleIsPrivate()}
@@ -69,7 +75,7 @@ export default class SqlQueryCard extends React.Component<Props> {
               tooltipPosition="top right"
             />
           )}
-          {ownerType && (
+          {!isBasic && ownerType && (
             <Tooltip
               delayed
               position="top right"
@@ -93,11 +99,13 @@ export default class SqlQueryCard extends React.Component<Props> {
               color={this.sqlQuery.isValid ? 'green' : 'red'}
             />
           </Tooltip>
-          <Label
-            content={this.sqlQuery.dbServerType}
-            color={this.sqlQuery.dbServerType === DbType.Psql ? 'blue' : 'orange'}
-            size="mini"
-          />
+          {!isBasic && (
+            <Label
+              content={this.sqlQuery.dbServerType}
+              color={this.sqlQuery.dbServerType === DbType.Psql ? 'blue' : 'orange'}
+              size="mini"
+            />
+          )}
         </div>
         <div className="meta">{this.sqlQuery.createdAt.toLocaleString()}</div>
         <SqlEditor

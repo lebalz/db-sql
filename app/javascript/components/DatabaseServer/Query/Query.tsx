@@ -45,8 +45,11 @@ export default class Query extends React.Component<Props> {
           attached="bottom"
           style={{ padding: `${EDITOR_PADDING_TOP}px 0 0 0`, marginBottom: '0' }}
         >
-          <SqlEditor sql={this.props.query} height={this.state.editorHeight} />
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <SqlEditor sql={this.props.query} height={this.state.editorHeight} />
+          </div>
           <Slider
+            hideIcon
             direction="vertical"
             shift={-EDITOR_PADDING_TOP}
             onChange={this.onResize}

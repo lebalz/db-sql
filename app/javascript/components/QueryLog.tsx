@@ -10,7 +10,13 @@ import SqlQuery from '../models/SqlQuery';
 import SqlQueryProps from './SqlQueries/SqlQueryProps';
 import SqlQueryCard from './SqlQueries/SqlQueryCard';
 
-interface InjectedProps {
+interface Props {
+  dbServerId?: string;
+  dbName?: string;
+  basic?: boolean;
+}
+
+interface InjectedProps extends Props {
   userStore: UserStore;
   dbServerStore: DbServerStore;
   sqlQueryStore: SqlQueryStore;
@@ -18,7 +24,7 @@ interface InjectedProps {
 
 @inject('sqlQueryStore', 'dbServerStore', 'userStore')
 @observer
-export default class QueryLog extends React.Component {
+export default class QueryLog extends React.Component<Props> {
   get injected() {
     return this.props as InjectedProps;
   }
@@ -29,7 +35,14 @@ export default class QueryLog extends React.Component {
 
   @computed
   get sqlQueries() {
-    return this.injected.sqlQueryStore.sqlQueries;
+    let queries = this.injected.sqlQueryStore.sqlQueries;
+    if (this.props.dbServerId) {
+      queries = queries.filter((query) => query.dbServerId === this.props.dbServerId);
+    }
+    if (this.props.dbName) {
+      queries = queries.filter((query) => query.dbName === this.props.dbName);
+    }
+    return queries;
   }
 
   @computed
@@ -48,7 +61,7 @@ export default class QueryLog extends React.Component {
         <SqlQueryProps sqlQuery={this.selectedSqlQuery} />
         <div className="cards">
           {this.sqlQueries.map((sqlQuery) => (
-            <SqlQueryCard key={sqlQuery.id} sqlQuery={sqlQuery} />
+            <SqlQueryCard key={sqlQuery.id} sqlQuery={sqlQuery} basic={this.props.basic} />
           ))}
         </div>
       </div>

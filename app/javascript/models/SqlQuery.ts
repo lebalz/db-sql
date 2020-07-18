@@ -21,8 +21,8 @@ export default class SqlQuery extends Sql {
   readonly dbServerId: string;
   readonly dbName: string;
   readonly query: string;
-  readonly createdAt: string;
-  readonly updatedAt: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
   readonly isValid: boolean;
   @observable description: string;
   @observable isPrivate: boolean;
@@ -45,8 +45,8 @@ export default class SqlQuery extends Sql {
     this.dbServerId = props.db_server_id;
     this.dbName = props.db_name;
     this.query = props.query;
-    this.createdAt = props.created_at;
-    this.updatedAt = props.updated_at;
+    this.createdAt = new Date(props.created_at);
+    this.updatedAt = new Date(props.updated_at);
     this.isValid = props.is_valid;
 
     this.description = props.description ?? '';
