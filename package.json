@@ -33,7 +33,7 @@
     "dom-to-image": "^2.6.0",
     "express": "^4.16.4",
     "js-file-download": "^0.4.12",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "mobx": "5.15.4",
     "mobx-react": "6.1.8",
     "mobx-react-router": "4.1.0",
