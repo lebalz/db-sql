@@ -112,6 +112,12 @@ export default class SqlQuery extends Sql {
   }
 
   @computed
+  get ownerId(): string | undefined {
+    return this.dbServer?.ownerId
+  }
+
+
+  @computed
   get isOwner(): boolean {
     return this.userId === this.userStore.loggedInUser.id;
   }

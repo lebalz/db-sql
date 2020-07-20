@@ -13,6 +13,7 @@ import SqlQueryCard from './SqlQueries/SqlQueryCard';
 interface Props {
   dbServerId?: string;
   dbName?: string;
+  groupId?: string;
   basic?: boolean;
 }
 
@@ -41,6 +42,9 @@ export default class QueryLog extends React.Component<Props> {
     }
     if (this.props.dbName) {
       queries = queries.filter((query) => query.dbName === this.props.dbName);
+    }
+    if (this.props.groupId) {
+      queries = queries.filter((query) => query.ownerId === this.props.groupId);
     }
     return queries;
   }
