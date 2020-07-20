@@ -6,12 +6,10 @@ module Resources
       def sql_query
         return @quey unless @quey.nil?
 
-        query = SqlQuery.includes(:db_server).find(params[:id])
+        query = policy_scope(SqlQuery).includes(:db_server).find(params[:id])
 
         error!('Sql query not found', 302) unless query
-        unless query.authorized?(current_user)
-          error!('You are not authorized to access this query', 401)
-        end
+        authorize query, :show?
 
         @quey = query
       end
@@ -20,8 +18,10 @@ module Resources
     resource :sql_queries do
       desc 'Get all sql queries of the current user'
       get do
+        authorize SqlQuery, :index?
+
         present(
-          current_user.sql_queries,
+          policy_scope(SqlQuery),
           with: Entities::SqlQuery
         )
       end
@@ -30,9 +30,11 @@ module Resources
         requires(:group_id, type: String, desc: 'group id')
       end
       get :shared do
-        group = Group.find(params[:group_id])
+        group = policy_cope(Group).find(params[:group_id])
         error!('Group not found', 302) unless group
-        
+
+        authorize group, :show?
+
         present(
           group.sql_queries,
           with: Entities::SqlQuery
@@ -40,7 +42,6 @@ module Resources
       end
 
       route_param :id, type: String, desc: 'update sql query id' do
-
         desc 'get sql query'
         get do
           present(sql_query, with: Entities::SqlQuery)
@@ -55,13 +56,9 @@ module Resources
           end
         end
         put do
-          authorized = sql_query.user_id == current_user.id || (
-            sql_query.db_server.owner_type == :group && sql_query.db_server.owner.admin?(current_user)
-          )
+          authorize sql_query, :update?
 
-          unless authorized
-            error!('No permission to update this query', 302)
-          end
+          error!('No permission to update this query', 302) unless authorized
           change = ActionController::Parameters.new(params[:data])
           sql_query.update!(
             change.permit(
