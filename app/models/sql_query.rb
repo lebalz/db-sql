@@ -6,7 +6,6 @@
 #
 #  id           :uuid             not null, primary key
 #  db_name      :string
-#  description  :string
 #  is_favorite  :boolean          default(FALSE)
 #  is_private   :boolean          default(TRUE)
 #  is_valid     :boolean          default(FALSE)

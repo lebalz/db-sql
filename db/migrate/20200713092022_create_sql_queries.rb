@@ -5,7 +5,6 @@ class CreateSqlQueries < ActiveRecord::Migration[6.0]
       t.references :user, type: :uuid, null: false, index: true
 
       t.string :db_name
-      t.string :description
       t.boolean :is_valid, default: false
       t.boolean :is_favorite, default: false
       t.boolean :is_private, default: true

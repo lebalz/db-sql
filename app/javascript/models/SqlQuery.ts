@@ -24,7 +24,6 @@ export default class SqlQuery extends Sql {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly isValid: boolean;
-  @observable description: string;
   @observable isPrivate: boolean;
   @observable isFavorite: boolean;
   readonly pristineState: ChangeableProps;
@@ -49,13 +48,11 @@ export default class SqlQuery extends Sql {
     this.updatedAt = new Date(props.updated_at);
     this.isValid = props.is_valid;
 
-    this.description = props.description ?? '';
     this.isPrivate = props.is_private;
     this.isFavorite = props.is_favorite;
     this.pristineState = {
       is_private: props.is_private,
-      is_favorite: props.is_favorite,
-      description: props.description ?? ''
+      is_favorite: props.is_favorite
     };
   }
 
@@ -72,7 +69,6 @@ export default class SqlQuery extends Sql {
   @computed
   get changeablProps(): ChangeableProps {
     return {
-      description: this.description,
       is_private: this.isPrivate,
       is_favorite: this.isFavorite
     };

@@ -107,7 +107,6 @@ ActiveRecord::Schema.define(version: 2020_07_13_091437) do
     t.uuid "db_server_id", null: false
     t.uuid "user_id", null: false
     t.string "db_name"
-    t.string "description"
     t.boolean "is_valid", default: false
     t.boolean "is_favorite", default: false
     t.boolean "is_private", default: true

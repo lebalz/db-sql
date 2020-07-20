@@ -8,7 +8,6 @@ module Entities
       expose :db_server_id
       expose :db_name
 
-      expose :description
       expose :query
       expose :is_private
       expose :is_favorite
