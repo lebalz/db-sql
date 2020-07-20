@@ -10,6 +10,8 @@ module Resources
       resource :users do
         desc 'Get all users'
         get do
+          authorize User, :index?
+
           present User.all, with: Entities::User
         end
 
@@ -19,16 +21,18 @@ module Resources
           get do
             user = User.find(params[:id])
             error!('User not found', 404) unless user
+
+            authorize user, :show?
+
             present user, with: Entities::User
           end
 
           desc 'Delete user'
           delete do
-            delete_self = current_user.id == params[:id]
-            error!('You can not delete current user', 403) if delete_self
-
             to_delete = User.find(params[:id])
             error!('User not found', 404) unless to_delete
+
+            authorize to_delete, :destroy?
             error!(to_delete.errors.messages, 400) unless to_delete.destroy
 
             status :no_content
@@ -49,6 +53,8 @@ module Resources
           put do
             user = User.find(params[:id])
             error!('User not found', 404) unless user
+
+            authorize user, :update?
 
             change = ActionController::Parameters.new(params[:data])
             success = user.update(change.permit(:role))

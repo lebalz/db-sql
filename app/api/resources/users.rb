@@ -21,6 +21,8 @@ module Resources
         requires :password, type: String
       end
       post do
+        authorize User, :create?
+
         logout_existing_user
         @user = User.create(email: params[:email], password: params[:password])
         error!(@user.errors.messages, 400) unless @user.persisted?
@@ -40,6 +42,8 @@ module Resources
 
       desc 'get all users available to build groups'
       get :group_users do
+        authorize User, :group_index?
+
         present(User.all, with: Entities::GroupUser)
       end
 
@@ -77,11 +81,14 @@ module Resources
       resource :current do
         desc 'Get current user'
         get do
+          authorize current_user, :show?
+
           present current_user, with: Entities::User
         end
 
         desc 'Get the role of a user'
         get :role do
+          authorize current_user, :show?
           {
             role: current_user.role
           }
@@ -98,6 +105,8 @@ module Resources
           )
         end
         put :password do
+          authorize current_user, :set_password?
+
           authenticated = current_user.authenticate(params[:old_password])
           error!('Incorrect old password', 403) unless authenticated
 
@@ -128,6 +137,8 @@ module Resources
           requires :password, type: String, desc: 'password'
         end
         delete do
+          authorize current_user, :destroy?
+
           authenticated = current_user.authenticate(params[:password])
           error!('Incorrect password', 403) unless authenticated
           error!(current_user.errors.messages, 400) unless current_user.destroy
