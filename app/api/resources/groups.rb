@@ -7,9 +7,7 @@ module Resources
     end
     helpers do
       def load_current_group
-        group = Group.includes(:group_members, :db_servers, :users).find(params[:id])
-
-        error!('Group not found', 302) unless group
+        group = policy_scope(Group).includes(:group_members, :db_servers, :users).find(params[:id])
 
         authorize group, :show?
 
@@ -30,7 +28,7 @@ module Resources
       get do
         authorize Group, :index?
 
-        groups = current_user.groups.includes(:group_members, :db_servers, :users)
+        groups = policy_scope(Group).includes(:group_members, :db_servers, :users)
         Group.update_outdated_group_members(user: current_user, pkey: current_user.private_key(crypto_key))
         present(
           groups,

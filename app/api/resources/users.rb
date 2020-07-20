@@ -155,7 +155,6 @@ module Resources
         end
         put :activate do
           user = User.find(params[:id])
-          return error!('Invalid activation link', 400) unless user
 
           return status(:no_content) if user.activated?
 
@@ -173,7 +172,6 @@ module Resources
         end
         post :reset_password do
           user = User.find(params[:id])
-          error!('Invalid link', 400) unless user
 
           user.reset_password(
             reset_token: params[:reset_token],

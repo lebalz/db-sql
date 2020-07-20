@@ -40,7 +40,9 @@ class DbServerPolicy < ApplicationPolicy
 
     # @return [ActiveRecord::Relation<DbServer>]
     def resolve
-      scope.where('db_servers.user_id = :author', author: user.id)
+      scope.left_joins(:group)
+           .joins('LEFT JOIN group_members ON groups.id = group_members.group_id')
+           .where('db_servers.user_id = :user OR group_members.user_id = :user', user: user.id)
     end
   end
   end

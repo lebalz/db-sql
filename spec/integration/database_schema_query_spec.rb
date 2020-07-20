@@ -323,7 +323,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         headers: @user_b_headers
       )
       expect(response.successful?).to be_falsey
-      expect(response.status).to eq(403)
+      expect(response.status).to eq(404)
     end
   end
 

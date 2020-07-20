@@ -8,7 +8,6 @@ module Resources
 
         query = policy_scope(SqlQuery).includes(:db_server).find(params[:id])
 
-        error!('Sql query not found', 302) unless query
         authorize query, :show?
 
         @quey = query
@@ -31,7 +30,6 @@ module Resources
       end
       get :shared do
         group = policy_cope(Group).find(params[:group_id])
-        error!('Group not found', 302) unless group
 
         authorize group, :show?
 

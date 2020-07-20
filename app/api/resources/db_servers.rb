@@ -7,8 +7,7 @@ module Resources
     end
     helpers do
       def load_db_server
-        db_server ||= DbServer.find(params[:id])
-        error!('Db server not found', 302) unless db_server
+        db_server ||= policy_scope(DbServer).find(params[:id])
 
         authorize db_server, :show?
 
@@ -83,13 +82,11 @@ module Resources
         if params[:owner_type] == :user
           key = user_key
         else
-          grp = Group.find(params[:owner_id])
-          error!('Group not found', 302) unless grp
-          unless grp.admin?(current_user)
-            error!('Missing privileg to add new servers', 401)
-          end
+          group = policy_scope(Group).find(params[:owner_id])
 
-          key = grp.crypto_key(current_user, current_user.private_key(user_key))
+          authorize group, :add_db_server?
+
+          key = group.crypto_key(current_user, current_user.private_key(user_key))
         end
         encrypted_password = DbServer.encrypt(
           key: key,

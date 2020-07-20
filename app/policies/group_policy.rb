@@ -25,6 +25,10 @@ class GroupPolicy < ApplicationPolicy
     record.admin?(user)
   end
 
+  def add_db_server?
+    record.admin?(user)
+  end
+
   def leave?
     record.public? && !record.admin?(user)
   end
@@ -49,7 +53,9 @@ class GroupPolicy < ApplicationPolicy
 
     # @return [ActiveRecord::Relation<DbServer>]
     def resolve
-      scope.where('db_servers.user_id = :author', author: user.id)
+      scope.all if user.admin?
+
+      scope.joins(:group_members).where('group_members.user_id = :user', user: user.id)
     end
   end
   end

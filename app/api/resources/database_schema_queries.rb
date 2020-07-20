@@ -7,9 +7,7 @@ module Resources
     end
     helpers do
       def load_database_schema_query
-        query = DatabaseSchemaQuery.includes(:db_servers).find(params[:id])
-        error!('Database schema query not found', 302) unless query
-
+        query = policy_scope(DatabaseSchemaQuery).includes(:db_servers).find(params[:id])
         authorize query, :show?
 
         @database_schema_query = query

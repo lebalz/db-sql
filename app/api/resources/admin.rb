@@ -19,9 +19,7 @@ module Resources
 
           desc 'User'
           get do
-            user = User.find(params[:id])
-            error!('User not found', 404) unless user
-
+            user = policy_scope(User).find(params[:id])
             authorize user, :show?
 
             present user, with: Entities::User
@@ -29,8 +27,7 @@ module Resources
 
           desc 'Delete user'
           delete do
-            to_delete = User.find(params[:id])
-            error!('User not found', 404) unless to_delete
+            to_delete = policy_scope(User).find(params[:id])
 
             authorize to_delete, :destroy?
             error!(to_delete.errors.messages, 400) unless to_delete.destroy
@@ -51,9 +48,7 @@ module Resources
             end
           end
           put do
-            user = User.find(params[:id])
-            error!('User not found', 404) unless user
-
+            user = policy_scope(User).find(params[:id])
             authorize user, :update?
 
             change = ActionController::Parameters.new(params[:data])

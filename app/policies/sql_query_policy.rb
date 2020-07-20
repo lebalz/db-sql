@@ -27,7 +27,7 @@ class SqlQueryPolicy < ApplicationPolicy
 
     # @return [ActiveRecord::Relation<DbServer>]
     def resolve
-      scope.where('sql_queris.user_id = :author', author: user.id)
+      scope.where('sql_queries.user_id = :user', user: user.id)
     end
   end
   end

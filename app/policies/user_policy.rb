@@ -37,7 +37,9 @@ class UserPolicy < ApplicationPolicy
 
     # @return [ActiveRecord::Relation<DbServer>]
     def resolve
-      scope.all
+      return scope.all if user.admin?
+
+      scope.where('id = :user', user: user.id)
     end
   end
   end

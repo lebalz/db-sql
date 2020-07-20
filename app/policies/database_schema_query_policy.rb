@@ -29,7 +29,10 @@ class DatabaseSchemaQueryPolicy < ApplicationPolicy
 
     # @return [ActiveRecord::Relation<DbServer>]
     def resolve
-      scope.where('(not database_schema_queries.is_private OR database_schema_queries.author_id = :author)', author: user.id)
+      scope.where(
+        '(not database_schema_queries.is_private OR database_schema_queries.author_id = :author)',
+        author: user.id
+      )
     end
   end
   end
