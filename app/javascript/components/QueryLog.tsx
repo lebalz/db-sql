@@ -1,5 +1,5 @@
 import React from 'react';
-import { DropdownProps, Button } from 'semantic-ui-react';
+import { DropdownProps, Button, Label } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import { computed } from 'mobx';
 import Tooltip from '../shared/Tooltip';
@@ -57,6 +57,7 @@ export default class QueryLog extends React.Component<Props> {
           <Tooltip delayed content="Refresh schema query list">
             <Button icon="refresh" size="mini" onClick={() => this.injected.sqlQueryStore.refresh()} />
           </Tooltip>
+          <Label content={this.sqlQueries.length} color="blue" />
         </div>
         <SqlQueryProps sqlQuery={this.selectedSqlQuery} />
         <div className="cards">

@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Label, Icon } from 'semantic-ui-react';
+import { Label, Icon, TextArea } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import Tooltip from '../../shared/Tooltip';
 import { computed } from 'mobx';
@@ -11,6 +11,7 @@ import RouterStore from '../../stores/router_store';
 import DbServerStore from '../../stores/db_server_store';
 import { OwnerType } from '../../api/db_server';
 import ClickableIcon from '../../shared/ClickableIcon';
+import { PrismCode } from '../DatabaseServer/SqlResult/PrismCode';
 
 interface Props {
   sqlQuery: SqlQuery;
@@ -56,14 +57,14 @@ export default class SqlQueryCard extends React.Component<Props> {
             </Fragment>
           )}
           <div className="spacer" />
-          {(!isBasic && ownerType === OwnerType.User) ||
-            (this.sqlQuery.isOwner && this.sqlQuery.isPrivate && (
-              <ClickableIcon
-                icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
-                color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
-                onClick={() => this.sqlQuery.toggleIsFavorite()}
-              />
-            ))}
+          {((!isBasic && ownerType === OwnerType.User) ||
+            (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
+            <ClickableIcon
+              icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
+              color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
+              onClick={() => this.sqlQuery.toggleIsFavorite()}
+            />
+          )}
           {!isBasic && ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
             <ClickableIcon
               icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
@@ -108,15 +109,11 @@ export default class SqlQueryCard extends React.Component<Props> {
           )}
         </div>
         <div className="meta">{this.sqlQuery.createdAt.toLocaleString()}</div>
-        <SqlEditor
-          key={`${this.sqlQuery.id}-${this.sqlQuery.updatedAt}`}
-          sql={this.sqlQuery}
-          readOnly={true}
-          className="editable"
-          height={this.sqlQuery.lineCount * 1.4}
-          heightUnit="em"
-          maxHeight="22em"
-          highlightActiveLine={false}
+        <PrismCode
+          code={this.sqlQuery.query}
+          language="sql"
+          plugins={['line-numbers']}
+          style={{ maxHeight: '22em' }}
         />
       </div>
     );

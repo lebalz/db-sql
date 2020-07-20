@@ -58,5 +58,9 @@ class SqlQuery < ApplicationRecord
   def private?
     is_private
   end
+
+  def public?
+    !is_private
+  end
 end
   

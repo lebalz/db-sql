@@ -131,7 +131,7 @@ export default class Profile extends React.Component<ProfileProps> {
               case 'delete_account':
                 return <DeleteAccount />;
               case 'query_log':
-                return <QueryLog />;
+                return <QueryLog basic={false} />;
               case 'users':
                 return <UserList />;
               case 'schema_queries':

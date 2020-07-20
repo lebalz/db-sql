@@ -56,7 +56,6 @@ module Resources
         put do
           authorize sql_query, :update?
 
-          error!('No permission to update this query', 302) unless authorized
           change = ActionController::Parameters.new(params[:data])
           sql_query.update!(
             change.permit(

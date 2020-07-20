@@ -10,6 +10,7 @@ interface Props {
   code: string;
   plugins?: string[];
   language: 'sql';
+  style?: React.CSSProperties;
 }
 
 export class PrismCode extends React.Component<Props> {
@@ -30,7 +31,7 @@ export class PrismCode extends React.Component<Props> {
   render() {
     const { code, plugins, language } = this.props;
     return (
-      <pre className={!plugins ? '' : plugins.join(' ')}>
+      <pre className={!plugins ? '' : plugins.join(' ')} style={this.props.style}>
         <code ref={this.ref} className={`language-${language}`}>
           {code.trim()}
         </code>
