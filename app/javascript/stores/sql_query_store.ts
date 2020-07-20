@@ -29,7 +29,7 @@ class SqlQueryStore implements Store {
 
   @computed
   get sqlQueries(): SqlQuery[] {
-    return _.orderBy(this.state.sqlQueries, ['createdAt'], 'desc');
+    return _.orderBy(this.state.sqlQueries, ['isFavorite', 'createdAt'], 'desc');
   }
 
   find = computedFn(

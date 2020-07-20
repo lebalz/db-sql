@@ -29,6 +29,10 @@ class SqlQuery < ApplicationRecord
   belongs_to :user
 
   has_one_attached :raw_query
+  after_create  :cleanup_outdated_queries
+
+  QUERY_COUNT_PER_SERVER_AND_USER = 100
+
 
   def valid_query?
     is_valid
@@ -60,6 +64,16 @@ class SqlQuery < ApplicationRecord
 
   def public?
     !is_private
+  end
+
+  private
+
+  def cleanup_outdated_queries
+    queries = SqlQuery.where(user: user, db_server: db_server)
+    return if queries.count <= QUERY_COUNT_PER_SERVER_AND_USER
+
+    to_delete = queries.order('is_favorite desc', 'updated_at asc').offset(QUERY_COUNT_PER_SERVER_AND_USER)
+    to_delete.destroy_all
   end
 end
   

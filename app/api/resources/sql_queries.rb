@@ -20,7 +20,7 @@ module Resources
         authorize SqlQuery, :index?
 
         present(
-          policy_scope(SqlQuery),
+          policy_scope(SqlQuery).order('is_favorite desc', 'updated_at desc'),
           with: Entities::SqlQuery
         )
       end
@@ -34,7 +34,7 @@ module Resources
         authorize group, :show?
 
         present(
-          group.sql_queries,
+          group.sql_queries.order('is_favorite desc', 'updated_at desc'),
           with: Entities::SqlQuery
         )
       end
