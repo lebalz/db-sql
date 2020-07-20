@@ -10,9 +10,7 @@ module Resources
         db_server ||= DbServer.find(params[:id])
         error!('Db server not found', 302) unless db_server
 
-        unless db_server.authorized? current_user
-          error!('Invalid permission for this db server', 401)
-        end
+        authorize db_server, :show?
 
         @db_server = db_server
       end
@@ -41,6 +39,8 @@ module Resources
         optional(:include_shared, type: Boolean, default: false, desc: 'wheter to include shared db servers from groups')
       end
       get do
+        authorize DbServer, :index?
+
         if params[:include_shared]
           present current_user.all_db_servers, with: Entities::DbServer
         else
@@ -77,13 +77,17 @@ module Resources
         optional(:initial_table, type: String, desc: 'initial table')
       end
       post do
+        authorize DbServer, :create?
+
         user_key = request.headers['Crypto-Key']
         if params[:owner_type] == :user
           key = user_key
         else
           grp = Group.find(params[:owner_id])
           error!('Group not found', 302) unless grp
-          error!('Missing privileg to add new servers', 401) unless grp.admin?(current_user)
+          unless grp.admin?(current_user)
+            error!('Missing privileg to add new servers', 401)
+          end
 
           key = grp.crypto_key(current_user, current_user.private_key(user_key))
         end
@@ -144,6 +148,8 @@ module Resources
           end
         end
         put do
+          authorize db_server, :update?
+
           if params[:data].key?('password')
             encrypted_password = DbServer.encrypt(
               key: crypto_key,
@@ -172,6 +178,8 @@ module Resources
 
         desc 'Delete a database server connection'
         delete do
+          authorize db_server, :destroy?
+
           db_server.destroy!
           status :no_content
         end
@@ -179,9 +187,9 @@ module Resources
         desc 'Get the databases of a database server connection'
         get :databases do
           present(
-            db_server.database_names(key: crypto_key).map do |n|
+            db_server.database_names(key: crypto_key).map do |name|
               {
-                name: n,
+                name: name,
                 db_server_id: db_server.id
               }
             end,
@@ -192,6 +200,7 @@ module Resources
         get :database_names do
           db_server.database_names(key: crypto_key)
         end
+
         route_param :database_name, type: String, desc: 'Database name' do
 
           desc 'Get full database structure'
@@ -294,7 +303,9 @@ module Resources
             end
             t_end = Time.now - t0
 
-            db_server.increment!(:error_query_count, 1) if results[:type] == :error
+            if results[:type] == :error
+              db_server.increment!(:error_query_count, 1)
+            end
             query.is_valid = results[:type] != :error
             query.save!
 
