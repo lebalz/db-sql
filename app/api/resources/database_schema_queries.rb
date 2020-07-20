@@ -9,9 +9,8 @@ module Resources
       def load_database_schema_query
         query = DatabaseSchemaQuery.includes(:db_servers).find(params[:id])
         error!('Database schema query not found', 302) unless query
-        unless query.public? || query.author_id == current_user.id
-          error!('Invalid permission for this database schema query', 401)
-        end
+
+        authorize query, :show?
 
         @database_schema_query = query
       end
@@ -25,6 +24,8 @@ module Resources
         optional(:db_type, type: Symbol, default: %i[psql mysql mariadb], values: %i[psql mysql mariadb], desc: 'db type')
       end
       get do
+        authorize DatabaseSchemaQuery, :index?
+
         escaped_id = ActiveRecord::Base.connection.quote(current_user.id)
         order_query = Arel.sql("is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC")
         present(
@@ -39,6 +40,8 @@ module Resources
 
       desc 'Get number of avlailable schema queries'
       get :counts do
+        authorize DatabaseSchemaQuery, :index?
+
         DbServer::DB_TYPES.map do |db_type|
           [db_type, DatabaseSchemaQuery.available(db_type, current_user).count]
         end.to_h
@@ -53,6 +56,8 @@ module Resources
         requires(:query, type: String, desc: 'database schema query')
       end
       post do
+        authorize DatabaseSchemaQuery, :create?
+
         schema_query = DatabaseSchemaQuery.create(
           author_id: current_user.id,
           name: params[:name],
@@ -67,6 +72,8 @@ module Resources
       desc 'Get the default database schema queries'
       route_setting :auth, disabled: true
       get :default do
+        authorize DatabaseSchemaQuery, :index?
+
         present(
           DbServer::DB_TYPES.map do |db_type|
             DatabaseSchemaQuery.default(db_type)
@@ -83,9 +90,8 @@ module Resources
 
         desc 'Delete a database schema query'
         delete do
-          unless database_schema_query.author_id == current_user.id
-            error!('No permission to delete this query', 401)
-          end
+          authorize database_schema_query, :destroy?
+
           begin
             database_schema_query.destroy!
           rescue StandardError
@@ -104,9 +110,7 @@ module Resources
           end
         end
         put do
-          unless database_schema_query.author_id == current_user.id
-            error!('No permission to update this query', 401)
-          end
+          authorize database_schema_query, :update?
 
           change = ActionController::Parameters.new(params[:data])
           database_schema_query.update!(
@@ -122,7 +126,7 @@ module Resources
 
         desc 'make default'
         post :make_default do
-          error!("No permission", 401) unless current_user.admin?
+          authorize database_schema_query, :change_default?
 
           begin
             database_schema_query.make_default!

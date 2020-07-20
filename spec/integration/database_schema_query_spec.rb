@@ -268,7 +268,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         headers: @user_a_headers
       )
       expect(response.successful?).to be_falsey
-      expect(response.status).to be(401)
+      expect(response.status).to be(403)
       expect(DatabaseSchemaQuery.default(:psql).id).to eq(@default_psql.id)
     end
 
@@ -323,7 +323,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         headers: @user_b_headers
       )
       expect(response.successful?).to be_falsey
-      expect(response.status).to eq(401)
+      expect(response.status).to eq(403)
     end
   end
 
@@ -360,7 +360,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         }
       )
       expect(response.successful?).to be_falsey
-      expect(response.status).to eq(401)
+      expect(response.status).to eq(403)
       expect(@q1.description).to be_nil
     end
   end
@@ -443,7 +443,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         headers: @user_b_headers
       )
       expect(response.successful?).to be_falsey
-      expect(response.status).to eq(401)
+      expect(response.status).to eq(403)
       expect(DatabaseSchemaQuery.find_by(id: q.id)).not_to be_nil
     ensure
       q.destroy!
