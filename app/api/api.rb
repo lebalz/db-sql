@@ -20,6 +20,8 @@ class API < Grape::API
   formatter :json, JsonFormatter
 
   include ErrorHandling
+  helpers Pundit
+
 
   # This before block has to be run after the route error handling blocks
   before do
