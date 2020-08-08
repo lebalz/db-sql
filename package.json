@@ -39,7 +39,7 @@
     "mobx-react-router": "4.1.0",
     "mobx-utils": "^5.5.6",
     "morgan": "^1.9.1",
-    "prismjs": "^1.20.0",
+    "prismjs": "^1.21.0",
     "prop-types": "^15.7.2",
     "rc-slider": "^9.2.4",
     "react": "^16.13.0",
