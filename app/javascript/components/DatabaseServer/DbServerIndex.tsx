@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Menu, Icon } from 'semantic-ui-react';
+import { Button, Menu, Icon, Dimmer, Loader } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
@@ -48,6 +48,10 @@ export default class DbServerIndex extends React.Component<Props> {
         style={{ paddingLeft: '1em' }}
       >
         {loadedDbServers.map((dbServer, i) => {
+          if (!dbServer) {
+            console.log('got printed')
+            return <Menu.Item key={i}><Loader indeterminate content="Loading..." /></Menu.Item>
+          }
           return (
             <Menu.Item
               key={i}

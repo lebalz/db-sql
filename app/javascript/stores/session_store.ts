@@ -62,6 +62,8 @@ const isLoginRequired = (pathname: string) => {
 class SessionStore implements Store {
   @observable private user: User | null = null;
   @observable emailOfLastLoginAttempt?: string;
+  @observable initialized = false;
+
   browserHistory = createBrowserHistory();
   history: SynchronizedHistory;
   @observable loginState: LoginRequestState = { state: ApiRequestState.None, message: '' };
@@ -72,9 +74,10 @@ class SessionStore implements Store {
 
   constructor(root: RootStore, routerStore: RouterStore) {
     this.root = root;
+
     this.history = syncHistoryWithStore(this.browserHistory, routerStore);
     this.history.subscribe(this.onRouteChange);
-    reaction(
+    const initDisposer = reaction(
       () => this.root.initialized,
       () => {
         this.setCurrentUser(this.fetchFromLocalStorage);
@@ -93,6 +96,8 @@ class SessionStore implements Store {
             return Promise.reject(error);
           }
         );
+        this.initialized = true;
+        initDisposer();
       }
     );
     reaction(

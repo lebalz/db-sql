@@ -72,8 +72,8 @@ class DbServerStore implements Store {
   private state = new State();
 
   loginDisposer: IReactionDisposer;
-  dbIndexLoader: IReactionDisposer;
-  currentDbLoader: IReactionDisposer;
+  dbIndexLoader?: IReactionDisposer;
+  currentDbLoader?: IReactionDisposer;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -86,47 +86,55 @@ class DbServerStore implements Store {
         }
       }
     );
-
-    // load the database index if it is not loaded
-    this.dbIndexLoader = reaction(
-      () => this.state.activeDbServerId,
-      (activeDbServerId) => {
-        if (activeDbServerId) {
-          this.loadDatabaseIndex(activeDbServerId);
-        }
-      }
-    );
-
-    // load the current database if it is not loaded
-    this.currentDbLoader = reaction(
-      () => this.activeDbServer?.activeDatabaseKey,
-      (activeDatabaseKey) => {
-        if (activeDatabaseKey) {
-          const { activeDbServerId } = this.state;
-          if (this.activeDatabase(activeDbServerId)) {
-            return;
+    const initDisposer = reaction(
+      () => this.root.session.initialized,
+      () => {
+    
+        // load the database index if it is not loaded
+        this.dbIndexLoader = reaction(
+          () => this.state.activeDbServerId,
+          (activeDbServerId) => {
+            if (activeDbServerId) {
+              this.loadDatabaseIndex(activeDbServerId);
+            }
           }
-
-          const dbName = this.state.activeDatabase.get(activeDbServerId);
-          if (dbName) {
-            this.loadDatabase(activeDbServerId, dbName).then((db) => {
-              if (!db) {
+        );
+    
+        // load the current database if it is not loaded
+        this.currentDbLoader = reaction(
+          () => this.activeDbServer?.activeDatabaseKey,
+          (activeDatabaseKey) => {
+            if (activeDatabaseKey) {
+              const { activeDbServerId } = this.state;
+              if (this.activeDatabase(activeDbServerId)) {
                 return;
               }
-              const tasks = this.state.onDatabaseLoaded.get(db.id)?.slice() ?? [];
-              this.state.onDatabaseLoaded.delete(db.id);
-              tasks.forEach((task) => task(db));
-            });
+    
+              const dbName = this.state.activeDatabase.get(activeDbServerId);
+              if (dbName) {
+                this.loadDatabase(activeDbServerId, dbName).then((db) => {
+                  if (!db) {
+                    return;
+                  }
+                  const tasks = this.state.onDatabaseLoaded.get(db.id)?.slice() ?? [];
+                  this.state.onDatabaseLoaded.delete(db.id);
+                  tasks.forEach((task) => task(db));
+                });
+              }
+            }
           }
-        }
+        );
+        initDisposer();
       }
-    );
+    )
+
+    
   }
 
   componentWillUnmount() {
     this.loginDisposer();
-    this.dbIndexLoader();
-    this.currentDbLoader();
+    this.dbIndexLoader && this.dbIndexLoader();
+    this.currentDbLoader && this.currentDbLoader();
   }
 
   databaseTreeViewFilter(dbServerId: string): string {
