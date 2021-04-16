@@ -67,7 +67,7 @@ export default class SqlQuery extends Sql {
   }
 
   @computed
-  get changeablProps(): ChangeableProps {
+  get changeableProps(): ChangeableProps {
     return {
       is_private: this.isPrivate,
       is_favorite: this.isFavorite
@@ -77,7 +77,7 @@ export default class SqlQuery extends Sql {
   @computed
   get isDirty(): boolean {
     return Object.values(Changeable).some((val) => {
-      return this.changeablProps[val] !== this.pristineState[val];
+      return this.changeableProps[val] !== this.pristineState[val];
     });
   }
 

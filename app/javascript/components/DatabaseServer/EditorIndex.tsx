@@ -16,7 +16,7 @@ interface InjectedProps extends Props {
 
 @inject('routerStore')
 @observer
-export default class QueryIndex extends React.Component<Props> {
+export default class EditorIndex extends React.Component<Props> {
   get injected() {
     return this.props as InjectedProps;
   }

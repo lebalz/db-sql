@@ -319,7 +319,7 @@ class GroupStore implements Store {
     if (!group.isDirty || !group.isPersisted) {
       return;
     }
-    update(group.id, group.changeablProps)
+    update(group.id, group.changeableProps)
       .then(({ data }) => {
         this.state.joinedGroups.remove(group);
         this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, data));

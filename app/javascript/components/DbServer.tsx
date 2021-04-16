@@ -10,7 +10,7 @@ import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
 import DbServerIndex from './DatabaseServer/DbServerIndex';
 import { Dimmer, Loader, Segment, Button, Header, Icon } from 'semantic-ui-react';
-import QueryIndex from './DatabaseServer/QueryIndex';
+import EditorIndex from './DatabaseServer/EditorIndex';
 import Query from './DatabaseServer/Query/Query';
 
 interface MatchParams {
@@ -115,7 +115,7 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           ) : (
             <Fragment>
               <Segment>
-                <QueryIndex queries={activeDbServer?.queries ?? []} />
+                <EditorIndex queries={activeDbServer?.queries ?? []} />
                 {query && <Query query={query} />}
               </Segment>
             </Fragment>

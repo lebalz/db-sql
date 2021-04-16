@@ -108,7 +108,7 @@ export default class SchemaQuery extends Sql {
   }
 
   @computed
-  get changeablProps(): ChangeableProps {
+  get changeableProps(): ChangeableProps {
     return {
       query: this.query,
       name: this.name,
@@ -121,7 +121,7 @@ export default class SchemaQuery extends Sql {
   get updateProps(): UpdateProps {
     return {
       id: this.id,
-      ...this.changeablProps
+      ...this.changeableProps
     };
   }
 
@@ -129,7 +129,7 @@ export default class SchemaQuery extends Sql {
   get createProps(): CreateProps {
     return {
       db_type: this.dbType,
-      ...this.changeablProps
+      ...this.changeableProps
     };
   }
 
@@ -139,7 +139,7 @@ export default class SchemaQuery extends Sql {
       return true;
     }
     return Object.values(Changeable).some((val) => {
-      return this.changeablProps[val] !== this.pristineState[val];
+      return this.changeableProps[val] !== this.pristineState[val];
     });
   }
 }

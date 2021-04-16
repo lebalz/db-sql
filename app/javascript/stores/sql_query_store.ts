@@ -77,7 +77,7 @@ class SqlQueryStore implements Store {
     if (!sqlQuery.isDirty) {
       return;
     }
-    update(sqlQuery.id, sqlQuery.changeablProps).then(({ data }) => {
+    update(sqlQuery.id, sqlQuery.changeableProps).then(({ data }) => {
       this.addSqlQuery(data);
     });
   }

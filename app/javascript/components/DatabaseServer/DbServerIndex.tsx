@@ -49,7 +49,6 @@ export default class DbServerIndex extends React.Component<Props> {
       >
         {loadedDbServers.map((dbServer, i) => {
           if (!dbServer) {
-            console.log('got printed')
             return <Menu.Item key={i}><Loader indeterminate content="Loading..." /></Menu.Item>
           }
           return (
