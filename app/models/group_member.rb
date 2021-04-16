@@ -4,14 +4,14 @@
 #
 # Table name: group_members
 #
-#  id                   :bigint           not null
+#  id                   :bigint           not null, primary key
 #  crypto_key_encrypted :string
 #  is_admin             :boolean          default(FALSE), not null
 #  is_outdated          :boolean          default(FALSE), not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
-#  group_id             :uuid             not null, primary key
-#  user_id              :uuid             not null, primary key
+#  group_id             :uuid             not null
+#  user_id              :uuid             not null
 #
 # Indexes
 #

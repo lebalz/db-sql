@@ -397,6 +397,7 @@ DEPENDENCIES
   pry-doc
   pry-rails
   puma (~> 5.2.2)
+  pundit
   rack-cors
   rails (~> 6.1.3)
   redis
