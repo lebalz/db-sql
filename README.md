@@ -50,7 +50,7 @@ bundle exec rails db:drop db:setup
 
 Rails is expected to run on port `3000`. Start it with
 ```sh
-bundle exec rails start
+bundle exec rails server
 ```
 and visit [http://localhost:3000](http://localhost:3000)
 

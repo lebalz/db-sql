@@ -4,6 +4,7 @@
 #
 # Table name: group_members
 #
+#  id                   :bigint           not null
 #  crypto_key_encrypted :string
 #  is_admin             :boolean          default(FALSE), not null
 #  is_outdated          :boolean          default(FALSE), not null
@@ -14,8 +15,9 @@
 #
 # Indexes
 #
-#  index_group_members_on_group_id  (group_id)
-#  index_group_members_on_user_id   (user_id)
+#  index_group_members_on_group_id              (group_id)
+#  index_group_members_on_user_id               (user_id)
+#  index_group_members_on_user_id_and_group_id  (user_id,group_id) UNIQUE
 #
 # Foreign Keys
 #
@@ -24,7 +26,6 @@
 #
 class GroupMember < ApplicationRecord
   self.table_name = 'group_members'
-  self.primary_keys = [ :user_id, :group_id ]
 
   belongs_to :user
   belongs_to :group
@@ -35,6 +36,14 @@ class GroupMember < ApplicationRecord
 
   def outdated?
     is_outdated
+  end
+
+  def destroy
+    self.class.where(user: user, group: group).first.destroy
+  end
+
+  def destroy!
+    self.class.where(user: user, group: group).first.destroy!
   end
 
   # @param private_key [OpenSSL::PKey::RSA]

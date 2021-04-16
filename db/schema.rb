@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_06_13_181612) do
+ActiveRecord::Schema.define(version: 2021_04_16_071527) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -52,7 +52,7 @@ ActiveRecord::Schema.define(version: 2020_06_13_181612) do
     t.index ["user_id"], name: "index_db_servers_on_user_id"
   end
 
-  create_table "group_members", primary_key: ["user_id", "group_id"], force: :cascade do |t|
+  create_table "group_members", force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "group_id", null: false
     t.string "crypto_key_encrypted"
@@ -61,6 +61,7 @@ ActiveRecord::Schema.define(version: 2020_06_13_181612) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["group_id"], name: "index_group_members_on_group_id"
+    t.index ["user_id", "group_id"], name: "index_group_members_on_user_id_and_group_id", unique: true
     t.index ["user_id"], name: "index_group_members_on_user_id"
   end
 

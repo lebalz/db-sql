@@ -24,7 +24,7 @@ interface InjectedDbItemPorps extends DatabaseItemProps {
 @observer
 export default class DatabaseItem extends React.Component<DatabaseItemProps> {
   itemRef = React.createRef<HTMLDivElement>();
-  contextMenuRef = React.createRef();
+  contextMenuRef = React.createRef<HTMLElement>();
 
   get injected() {
     return this.props as InjectedDbItemPorps;

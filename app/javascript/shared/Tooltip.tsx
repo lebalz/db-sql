@@ -32,8 +32,8 @@ class Tooltip extends React.Component<Props> {
     return (
       <Popup
         trigger={this.props.children}
+        popperModifiers={[{ preventOverflow: { boundariesElement: 'offsetParent' } }]}
         content={this.props.content}
-        popperModifiers={{ preventOverflow: { boundariesElement: 'offsetParent' } }}
         position={this.props.position}
         mouseEnterDelay={this.props.delayed ? DISPLAY_DELAY : 0}
         {...this.props.popupProps}

@@ -16,7 +16,7 @@ export default class SchemaQueryProps extends React.Component<Props> {
   onChangeName = (event: SyntheticEvent<HTMLInputElement>, data: InputOnChangeData) => {
     event.preventDefault();
     if (this.selectedSchemaQuery) {
-      this.selectedSchemaQuery.name = data.value;
+      this.selectedSchemaQuery._name = data.value;
     }
   };
 

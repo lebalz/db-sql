@@ -4,18 +4,18 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '2.7.1'
 gem 'sassc-rails'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.3'
-gem 'pg', '~> 0.18'
-gem 'mysql2', '~>0.5.2'
+gem 'rails', '~> 6.1.3'
+gem 'pg', '~> 1.1'
+gem 'mysql2', '~>0.5.3'
 
 # Use Puma as the app server
-gem 'puma', '~> 4.3'
+gem 'puma', '~> 5.2.2'
 
 gem 'redis'
 gem 'hiredis'
 gem 'turbolinks', '~> 5'
 # Use ActiveModel has_secure_password
-gem 'bcrypt', '~> 3.1.7'
+gem 'bcrypt', '~> 3.1.16'
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possibls
 gem 'rack-cors', require: 'rack/cors'
@@ -35,19 +35,16 @@ gem 'grape-entity'
 gem 'sidekiq'
 
 gem 'semantic-ui-sass'
-gem 'webpacker', '~>4.2.2'
+gem 'webpacker', '~>5.2.1'
 
 # Reduces boot times through caching; required in config/boot.rb
-gem 'bootsnap', '>= 1.4.2', require: false
+gem 'bootsnap', '>= 1.7.3', require: false
 
 # Character encoding detection
 # gem 'charlock_holmes'
 
 # run tests from github
 gem 'travis'
-
-# support composite primary keys, e.g. for group members
-gem 'composite_primary_keys', '~> 12'
 
 group :development, :test do
   gem 'pry'
@@ -64,24 +61,24 @@ group :development, :test do
   gem 'solargraph'
 
   # for vscode-development
-  gem 'ruby-debug-ide', '~>0.7.1.beta3'
-  gem 'debase', '~>0.2.5.beta1'
+  gem 'ruby-debug-ide', '~>0.7.2'
+  gem 'debase', '~>0.2.5.beta2'
 
   gem 'factory_bot_rails'
 
   gem 'database_cleaner'
 
   # Dokku currently does not suppoert sqlite3
-  gem 'sqlite3', '~> 1.3.6'
+  gem 'sqlite3', '~> 1.4.2'
 end
 
 group :development do
   gem 'rubocop'
 
-  gem 'listen', '>= 3.0.5', '< 3.2'
+  gem 'listen'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
-  gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'spring-watcher-listen', '~> 2.0.1'
 
   # Annotate Rails classes with schema and routes info
   gem 'annotate'

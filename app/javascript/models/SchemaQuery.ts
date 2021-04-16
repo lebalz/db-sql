@@ -26,7 +26,7 @@ export default class SchemaQuery extends Sql {
   readonly stats: DatabaseSchemaQueryStats;
   readonly orderPosition: number;
 
-  @observable name: string;
+  @observable _name: string;
   @observable description?: string;
   @observable isPrivate: boolean;
   @observable query: string;
@@ -42,7 +42,7 @@ export default class SchemaQuery extends Sql {
     this.isPersisted = persisted;
     this.schemaQueryStore = store;
     this.id = props.id;
-    this.name = props.name;
+    this._name = props.name;
     this.description = props.description;
     this.isDefault = props.is_default;
     this.createdAt = new Date(props.created_at);
@@ -69,12 +69,16 @@ export default class SchemaQuery extends Sql {
   get canEdit(): boolean {
     return this.schemaQueryStore.canEdit(this);
   }
+  @computed
+  get name() {
+    return this._name;
+  }
 
   @action
   restore() {
     this.isPrivate = this.pristineState.is_private;
     this.query = this.pristineState.query;
-    this.name = this.pristineState.name;
+    this._name = this.pristineState.name;
     this.description = this.pristineState.description;
   }
 

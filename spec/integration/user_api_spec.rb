@@ -172,7 +172,7 @@ RSpec.describe "API::Resources::User" do
         )
         expect(response.successful?).to be_falsey
         expect(response.status).to be(400)
-        expect(json['email'][0]).to eq('is invalid')
+        expect(json['error']['email'][0]).to eq('is invalid')
       end
     end
     context 'short password' do
@@ -185,7 +185,7 @@ RSpec.describe "API::Resources::User" do
         )
         expect(response.successful?).to be_falsey
         expect(response.status).to be(400)
-        expect(json['password'][0]).to eq('is too short (minimum is 8 characters)')
+        expect(json['error']['password'][0]).to eq('is too short (minimum is 8 characters)')
       end
     end
     context 'long password' do
@@ -210,7 +210,7 @@ RSpec.describe "API::Resources::User" do
         )
         expect(response.successful?).to be_falsey
         expect(response.status).to be(400)
-        expect(json['password'][0]).to eq('is too long (maximum is 72 characters)')
+        expect(json['error']['password'][0]).to eq('is too long (maximum is 72 characters)')
       end
     end
   end

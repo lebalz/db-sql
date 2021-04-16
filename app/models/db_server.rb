@@ -172,7 +172,7 @@ class DbServer < ApplicationRecord
     # don't let a user connect to the servers localhost
     db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
     unless @connection.connected?(@conn_key)
-      @connection.establish_connection(
+      @connection.establish_connection({
         as: :hash,
         adapter: DEFAULT_AR_DB_ADAPTER[db_type],
         host: db_host,
@@ -184,7 +184,7 @@ class DbServer < ApplicationRecord
         flags: ["MULTI_STATEMENTS"],
         sslmode: :prefer,
         **db_specific_connection_options
-      )
+      }, owner_name: @conn_key)
     end
     @active_connection = @connection.retrieve_connection(@conn_key)
     yield(@active_connection)
@@ -205,7 +205,7 @@ class DbServer < ApplicationRecord
   def close_connection
     # ActiveRecord::ConnectionAdapters::ConnectionHandler#remove_connection
     # will close active connection and the defined connection
-    @connection&.remove_connection(@conn_key)
+    @connection&.remove_connection_pool(@conn_key)
     @connection = @conn_key = @active_connection = nil
   end
 
