@@ -42,6 +42,15 @@ class SqlQueryStore implements Store {
     { keepAlive: true }
   );
 
+  findBy = computedFn(
+    function (this: SqlQueryStore, dbServerId: string, dbName: string): SqlQuery[] {
+      if (!dbServerId || !dbName) {
+        return [];
+      }
+      return this.state.sqlQueries.filter((q) => q.dbServerId === dbServerId && q.dbName === dbName);
+    }
+  );
+
   @action
   setSelectedSqlQueryId(id: string | undefined) {
     this.state.selectedQueryId = id;

@@ -12,6 +12,7 @@ import DbServerIndex from './DatabaseServer/DbServerIndex';
 import { Dimmer, Loader, Segment, Button, Header, Icon } from 'semantic-ui-react';
 import EditorIndex from './DatabaseServer/EditorIndex';
 import Query from './DatabaseServer/Query/Query';
+import QueryIndex from './DatabaseServer/QueryIndex';
 
 interface MatchParams {
   id: string;
@@ -116,6 +117,9 @@ export default class DbServer extends React.Component<DbConnectionProps> {
             <Fragment>
               <Segment>
                 <EditorIndex editors={activeDbServer?.queries ?? []} />
+                {activeDbServer && activeDbServer.activeDatabaseName && (
+                <QueryIndex dbServerId={activeDbServer.id} dbName={activeDbServer.activeDatabaseName} />
+                )} 
                 {query && <Query query={query} />}
               </Segment>
             </Fragment>
