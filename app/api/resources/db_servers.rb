@@ -222,6 +222,7 @@ module Resources
 
             db_server.increment!(:query_count, 1)
             db_server.owner.touch
+            query = SqlQuery.new(db_server: db_server, user: current_user, db_name: db_name)
             result = db_server.exec_query(key: crypto_key, database_name: db_name) do
               params[:query]
             end

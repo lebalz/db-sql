@@ -33,7 +33,6 @@ class SqlQuery < ApplicationRecord
 
   QUERY_COUNT_PER_SERVER_AND_USER = 100
 
-
   def valid_query?
     is_valid
   end
@@ -44,6 +43,9 @@ class SqlQuery < ApplicationRecord
 
   def query=(value)
     @query = value
+    if self.raw_query.attached?
+      self.raw_query.purge
+    end
     self.raw_query.attach(
       io: StringIO.new(value),
       filename: "query_#{Time.now.to_i}.sql",

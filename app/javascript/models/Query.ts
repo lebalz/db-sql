@@ -35,7 +35,7 @@ export const PlaceholderQuery = (dbName: string) => {
 };
 type QueryResult = MultiResult | RawResult;
 export default class Query extends Sql {
-  readonly database: Database;
+  readonly _database: Database;
   readonly id: number;
   @observable requestState: REST = REST.None;
   @observable query: string = '';
@@ -51,8 +51,13 @@ export default class Query extends Sql {
 
   constructor(database: Database, id: number) {
     super();
-    this.database = database;
+    this._database = database;
     this.id = id;
+  }
+
+  @computed
+  get database(): Database {
+    return this._database;
   }
 
   @computed
