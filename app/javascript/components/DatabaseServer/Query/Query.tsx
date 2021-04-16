@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import _ from 'lodash';
 import SqlEditor from './SqlEditor';
 import SqlResults from '../SqlResults';
-import { default as QueryModel } from '../../../models/Query';
+import { default as QueryModel } from '../../../models/QueryEditor';
 import { REST } from '../../../declarations/REST';
 import Slider from '../../../shared/Slider';
 import { ResultType } from '../../../models/Result';

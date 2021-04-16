@@ -29,12 +29,12 @@ function identifyCommands(queryText: string) {
 }
 
 export const PlaceholderQuery = (dbName: string) => {
-  const query = new Query({ name: dbName } as Database, -1);
+  const query = new QueryEditor({ name: dbName } as Database, -1);
   query.requestState = REST.Requested;
   return query;
 };
 type QueryResult = MultiResult | RawResult;
-export default class Query extends Sql {
+export default class QueryEditor extends Sql {
   readonly _database: Database;
   readonly id: number;
   @observable requestState: REST = REST.None;
@@ -102,7 +102,7 @@ export default class Query extends Sql {
   }
 
   createCopyFor(database: Database) {
-    const copy = new Query(database, this.id);
+    const copy = new QueryEditor(database, this.id);
     copy.query = this.query;
     copy.proceedAfterError = this.proceedAfterError;
     copy.executionMode = this.executionMode;

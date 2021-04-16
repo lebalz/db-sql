@@ -17,7 +17,7 @@ import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
 import { ApiRequestState } from './session_store';
 import Database from '../models/Database';
-import Query, { PlaceholderQuery } from '../models/Query';
+import QueryEditor, { PlaceholderQuery } from '../models/QueryEditor';
 import { computedFn } from 'mobx-utils';
 
 export enum LoadState {
@@ -316,7 +316,7 @@ class DbServerStore implements Store {
     return this.state.databases.get(dbServerId) ?? new Map();
   }
 
-  queries(dbServerId: string): Query[] {
+  queries(dbServerId: string): QueryEditor[] {
     const dbMap = this.loadedDatabaseMap(dbServerId);
     const queries = _.flatten(Array.from(dbMap, ([_, db]) => db.queries));
 

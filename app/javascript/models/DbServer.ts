@@ -5,7 +5,7 @@ import Database from './Database';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
-import Query from './Query';
+import QueryEditor from './QueryEditor';
 import DbTable from './DbTable';
 import SchemaQuery from './SchemaQuery';
 import SchemaQueryStore from '../stores/schema_query_store';
@@ -221,7 +221,7 @@ export default class DbServer {
   }
 
   @computed
-  get queries(): Query[] {
+  get queries(): QueryEditor[] {
     return this.dbServerStore.queries(this.id);
   }
 

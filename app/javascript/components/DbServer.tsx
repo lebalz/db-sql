@@ -115,7 +115,7 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           ) : (
             <Fragment>
               <Segment>
-                <EditorIndex queries={activeDbServer?.queries ?? []} />
+                <EditorIndex editors={activeDbServer?.queries ?? []} />
                 {query && <Query query={query} />}
               </Segment>
             </Fragment>

@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { ResultState } from '../../api/db_server';
 import { computed, action } from 'mobx';
 import { SqlResult } from './SqlResult/SqlResult';
-import Query from '../../models/Query';
+import QueryEditor from '../../models/QueryEditor';
 import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react/dist/commonjs/generic';
 import Tooltip from '../../shared/Tooltip';
 import { PrismCode } from './SqlResult/PrismCode';
@@ -15,7 +15,7 @@ import { TableData, CopyState } from '../../models/Result';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 interface Props {
-  query: Query;
+  query: QueryEditor;
 }
 
 interface InjectedProps extends Props {

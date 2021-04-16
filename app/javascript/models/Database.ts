@@ -3,7 +3,7 @@ import { Database as DatabaseProps } from '../api/db_server';
 import _ from 'lodash';
 import DbServer from './DbServer';
 import DbTable from './DbTable';
-import Query from './Query';
+import QueryEditor from './QueryEditor';
 import DbSchema from './DbSchema';
 import DbColumn from './DbColumn';
 
@@ -12,7 +12,7 @@ export default class Database {
   readonly name: string;
   readonly dbServerId: string;
   readonly schemas: DbSchema[];
-  queries = observable<Query>([]);
+  queries = observable<QueryEditor>([]);
   @observable activeQueryId: number = 1;
 
   @observable show: boolean = false;
@@ -39,7 +39,7 @@ export default class Database {
   }
 
   @action
-  replaceQuery(query: Query) {
+  replaceQuery(query: QueryEditor) {
     const oldQuery = this.queries.find((q) => q.id === query.id);
     if (oldQuery) {
       this.queries.remove(oldQuery);
@@ -102,8 +102,8 @@ export default class Database {
   }
 
   @action
-  addQuery(): Query {
-    const query = new Query(this, this.nextQueryId);
+  addQuery(): QueryEditor {
+    const query = new QueryEditor(this, this.nextQueryId);
     this.queries.push(query);
     this.setActiveQuery(query.id);
     return query;
@@ -140,7 +140,7 @@ export default class Database {
   }
 
   @action
-  removeQuery(query: Query) {
+  removeQuery(query: QueryEditor) {
     const idx = this.queries.indexOf(query);
     if (idx >= 0) {
       this.queries.remove(query);
