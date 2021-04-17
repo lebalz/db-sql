@@ -29,8 +29,7 @@ module Resources
       get do
         authorize Group, :index?
 
-        groups = policy_scope(Group).includes(:group_members, :db_servers,
-                                              :users)
+        groups = current_user.groups
         Group.update_outdated_group_members(user: current_user,
                                             pkey: current_user.private_key(crypto_key))
         present(
