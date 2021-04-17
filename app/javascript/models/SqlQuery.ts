@@ -3,7 +3,7 @@ import _ from 'lodash';
 import SqlQueryStore from '../stores/sql_query_store';
 import DbServerStore from '../stores/db_server_store';
 import UserStore from '../stores/user_store';
-import { SqlQuery as SqlQueryProps, ChangeableProps, Changeable, update } from '../api/sql_query';
+import { SqlQuery as SqlQueryProps, ChangeableProps, Changeable, update, SqlError } from '../api/sql_query';
 import DbServer, { DbType } from './DbServer';
 import { OwnerType } from '../api/db_server';
 import Sql from './Sql';
@@ -24,6 +24,8 @@ export default class SqlQuery extends Sql {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly isValid: boolean;
+  readonly errors: SqlError[];
+  readonly execTime?: number;
   @observable isPrivate: boolean;
   @observable isFavorite: boolean;
   readonly pristineState: ChangeableProps;
@@ -47,6 +49,8 @@ export default class SqlQuery extends Sql {
     this.createdAt = new Date(props.created_at);
     this.updatedAt = new Date(props.updated_at);
     this.isValid = props.is_valid;
+    this.execTime = props.exec_time;
+    this.errors = props.error;
 
     this.isPrivate = props.is_private;
     this.isFavorite = props.is_favorite;
@@ -54,6 +58,11 @@ export default class SqlQuery extends Sql {
       is_private: props.is_private,
       is_favorite: props.is_favorite
     };
+  }
+
+  @computed
+  get scope() {
+    return `${this.dbServerId}-${this.dbName}`;
   }
 
   @action
@@ -113,9 +122,8 @@ export default class SqlQuery extends Sql {
 
   @computed
   get ownerId(): string | undefined {
-    return this.dbServer?.ownerId
+    return this.dbServer?.ownerId;
   }
-
 
   @computed
   get isOwner(): boolean {
@@ -155,10 +163,15 @@ export default class SqlQuery extends Sql {
     this.dbServerStore.routeToDbServer(this.dbServerId, { dbName: this.dbName });
   }
 
-  // @computed
-  // get lineCount(): number {
-  //   return this.query.match(LINE_MATCHER)?.length ?? 0;
-  // }
+  @action
+  insertInEditor() {
+    if (this.database && this.database.activeQuery) {
+      const newContent = `${this.database.activeQuery.query}${
+        this.database.activeQuery.query.length > 0 ? '\n' : ''
+      }${this.query}`;
+      this.database.activeQuery.onSqlChange(newContent, this.database.activeQuery.lineCount);
+    }
+  }
 
   onSqlChange(_value: string, lineCount: number) {
     this.lineCount = lineCount;

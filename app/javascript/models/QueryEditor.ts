@@ -12,30 +12,19 @@ import Sql from './Sql';
 import { ResultType, TableData } from './Result';
 import RawResult from './Results/RawResult';
 import MultiResult from './Results/MultiResult';
+import SqlQueryStore from '../stores/sql_query_store';
 
 const RAW_QUERY_THRESHOLD = 100;
 
-function identifyCommands(queryText: string) {
-  const inputStream = new ANTLRInputStream(queryText);
-  const lexer = new QuerySeparationGrammarLexer(inputStream);
-  const tokenStream = new CommonTokenStream(lexer);
-  const parser = new QuerySeparationGrammarParser(tokenStream);
-  const { children } = parser.queriesText();
-  if (!children) {
-    return [];
-  }
-
-  return children.map((child) => child.text.trim()).slice(0, -1);
-}
-
 export const PlaceholderQuery = (dbName: string) => {
-  const query = new QueryEditor({ name: dbName } as Database, -1);
+  const query = new QueryEditor({} as SqlQueryStore, { name: dbName } as Database, -1);
   query.requestState = REST.Requested;
   return query;
 };
 export type QueryResult = MultiResult | RawResult;
 export default class QueryEditor extends Sql {
   readonly _database: Database;
+  readonly sqlStore: SqlQueryStore;
   readonly id: number;
   @observable requestState: REST = REST.None;
   @observable query: string = '';
@@ -49,8 +38,9 @@ export default class QueryEditor extends Sql {
 
   cancelToken: CancelTokenSource = axios.CancelToken.source();
 
-  constructor(database: Database, id: number) {
+  constructor(sqlQueryStore: SqlQueryStore, database: Database, id: number) {
     super();
+    this.sqlStore = sqlQueryStore;
     this._database = database;
     this.id = id;
   }
@@ -102,7 +92,7 @@ export default class QueryEditor extends Sql {
   }
 
   createCopyFor(database: Database) {
-    const copy = new QueryEditor(database, this.id);
+    const copy = new QueryEditor(this.sqlStore, database, this.id);
     copy.query = this.query;
     copy.proceedAfterError = this.proceedAfterError;
     copy.executionMode = this.executionMode;
@@ -184,21 +174,15 @@ export default class QueryEditor extends Sql {
   private runMultiQuery(): Promise<QueryResult[] | void> {
     this.requestState = REST.Requested;
     const rawInput = this.query;
-    const t0 = Date.now();
-    const queries = identifyCommands(rawInput);
-    console.log('Time to parse: ', (Date.now() - t0) / 1000.0);
-    return fetchQuery(
-      this.database.dbServerId,
-      this.database.name,
-      queries,
-      this.proceedAfterError,
-      this.cancelToken
-    )
-      .then(({ data }) => {
-        const results = data.map((res, idx) => new MultiResult(res, idx));
-        console.log('Got result: ', (Date.now() - t0) / 1000.0);
+    return this.sqlStore
+      .runMultiQuery(
+        this.query,
+        { id: this.database.dbServerId, name: this.database.name },
+        this.proceedAfterError
+      )
+      .then(({ queries, result }) => {
         this.queries.replace(queries);
-        this.results.replace(results);
+        this.results.replace(result);
         this.requestState = REST.Success;
         return this.results;
       })
@@ -210,16 +194,10 @@ export default class QueryEditor extends Sql {
   private runRawQuery(): Promise<QueryResult[] | void> {
     this.queries.clear();
     this.requestState = REST.Requested;
-    return rawQuery(this.database.dbServerId, this.database.name, this.query, this.cancelToken)
-      .then(({ data }) => {
-        if (data.state === ResultState.Error) {
-          this.results.replace([new RawResult(data, 0)]);
-        } else {
-          const results = data.result.map(
-            (res, idx) => new RawResult({ state: ResultState.Success, time: data.time, result: res }, idx)
-          );
-          this.results.replace(results);
-        }
+    return this.sqlStore
+      .runRawQuery(this.query, { id: this.database.dbServerId, name: this.database.name })
+      .then((result) => {
+        this.results.replace(result);
         this.requestState = REST.Success;
         return this.results;
       })

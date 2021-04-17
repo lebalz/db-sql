@@ -9,7 +9,7 @@ import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
 interface Props {
   code: string;
   plugins?: string[];
-  language: 'sql';
+  language: 'sql' | 'any';
   style?: React.CSSProperties;
 }
 

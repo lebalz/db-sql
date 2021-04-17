@@ -106,7 +106,7 @@ export default class Groups extends React.Component {
                   )}
                 </div>
                 <div style={{ flexGrow: 2, marginLeft: '1em' }}>
-                  <QueryLog basic={true} groupId={this.activeGroup.id} />
+                  <QueryLog basic groupId={this.activeGroup.id} />
                 </div>
               </div>
             </Fragment>

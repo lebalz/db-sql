@@ -100,6 +100,14 @@ export default class SqlQueryCard extends React.Component<Props> {
               color={this.sqlQuery.isValid ? 'green' : 'red'}
             />
           </Tooltip>
+          {this.sqlQuery.execTime && (
+            <Tooltip delayed position="top right" content={`Executed in ${this.sqlQuery.execTime}s`}>
+              <span>
+                <Icon className="centered" name="clock" color="black" />
+                {` ${this.sqlQuery.execTime.toFixed(2)}s`}
+              </span>
+            </Tooltip>
+          )}
           {!isBasic && (
             <Label
               content={this.sqlQuery.dbServerType}

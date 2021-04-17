@@ -13,7 +13,7 @@ import 'ace-builds/src-noconflict/snippets/mysql';
 import 'ace-builds/src-noconflict/snippets/pgsql';
 
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
-import { computed } from 'mobx';
+import { action, computed } from 'mobx';
 import Sql from '../../../models/Sql';
 import { DbType } from '../../../models/DbServer';
 

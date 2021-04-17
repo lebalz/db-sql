@@ -104,6 +104,10 @@ export default class DbServer {
     this.errorQueryCount += errorCount;
   }
 
+  newEditor(database: Database, queryId: number) {
+    return this.dbServerStore.requestQueryEditor(database, queryId);
+  }
+
   @computed
   get isActive(): boolean {
     return this.id === this.dbServerStore.activeDbServerId;

@@ -12,7 +12,7 @@ export default class Database {
   readonly name: string;
   readonly dbServerId: string;
   readonly schemas: DbSchema[];
-  queries = observable<QueryEditor>([]);
+  editors = observable<QueryEditor>([]);
   @observable activeQueryId: number = 1;
 
   @observable show: boolean = false;
@@ -40,11 +40,11 @@ export default class Database {
 
   @action
   replaceQuery(query: QueryEditor) {
-    const oldQuery = this.queries.find((q) => q.id === query.id);
+    const oldQuery = this.editors.find((q) => q.id === query.id);
     if (oldQuery) {
-      this.queries.remove(oldQuery);
+      this.editors.remove(oldQuery);
     }
-    this.queries.push(query);
+    this.editors.push(query);
   }
 
   @action
@@ -54,9 +54,9 @@ export default class Database {
 
   @action
   copyFrom(database: Database) {
-    this.queries.clear();
-    database.queries.forEach((query) => {
-      this.queries.push(query.createCopyFor(database));
+    this.editors.clear();
+    database.editors.forEach((query) => {
+      this.editors.push(query.createCopyFor(database));
     });
     this.activeQueryId = database.activeQueryId;
     this.show = database.show;
@@ -83,7 +83,7 @@ export default class Database {
 
   @computed
   get activeQuery() {
-    return this.queries.find((query) => query.id === this.activeQueryId);
+    return this.editors.find((query) => query.id === this.activeQueryId);
   }
 
   find(schemaName: string, tableName: string, columnName: string): DbColumn;
@@ -103,10 +103,10 @@ export default class Database {
 
   @action
   addQuery(): QueryEditor {
-    const query = new QueryEditor(this, this.nextQueryId);
-    this.queries.push(query);
-    this.setActiveQuery(query.id);
-    return query;
+    const editor = this.dbServer.newEditor(this, this.nextQueryId);
+    this.editors.push(editor);
+    this.setActiveQuery(editor.id);
+    return editor;
   }
 
   table(name: string): DbTable | undefined {
@@ -121,7 +121,7 @@ export default class Database {
   @action
   setShow(show: boolean) {
     this.show = show;
-    if (this.show && this.queries.length === 0) {
+    if (this.show && this.editors.length === 0) {
       this.addQuery();
     }
   }
@@ -133,17 +133,17 @@ export default class Database {
 
   @action
   setDefaultQueryActive() {
-    if (this.queries.length > 0) {
-      const lastQuery = this.queries[this.queries.length - 1];
+    if (this.editors.length > 0) {
+      const lastQuery = this.editors[this.editors.length - 1];
       this.setActiveQuery(lastQuery.id);
     }
   }
 
   @action
   removeQuery(query: QueryEditor) {
-    const idx = this.queries.indexOf(query);
+    const idx = this.editors.indexOf(query);
     if (idx >= 0) {
-      this.queries.remove(query);
+      this.editors.remove(query);
       query.cancel();
       if (idx > 0) {
         this.setActiveQuery(idx - 1);
@@ -163,6 +163,6 @@ export default class Database {
 
   @computed
   private get nextQueryId(): number {
-    return this.queries.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
+    return this.editors.reduce((maxId, query) => (maxId > query.id ? maxId : query.id), 0) + 1;
   }
 }

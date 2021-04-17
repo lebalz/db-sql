@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Label, Icon, TextArea } from 'semantic-ui-react';
+import { Label, Icon, TextArea, Message } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import Tooltip from '../../shared/Tooltip';
 import { computed } from 'mobx';
@@ -12,19 +12,17 @@ import DbServerStore from '../../stores/db_server_store';
 import { OwnerType } from '../../api/db_server';
 import ClickableIcon from '../../shared/ClickableIcon';
 import { PrismCode } from '../Workbench/SqlResult/PrismCode';
+import ViewStateStore from '../../stores/view_state_store';
 
 interface Props {
   sqlQuery: SqlQuery;
-  basic?: boolean;
 }
 
 interface InjectedProps extends Props {
-  sqlQueryStore: SqlQueryStore;
-  routerStore: RouterStore;
-  dbServerStore: DbServerStore;
+  viewStateStore: ViewStateStore;
 }
 
-@inject('sqlQueryStore', 'routerStore', 'dbServerStore')
+@inject('viewStateStore')
 @observer
 export default class SqlQueryPreview extends React.Component<Props> {
   get injected() {
@@ -38,83 +36,97 @@ export default class SqlQueryPreview extends React.Component<Props> {
 
   render() {
     const ownerType = this.sqlQuery.dbServerOwnerType;
-    const isBasic = this.props.basic === true;
     return (
-      <div key={this.sqlQuery.id} className="sql-query">
-        <div className="card-labels">
-          {!isBasic && (
-            <Fragment>
-              <Label content={this.sqlQuery.dbServerName} color="blue" basic size="mini" pointing="right" />
-              <Label
-                icon="database"
-                content={this.sqlQuery.dbName}
-                color="blue"
-                basic
-                size="mini"
-                as="a"
-                onClick={() => this.sqlQuery.showInEditor()}
+      <div
+        key={this.sqlQuery.id}
+        onMouseOver={() => {
+          this.injected.viewStateStore.cancelPreviewTimeout(this.sqlQuery.scope, this.sqlQuery.id);
+        }}
+        onMouseLeave={() => {
+          this.injected.viewStateStore.unsetPreviewQuery(this.sqlQuery.scope, this.sqlQuery.id);
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+          <div className="query-actions">
+            {(ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
+              <ClickableIcon
+                icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
+                color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
+                onClick={() => this.sqlQuery.toggleIsFavorite()}
               />
-            </Fragment>
-          )}
-          <div className="spacer" />
-          {((!isBasic && ownerType === OwnerType.User) ||
-            (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
-            <ClickableIcon
-              icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
-              color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
-              onClick={() => this.sqlQuery.toggleIsFavorite()}
-            />
-          )}
-          {!isBasic && ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
-            <ClickableIcon
-              icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
-              onClick={() => this.sqlQuery.toggleIsPrivate()}
-              tooltip={
-                this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'
-              }
-              delayed
-              tooltipPosition="top right"
-            />
-          )}
-          {!isBasic && ownerType && (
+            )}
+            {(ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
+              <ClickableIcon
+                icon={this.sqlQuery.isValid ? 'play' : 'edit'}
+                color={this.sqlQuery.isValid ? 'green' : 'blue'}
+                tooltip="Insert in the Editor"
+                onClick={() => this.sqlQuery.insertInEditor()}
+              />
+            )}
+            {ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
+              <ClickableIcon
+                icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
+                onClick={() => this.sqlQuery.toggleIsPrivate()}
+                tooltip={
+                  this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'
+                }
+                delayed
+                tooltipPosition="top right"
+              />
+            )}
+          </div>
+          <div className="query-labels">
+            {ownerType && (
+              <Tooltip
+                delayed
+                position="top right"
+                content={
+                  ownerType === OwnerType.Group
+                    ? 'Executed on a shared db connection'
+                    : 'Executed on a personal db connection'
+                }
+              >
+                <Icon className="centered" name={ownerType === OwnerType.Group ? 'group' : 'user'} />
+              </Tooltip>
+            )}
             <Tooltip
               delayed
               position="top right"
-              content={
-                ownerType === OwnerType.Group
-                  ? 'Executed on a shared db connection'
-                  : 'Executed on a personal db connection'
-              }
+              content={this.sqlQuery.isValid ? 'Successful executed' : 'Execution resulted in errors'}
             >
-              <Icon className="centered" name={ownerType === OwnerType.Group ? 'group' : 'user'} />
+              <Icon
+                className="centered"
+                name={this.sqlQuery.isValid ? 'check' : 'close'}
+                color={this.sqlQuery.isValid ? 'green' : 'red'}
+              />
             </Tooltip>
-          )}
-          <Tooltip
-            delayed
-            position="top right"
-            content={this.sqlQuery.isValid ? 'Successful executed' : 'Execution resulted in errors'}
-          >
-            <Icon
-              className="centered"
-              name={this.sqlQuery.isValid ? 'check' : 'close'}
-              color={this.sqlQuery.isValid ? 'green' : 'red'}
-            />
-          </Tooltip>
-          {!isBasic && (
-            <Label
-              content={this.sqlQuery.dbServerType}
-              color={this.sqlQuery.dbServerType === DbType.Psql ? 'blue' : 'orange'}
-              size="mini"
-            />
-          )}
+            {this.sqlQuery.execTime && (
+              <Tooltip delayed position="top right" content={`Executed in ${this.sqlQuery.execTime}s`}>
+                <span>
+                  <Icon className="centered" name="clock" color="black" />
+                  {` ${this.sqlQuery.execTime.toFixed(2)}s`}
+                </span>
+              </Tooltip>
+            )}
+          </div>
+          <div>
+            <i>{this.sqlQuery.createdAt.toLocaleString()}</i>
+          </div>
         </div>
-        <div className="meta">{this.sqlQuery.createdAt.toLocaleString()}</div>
         <PrismCode
           code={this.sqlQuery.query}
           language="sql"
           plugins={['line-numbers']}
-          style={{ maxHeight: '22em' }}
+          style={{ maxHeight: '22em', fontSize: 'smaller' }}
         />
+        {this.sqlQuery.errors.map((err) => {
+          return (
+            <Message error size="mini" key={err.query_idx}>
+              <Message.Header>{`Error in the ${err.query_idx + 1}. query`}</Message.Header>
+              <p>{err.error}</p>
+            </Message>
+          );
+        })}
       </div>
     );
   }

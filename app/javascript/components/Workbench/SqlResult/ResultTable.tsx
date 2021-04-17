@@ -261,18 +261,23 @@ class ResultTable extends React.Component<Props> {
   }
 }
 
-const CellContent = ({cell}: {cell: number | string | undefined | null}) => {
+const CellContent = ({ cell }: { cell: number | string | undefined | null }) => {
   switch (typeof cell) {
     case 'string':
       if (cell === '') {
-        return <span>-</span>
+        return <span>-</span>;
       }
       return <span>{cell}</span>;
     case 'number':
       return <span>{cell}</span>;
-    }
-    return <Label content="NULL" size="mini"/>
-}
+    case 'boolean':
+      return <span>{(cell as boolean).toString()}</span>;
+  }
+  if (cell) {
+    return <span>{cell}</span>;
+  }
+  return <Label content="NULL" size="mini" />;
+};
 
 const ScrollPlaceholder = ({ height }: { height: number }) => {
   return (

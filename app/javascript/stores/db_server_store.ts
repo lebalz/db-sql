@@ -89,7 +89,6 @@ class DbServerStore implements Store {
     const initDisposer = reaction(
       () => this.root.session.initialized,
       () => {
-    
         // load the database index if it is not loaded
         this.dbIndexLoader = reaction(
           () => this.state.activeDbServerId,
@@ -99,7 +98,7 @@ class DbServerStore implements Store {
             }
           }
         );
-    
+
         // load the current database if it is not loaded
         this.currentDbLoader = reaction(
           () => this.activeDbServer?.activeDatabaseKey,
@@ -109,7 +108,7 @@ class DbServerStore implements Store {
               if (this.activeDatabase(activeDbServerId)) {
                 return;
               }
-    
+
               const dbName = this.state.activeDatabase.get(activeDbServerId);
               if (dbName) {
                 this.loadDatabase(activeDbServerId, dbName).then((db) => {
@@ -126,9 +125,7 @@ class DbServerStore implements Store {
         );
         initDisposer();
       }
-    )
-
-    
+    );
   }
 
   componentWillUnmount() {
@@ -227,7 +224,7 @@ class DbServerStore implements Store {
     if (this.state.databaseIndex.has(dbServerId) && !force) {
       return;
     }
-    const dbServer = this.find(dbServerId)
+    const dbServer = this.find(dbServerId);
     if (dbServer) {
       dbServer.connectionError = undefined;
     }
@@ -247,7 +244,7 @@ class DbServerStore implements Store {
         this.state.dbIndexLoadState = LoadState.Success;
       })
       .catch((e: Error) => {
-        const dbServer = this.find(dbServerId)
+        const dbServer = this.find(dbServerId);
         if (dbServer) {
           dbServer.connectionError = e.message;
         }
@@ -318,7 +315,7 @@ class DbServerStore implements Store {
 
   queries(dbServerId: string): QueryEditor[] {
     const dbMap = this.loadedDatabaseMap(dbServerId);
-    const queries = _.flatten(Array.from(dbMap, ([_, db]) => db.queries));
+    const queries = _.flatten(Array.from(dbMap, ([_, db]) => db.editors));
 
     // add placeholder query if the active database is loading
     const activeDbName = this.activeDatabaseName(dbServerId);
@@ -395,8 +392,8 @@ class DbServerStore implements Store {
   }
 
   @action
-  routeToDbServer(id: string, options?: { dbName?: string, replace?: boolean }) {
-    if (options?.replace) {      
+  routeToDbServer(id: string, options?: { dbName?: string; replace?: boolean }) {
+    if (options?.replace) {
       if (options.dbName) {
         this.root.routing.replace(`/connections/${id}/${options.dbName}`);
       } else {
@@ -576,7 +573,11 @@ class DbServerStore implements Store {
   editDbServer(dbServerId: string) {
     const dbServer = this.find(dbServerId);
     const temp = new TempDbServer(
-      dbServer?.props ?? { ...DEFAULT_DB_SERVER, owner_type: OwnerType.User, owner_id: this.root.session.currentUser.id },
+      dbServer?.props ?? {
+        ...DEFAULT_DB_SERVER,
+        owner_type: OwnerType.User,
+        owner_id: this.root.session.currentUser.id
+      },
       this.root.dbServer,
       this.root.schemaQueryStore,
       dbServer ? TempDbServerRole.Update : TempDbServerRole.Create,
@@ -586,6 +587,10 @@ class DbServerStore implements Store {
     if (!this.root.routing.location.pathname.startsWith('/dashboard')) {
       this.root.routing.push('/dashboard');
     }
+  }
+
+  requestQueryEditor(database: Database, queryId: number) {
+    return new QueryEditor(this.root.sqlQueryStore, database, queryId);
   }
 }
 

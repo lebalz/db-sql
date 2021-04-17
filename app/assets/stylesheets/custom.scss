@@ -8,8 +8,8 @@ body {
     grid-template-columns: 280px 2px auto;
     grid-template-rows: 82px auto;
     grid-template-areas:
-      "header  header header"
-      "sidebar divider main";
+      'header  header header'
+      'sidebar divider main';
     justify-items: stretch;
     width: 100vw;
     height: 100vh;
@@ -111,7 +111,6 @@ body {
     flex-direction: column;
   }
 
-
   main {
     grid-area: main;
     flex: 1;
@@ -119,7 +118,7 @@ body {
     flex-direction: column;
     padding: 2em;
     box-shadow: 0 0 20px 0 rgba($color: #242424, $alpha: 0.4);
-    overflow-y: auto;
+    overflow-y: scroll;
   }
 
   footer {
