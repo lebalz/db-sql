@@ -1,6 +1,8 @@
 import React from 'react';
 import { Icon } from 'semantic-ui-react';
 
+type CollapseDirection = 'left' | 'right' | 'up' | 'down';
+
 interface Props {
   direction: 'horizontal' | 'vertical';
   id?: string;
@@ -8,6 +10,7 @@ interface Props {
   defaultSize: number;
   shift?: number;
   hideIcon?: boolean;
+  collapseDirection?: CollapseDirection;
   /**
    * position relative to the divider line
    */
@@ -20,9 +23,31 @@ interface Props {
   onChange: (size: number) => void;
 }
 
+type CollapsIcon = 'triangle left' | 'triangle right' | 'triangle up' | 'triangle down';
+type CollapseIconMap = {
+  [key in CollapseDirection]: CollapsIcon;
+};
+
+const collapseIconMap: CollapseIconMap = {
+  left: 'triangle left',
+  right: 'triangle right',
+  up: 'triangle up',
+  down: 'triangle down'
+};
+
+const flippedCollapseIconMap: CollapseIconMap = {
+  right: 'triangle left',
+  left: 'triangle right',
+  down: 'triangle up',
+  up: 'triangle down'
+};
+
 class Slider extends React.Component<Props> {
   ref = React.createRef<HTMLDivElement>();
-  state: { pointerDown: boolean; share: number } = { pointerDown: false, share: this.props.defaultSize };
+  state: { pointerDown: boolean; share: number; oldShare?: number } = {
+    pointerDown: false,
+    share: this.props.defaultSize
+  };
 
   get minSize(): number {
     return this.props.minSize ?? 0;
@@ -33,6 +58,9 @@ class Slider extends React.Component<Props> {
   }
 
   beginSliding = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (((e.target as any).classList ?? []).contains('toggleIcon')) {
+      return;
+    }
     if (this.ref.current) {
       this.ref.current.addEventListener('pointermove', this.slide, true);
       this.ref.current.setPointerCapture(e.pointerId);
@@ -58,6 +86,19 @@ class Slider extends React.Component<Props> {
     this.setState({ share: topShare });
   };
 
+  toggleCollapse = (e: PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let newState = { share: this.state.share, oldShare: this.state.share };
+    if (this.isCollapsed) {
+      newState.share = this.state.oldShare ?? this.minSize;
+    } else {
+      newState.share = 0;
+    }
+    this.setState(newState);
+    this.props.onChange(newState.share);
+  };
+
   slide = (e: PointerEvent) => {
     switch (this.props.direction) {
       case 'horizontal':
@@ -76,25 +117,47 @@ class Slider extends React.Component<Props> {
     return `resize ${this.props.direction}` as 'resize horizontal' | 'resize vertical';
   }
 
-  get iconStyle() {
+  iconStyle(defaultSpace = '1em', align: 'center' | 'start' | 'end' = 'center') {
+    const center = align === 'center' ? '-1em' : undefined;
     switch (this.props.direction) {
       case 'horizontal':
-        const defaultTop = this.props.iconPosition?.bottom ? undefined : '1em';
+        const defaultTop = this.props.iconPosition?.bottom ? undefined : defaultSpace;
+        const end = align === 'end' ? '0' : undefined;
         return {
-          left: '-1em',
+          left: center,
+          right: end,
           top: this.props.iconPosition?.top ?? defaultTop,
           bottom: this.props.iconPosition?.bottom
         };
       case 'vertical':
-        const defaultLeft = this.props.iconPosition?.right ? undefined : '1em';
+        const defaultLeft = this.props.iconPosition?.right ? undefined : defaultSpace;
+        const bottom = align === 'end' ? '0' : undefined;
         return {
-          top: '-1em',
+          top: center,
+          bottom: bottom,
           left: this.props.iconPosition?.left ?? defaultLeft,
           right: this.props.iconPosition?.right
         };
       default:
         return {};
     }
+  }
+
+  get canCollapse(): boolean {
+    return this.props.collapseDirection !== undefined;
+  }
+
+  get isCollapsed(): boolean {
+    return this.state.share === 0;
+  }
+
+  collapseIconName() {
+    if (!this.props.collapseDirection) {
+      throw new Error('No collapse direction given');
+    }
+    return this.isCollapsed
+      ? flippedCollapseIconMap[this.props.collapseDirection]
+      : collapseIconMap[this.props.collapseDirection];
   }
 
   render() {
@@ -106,8 +169,16 @@ class Slider extends React.Component<Props> {
         onPointerDown={this.beginSliding}
         onPointerUp={this.stopSliding}
       >
-        {!this.props.hideIcon && (
-          <Icon circular name={this.iconName} style={this.iconStyle} className="resizeIcon" />
+        {!this.props.hideIcon && !this.isCollapsed && (
+          <Icon circular name={this.iconName} style={this.iconStyle('1em')} className="resizeIcon" />
+        )}
+        {this.canCollapse && (
+          <Icon
+            name={this.collapseIconName()}
+            style={this.iconStyle(this.props.hideIcon ? '1em' : '3em', 'start')}
+            className={`toggleIcon ${this.props.collapseDirection}`}
+            onClick={(e: PointerEvent) => this.toggleCollapse(e)}
+          />
         )}
       </div>
     );

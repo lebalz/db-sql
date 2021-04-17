@@ -31,6 +31,9 @@ gem 'grape'
 gem 'grape-swagger'
 gem 'grape-entity'
 
+# Authorization
+gem 'pundit'
+
 # For background jobs
 gem 'sidekiq'
 

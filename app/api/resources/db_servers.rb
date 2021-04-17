@@ -7,12 +7,9 @@ module Resources
     end
     helpers do
       def load_db_server
-        db_server ||= DbServer.find(params[:id])
-        error!('Db server not found', 302) unless db_server
+        db_server ||= policy_scope(DbServer).find(params[:id])
 
-        unless db_server.authorized? current_user
-          error!('Invalid permission for this db server', 401)
-        end
+        authorize db_server, :show?
 
         @db_server = db_server
       end
@@ -38,9 +35,12 @@ module Resources
     resource :db_servers do
       desc 'Get all database servers'
       params do
-        optional(:include_shared, type: Boolean, default: false, desc: 'wheter to include shared db servers from groups')
+        optional(:include_shared, type: Boolean, default: false,
+                                  desc: 'wheter to include shared db servers from groups')
       end
       get do
+        authorize DbServer, :index?
+
         if params[:include_shared]
           present current_user.all_db_servers, with: Entities::DbServer
         else
@@ -77,15 +77,18 @@ module Resources
         optional(:initial_table, type: String, desc: 'initial table')
       end
       post do
+        authorize DbServer, :create?
+
         user_key = request.headers['Crypto-Key']
         if params[:owner_type] == :user
           key = user_key
         else
-          grp = Group.find(params[:owner_id])
-          error!('Group not found', 302) unless grp
-          error!('Missing privileg to add new servers', 401) unless grp.admin?(current_user)
+          group = policy_scope(Group).find(params[:owner_id])
 
-          key = grp.crypto_key(current_user, current_user.private_key(user_key))
+          authorize group, :add_db_server?
+
+          key = group.crypto_key(current_user,
+                                 current_user.private_key(user_key))
         end
         encrypted_password = DbServer.encrypt(
           key: key,
@@ -140,10 +143,13 @@ module Resources
             optional(:password, type: String, desc: 'db password')
             optional(:initial_db, type: String, desc: 'initial database')
             optional(:initial_table, type: String, desc: 'initial table')
-            optional(:database_schema_query_id, type: String, desc: 'id of the database schema query')
+            optional(:database_schema_query_id, type: String,
+                                                desc: 'id of the database schema query')
           end
         end
         put do
+          authorize db_server, :update?
+
           if params[:data].key?('password')
             encrypted_password = DbServer.encrypt(
               key: crypto_key,
@@ -172,6 +178,8 @@ module Resources
 
         desc 'Delete a database server connection'
         delete do
+          authorize db_server, :destroy?
+
           db_server.destroy!
           status :no_content
         end
@@ -179,9 +187,9 @@ module Resources
         desc 'Get the databases of a database server connection'
         get :databases do
           present(
-            db_server.database_names(key: crypto_key).map do |n|
+            db_server.database_names(key: crypto_key).map do |name|
               {
-                name: n,
+                name: name,
                 db_server_id: db_server.id
               }
             end,
@@ -192,11 +200,13 @@ module Resources
         get :database_names do
           db_server.database_names(key: crypto_key)
         end
+
         route_param :database_name, type: String, desc: 'Database name' do
 
           desc 'Get full database structure'
           get do
-            full_db = db_server.full_database(key: crypto_key, database_name: params[:database_name])
+            full_db = db_server.full_database(key: crypto_key,
+                                              database_name: params[:database_name])
             present(
               full_db,
               with: Entities::FullDatabase
@@ -213,17 +223,53 @@ module Resources
           end
           post :query do
             db_name = params[:database_name]
+
             db_server.increment!(:query_count, 1)
             db_server.owner.touch
-            db_server.exec_query(key: crypto_key, database_name: db_name) do
-              params[:query]
-            end.to_a
+            sql_query = SqlQuery.new(db_server: db_server, user: current_user,
+                                     db_name: db_name)
+            t0 = Time.now
+
+            begin
+              result = db_server.exec_query(key: crypto_key,
+                                            database_name: db_name) do
+                params[:query]
+              end
+            rescue StandardError => e
+              sql_query.exec_time = Time.now - t0
+              sql_query.is_valid = false
+              sql_query.error = [{ query_idx: 0, error: e.message }]
+              sql_query.save
+              return present(
+                {
+                  error: e.message,
+                  state: 'error',
+                  time: Time.now - t0,
+                  query_id: sql_query.id
+                },
+                with: Entities::QueryResult
+              )
+            end
+            sql_query.exec_time = Time.now - t0
+            sql_query.is_valid = true
+            sql_query.save
+
+            present(
+              {
+                result: result.to_a,
+                state: 'success',
+                time: Time.now - t0,
+                query_id: sql_query.id
+              },
+              with: Entities::QueryResult
+            )
           end
 
           desc 'Query the database with mutliple statements'
           params do
             requires(:queries, type: Array[String])
-            optional(:proceed_after_error, type: Boolean, default: true, desc: 'Wheter to proceed query execution after an error or not.')
+            optional(:proceed_after_error, type: Boolean, default: true,
+                                           desc: 'Wheter to proceed query execution after an error or not.')
           end
           post :multi_query do
             db_name = params[:database_name]
@@ -231,8 +277,14 @@ module Resources
             error_occured = false
             db_server.owner.touch
 
+            sql_query = SqlQuery.new(db_server: db_server, user: current_user,
+                                     db_name: db_name)
+            sql_query.query = params[:queries].join("\n")
+            exec_start = Time.now
+            errors = []
+
             db_server.reuse_connection do |conn|
-              params[:queries].each do |query|
+              params[:queries].each_with_index do |query, idx|
                 next if query.blank?
 
                 if error_occured && !params[:proceed_after_error]
@@ -247,15 +299,17 @@ module Resources
                 begin
                   db_server.increment!(:query_count, 1)
                   results << {
-                    result: conn.exec_query(key: crypto_key, database_name: db_name) do
-                      query
-                    end.to_a,
+                    result: conn.exec_query(key: crypto_key,
+                                            database_name: db_name) do
+                              query
+                            end.to_a,
                     state: 'success',
                     time: Time.now - t0
                   }
                 rescue StandardError => e
                   db_server.increment!(:error_query_count, 1)
                   error_occured = true
+                  errors << { query_idx: idx, error: e.message }
                   results << {
                     error: e.message,
                     state: 'error',
@@ -264,7 +318,17 @@ module Resources
                 end
               end
             end
-            present(results, with: Entities::QueryResult)
+            sql_query.is_valid = !error_occured
+            sql_query.exec_time = Time.now - exec_start
+            sql_query.error = errors
+            sql_query.save!
+
+            present({
+                      result: results,
+                      query_id: sql_query.id,
+                      time: sql_query.exec_time,
+                      state: error_occured ? :error : :success
+                    }, type: :multi, with: Entities::QueryResult)
           end
 
           desc 'Query the database and returns the raw result. Multiple query statements are allowed'
@@ -274,14 +338,31 @@ module Resources
           post :raw_query do
             db_server.owner.touch
             db_name = params[:database_name]
+
+            sql_query = SqlQuery.new(db_server: db_server, user: current_user,
+                                     db_name: db_name)
+            sql_query.query = params[:query]
+
             t0 = Time.now
             db_server.increment!(:query_count, 1)
-            results = db_server.exec_raw_query(key: crypto_key, database_name: db_name) do
+            results = db_server.exec_raw_query(key: crypto_key,
+                                               database_name: db_name) do
               params[:query]
             end
-            db_server.increment!(:error_query_count, 1) if results[:type] == :error
+            t_end = Time.now - t0
 
-            results.merge({ time: Time.now - t0 })
+            if results[:type] == :error
+              db_server.increment!(:error_query_count, 1)
+            end
+            sql_query.is_valid = results[:type] != :error
+            if results[:type] == :error
+              sql_query.error = [{ query_idx: 0,
+                                   error: results[:error] }]
+            end
+            sql_query.exec_time = t_end
+            sql_query.save!
+
+            results.merge({ time: t_end, query_id: sql_query.id })
           end
 
           desc "Get the database's tables"

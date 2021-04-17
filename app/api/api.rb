@@ -20,6 +20,8 @@ class API < Grape::API
   formatter :json, JsonFormatter
 
   include ErrorHandling
+  helpers Pundit
+
 
   # This before block has to be run after the route error handling blocks
   before do
@@ -62,6 +64,7 @@ class API < Grape::API
   mount Resources::Status
   mount Resources::DatabaseSchemaQueries
   mount Resources::Groups
+  mount Resources::SqlQueries
 
   # This needs to happen at the very end of this file.
   add_swagger_documentation(

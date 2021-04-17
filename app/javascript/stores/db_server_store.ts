@@ -9,14 +9,15 @@ import {
   databases,
   database,
   OwnerType,
-  DbServer as DbServerProps
+  DbServer as DbServerProps,
+  dbServer
 } from '../api/db_server';
-import DbServer from '../models/DbServer';
-import { TempDbServer } from '../models/TempDbServer';
+import DbServer, { DEFAULT_DB_SERVER } from '../models/DbServer';
+import { TempDbServer, TempDbServerRole } from '../models/TempDbServer';
 import 'regenerator-runtime/runtime';
 import { ApiRequestState } from './session_store';
 import Database from '../models/Database';
-import Query, { PlaceholderQuery } from '../models/Query';
+import QueryEditor, { PlaceholderQuery } from '../models/QueryEditor';
 import { computedFn } from 'mobx-utils';
 
 export enum LoadState {
@@ -29,9 +30,30 @@ export enum LoadState {
 class State {
   dbServers = observable<DbServer>([]);
   @observable activeDbServerId: string = '';
+
+  /**
+   * mapping "db server id <-> db names"
+   */
   databaseIndex = observable(new Map<string, string[]>());
+
+  /**
+   * mapping "db server id <-> active database"
+   */
   activeDatabase = observable(new Map<string, string>());
+
+  /**
+   * mapping "db server id <-> 'db name <-> database id'"
+   */
   databases = observable(new Map<string, Map<string, Database>>());
+
+  /**
+   * mapping "database id <-> onLoadFunctions(db)"
+   *
+   * when a database is loaded, all functions for a database will be called.
+   * @see SqlQuery#showInEditor as an example, where a task to set the initial
+   *  sql statement is defined.
+   */
+  onDatabaseLoaded = observable(new Map<string, ((db: Database) => void)[]>());
 
   databaseTreeViewFilter = observable(new Map<string, string>());
 
@@ -50,8 +72,8 @@ class DbServerStore implements Store {
   private state = new State();
 
   loginDisposer: IReactionDisposer;
-  dbIndexLoader: IReactionDisposer;
-  currentDbLoader: IReactionDisposer;
+  dbIndexLoader?: IReactionDisposer;
+  currentDbLoader?: IReactionDisposer;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -64,40 +86,52 @@ class DbServerStore implements Store {
         }
       }
     );
-
-    // load the database index if it is not loaded
-    this.dbIndexLoader = reaction(
-      () => this.state.activeDbServerId,
-      (activeDbServerId) => {
-        if (activeDbServerId) {
-          this.loadDatabaseIndex(activeDbServerId);
-        }
-      }
-    );
-
-    // load the current database if it is not loaded
-    this.currentDbLoader = reaction(
-      () => this.activeDbServer?.activeDatabaseKey,
-      (activeDatabaseKey) => {
-        if (activeDatabaseKey) {
-          const { activeDbServerId } = this.state;
-          if (this.activeDatabase(activeDbServerId)) {
-            return;
+    const initDisposer = reaction(
+      () => this.root.session.initialized,
+      () => {
+        // load the database index if it is not loaded
+        this.dbIndexLoader = reaction(
+          () => this.state.activeDbServerId,
+          (activeDbServerId) => {
+            if (activeDbServerId) {
+              this.loadDatabaseIndex(activeDbServerId);
+            }
           }
+        );
 
-          const dbName = this.state.activeDatabase.get(activeDbServerId);
-          if (dbName) {
-            this.loadDatabase(activeDbServerId, dbName);
+        // load the current database if it is not loaded
+        this.currentDbLoader = reaction(
+          () => this.activeDbServer?.activeDatabaseKey,
+          (activeDatabaseKey) => {
+            if (activeDatabaseKey) {
+              const { activeDbServerId } = this.state;
+              if (this.activeDatabase(activeDbServerId)) {
+                return;
+              }
+
+              const dbName = this.state.activeDatabase.get(activeDbServerId);
+              if (dbName) {
+                this.loadDatabase(activeDbServerId, dbName).then((db) => {
+                  if (!db) {
+                    return;
+                  }
+                  const tasks = this.state.onDatabaseLoaded.get(db.id)?.slice() ?? [];
+                  this.state.onDatabaseLoaded.delete(db.id);
+                  tasks.forEach((task) => task(db));
+                });
+              }
+            }
           }
-        }
+        );
+        initDisposer();
       }
     );
   }
 
   componentWillUnmount() {
     this.loginDisposer();
-    this.dbIndexLoader();
-    this.currentDbLoader();
+    this.dbIndexLoader && this.dbIndexLoader();
+    this.currentDbLoader && this.currentDbLoader();
   }
 
   databaseTreeViewFilter(dbServerId: string): string {
@@ -105,6 +139,16 @@ class DbServerStore implements Store {
       this.state.databaseTreeViewFilter.set(dbServerId, '');
     }
     return this.state.databaseTreeViewFilter.get(dbServerId)!;
+  }
+
+  @action
+  addOnDbLoadTask(dbServerId: string, dbName: string, task: (db: Database) => void) {
+    const id = `${dbServerId}-${dbName}`;
+    if (!this.state.onDatabaseLoaded.has(id)) {
+      this.state.onDatabaseLoaded.set(id, [task]);
+    } else {
+      this.state.onDatabaseLoaded.get(id)!.push(task);
+    }
   }
 
   @action
@@ -118,7 +162,7 @@ class DbServerStore implements Store {
       Array.from(this.state.databaseIndex.keys()).map((id) => this.find(id)!),
       'name',
       'asc'
-    )
+    );
   }
 
   @computed
@@ -180,6 +224,10 @@ class DbServerStore implements Store {
     if (this.state.databaseIndex.has(dbServerId) && !force) {
       return;
     }
+    const dbServer = this.find(dbServerId);
+    if (dbServer) {
+      dbServer.connectionError = undefined;
+    }
     this.state.dbIndexLoadState = LoadState.Loading;
     databases(dbServerId, this.cancelToken)
       .then(({ data }) => {
@@ -195,23 +243,27 @@ class DbServerStore implements Store {
         }
         this.state.dbIndexLoadState = LoadState.Success;
       })
-      .catch((e) => {
+      .catch((e: Error) => {
+        const dbServer = this.find(dbServerId);
+        if (dbServer) {
+          dbServer.connectionError = e.message;
+        }
         this.state.databaseIndex.delete(dbServerId);
         this.state.activeDbServerId = '';
         this.state.dbIndexLoadState = LoadState.Error;
       });
   }
 
-  @action loadDatabase(dbServerId: string, dbName: string) {
+  @action loadDatabase(dbServerId: string, dbName: string): Promise<Database | undefined> {
     const dbServer = this.find(dbServerId);
     if (!dbServer) {
-      return;
+      return new Promise((resolve) => resolve(undefined));
     }
     const placeholderDb = new Database(dbServer, { db_server_id: dbServerId, name: dbName, schemas: [] });
     placeholderDb.isLoading = true;
     this.state.databases.get(dbServerId)?.set(dbName, placeholderDb);
 
-    database(dbServerId, dbName, this.cancelToken)
+    return database(dbServerId, dbName, this.cancelToken)
       .then(({ data }) => {
         const db = new Database(dbServer, data);
         this.state.databases.get(dbServerId)!.set(dbName, db);
@@ -224,10 +276,12 @@ class DbServerStore implements Store {
             initTable.toggleShow();
           }
         }
+        return db;
       })
       .catch((err) => {
         placeholderDb.isLoading = false;
         placeholderDb.loadError = err.message;
+        return new Promise((resolve) => resolve(undefined));
       });
   }
 
@@ -259,9 +313,9 @@ class DbServerStore implements Store {
     return this.state.databases.get(dbServerId) ?? new Map();
   }
 
-  queries(dbServerId: string): Query[] {
+  queries(dbServerId: string): QueryEditor[] {
     const dbMap = this.loadedDatabaseMap(dbServerId);
-    const queries = _.flatten(Array.from(dbMap, ([_, db]) => db.queries));
+    const queries = _.flatten(Array.from(dbMap, ([_, db]) => db.editors));
 
     // add placeholder query if the active database is loading
     const activeDbName = this.activeDatabaseName(dbServerId);
@@ -338,8 +392,20 @@ class DbServerStore implements Store {
   }
 
   @action
-  routeToDbServer(id: string) {
-    this.root.routing.replace(`/connections/${id}`);
+  routeToDbServer(id: string, options?: { dbName?: string; replace?: boolean }) {
+    if (options?.replace) {
+      if (options.dbName) {
+        this.root.routing.replace(`/connections/${id}/${options.dbName}`);
+      } else {
+        this.root.routing.replace(`/connections/${id}`);
+      }
+    } else {
+      if (options?.dbName) {
+        this.root.routing.push(`/connections/${id}/${options.dbName}`);
+      } else {
+        this.root.routing.push(`/connections/${id}`);
+      }
+    }
   }
 
   setActiveDbServer(id: string) {
@@ -461,6 +527,17 @@ class DbServerStore implements Store {
   );
 
   @action
+  findOrLoad(id: string): DbServer | undefined {
+    const server = this.find(id);
+    if (server) {
+      return server;
+    }
+    dbServer(id, this.cancelToken).then(({ data }) => {
+      this.addDbServers([data]);
+    });
+  }
+
+  @action
   addDbServers(dbServerProps: DbServerProps[]) {
     dbServerProps.forEach((dbServer) => {
       const oldDbServer = this.find(dbServer.id);
@@ -490,6 +567,30 @@ class DbServerStore implements Store {
     if (tempDbServer) {
       this.root.schemaQueryStore.setSelectedDbType(tempDbServer.dbType);
     }
+  }
+
+  @action
+  editDbServer(dbServerId: string) {
+    const dbServer = this.find(dbServerId);
+    const temp = new TempDbServer(
+      dbServer?.props ?? {
+        ...DEFAULT_DB_SERVER,
+        owner_type: OwnerType.User,
+        owner_id: this.root.session.currentUser.id
+      },
+      this.root.dbServer,
+      this.root.schemaQueryStore,
+      dbServer ? TempDbServerRole.Update : TempDbServerRole.Create,
+      this.cancelToken
+    );
+    this.setTempDbServer(temp);
+    if (!this.root.routing.location.pathname.startsWith('/dashboard')) {
+      this.root.routing.push('/dashboard');
+    }
+  }
+
+  requestQueryEditor(database: Database, queryId: number) {
+    return new QueryEditor(this.root.sqlQueryStore, database, queryId);
   }
 }
 

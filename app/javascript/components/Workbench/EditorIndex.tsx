@@ -2,12 +2,12 @@ import React from 'react';
 import { Button, Menu, Icon } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import Query from '../../models/Query';
+import QueryEditor from '../../models/QueryEditor';
 import { RouterStore } from 'mobx-react-router';
 import { REST } from '../../declarations/REST';
 
 interface Props {
-  queries: Query[];
+  editors: QueryEditor[];
 }
 
 interface InjectedProps extends Props {
@@ -16,20 +16,20 @@ interface InjectedProps extends Props {
 
 @inject('routerStore')
 @observer
-export default class QueryIndex extends React.Component<Props> {
+export default class EditorIndex extends React.Component<Props> {
   get injected() {
     return this.props as InjectedProps;
   }
 
-  close(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, query: Query) {
+  close(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, query: QueryEditor) {
     e.stopPropagation();
 
-    const idx = this.props.queries.indexOf(query);
+    const idx = this.props.editors.indexOf(query);
     query.close();
 
-    const numQueries = this.props.queries.length;
+    const numQueries = this.props.editors.length;
     if (numQueries > 1) {
-      const nextQuery = this.props.queries[idx > 0 ? idx - 1 : 1];
+      const nextQuery = this.props.editors[idx > 0 ? idx - 1 : 1];
       this.injected.routerStore.push(nextQuery.link);
       nextQuery.setActive();
     }
@@ -38,7 +38,7 @@ export default class QueryIndex extends React.Component<Props> {
   render() {
     return (
       <Menu attached="top" tabular size="mini">
-        {this.props.queries.map((query) => {
+        {this.props.editors.map((query) => {
           return (
             <Menu.Item
               active={query.isActive}

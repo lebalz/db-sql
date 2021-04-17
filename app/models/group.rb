@@ -14,18 +14,18 @@
 #
 class Group < ApplicationRecord
   has_many :group_members, dependent: :delete_all
-  has_many :users, through: :group_members
+  has_many :users, through: :group_members, source: 'user'
   has_many :db_servers, dependent: :delete_all
   before_create :create_public_crypto_key
-  
+
   alias members group_members
 
   scope :public_available, -> { where(is_private: false) }
 
   def self.random_crypto_key
-    hash = OpenSSL::Digest::SHA256.new
+    hash = OpenSSL::Digest.new('SHA256')
     key = OpenSSL::KDF.pbkdf2_hmac(
-      OpenSSL::Digest::SHA256.new.to_s,
+      OpenSSL::Digest.new('SHA256').to_s,
       salt: Time.now.to_i.to_s,
       iterations: 20_000,
       length: hash.length,
@@ -71,7 +71,7 @@ class Group < ApplicationRecord
   # @param user [User]
   # @return [boolean]
   def admin?(user)
-    admins.include?(user)
+    group_members.where(is_admin: true, user_id: user.id).count > 0
   end
 
   # @param group_key [String] key used to decrypt the
@@ -129,8 +129,6 @@ class Group < ApplicationRecord
                 Base64.strict_encode64(
                   member.user.public_key.public_encrypt(new_crypto_key)
                 )
-              else 
-                nil
               end
 
         member.update!(

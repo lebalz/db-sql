@@ -1,31 +1,12 @@
 import React from 'react';
 import { observer, inject } from 'mobx-react';
-import { Card, Label, Button } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { TempDbServer, TempDbServerRole } from '../../models/TempDbServer';
-import { action, computed } from 'mobx';
 import { RouterStore } from 'mobx-react-router';
-import Tooltip from '../../shared/Tooltip';
 import SchemaQueryStore from '../../stores/schema_query_store';
-import { OwnerType, DbServer } from '../../api/db_server';
-import { DbType } from '../../models/DbServer';
+import { OwnerType } from '../../api/db_server';
+import { DEFAULT_DB_SERVER } from '../../models/DbServer';
 import AddEntityButton from '../../shared/AddEntityButton';
-
-const DEFAULT_DB_SERVER: DbServer = {
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  owner_type: OwnerType.User,
-  owner_id: '',
-  db_type: DbType.Psql,
-  host: '',
-  id: '',
-  name: '',
-  port: 5432,
-  username: '',
-  query_count: 0,
-  database_schema_query_id: '',
-  error_query_count: 0
-};
 
 interface Props {
   ownerType: OwnerType;

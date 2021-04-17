@@ -7,12 +7,10 @@ module Resources
     end
     helpers do
       def load_current_group
-        group = Group.includes(:group_members, :db_servers, :users).find(params[:id])
+        group = policy_scope(Group).includes(:group_members, :db_servers,
+                                             :users).find(params[:id])
 
-        error!('Group not found', 302) unless group
-        unless group.public? || group.member?(current_user)
-          error!('You are not a member of this group', 401)
-        end
+        authorize group, :show?
 
         @current_group = group
       end
@@ -29,8 +27,11 @@ module Resources
     resource :groups do
       desc 'Get all groups of the current user'
       get do
-        groups = current_user.groups.includes(:group_members, :db_servers, :users)
-        Group.update_outdated_group_members(user: current_user, pkey: current_user.private_key(crypto_key))
+        authorize Group, :index?
+
+        groups = current_user.groups
+        Group.update_outdated_group_members(user: current_user,
+                                            pkey: current_user.private_key(crypto_key))
         present(
           groups,
           with: Entities::Group,
@@ -40,16 +41,21 @@ module Resources
 
       desc 'Get public groups, by default 20 with no offset'
       params do
-        optional(:limit, type: Integer, default: -1, desc: 'maximal number of returned groups, -1 returns all groups')
-        optional(:offset, type: Integer,  default: 0, desc: 'offset of returned groups')
+        optional(:limit, type: Integer, default: -1,
+                         desc: 'maximal number of returned groups, -1 returns all groups')
+        optional(:offset, type: Integer,  default: 0,
+                          desc: 'offset of returned groups')
       end
       get :public do
+        authorize Group, :index?
+
         public_groups = Group.public_available.where.not(
-                          'id in (?)', current_user.groups.select(:id)
-                        ).includes(:group_members, :db_servers, :users)
+          'id in (?)', current_user.groups.select(:id)
+        ).includes(:group_members, :db_servers, :users)
 
         if (params[:limit] || 0) < 0
-          return present(public_groups, with: Entities::Group, user: current_user)
+          return present(public_groups, with: Entities::Group,
+                                        user: current_user)
         end
 
         present(
@@ -64,16 +70,22 @@ module Resources
       desc 'Get number of available groups'
       route_setting :auth, disabled: true
       get :counts do
+        authorize Group, :index?
+
         { count: Group.public_available.count }
       end
 
       desc 'Create a new group'
       params do
         requires(:name, type: String, desc: 'Name')
-        optional(:description, type: String, default: '', desc: 'description or purpose of the group')
-        optional(:is_private, type: Boolean, default: true, desc: 'is a private group')
+        optional(:description, type: String, default: '',
+                               desc: 'description or purpose of the group')
+        optional(:is_private, type: Boolean, default: true,
+                              desc: 'is a private group')
       end
       post do
+        authorize Group, :create?
+
         new_group = nil
         ActiveRecord::Base.transaction do
           new_group = Group.create(
@@ -93,8 +105,11 @@ module Resources
       route_param :id, type: String, desc: 'Group ID' do
         desc 'Get a specific group'
         get do
+          authorize current_group, :show?
+
           current_group.update_outdated_members(
-            group_key: current_group.crypto_key(current_user, current_user.private_key(crypto_key))
+            group_key: current_group.crypto_key(current_user,
+                                                current_user.private_key(crypto_key))
           )
 
           present(current_group, with: Entities::Group, user: current_user)
@@ -102,9 +117,7 @@ module Resources
 
         desc 'Delete a group'
         delete do
-          unless current_group.admin?(current_user)
-            error!('No permission to delete this group', 302)
-          end
+          authorize current_group, :destroy?
 
           begin
             current_group.destroy
@@ -116,6 +129,8 @@ module Resources
 
         desc 'force the current group to generate a new crypto key. All db server passwords of this group will be lost!'
         post :generate_new_crypto_key do
+          authorize current_group, :recrypt?
+
           current_group.force_new_crypto_key!
           current_group.reload
           present(current_group, with: Entities::Group, user: current_user)
@@ -130,9 +145,7 @@ module Resources
           end
         end
         put do
-          unless current_group.admin?(current_user)
-            error!('No permission to update this group', 302)
-          end
+          authorize current_group, :update?
 
           change = ActionController::Parameters.new(params[:data])
           privacy_changed = change[:is_private] != current_group.private?
@@ -180,9 +193,7 @@ module Resources
             requires(:user_id, type: String, desc: 'user id of the new member')
           end
           post do
-            if current_group.private? && !current_group.admin?(current_user)
-              error!('No permission to remove members from this group', 302)
-            end
+            authorize current_group, :add_member?
 
             new_member = User.find(params[:user_id])
             group_member = current_group.add_user(
@@ -198,13 +209,11 @@ module Resources
           route_param :user_id, type: String, desc: 'Group ID' do
             desc 'remove member'
             delete do
-              # current_user can leave public groups without admin rights
-              if current_group.public? && current_group.member?(current_user) && !current_group.admin?(current_user)
-                'leaving is allowed'
-              elsif !current_group.admin?(current_user)
-                error!('No permission to remove members from this group', 302)
-              elsif current_group.admin?(current_user) && current_user.id == params[:user_id]
-                error!('Admin can not remove itself', 302)
+              is_self = current_user.id == params[:user_id]
+              if is_self
+                authorize current_group, :leave?
+              else
+                authorize current_group, :remove_member?
               end
 
               group_member = current_group.group_members.find_by(user_id: params[:user_id])
@@ -219,10 +228,13 @@ module Resources
               requires(:is_admin, type: Boolean, desc: 'is admin')
             end
             post :set_admin_permission do
-              unless current_group.admin?(current_user)
-                error!('No permission to delete this group', 302)
+              authorize current_group, :change_member_permission?
+
+              if current_user.id == params[:user_id]
+                error!(
+                  'Admin can not revoke it\'s admin rights User not found', 302
+                )
               end
-              error!('Admin can not revoke it\'s admin rights User not found', 302) if current_user.id == params[:user_id]
 
               group_member = current_group.group_members.find_by(user_id: params[:user_id])
               error!('User not found', 302) unless group_member
@@ -230,7 +242,7 @@ module Resources
               group_member.update!(
                 is_admin: params[:is_admin]
               )
-              
+
               present(group_member, with: Entities::GroupMember)
             end
           end

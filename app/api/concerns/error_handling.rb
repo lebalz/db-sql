@@ -29,5 +29,9 @@ module ErrorHandling
     base.rescue_from ActiveRecord::RecordInvalid do |e|
       error_response(message: e.message, status: 422)
     end
+
+    base.rescue_from Pundit::NotAuthorizedError do |e|
+      error_response(message: e.message, status: 403)
+    end
   end
 end

@@ -111,10 +111,16 @@ export enum ResultState {
   Error = 'error',
   Skipped = 'skipped'
 }
+
 export interface Result {
   time: number;
   state: ResultState;
 }
+
+interface Response extends Result {
+  query_id: string;
+}
+
 export interface SuccessQuery extends Result {
   result: ResultTable;
   state: ResultState.Success;
@@ -124,20 +130,31 @@ export interface ErrorQuery extends Result {
   state: ResultState.Error;
 }
 
+export interface ErrorQueryResponse extends ErrorQuery {
+  query_id: string;
+}
+
 export interface SkippedQuery extends Result {
   state: ResultState.Skipped;
 }
-interface SuccessRawQuery extends Result {
+interface SuccessRawQuery extends Response {
   result: ResultTable[];
   state: ResultState.Success;
 }
 
-export type MultiQueryResult = SuccessQuery | ErrorQuery | SkippedQuery;
+interface MultiQueryResponse extends Response {
+  result: MultiQueryResult[];
+}
 
-export type RawQueryResult = SuccessRawQuery | ErrorQuery;
+export type MultiQueryResult = SuccessQuery | ErrorQuery | SkippedQuery;
+export type RawQueryResult = SuccessRawQuery | ErrorQueryResponse;
 
 export function newDbServer(dbServer: CreateProps, cancelToken: CancelTokenSource) {
   return api.post('/db_servers', dbServer, { cancelToken: cancelToken.token });
+}
+
+export function dbServer(id: string, cancelToken: CancelTokenSource): AxiosPromise<DbServer> {
+  return api.get(`/db_servers/${id}`, { cancelToken: cancelToken.token });
 }
 
 export function dbServers(cancelToken: CancelTokenSource): AxiosPromise<DbServer[]> {
@@ -186,7 +203,7 @@ export function query(
   queries: string[],
   proceed_after_error: boolean,
   cancelToken: CancelTokenSource
-): AxiosPromise<MultiQueryResult[]> {
+): AxiosPromise<MultiQueryResponse> {
   return api.post(
     `/db_servers/${id}/${databaseName}/multi_query`,
     {

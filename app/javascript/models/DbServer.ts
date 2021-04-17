@@ -5,7 +5,7 @@ import Database from './Database';
 import { REST } from '../declarations/REST';
 import { CancelTokenSource } from 'axios';
 import DbServerStore from '../stores/db_server_store';
-import Query from './Query';
+import QueryEditor from './QueryEditor';
 import DbTable from './DbTable';
 import SchemaQuery from './SchemaQuery';
 import SchemaQueryStore from '../stores/schema_query_store';
@@ -21,6 +21,22 @@ export enum QueryState {
   Success,
   Error
 }
+
+export const DEFAULT_DB_SERVER: DbServerProps = {
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  owner_type: OwnerType.User,
+  owner_id: '',
+  db_type: DbType.Psql,
+  host: '',
+  id: '',
+  name: '',
+  port: 5432,
+  username: '',
+  query_count: 0,
+  database_schema_query_id: '',
+  error_query_count: 0
+};
 
 export interface UpdateProps extends Partial<DbServerProps> {
   id: string;
@@ -47,6 +63,7 @@ export default class DbServer {
   @observable queryState: QueryState = QueryState.None;
   @observable ownerType: OwnerType;
   @observable ownerId: string;
+  @observable connectionError?: string;
 
   @observable dbRequestState: REST = REST.None;
   cancelToken: CancelTokenSource;
@@ -85,6 +102,10 @@ export default class DbServer {
   incrementQueryCount(queryCount: number, errorCount: number) {
     this.queryCount += queryCount;
     this.errorQueryCount += errorCount;
+  }
+
+  newEditor(database: Database, queryId: number) {
+    return this.dbServerStore.requestQueryEditor(database, queryId);
   }
 
   @computed
@@ -157,7 +178,7 @@ export default class DbServer {
     this.close();
     this.databaseSchemaQueryId = this.schemaQueryStore.default(this.dbType).id;
     this.save().then(() => {
-      this.dbServerStore.routeToDbServer(this.id);
+      this.dbServerStore.routeToDbServer(this.id, { replace: true });
     });
   }
 
@@ -178,7 +199,7 @@ export default class DbServer {
 
   @computed
   get isOutdated(): boolean {
-    return this.dbServerStore.isOutdated(this.id);
+    return (this.connectionError ?? '').length > 0 || this.dbServerStore.isOutdated(this.id);
   }
 
   @action
@@ -204,7 +225,7 @@ export default class DbServer {
   }
 
   @computed
-  get queries(): Query[] {
+  get queries(): QueryEditor[] {
     return this.dbServerStore.queries(this.id);
   }
 
@@ -232,6 +253,11 @@ export default class DbServer {
   }
 
   @action
+  show(dbName?: string) {
+    this.dbServerStore.routeToDbServer(this.id, { dbName: dbName });
+  }
+
+  @action
   setActiveDatabase(dbName: string) {
     this.dbServerStore.setActiveDatabase(this.id, dbName);
   }
@@ -247,6 +273,11 @@ export default class DbServer {
     if (dbNames.length > 0) {
       return dbNames[dbNames.length - 1];
     }
+  }
+
+  @action
+  edit() {
+    this.dbServerStore.editDbServer(this.id);
   }
 
   @action

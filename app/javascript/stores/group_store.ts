@@ -40,6 +40,7 @@ class GroupStore implements Store {
   private readonly root: RootStore;
   @observable.ref
   private state = new State();
+  @observable initialized: boolean = false;
 
   constructor(root: RootStore) {
     this.root = root;
@@ -47,8 +48,11 @@ class GroupStore implements Store {
       () => this.root.session.isLoggedIn,
       (isLoggedIn) => {
         if (isLoggedIn) {
-          this.loadGroups();
-          this.loadPublicGroups();
+          Promise.all([this.loadGroups(), this.loadPublicGroups()]).then(() => {
+            this.initialized = true;
+          });
+        } else {
+          this.initialized = false;
         }
       }
     );
@@ -239,7 +243,7 @@ class GroupStore implements Store {
         if ((!hasDbServers || isOutdated) && !this.reducedDashboardGroups.includes(group.id)) {
           this.reducedDashboardGroups.push(group.id);
         }
-        
+
         this.replaceGroup(group);
       });
       if (this.joinedGroups.length > 0) {
@@ -251,9 +255,9 @@ class GroupStore implements Store {
 
   @action
   generateNewCryptoKey(id: string) {
-    requestNewCryptoKey(id).then(({data}) => {
+    requestNewCryptoKey(id).then(({ data }) => {
       return this.replaceGroup(data);
-    })
+    });
   }
 
   @action
@@ -319,7 +323,7 @@ class GroupStore implements Store {
     if (!group.isDirty || !group.isPersisted) {
       return;
     }
-    update(group.id, group.changeablProps)
+    update(group.id, group.changeableProps)
       .then(({ data }) => {
         this.state.joinedGroups.remove(group);
         this.state.joinedGroups.push(new Group(this, this.root.dbServer, this.root.user, data));

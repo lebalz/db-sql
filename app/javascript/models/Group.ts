@@ -63,7 +63,7 @@ export default class Group {
   }
 
   @computed
-  get changeablProps(): ChangeableProps {
+  get changeableProps(): ChangeableProps {
     return {
       name: this.name,
       is_private: this.isPrivate,
@@ -77,7 +77,7 @@ export default class Group {
       return true;
     }
     return Object.values(Changeable).some((val) => {
-      return this.changeablProps[val] !== this.pristineState[val];
+      return this.changeableProps[val] !== this.pristineState[val];
     });
   }
 

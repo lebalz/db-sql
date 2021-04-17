@@ -1,10 +1,6 @@
 import { observable, computed, action } from 'mobx';
 import _ from 'lodash';
-import {
-  GroupMember as GroupMemberProps,
-  setAdminPermission as changeAdminPermission,
-  removeMember
-} from '../api/group';
+import { GroupMember as GroupMemberProps, setAdminPermission as changeAdminPermission } from '../api/group';
 import GroupStore from '../stores/group_store';
 import Group from './Group';
 import { UserProfile } from '../api/user';
@@ -58,7 +54,7 @@ export default class GroupMember {
     if (!this.user) {
       return;
     }
-    changeAdminPermission(this.groupId, this.user.id, isAdmin).then(({ data }) => {
+    return changeAdminPermission(this.groupId, this.user.id, isAdmin).then(({ data }) => {
       this.isAdmin = data.is_admin;
     });
   }

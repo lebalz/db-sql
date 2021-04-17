@@ -246,7 +246,7 @@ class ResultTable extends React.Component<Props> {
                   {Object.values(val).map((cell, j) => {
                     return (
                       <Table.Cell key={j} className={cx(colorMap[j], { selected: selectionMap[j] })}>
-                        {cell === null ? <Label content="NULL" size="mini" /> : cell}
+                        <CellContent cell={cell} />
                       </Table.Cell>
                     );
                   })}
@@ -260,6 +260,24 @@ class ResultTable extends React.Component<Props> {
     );
   }
 }
+
+const CellContent = ({ cell }: { cell: number | string | undefined | null }) => {
+  switch (typeof cell) {
+    case 'string':
+      if (cell === '') {
+        return <span>-</span>;
+      }
+      return <span>{cell}</span>;
+    case 'number':
+      return <span>{cell}</span>;
+    case 'boolean':
+      return <span>{(cell as boolean).toString()}</span>;
+  }
+  if (cell) {
+    return <span>{cell}</span>;
+  }
+  return <Label content="NULL" size="mini" />;
+};
 
 const ScrollPlaceholder = ({ height }: { height: number }) => {
   return (

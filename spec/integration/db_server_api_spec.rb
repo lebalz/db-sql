@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../rails_helper.rb'
+require_relative '../rails_helper'
 require_relative './helpers'
 
 RSpec.configure do |c|
@@ -83,10 +83,11 @@ RSpec.describe "API::Resources::DbServer" do
           params: params
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(3)
-        expect(json[0]['name']).to eq('Ninja Reto')
-        expect(json[1]['name']).to eq('Warrior Maria')
-        expect(json[2]['name']).to eq('Mutant Holzkopf')
+        expect(json['state']).to eq('success')
+        expect(json['result'].size).to be(3)
+        expect(json['result'][0]['name']).to eq('Ninja Reto')
+        expect(json['result'][1]['name']).to eq('Warrior Maria')
+        expect(json['result'][2]['name']).to eq('Mutant Holzkopf')
       end
     end
 
@@ -106,21 +107,22 @@ RSpec.describe "API::Resources::DbServer" do
           params: params
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(2)
+        expect(json.keys.sort).to eq(%w[query_id result state time])
+        expect(json['result'].size).to be(2)
 
-        json.each do |query_result|
+        json['result'].each do |query_result|
           expect(query_result["state"]).to eq("success")
           expect(query_result["result"].length).to be(3)
           expect(query_result["time"]).to be > 0
         end
 
-        expect(json[0]["result"][0]).to eq({ "id" => 1 })
-        expect(json[0]["result"][1]).to eq({ "id" => 2 })
-        expect(json[0]["result"][2]).to eq({ "id" => 3 })
+        expect(json['result'][0]["result"][0]).to eq({ "id" => 1 })
+        expect(json['result'][0]["result"][1]).to eq({ "id" => 2 })
+        expect(json['result'][0]["result"][2]).to eq({ "id" => 3 })
 
-        expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
-        expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
-        expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
+        expect(json['result'][1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json['result'][1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json['result'][1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
       end
 
       it 'can proceed after erroneous query' do
@@ -133,25 +135,25 @@ RSpec.describe "API::Resources::DbServer" do
           params: params
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(2)
+        expect(json['result'].size).to be(2)
 
-        expect(json[0]["state"]).to eq("error")
-        expect(json[0]["result"]).to be_nil
+        expect(json['result'][0]["state"]).to eq("error")
+        expect(json['result'][0]["result"]).to be_nil
         if @db_server.psql?
-          expect(json[0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
+          expect(json['result'][0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
         elsif @db_server.mysql? || @db_server.mariadb?
-          expect(json[0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
+          expect(json['result'][0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
         end
-        expect(json[0]["time"]).to be > 0
+        expect(json['result'][0]["time"]).to be > 0
 
-        expect(json[1]["state"]).to eq("success")
-        expect(json[1]["result"].length).to be(3)
-        expect(json[1]["time"]).to be > 0
-        expect(json[1]["error"]).to be_nil
+        expect(json['result'][1]["state"]).to eq("success")
+        expect(json['result'][1]["result"].length).to be(3)
+        expect(json['result'][1]["time"]).to be > 0
+        expect(json['result'][1]["error"]).to be_nil
 
-        expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
-        expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
-        expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
+        expect(json['result'][1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json['result'][1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json['result'][1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
       end
 
       it 'can skip query execution after erroneous query' do
@@ -165,14 +167,14 @@ RSpec.describe "API::Resources::DbServer" do
           params: params.merge({ proceed_after_error: false })
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(3)
+        expect(json['result'].size).to be(3)
 
-        expect(json[0]["state"]).to eq("success")
-        expect(json[1]["state"]).to eq("error")
-        expect(json[2]["state"]).to eq("skipped")
-        expect(json[2]["result"]).to be_nil
-        expect(json[2]["error"]).to be_nil
-        expect(json[2]["time"]).to be(0)
+        expect(json['result'][0]["state"]).to eq("success")
+        expect(json['result'][1]["state"]).to eq("error")
+        expect(json['result'][2]["state"]).to eq("skipped")
+        expect(json['result'][2]["result"]).to be_nil
+        expect(json['result'][2]["error"]).to be_nil
+        expect(json['result'][2]["time"]).to be(0)
       end
     end
 
@@ -244,7 +246,8 @@ RSpec.describe "API::Resources::DbServer" do
 
       it 'can not return result on error' do
 
-        params[:query] = "SELECT id FROM ninja_turtles; SELECT no_row FROM ninja_turtles"
+        params[:query] =
+          "SELECT id FROM ninja_turtles; SELECT no_row FROM ninja_turtles"
 
         post(
           "/api/db_servers/#{@db_server.id}/ninja_turtles_db/raw_query",
@@ -338,8 +341,12 @@ RSpec.describe "API::Resources::DbServer" do
         expect(response.successful?).to be_truthy
         expect(json.size).to be(2)
 
-        badass_idx = json.index { |meta| meta['options']['column'] == 'badass_turtle_id' }
-        kickass_idx = json.index { |meta| meta['options']['column'] == 'kickass_turtle_id' }
+        badass_idx = json.index do |meta|
+          meta['options']['column'] == 'badass_turtle_id'
+        end
+        kickass_idx = json.index do |meta|
+          meta['options']['column'] == 'kickass_turtle_id'
+        end
 
         # first foreign key
         expect(json[badass_idx]['from_table']).to eq('fights')
@@ -392,7 +399,8 @@ RSpec.describe "API::Resources::DbServer" do
           hash_including("limit" => 4, "type" => "integer")
         )
         expect(json[1]).to match(
-          hash_including("is_primary" => false, "name" => "name", "null" => true)
+          hash_including("is_primary" => false, "name" => "name",
+                         "null" => true)
         )
         expect(json[1]["sql_type_metadata"]).to match(
           hash_including("type" => "text")
@@ -412,19 +420,22 @@ RSpec.describe "API::Resources::DbServer" do
           hash_including("limit" => 4, "type" => "integer")
         )
         expect(json[1]).to match(
-          hash_including("name" => "date", "is_primary" => false, "null" => true)
+          hash_including("name" => "date", "is_primary" => false,
+                         "null" => true)
         )
         expect(json[1]["sql_type_metadata"]).to match(
           hash_including("type" => "datetime")
         )
         expect(json[2]).to match(
-          hash_including("name" => "badass_turtle_id", "is_primary" => false, "null" => true)
+          hash_including("name" => "badass_turtle_id", "is_primary" => false,
+                         "null" => true)
         )
         expect(json[2]["sql_type_metadata"]).to match(
           hash_including("limit" => 4, "type" => "integer")
         )
         expect(json[3]).to match(
-          hash_including("name" => "kickass_turtle_id", "is_primary" => false, "null" => true)
+          hash_including("name" => "kickass_turtle_id", "is_primary" => false,
+                         "null" => true)
         )
         expect(json[3]["sql_type_metadata"]).to match(
           hash_including("limit" => 4, "type" => "integer")
@@ -717,99 +728,139 @@ RSpec.describe "API::Resources::DbServer" do
   RSpec.shared_examples 'common owner type specs' do
     describe 'with psql 9.3' do
       before(:all) do
-        config_for(db_version: 'p9.3', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'p9.3', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
 
     describe 'with psql 10' do
       before(:all) do
-        config_for(db_version: 'p10', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'p10', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
 
     describe 'with psql 11' do
       before(:all) do
-        config_for(db_version: 'p11', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'p11', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
 
     end
 
     describe 'with psql 12' do
       before(:all) do
-        config_for(db_version: 'p12', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'p12', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
 
     describe 'with mysql 5.6' do
       before(:all) do
-        config_for(db_version: 'm5.6', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'm5.6', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
 
     describe 'with mysql 5.7' do
       before(:all) do
-        config_for(db_version: 'm5.7', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'm5.7', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
 
     describe 'with mysql 8' do
       before(:all) do
-        config_for(db_version: 'm8', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'm8', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
 
     describe 'with mariadb 10.5.3' do
       before(:all) do
-        config_for(db_version: 'mariadb_10.5.3', owner_type: @owner_type, read_only_access: @read_only_access)
+        config_for(db_version: 'mariadb_10.5.3', owner_type: @owner_type,
+                   read_only_access: @read_only_access)
       end
       after(:all) do
         @db_server.destroy!
       end
       include_examples 'common database specs'
-      include_examples 'common database server specs for owners with read only rights' if @read_only_access
-      include_examples 'common database specs for owners with write rights' unless @read_only_access
+      if @read_only_access
+        include_examples 'common database server specs for owners with read only rights'
+      end
+      unless @read_only_access
+        include_examples 'common database specs for owners with write rights'
+      end
     end
   end
 

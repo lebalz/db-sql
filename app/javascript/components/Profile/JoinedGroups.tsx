@@ -12,6 +12,7 @@ import { REST } from '../../declarations/REST';
 import _ from 'lodash';
 import GroupProps from './Groups/GroupProps';
 import Editable from './Groups/Editable';
+import QueryLog from '../QueryLog';
 
 interface InjectedProps {
   groupStore: GroupStore;
@@ -90,14 +91,24 @@ export default class Groups extends React.Component {
           {this.activeGroup && (
             <Fragment>
               <GroupProps group={this.activeGroup} />
-              <Editable group={this.activeGroup} currentUserId={this.injected.userStore.loggedInUser.id} />
-              {this.isGroupAdmin && (
-                <Actions
-                  for={this.activeGroup}
-                  isSaving={this.injected.groupStore.requestState === REST.Requested}
-                  size="mini"
-                />
-              )}
+              <div style={{ display: 'flex' }}>
+                <div style={{ flexGrow: 1 }}>
+                  <Editable
+                    group={this.activeGroup}
+                    currentUserId={this.injected.userStore.loggedInUser.id}
+                  />
+                  {this.isGroupAdmin && (
+                    <Actions
+                      for={this.activeGroup}
+                      isSaving={this.injected.groupStore.requestState === REST.Requested}
+                      size="mini"
+                    />
+                  )}
+                </div>
+                <div style={{ flexGrow: 2, marginLeft: '1em' }}>
+                  <QueryLog basic groupId={this.activeGroup.id} />
+                </div>
+              </div>
             </Fragment>
           )}
         </div>

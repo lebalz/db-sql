@@ -5,13 +5,14 @@ import { RouterStore } from 'mobx-react-router';
 import DbServerStore, { LoadState } from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSchemaTree';
+import DatabaseSchemaTree from './Workbench/DatabaseSchemaTree/DatabaseSchemaTree';
 import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
-import DbServerIndex from './DatabaseServer/DbServerIndex';
-import { Dimmer, Loader, Segment } from 'semantic-ui-react';
-import QueryIndex from './DatabaseServer/QueryIndex';
-import Query from './DatabaseServer/Query/Query';
+import DbServerIndex from './Workbench/DbServerIndex';
+import { Dimmer, Loader, Segment, Button, Header, Icon } from 'semantic-ui-react';
+import EditorIndex from './Workbench/EditorIndex';
+import QueryEditor from './Workbench/QueryEditor/QueryEditor';
+import QueryIndex from './Workbench/QueryIndex';
 
 interface MatchParams {
   id: string;
@@ -28,7 +29,7 @@ interface InjectedProps extends DbConnectionProps {
 
 @inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
-export default class DbServer extends React.Component<DbConnectionProps> {
+export default class Workbench extends React.Component<DbConnectionProps> {
   loadDisposer: IReactionDisposer;
   tableDisposer: IReactionDisposer;
   constructor(props: DbConnectionProps) {
@@ -79,7 +80,13 @@ export default class DbServer extends React.Component<DbConnectionProps> {
   }
 
   render() {
-    const query = this.injected.dbServerStore.activeDbServer?.activeDatabase?.activeQuery;
+    const { dbServerStore } = this.injected;
+    const { activeDbServer } = dbServerStore;
+
+    const connectionError = dbServerStore.find(this.id)?.connectionError;
+    const connectionSuccess = !connectionError;
+
+    const query = activeDbServer?.activeDatabase?.activeQuery;
     return (
       <Fragment>
         <header>
@@ -89,13 +96,35 @@ export default class DbServer extends React.Component<DbConnectionProps> {
           <DatabaseSchemaTree />
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
-          <DbServerIndex />
-          <Segment>
-            <QueryIndex queries={this.injected.dbServerStore.activeDbServer?.queries ?? []} />
-            {query && <Query query={query} />}
-          </Segment>
+          <DbServerIndex activeId={this.id} />
+          {connectionSuccess ? (
+            <Fragment>
+              <Segment>
+                <EditorIndex editors={activeDbServer?.queries ?? []} />
+                {activeDbServer && activeDbServer.activeDatabaseName && (
+                  <QueryIndex dbServerId={activeDbServer.id} dbName={activeDbServer.activeDatabaseName} />
+                )}
+                {query && <QueryEditor query={query} />}
+              </Segment>
+            </Fragment>
+          ) : (
+            <Segment placeholder>
+              <Header icon>
+                <Icon name="close" color="red" />
+                Error connecting to this database server
+              </Header>
+              <Segment color="red">
+                <code>{connectionError}</code>
+              </Segment>
+              <Button
+                size="mini"
+                content="Edit this connection"
+                onClick={() => this.injected.dbServerStore.editDbServer(this.id)}
+              />
+            </Segment>
+          )}
         </main>
-        <Dimmer active={this.injected.dbServerStore.dbIndexLoadState === LoadState.Loading}>
+        <Dimmer active={dbServerStore.dbIndexLoadState === LoadState.Loading}>
           <Loader indeterminate content="Loading Databases" />
         </Dimmer>
       </Fragment>

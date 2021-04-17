@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../rails_helper.rb'
+require_relative '../rails_helper'
 
 RSpec.describe "API::Resources::DatabaseSchemaQuery" do
   before(:all) do
@@ -14,7 +14,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       'Authorization' => @user1_token.token,
       'Crypto-Key' => @user1_key
     }
-    
+
     @user2_token = FactoryBot.create(:login_token, user: @user2)
     @user2_key = @user2.crypto_key('asdfasdf')
     @user2_headers = {
@@ -29,10 +29,10 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       'Crypto-Key' => @user3_key
     }
 
-
     @group1 = FactoryBot.create(:group, name: 'Random SQL')
     @group2 = FactoryBot.create(:group, name: 'Fancy Pancy')
-    @group3 = FactoryBot.create(:group, name: 'Public Shizzle', is_private: false)
+    @group3 = FactoryBot.create(:group, name: 'Public Shizzle',
+                                        is_private: false)
 
     @group1_key = Group.random_crypto_key
     @group2_key = Group.random_crypto_key
@@ -85,9 +85,11 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
       expect(json[0]["name"]).to eq("Random SQL")
-      expect(json[0]["members"].find { |u| u['user_id'] == @user1.id }['is_admin']).to be_truthy
+      expect(json[0]["members"].find do |u|
+               u['user_id'] == @user1.id
+             end             ['is_admin']).to be_truthy
 
-      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
+      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }
       expect(db_servers.count).to be(2)
       expect(db_servers[0]['name']).to eq("db_server1")
       expect(db_servers[0]['username']).to eq("foobar")
@@ -104,13 +106,13 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         "/api/groups",
         headers: @user2_headers
       )
-    
+
       expect(response.successful?).to be_truthy
       expect(json.size).to be(1)
       expect(json[0]["members"]).to be_nil
       expect(json[0]["name"]).to eq("Random SQL")
 
-      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }      
+      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }
       expect(db_servers.count).to be(2)
       expect(db_servers[0]['name']).to eq("db_server1")
       expect(db_servers[0]['username']).to eq("foobar")
@@ -128,7 +130,9 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(json[0]["db_servers"].count).to be(1)
       expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
       expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
-      expect(json[0]["members"].find { |u| u['user_id'] == @user3.id }['is_admin']).to be_truthy
+      expect(json[0]["members"].find do |u|
+               u['user_id'] == @user3.id
+             end             ['is_admin']).to be_truthy
     end
 
     it 'returns all public available groups' do
@@ -188,7 +192,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         @group1.reload
         member = @group1.members.find { |m| m.user_id == user.id }
         expect(member.is_outdated).to be_truthy
-  
+
         get(
           "/api/groups/#{@group1.id}",
           headers: @user2_headers
@@ -199,7 +203,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       end
 
       it 'can not update itself' do
-        user = @group_user        
+        user = @group_user
         user_token = FactoryBot.create(:login_token, user: user)
         user_key = user.crypto_key('12341234')
         user_headers = {
@@ -209,7 +213,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         @group1.reload
         member = @group1.members.find { |m| m.user_id == user.id }
         expect(member.is_outdated).to be_truthy
-  
+
         get(
           "/api/groups/#{@group1.id}",
           headers: user_headers
@@ -218,7 +222,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         @group1.reload
         member = @group1.members.find { |m| m.user_id == user.id }
         expect(member.is_outdated).to be_truthy
-  
+
       end
     end
 
