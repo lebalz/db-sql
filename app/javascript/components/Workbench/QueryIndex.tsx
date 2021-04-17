@@ -89,11 +89,7 @@ export default class QueryIndex extends React.Component<Props> {
             </div>
           </div>
         </div>
-        {this.activeQuery && (
-          <Segment raised>
-            <SqlQueryPreview sqlQuery={this.activeQuery} />
-          </Segment>
-        )}
+        {this.activeQuery && <SqlQueryPreview sqlQuery={this.activeQuery} />}
       </Segment>
     );
   }

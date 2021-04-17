@@ -13,11 +13,21 @@ import { copyIcon, copyIconColor } from '../../shared/helpers';
 interface Props {
   sqlQuery: SqlQuery;
   playTooltip?: string;
+  actions?: QueryActions[];
+  exclude?: QueryActions[];
   onPlay: () => void;
 }
 
 interface InjectedProps extends Props {
   viewStateStore: ViewStateStore;
+}
+
+export enum QueryActions {
+  Copy = 'copy',
+  Download = 'download',
+  Star = 'star',
+  Play = 'play',
+  Share = 'share'
 }
 
 @inject('viewStateStore')
@@ -30,6 +40,14 @@ export default class SqlQueryActions extends React.Component<Props> {
   @computed
   get sqlQuery() {
     return this.props.sqlQuery;
+  }
+
+  get queryLabels(): QueryActions[] {
+    const exclude = this.props.exclude || [];
+    if (this.props.actions) {
+      return this.props.actions.filter((l) => !exclude.includes(l));
+    }
+    return Object.values(QueryActions).filter((l) => !exclude.includes(l));
   }
 
   @action
@@ -60,41 +78,49 @@ export default class SqlQueryActions extends React.Component<Props> {
 
     return (
       <div className="query-actions">
-        {(ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
-          <ClickableIcon
-            icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
-            color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
-            onClick={() => this.sqlQuery.toggleIsFavorite()}
-          />
+        {this.queryLabels.includes(QueryActions.Star) &&
+          (ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
+            <ClickableIcon
+              icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
+              color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
+              onClick={() => this.sqlQuery.toggleIsFavorite()}
+            />
+          )}
+        {this.queryLabels.includes(QueryActions.Play) &&
+          (ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
+            <ClickableIcon
+              icon={this.sqlQuery.isValid ? 'play' : 'edit'}
+              color={this.sqlQuery.isValid ? 'green' : 'blue'}
+              tooltip={this.props.playTooltip}
+              onClick={this.props.onPlay}
+            />
+          )}
+        {this.queryLabels.includes(QueryActions.Download) && (
+          <ClickableIcon icon="download" color="black" tooltip="Download" onClick={() => this.download()} />
         )}
-        {(ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
-          <ClickableIcon
-            icon={this.sqlQuery.isValid ? 'play' : 'edit'}
-            color={this.sqlQuery.isValid ? 'green' : 'blue'}
-            tooltip={this.props.playTooltip}
-            onClick={this.props.onPlay}
-          />
+        {this.queryLabels.includes(QueryActions.Copy) && (
+          <CopyToClipboard text={this.sqlQuery.query} onCopy={(_, success) => this.onCopy(success)}>
+            <ClickableIcon
+              icon={copyIcon(this.injected.viewStateStore.sqlCopyState(this.sqlQuery.id))}
+              color={copyIconColor(this.injected.viewStateStore.sqlCopyState(this.sqlQuery.id))}
+              tooltip="Copy sql"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            />
+          </CopyToClipboard>
         )}
-        <ClickableIcon icon="download" color="black" tooltip="Download" onClick={() => this.download()} />
-        <CopyToClipboard text={this.sqlQuery.query} onCopy={(_, success) => this.onCopy(success)}>
-          <ClickableIcon
-            icon={copyIcon(this.injected.viewStateStore.sqlCopyState(this.sqlQuery.id))}
-            color={copyIconColor(this.injected.viewStateStore.sqlCopyState(this.sqlQuery.id))}
-            tooltip="Copy sql"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          />
-        </CopyToClipboard>
-        {ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
-          <ClickableIcon
-            icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
-            onClick={() => this.sqlQuery.toggleIsPrivate()}
-            tooltip={
-              this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'
-            }
-            delayed
-            tooltipPosition="top right"
-          />
-        )}
+        {this.queryLabels.includes(QueryActions.Share) &&
+          ownerType === OwnerType.Group &&
+          this.sqlQuery.isOwner && (
+            <ClickableIcon
+              icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
+              onClick={() => this.sqlQuery.toggleIsPrivate()}
+              tooltip={
+                this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'
+              }
+              delayed
+              tooltipPosition="top right"
+            />
+          )}
       </div>
     );
   }

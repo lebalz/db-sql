@@ -60,14 +60,14 @@ export default class QueryEditor extends React.Component<Props> {
         </Segment>
         <div className="query-bar">
           <Checkbox
-            toggle
             checked={this.props.query.proceedAfterError}
             disabled={this.props.query.executionMode === ResultType.Raw}
             label="Proceed after sql error"
             onChange={() => this.props.query.toggleProceedAfterError()}
           />
+          <div className="spacer" />
+
           <Checkbox
-            toggle
             checked={this.props.query.executionMode === ResultType.Raw}
             label="Execute raw query"
             onChange={() => this.props.query.toggleExecuteRawQuery()}

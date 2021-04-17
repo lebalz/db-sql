@@ -5,11 +5,11 @@ import Tooltip from '../../shared/Tooltip';
 import { computed } from 'mobx';
 import SqlQuery from '../../models/SqlQuery';
 import { DbType } from '../../models/DbServer';
-import { OwnerType } from '../../api/db_server';
-import ClickableIcon from '../../shared/ClickableIcon';
 import { PrismCode } from '../Workbench/SqlResult/PrismCode';
 import ViewStateStore from '../../stores/view_state_store';
 import SqlQueryActions from './SqlQueryActions';
+import SqlQueryLabels, { QueryLabels } from './SqlQueryLabels';
+import SqlQueryErrors from './SqlQueryErrors';
 
 interface Props {
   sqlQuery: SqlQuery;
@@ -39,18 +39,20 @@ export default class SqlQueryCard extends React.Component<Props> {
       <div key={this.sqlQuery.id} className="sql-query">
         <div className="card-labels">
           {!isBasic && (
-            <Fragment>
-              <Label content={this.sqlQuery.dbServerName} color="blue" basic size="mini" pointing="right" />
-              <Label
-                icon="database"
-                content={this.sqlQuery.dbName}
-                color="blue"
-                basic
-                size="mini"
-                as="a"
-                onClick={() => this.sqlQuery.showInEditor()}
-              />
-            </Fragment>
+            <div style={{ width: '15em', overflowX: 'hidden' }}>
+              <div style={{ width: 'max-content' }}>
+                <Label content={this.sqlQuery.dbServerName} color="blue" basic size="mini" pointing="right" />
+                <Label
+                  icon="database"
+                  content={this.sqlQuery.dbName}
+                  color="blue"
+                  basic
+                  size="mini"
+                  as="a"
+                  onClick={() => this.sqlQuery.showInEditor()}
+                />
+              </div>
+            </div>
           )}
           <div className="spacer" />
           {!isBasic && (
@@ -61,40 +63,19 @@ export default class SqlQueryCard extends React.Component<Props> {
             />
           )}
           <div className="spacer" />
-          <Tooltip
-            delayed
-            position="top right"
-            content={this.sqlQuery.isValid ? 'Successful executed' : 'Execution resulted in errors'}
-          >
-            <Icon
-              className="centered"
-              name={this.sqlQuery.isValid ? 'check' : 'close'}
-              color={this.sqlQuery.isValid ? 'green' : 'red'}
-            />
-          </Tooltip>
-          {this.sqlQuery.execTime && (
-            <Tooltip delayed position="top right" content={`Executed in ${this.sqlQuery.execTime}s `}>
-              <span>
-                <Icon className="centered" name="clock" color="black" />
-                {` ${this.sqlQuery.execTime.toFixed(2)}s`}
-              </span>
-            </Tooltip>
-          )}
-          {!isBasic && (
-            <Label
-              content={this.sqlQuery.dbServerType}
-              color={this.sqlQuery.dbServerType === DbType.Psql ? 'blue' : 'orange'}
-              size="mini"
-            />
-          )}
+          <SqlQueryLabels
+            sqlQuery={this.sqlQuery}
+            exclude={isBasic ? [QueryLabels.ExecTime, QueryLabels.OwnerType] : []}
+          />
         </div>
         <div className="meta">{this.sqlQuery.createdAt.toLocaleString()}</div>
         <PrismCode
           code={this.sqlQuery.query}
           language="sql"
           plugins={['line-numbers']}
-          style={{ maxHeight: '22em' }}
+          style={{ maxHeight: '22em', fontSize: 'smaller' }}
         />
+        <SqlQueryErrors sqlQuery={this.sqlQuery} />
       </div>
     );
   }

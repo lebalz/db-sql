@@ -1,15 +1,15 @@
 import React from 'react';
-import { Icon, Message } from 'semantic-ui-react';
+import { Icon, Message, Segment } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import Tooltip from '../../shared/Tooltip';
-import { action, computed } from 'mobx';
+import { computed } from 'mobx';
 import SqlQuery from '../../models/SqlQuery';
 import { OwnerType } from '../../api/db_server';
 import { PrismCode } from '../Workbench/SqlResult/PrismCode';
 import ViewStateStore from '../../stores/view_state_store';
-import fileDownload from 'js-file-download';
-import { CopyState } from '../../models/Result';
 import SqlQueryActions from './SqlQueryActions';
+import SqlQueryErrors from './SqlQueryErrors';
+import SqlQueryLabels, { QueryLabels } from './SqlQueryLabels';
 
 interface Props {
   sqlQuery: SqlQuery;
@@ -30,77 +30,45 @@ export default class SqlQueryPreview extends React.Component<Props> {
   get sqlQuery() {
     return this.props.sqlQuery;
   }
+  @computed
+  get viewState() {
+    return this.injected.viewStateStore;
+  }
   render() {
-    const ownerType = this.sqlQuery.dbServerOwnerType;
+    const { scope, id } = this.sqlQuery;
     return (
-      <div
-        key={this.sqlQuery.id}
+      <Segment
+        raised={this.viewState.sqlQueryPreviewHovered}
         onMouseOver={() => {
-          this.injected.viewStateStore.cancelPreviewTimeout(this.sqlQuery.scope, this.sqlQuery.id);
+          this.viewState.setSqlQueryPreviewHovered(true);
+          this.viewState.cancelPreviewTimeout(scope, id);
         }}
         onMouseLeave={() => {
-          this.injected.viewStateStore.unsetPreviewQuery(this.sqlQuery.scope, this.sqlQuery.id);
+          this.viewState.setSqlQueryPreviewHovered(false);
+          this.viewState.unsetPreviewQuery(scope, id);
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-          <SqlQueryActions
-            sqlQuery={this.sqlQuery}
-            onPlay={() => this.sqlQuery.insertInEditor()}
-            playTooltip="Insert in the editor"
+        <div key={id}>
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+            <SqlQueryActions
+              sqlQuery={this.sqlQuery}
+              onPlay={() => this.sqlQuery.insertInEditor()}
+              playTooltip="Insert in the editor"
+            />
+            <SqlQueryLabels sqlQuery={this.sqlQuery} exclude={[QueryLabels.DbType, QueryLabels.OwnerType]} />
+            <div style={{ color: 'gray', marginBottom: '0.4em', fontStyle: 'italic' }}>
+              {this.sqlQuery.createdAt.toLocaleString()}
+            </div>
+          </div>
+          <PrismCode
+            code={this.sqlQuery.query}
+            language="sql"
+            plugins={['line-numbers']}
+            style={{ maxHeight: '22em', fontSize: 'smaller' }}
           />
-          <div className="query-labels">
-            {ownerType && (
-              <Tooltip
-                delayed
-                position="top right"
-                content={
-                  ownerType === OwnerType.Group
-                    ? 'Executed on a shared db connection'
-                    : 'Executed on a personal db connection'
-                }
-              >
-                <Icon className="centered" name={ownerType === OwnerType.Group ? 'group' : 'user'} />
-              </Tooltip>
-            )}
-            <Tooltip
-              delayed
-              position="top right"
-              content={this.sqlQuery.isValid ? 'Successful executed' : 'Execution resulted in errors'}
-            >
-              <Icon
-                className="centered"
-                name={this.sqlQuery.isValid ? 'check' : 'close'}
-                color={this.sqlQuery.isValid ? 'green' : 'red'}
-              />
-            </Tooltip>
-            {this.sqlQuery.execTime && (
-              <Tooltip delayed position="top right" content={`Executed in ${this.sqlQuery.execTime}s`}>
-                <span>
-                  <Icon className="centered" name="clock" color="black" />
-                  {` ${this.sqlQuery.execTime.toFixed(2)}s`}
-                </span>
-              </Tooltip>
-            )}
-          </div>
-          <div>
-            <i>{this.sqlQuery.createdAt.toLocaleString()}</i>
-          </div>
+          <SqlQueryErrors sqlQuery={this.sqlQuery} />
         </div>
-        <PrismCode
-          code={this.sqlQuery.query}
-          language="sql"
-          plugins={['line-numbers']}
-          style={{ maxHeight: '22em', fontSize: 'smaller' }}
-        />
-        {this.sqlQuery.errors.map((err) => {
-          return (
-            <Message error size="mini" key={err.query_idx}>
-              <Message.Header>{`Error in the ${err.query_idx + 1}. query`}</Message.Header>
-              <p>{err.error}</p>
-            </Message>
-          );
-        })}
-      </div>
+      </Segment>
     );
   }
 }

@@ -30,6 +30,9 @@ class State {
 
   @observable.ref
   sqlCopyState = observable(new Map<string, CopyState>());
+
+  @observable
+  sqlQueryPreviewHovered: boolean = false;
 }
 
 class ViewStateStore {
@@ -43,6 +46,15 @@ class ViewStateStore {
   @computed
   get previewSelectedQueries() {
     return this.state.previewSelectedQueries;
+  }
+
+  @computed
+  get sqlQueryPreviewHovered() {
+    return this.state.sqlQueryPreviewHovered;
+  }
+  @action
+  setSqlQueryPreviewHovered(hovered: boolean) {
+    this.state.sqlQueryPreviewHovered = hovered;
   }
 
   sqlCopyState(sqlId: string): CopyState {
@@ -95,7 +107,7 @@ class ViewStateStore {
         if (selected) {
           selected.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 1500) as any;
+      }, 800) as any;
     } else {
       this.state.previewQueries.delete(scope);
       const selected = this.state.previewSelectedQueries.get(scope);
