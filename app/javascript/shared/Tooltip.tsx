@@ -31,7 +31,7 @@ class Tooltip extends React.Component<Props> {
 
     return (
       <Popup
-      flowing
+        flowing
         trigger={this.props.children}
         content={this.props.content}
         position={this.props.position}

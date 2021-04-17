@@ -150,7 +150,7 @@ export default class Editable extends React.Component<Props> {
                     <Icon name="warning sign" color="yellow" />
                   </Tooltip>
                 )}
-                <AdminBadge isOutdated={this.group.isOutdated} member={member} />
+                <AdminBadge isOutdated={this.group.isOutdated} isAdmin={member.isAdmin} member={member} />
                 {this.group.isAdmin && (
                   <ClickableIcon
                     icon="minus circle"
@@ -168,17 +168,17 @@ export default class Editable extends React.Component<Props> {
   }
 }
 
-const AdminBadge = (props: { isOutdated: boolean; member: GroupMember }) => {
-  const { member, isOutdated } = props;
+const AdminBadge = (props: { isOutdated: boolean; isAdmin: boolean; member: GroupMember }) => {
+  const { isAdmin, isOutdated, member } = props;
   return (
     <Label
-      content={member.isAdmin ? 'admin' : 'user'}
-      color={member.isAdmin ? 'teal' : undefined}
+      content={isAdmin ? 'admin' : 'user'}
+      color={isAdmin ? 'teal' : undefined}
       size="mini"
-      basic={!member.isAdmin}
+      basic={!isAdmin}
       onClick={() => {
         if (!isOutdated) {
-          member.setAdminPermission(!member.isAdmin);
+          member.setAdminPermission(!isAdmin);
         }
       }}
       as={member.isCurrentUser ? undefined : 'a'}

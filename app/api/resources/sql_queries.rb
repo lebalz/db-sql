@@ -29,12 +29,17 @@ module Resources
         requires(:group_id, type: String, desc: 'group id')
       end
       get :shared do
-        group = policy_cope(Group).find(params[:group_id])
+        group = policy_scope(Group).find(params[:group_id])
 
         authorize group, :show?
 
+        db_servers = group.db_servers.select(:id).to_sql
+        queries = SqlQuery.where(is_private: false).where(
+          "db_server_id in (#{db_servers})"
+        )
+
         present(
-          group.sql_queries.order('is_favorite desc', 'updated_at desc'),
+          queries.order('is_favorite desc', 'updated_at desc'),
           with: Entities::SqlQuery
         )
       end

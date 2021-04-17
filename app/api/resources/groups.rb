@@ -7,7 +7,8 @@ module Resources
     end
     helpers do
       def load_current_group
-        group = policy_scope(Group).includes(:group_members, :db_servers, :users).find(params[:id])
+        group = policy_scope(Group).includes(:group_members, :db_servers,
+                                             :users).find(params[:id])
 
         authorize group, :show?
 
@@ -28,8 +29,10 @@ module Resources
       get do
         authorize Group, :index?
 
-        groups = policy_scope(Group).includes(:group_members, :db_servers, :users)
-        Group.update_outdated_group_members(user: current_user, pkey: current_user.private_key(crypto_key))
+        groups = policy_scope(Group).includes(:group_members, :db_servers,
+                                              :users)
+        Group.update_outdated_group_members(user: current_user,
+                                            pkey: current_user.private_key(crypto_key))
         present(
           groups,
           with: Entities::Group,
@@ -39,8 +42,10 @@ module Resources
 
       desc 'Get public groups, by default 20 with no offset'
       params do
-        optional(:limit, type: Integer, default: -1, desc: 'maximal number of returned groups, -1 returns all groups')
-        optional(:offset, type: Integer,  default: 0, desc: 'offset of returned groups')
+        optional(:limit, type: Integer, default: -1,
+                         desc: 'maximal number of returned groups, -1 returns all groups')
+        optional(:offset, type: Integer,  default: 0,
+                          desc: 'offset of returned groups')
       end
       get :public do
         authorize Group, :index?
@@ -50,7 +55,8 @@ module Resources
         ).includes(:group_members, :db_servers, :users)
 
         if (params[:limit] || 0) < 0
-          return present(public_groups, with: Entities::Group, user: current_user)
+          return present(public_groups, with: Entities::Group,
+                                        user: current_user)
         end
 
         present(
@@ -73,8 +79,10 @@ module Resources
       desc 'Create a new group'
       params do
         requires(:name, type: String, desc: 'Name')
-        optional(:description, type: String, default: '', desc: 'description or purpose of the group')
-        optional(:is_private, type: Boolean, default: true, desc: 'is a private group')
+        optional(:description, type: String, default: '',
+                               desc: 'description or purpose of the group')
+        optional(:is_private, type: Boolean, default: true,
+                              desc: 'is a private group')
       end
       post do
         authorize Group, :create?
@@ -101,7 +109,8 @@ module Resources
           authorize current_group, :show?
 
           current_group.update_outdated_members(
-            group_key: current_group.crypto_key(current_user, current_user.private_key(crypto_key))
+            group_key: current_group.crypto_key(current_user,
+                                                current_user.private_key(crypto_key))
           )
 
           present(current_group, with: Entities::Group, user: current_user)
@@ -110,7 +119,7 @@ module Resources
         desc 'Delete a group'
         delete do
           authorize current_group, :destroy?
-          
+
           begin
             current_group.destroy
           rescue StandardError => e
@@ -223,7 +232,9 @@ module Resources
               authorize current_group, :change_member_permission?
 
               if current_user.id == params[:user_id]
-                error!('Admin can not revoke it\'s admin rights User not found', 302)
+                error!(
+                  'Admin can not revoke it\'s admin rights User not found', 302
+                )
               end
 
               group_member = current_group.group_members.find_by(user_id: params[:user_id])

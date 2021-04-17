@@ -25,7 +25,7 @@
 
 class User < ApplicationRecord
   has_many :group_members, dependent: :delete_all
-  has_many :groups, through: :group_members
+  has_many :groups, through: :group_members, source: 'group'
   has_many :sql_queries, dependent: :delete_all
 
   has_secure_password
@@ -151,7 +151,7 @@ class User < ApplicationRecord
   # @param password [String] clear text password. (Not stored to db)
   # @return [String] base64 encoded key
   def crypto_key(password)
-    hash = OpenSSL::Digest::SHA256.new
+    hash = OpenSSL::Digest.new('SHA256')
     key = OpenSSL::KDF.pbkdf2_hmac(
       password,
       salt: id,

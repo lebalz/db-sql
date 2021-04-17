@@ -1,8 +1,6 @@
 import { action, computed } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import React, { Fragment } from 'react';
-import CopyToClipboard from 'react-copy-to-clipboard';
-import { Button, Icon, Label, SemanticCOLORS } from 'semantic-ui-react';
 import { ResultState } from '../../../api/db_server';
 import { QueryResult } from '../../../models/QueryEditor';
 import ViewStateStore from '../../../stores/view_state_store';

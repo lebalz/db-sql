@@ -55,7 +55,11 @@ class GroupPolicy < ApplicationPolicy
     def resolve
       scope.all if user.admin?
 
-      scope.joins(:group_members).where('not groups.is_private or group_members.user_id = :user', user: user.id)
+      my_groups = GroupMember.select(:group_id).where(user: user).to_sql
+
+      scope.where(
+        "not groups.is_private or groups.id in (#{my_groups})"
+      )
     end
   end
-  end
+end

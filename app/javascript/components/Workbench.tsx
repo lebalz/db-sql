@@ -84,6 +84,7 @@ export default class Workbench extends React.Component<DbConnectionProps> {
     const { activeDbServer } = dbServerStore;
 
     const connectionError = dbServerStore.find(this.id)?.connectionError;
+    const connectionSuccess = !connectionError;
 
     const query = activeDbServer?.activeDatabase?.activeQuery;
     return (
@@ -96,16 +97,24 @@ export default class Workbench extends React.Component<DbConnectionProps> {
         </div>
         <main style={{ paddingTop: '0em', paddingLeft: '0.2em' }}>
           <DbServerIndex activeId={this.id} />
-          {connectionError ? (
+          {connectionSuccess ? (
+            <Fragment>
+              <Segment>
+                <EditorIndex editors={activeDbServer?.queries ?? []} />
+                {activeDbServer && activeDbServer.activeDatabaseName && (
+                  <QueryIndex dbServerId={activeDbServer.id} dbName={activeDbServer.activeDatabaseName} />
+                )}
+                {query && <QueryEditor query={query} />}
+              </Segment>
+            </Fragment>
+          ) : (
             <Segment placeholder>
               <Header icon>
                 <Icon name="close" color="red" />
                 Error connecting to this database server
               </Header>
               <Segment color="red">
-                <code>
-                  {connectionError}
-                </code>
+                <code>{connectionError}</code>
               </Segment>
               <Button
                 size="mini"
@@ -113,16 +122,6 @@ export default class Workbench extends React.Component<DbConnectionProps> {
                 onClick={() => this.injected.dbServerStore.editDbServer(this.id)}
               />
             </Segment>
-          ) : (
-            <Fragment>
-              <Segment>
-                <EditorIndex editors={activeDbServer?.queries ?? []} />
-                {activeDbServer && activeDbServer.activeDatabaseName && (
-                <QueryIndex dbServerId={activeDbServer.id} dbName={activeDbServer.activeDatabaseName} />
-                )} 
-                {query && <QueryEditor query={query} />}
-              </Segment>
-            </Fragment>
           )}
         </main>
         <Dimmer active={dbServerStore.dbIndexLoadState === LoadState.Loading}>
