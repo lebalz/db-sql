@@ -19,6 +19,60 @@ class ResultTableState {
   graph?: Graph;
 }
 
+class SqlQueryLogFilter {
+  @observable
+  private _dbServerId?: string;
+  @observable
+  private _dbName?: string;
+
+  @observable
+  executionState?: 'success' | 'error';
+
+  @action
+  toggleError() {
+    if (this.executionState === 'error') {
+      this.executionState = undefined;
+    } else {
+      this.executionState = 'error';
+    }
+  }
+  @action
+  toggleSuccess() {
+    if (this.executionState === 'success') {
+      this.executionState = undefined;
+    } else {
+      this.executionState = 'success';
+    }
+  }
+
+  @computed
+  get dbServerId() {
+    return this._dbServerId;
+  }
+
+  @computed
+  get dbName() {
+    return this._dbName;
+  }
+
+  @action
+  setDbServerId(id: string | undefined) {
+    if (this._dbServerId === id) {
+      return;
+    }
+    this._dbServerId = id;
+    this._dbName = undefined;
+  }
+
+  @action
+  setDbName(name: string | undefined) {
+    if (this._dbName === name) {
+      return;
+    }
+    this._dbName = name;
+  }
+}
+
 class State {
   @observable.ref
   resultTable = observable(new Map<string, ResultTableState>());
@@ -38,6 +92,9 @@ class State {
 class ViewStateStore {
   @observable.ref
   private state = new State();
+
+  @observable.ref
+  sqlQueryLogFilter = new SqlQueryLogFilter();
 
   hoverTimeoutHandler?: number;
 
@@ -148,6 +205,7 @@ class ViewStateStore {
   @action cleanup() {
     clearTimeout(this.hoverTimeoutHandler);
     this.state = new State();
+    this.sqlQueryLogFilter = new SqlQueryLogFilter();
   }
 }
 

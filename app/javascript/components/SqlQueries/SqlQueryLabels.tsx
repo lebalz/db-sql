@@ -12,6 +12,7 @@ interface Props {
   sqlQuery: SqlQuery;
   labels?: QueryLabels[];
   exclude?: QueryLabels[];
+  additional?: React.ReactNode;
 }
 
 interface InjectedProps extends Props {
@@ -89,8 +90,10 @@ export default class SqlQueryLabels extends React.Component<Props> {
             content={this.sqlQuery.dbServerType}
             color={this.sqlQuery.dbServerType === DbType.Psql ? 'blue' : 'orange'}
             size="mini"
+            style={{ verticalAlign: 'text-bottom' }}
           />
         )}
+        {this.props.additional && this.props.additional}
       </div>
     );
   }

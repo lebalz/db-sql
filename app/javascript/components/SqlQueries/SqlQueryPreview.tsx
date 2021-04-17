@@ -1,5 +1,5 @@
-import React from 'react';
-import { Icon, Message, Segment } from 'semantic-ui-react';
+import React, { Fragment } from 'react';
+import { Icon, Label, Message, Segment } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import Tooltip from '../../shared/Tooltip';
 import { computed } from 'mobx';
@@ -13,6 +13,7 @@ import SqlQueryLabels, { QueryLabels } from './SqlQueryLabels';
 
 interface Props {
   sqlQuery: SqlQuery;
+  index: number;
 }
 
 interface InjectedProps extends Props {
@@ -49,13 +50,35 @@ export default class SqlQueryPreview extends React.Component<Props> {
         }}
       >
         <div key={id}>
-          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
             <SqlQueryActions
               sqlQuery={this.sqlQuery}
               onPlay={() => this.sqlQuery.insertInEditor()}
               playTooltip="Insert in the editor"
             />
-            <SqlQueryLabels sqlQuery={this.sqlQuery} exclude={[QueryLabels.DbType, QueryLabels.OwnerType]} />
+            <SqlQueryLabels
+              sqlQuery={this.sqlQuery}
+              exclude={[QueryLabels.DbType, QueryLabels.OwnerType]}
+              additional={
+                <Label
+                  style={{ verticalAlign: 'text-bottom' }}
+                  content={`#${this.props.index}`}
+                  color={
+                    this.viewState.previewSelectedQueries.get(scope)?.id === this.sqlQuery.id
+                      ? 'teal'
+                      : undefined
+                  }
+                  size="mini"
+                />
+              }
+            />
             <div style={{ color: 'gray', marginBottom: '0.4em', fontStyle: 'italic' }}>
               {this.sqlQuery.createdAt.toLocaleString()}
             </div>

@@ -203,8 +203,11 @@ class SessionStore implements Store {
 
   lastRouteContext(route: string, alternativeRoute?: string): string {
     return (
-      this.locationHistory.slice().reverse().find((location) => location.pathname.startsWith(route))?.pathname ??
-      `${route}/${alternativeRoute}`
+      this.locationHistory
+        .slice()
+        .reverse()
+        .find((location) => location.pathname.startsWith(route))?.pathname ??
+      `${route}${alternativeRoute ? `/${alternativeRoute}` : ''}`
     );
   }
 
