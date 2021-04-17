@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 import { TempDbServer } from '../../models/TempDbServer';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import { computed } from 'mobx';
-import SqlEditor from '../DatabaseServer/Query/SqlEditor';
+import SqlEditor from '../Workbench/QueryEditor/SqlEditor';
 import SchemaQuery from '../../models/SchemaQuery';
 import SchemaQueryCard from '../Profile/SchemaQueries/SchemaQueryCard';
 import LoadMoreCard from '../Profile/SchemaQueries/LoadMoreCard';

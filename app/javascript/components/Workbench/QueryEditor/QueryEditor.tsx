@@ -18,7 +18,7 @@ const EDITOR_PADDING_TOP = 10;
 const DEFAULT_EDITOR_HEIGHT = 200;
 
 @observer
-export default class Query extends React.Component<Props> {
+export default class QueryEditor extends React.Component<Props> {
   wrapperRef = React.createRef<HTMLElement>();
 
   state: { editorHeight: number } = {

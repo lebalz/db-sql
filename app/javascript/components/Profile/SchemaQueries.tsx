@@ -4,7 +4,7 @@ import { inject, observer } from 'mobx-react';
 import SchemaQueryStore from '../../stores/schema_query_store';
 import { computed } from 'mobx';
 import SchemaQuery from '../../models/SchemaQuery';
-import SqlEditor from '../DatabaseServer/Query/SqlEditor';
+import SqlEditor from '../Workbench/QueryEditor/SqlEditor';
 import { DbType } from '../../models/DbServer';
 import { REST } from '../../declarations/REST';
 import cx from 'classnames';

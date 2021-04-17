@@ -6,12 +6,12 @@ import { computed } from 'mobx';
 import SqlQueryStore from '../../stores/sql_query_store';
 import SqlQuery from '../../models/SqlQuery';
 import { DbType } from '../../models/DbServer';
-import SqlEditor from '../DatabaseServer/Query/SqlEditor';
+import SqlEditor from '../Workbench/QueryEditor/SqlEditor';
 import RouterStore from '../../stores/router_store';
 import DbServerStore from '../../stores/db_server_store';
 import { OwnerType } from '../../api/db_server';
 import ClickableIcon from '../../shared/ClickableIcon';
-import { PrismCode } from '../DatabaseServer/SqlResult/PrismCode';
+import { PrismCode } from '../Workbench/SqlResult/PrismCode';
 
 interface Props {
   sqlQuery: SqlQuery;

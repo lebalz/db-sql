@@ -1,6 +1,6 @@
 import { observable, computed } from 'mobx';
 import Database from './Database';
-import { AceSqlType } from '../components/DatabaseServer/Query/SqlEditor';
+import { AceSqlType } from '../components/Workbench/QueryEditor/SqlEditor';
 
 export default class Sql {
   _database?: Database;

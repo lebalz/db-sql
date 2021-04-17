@@ -5,14 +5,14 @@ import { RouterStore } from 'mobx-react-router';
 import DbServerStore, { LoadState } from '../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
-import DatabaseSchemaTree from './DatabaseServer/DatabaseSchemaTree/DatabaseSchemaTree';
+import DatabaseSchemaTree from './Workbench/DatabaseSchemaTree/DatabaseSchemaTree';
 import { RouteComponentProps } from 'react-router';
 import { reaction, computed, IReactionDisposer } from 'mobx';
-import DbServerIndex from './DatabaseServer/DbServerIndex';
+import DbServerIndex from './Workbench/DbServerIndex';
 import { Dimmer, Loader, Segment, Button, Header, Icon } from 'semantic-ui-react';
-import EditorIndex from './DatabaseServer/EditorIndex';
-import Query from './DatabaseServer/Query/Query';
-import QueryIndex from './DatabaseServer/QueryIndex';
+import EditorIndex from './Workbench/EditorIndex';
+import QueryEditor from './Workbench/QueryEditor/QueryEditor';
+import QueryIndex from './Workbench/QueryIndex';
 
 interface MatchParams {
   id: string;
@@ -120,7 +120,7 @@ export default class Workbench extends React.Component<DbConnectionProps> {
                 {activeDbServer && activeDbServer.activeDatabaseName && (
                 <QueryIndex dbServerId={activeDbServer.id} dbName={activeDbServer.activeDatabaseName} />
                 )} 
-                {query && <Query query={query} />}
+                {query && <QueryEditor query={query} />}
               </Segment>
             </Fragment>
           )}

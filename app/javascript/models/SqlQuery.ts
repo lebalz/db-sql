@@ -7,7 +7,7 @@ import { SqlQuery as SqlQueryProps, ChangeableProps, Changeable, update } from '
 import DbServer, { DbType } from './DbServer';
 import { OwnerType } from '../api/db_server';
 import Sql from './Sql';
-import { DB_TYPE_MAPPING } from '../components/DatabaseServer/Query/SqlEditor';
+import { DB_TYPE_MAPPING } from '../components/Workbench/QueryEditor/SqlEditor';
 import Database from './Database';
 
 const LINE_MATCHER = /.*\r?\n/gi;
