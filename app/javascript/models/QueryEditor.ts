@@ -33,7 +33,7 @@ export const PlaceholderQuery = (dbName: string) => {
   query.requestState = REST.Requested;
   return query;
 };
-type QueryResult = MultiResult | RawResult;
+export type QueryResult = MultiResult | RawResult;
 export default class QueryEditor extends Sql {
   readonly _database: Database;
   readonly id: number;
