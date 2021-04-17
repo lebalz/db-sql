@@ -107,21 +107,22 @@ RSpec.describe "API::Resources::DbServer" do
           params: params
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(2)
+        expect(json.keys.sort).to eq(%w[query_id result state time])
+        expect(json['result'].size).to be(2)
 
-        json.each do |query_result|
+        json['result'].each do |query_result|
           expect(query_result["state"]).to eq("success")
           expect(query_result["result"].length).to be(3)
           expect(query_result["time"]).to be > 0
         end
 
-        expect(json[0]["result"][0]).to eq({ "id" => 1 })
-        expect(json[0]["result"][1]).to eq({ "id" => 2 })
-        expect(json[0]["result"][2]).to eq({ "id" => 3 })
+        expect(json['result'][0]["result"][0]).to eq({ "id" => 1 })
+        expect(json['result'][0]["result"][1]).to eq({ "id" => 2 })
+        expect(json['result'][0]["result"][2]).to eq({ "id" => 3 })
 
-        expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
-        expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
-        expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
+        expect(json['result'][1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json['result'][1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json['result'][1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
       end
 
       it 'can proceed after erroneous query' do
@@ -134,25 +135,25 @@ RSpec.describe "API::Resources::DbServer" do
           params: params
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(2)
+        expect(json['result'].size).to be(2)
 
-        expect(json[0]["state"]).to eq("error")
-        expect(json[0]["result"]).to be_nil
+        expect(json['result'][0]["state"]).to eq("error")
+        expect(json['result'][0]["result"]).to be_nil
         if @db_server.psql?
-          expect(json[0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
+          expect(json['result'][0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
         elsif @db_server.mysql? || @db_server.mariadb?
-          expect(json[0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
+          expect(json['result'][0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
         end
-        expect(json[0]["time"]).to be > 0
+        expect(json['result'][0]["time"]).to be > 0
 
-        expect(json[1]["state"]).to eq("success")
-        expect(json[1]["result"].length).to be(3)
-        expect(json[1]["time"]).to be > 0
-        expect(json[1]["error"]).to be_nil
+        expect(json['result'][1]["state"]).to eq("success")
+        expect(json['result'][1]["result"].length).to be(3)
+        expect(json['result'][1]["time"]).to be > 0
+        expect(json['result'][1]["error"]).to be_nil
 
-        expect(json[1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
-        expect(json[1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
-        expect(json[1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
+        expect(json['result'][1]["result"][0]).to eq({ "name" => 'Ninja Reto' })
+        expect(json['result'][1]["result"][1]).to eq({ "name" => 'Warrior Maria' })
+        expect(json['result'][1]["result"][2]).to eq({ "name" => 'Mutant Holzkopf' })
       end
 
       it 'can skip query execution after erroneous query' do
@@ -166,14 +167,14 @@ RSpec.describe "API::Resources::DbServer" do
           params: params.merge({ proceed_after_error: false })
         )
         expect(response.successful?).to be_truthy
-        expect(json.size).to be(3)
+        expect(json['result'].size).to be(3)
 
-        expect(json[0]["state"]).to eq("success")
-        expect(json[1]["state"]).to eq("error")
-        expect(json[2]["state"]).to eq("skipped")
-        expect(json[2]["result"]).to be_nil
-        expect(json[2]["error"]).to be_nil
-        expect(json[2]["time"]).to be(0)
+        expect(json['result'][0]["state"]).to eq("success")
+        expect(json['result'][1]["state"]).to eq("error")
+        expect(json['result'][2]["state"]).to eq("skipped")
+        expect(json['result'][2]["result"]).to be_nil
+        expect(json['result'][2]["error"]).to be_nil
+        expect(json['result'][2]["time"]).to be(0)
       end
     end
 
