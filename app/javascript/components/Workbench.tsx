@@ -29,7 +29,7 @@ interface InjectedProps extends DbConnectionProps {
 
 @inject('sessionStore', 'routerStore', 'dbServerStore')
 @observer
-export default class DbServer extends React.Component<DbConnectionProps> {
+export default class Workbench extends React.Component<DbConnectionProps> {
   loadDisposer: IReactionDisposer;
   tableDisposer: IReactionDisposer;
   constructor(props: DbConnectionProps) {

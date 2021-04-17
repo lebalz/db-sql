@@ -9,7 +9,7 @@ import Dashboard from '../components/Dashboard';
 import Profile from '../components/Profile';
 import ResetPassword from '../views/ResetPassword';
 import ActivateAccount from '../views/ActivateAccount';
-import DbServer from '../components/DbServer';
+import Workbench from '../components/Workbench';
 import About from '../components/About';
 import Slider from '../shared/Slider';
 
@@ -35,7 +35,7 @@ const AppContent = observer(() => (
         <Route path="/login" component={Login} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/about" component={About} />
-        <Route path="/connections/:id/:db_name?" component={DbServer} />
+        <Route path="/connections/:id/:db_name?" component={Workbench} />
         <Route path="/profile/:part/:id?" component={Profile} />
         <Route path="/users/:id/reset_password" component={ResetPassword} />
         <Route path="/users/:id/activate" component={ActivateAccount} />
