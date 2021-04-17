@@ -56,6 +56,9 @@ export default class QueryIndex extends React.Component<Props> {
   };
 
   render() {
+    if (this.queries.length === 0) {
+      return null;
+    }
     return (
       <Segment attached>
         <div style={{ overflowX: 'auto' }}>

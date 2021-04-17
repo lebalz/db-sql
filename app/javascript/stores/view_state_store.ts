@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { DEFAULT_HEIGHT } from '../components/Workbench/SqlResult/ResultTable';
 import { Graph } from '../models/Graphs/WordcloudGraph';
 import { select } from 'd3-selection';
+import { CopyState } from '../models/Result';
 
 class ResultTableState {
   @observable row = 0;
@@ -26,6 +27,9 @@ class State {
   previewQueries = observable(new Map<string, string>());
   @observable.ref
   previewSelectedQueries = observable(new Map<string, { id: string; element: EventTarget & HTMLElement }>());
+
+  @observable.ref
+  sqlCopyState = observable(new Map<string, CopyState>());
 }
 
 class ViewStateStore {
@@ -39,6 +43,15 @@ class ViewStateStore {
   @computed
   get previewSelectedQueries() {
     return this.state.previewSelectedQueries;
+  }
+
+  sqlCopyState(sqlId: string): CopyState {
+    return this.state.sqlCopyState.get(sqlId) || CopyState.Ready;
+  }
+
+  @action
+  setSqlCopyState(sqlId: string, state: CopyState) {
+    this.state.sqlCopyState.set(sqlId, state);
   }
 
   @action

@@ -1,18 +1,15 @@
-import React, { Fragment } from 'react';
-import { Label, Icon, TextArea, Message } from 'semantic-ui-react';
+import React from 'react';
+import { Icon, Message } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
 import Tooltip from '../../shared/Tooltip';
-import { computed } from 'mobx';
-import SqlQueryStore from '../../stores/sql_query_store';
+import { action, computed } from 'mobx';
 import SqlQuery from '../../models/SqlQuery';
-import { DbType } from '../../models/DbServer';
-import SqlEditor from '../Workbench/QueryEditor/SqlEditor';
-import RouterStore from '../../stores/router_store';
-import DbServerStore from '../../stores/db_server_store';
 import { OwnerType } from '../../api/db_server';
-import ClickableIcon from '../../shared/ClickableIcon';
 import { PrismCode } from '../Workbench/SqlResult/PrismCode';
 import ViewStateStore from '../../stores/view_state_store';
+import fileDownload from 'js-file-download';
+import { CopyState } from '../../models/Result';
+import SqlQueryActions from './SqlQueryActions';
 
 interface Props {
   sqlQuery: SqlQuery;
@@ -33,7 +30,6 @@ export default class SqlQueryPreview extends React.Component<Props> {
   get sqlQuery() {
     return this.props.sqlQuery;
   }
-
   render() {
     const ownerType = this.sqlQuery.dbServerOwnerType;
     return (
@@ -47,34 +43,11 @@ export default class SqlQueryPreview extends React.Component<Props> {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-          <div className="query-actions">
-            {(ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
-              <ClickableIcon
-                icon={this.sqlQuery.isFavorite ? 'star' : 'star outline'}
-                color={this.sqlQuery.isFavorite ? 'yellow' : 'black'}
-                onClick={() => this.sqlQuery.toggleIsFavorite()}
-              />
-            )}
-            {(ownerType === OwnerType.User || (this.sqlQuery.isOwner && this.sqlQuery.isPrivate)) && (
-              <ClickableIcon
-                icon={this.sqlQuery.isValid ? 'play' : 'edit'}
-                color={this.sqlQuery.isValid ? 'green' : 'blue'}
-                tooltip="Insert in the Editor"
-                onClick={() => this.sqlQuery.insertInEditor()}
-              />
-            )}
-            {ownerType === OwnerType.Group && this.sqlQuery.isOwner && (
-              <ClickableIcon
-                icon={this.sqlQuery.isPrivate ? 'lock' : 'lock open'}
-                onClick={() => this.sqlQuery.toggleIsPrivate()}
-                tooltip={
-                  this.sqlQuery.isPrivate ? 'Share this query with your group' : 'Revoke sharing in the group'
-                }
-                delayed
-                tooltipPosition="top right"
-              />
-            )}
-          </div>
+          <SqlQueryActions
+            sqlQuery={this.sqlQuery}
+            onPlay={() => this.sqlQuery.insertInEditor()}
+            playTooltip="Insert in the editor"
+          />
           <div className="query-labels">
             {ownerType && (
               <Tooltip
