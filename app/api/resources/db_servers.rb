@@ -236,21 +236,30 @@ module Resources
                 params[:query]
               end
             rescue StandardError => e
+              sql_query.exec_time = Time.now - t0
+              sql_query.is_valid = false
+              sql_query.error = [{ query_idx: 0, error: e.message }]
+              sql_query.save
               return present(
                 {
                   error: e.message,
                   state: 'error',
-                  time: Time.now - t0
+                  time: Time.now - t0,
+                  query_id: sql_query.id
                 },
                 with: Entities::QueryResult
               )
             end
+            sql_query.exec_time = Time.now - t0
+            sql_query.is_valid = true
+            sql_query.save
 
             present(
               {
                 result: result.to_a,
                 state: 'success',
-                time: Time.now - t0
+                time: Time.now - t0,
+                query_id: sql_query.id
               },
               with: Entities::QueryResult
             )
@@ -271,9 +280,11 @@ module Resources
             sql_query = SqlQuery.new(db_server: db_server, user: current_user,
                                      db_name: db_name)
             sql_query.query = params[:queries].join("\n")
+            exec_start = Time.now
+            errors = []
 
             db_server.reuse_connection do |conn|
-              params[:queries].each do |query|
+              params[:queries].each_with_index do |query, idx|
                 next if query.blank?
 
                 if error_occured && !params[:proceed_after_error]
@@ -298,6 +309,7 @@ module Resources
                 rescue StandardError => e
                   db_server.increment!(:error_query_count, 1)
                   error_occured = true
+                  errors << { query_idx: idx, error: e.message }
                   results << {
                     error: e.message,
                     state: 'error',
@@ -307,9 +319,16 @@ module Resources
               end
             end
             sql_query.is_valid = !error_occured
+            sql_query.exec_time = Time.now - exec_start
+            sql_query.error = errors
             sql_query.save!
 
-            present(results, with: Entities::QueryResult)
+            present({
+                      result: results,
+                      query_id: sql_query.id,
+                      time: sql_query.exec_time,
+                      state: error_occured ? :error : :success
+                    }, type: :multi, with: Entities::QueryResult)
           end
 
           desc 'Query the database and returns the raw result. Multiple query statements are allowed'
@@ -336,9 +355,14 @@ module Resources
               db_server.increment!(:error_query_count, 1)
             end
             sql_query.is_valid = results[:type] != :error
+            if results[:type] == :error
+              sql_query.error = [{ query_idx: 0,
+                                   error: results[:error] }]
+            end
+            sql_query.exec_time = t_end
             sql_query.save!
 
-            results.merge({ time: t_end })
+            results.merge({ time: t_end, query_id: sql_query.id })
           end
 
           desc "Get the database's tables"

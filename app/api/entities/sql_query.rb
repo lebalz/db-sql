@@ -7,8 +7,9 @@ module Entities
       expose :user_id
       expose :db_server_id
       expose :db_name
-
+      expose :error
       expose :query
+      expose :exec_time
       expose :is_private
       expose :is_favorite
       expose :is_valid

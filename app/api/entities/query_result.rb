@@ -7,6 +7,7 @@ module Entities
       expose :error
       expose :time
       expose :state
+      expose :query_id
     end
   end
 end

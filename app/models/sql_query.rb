@@ -6,6 +6,8 @@
 #
 #  id           :uuid             not null, primary key
 #  db_name      :string
+#  error        :json
+#  exec_time    :float
 #  is_favorite  :boolean          default(FALSE)
 #  is_private   :boolean          default(TRUE)
 #  is_valid     :boolean          default(FALSE)
@@ -29,7 +31,7 @@ class SqlQuery < ApplicationRecord
   belongs_to :user
 
   has_one_attached :raw_query
-  after_create  :cleanup_outdated_queries
+  after_create :cleanup_outdated_queries
 
   QUERY_COUNT_PER_SERVER_AND_USER = 100
 
@@ -43,10 +45,8 @@ class SqlQuery < ApplicationRecord
 
   def query=(value)
     @query = value
-    if self.raw_query.attached?
-      self.raw_query.purge
-    end
-    self.raw_query.attach(
+    raw_query.purge if raw_query.attached?
+    raw_query.attach(
       io: StringIO.new(value),
       filename: "query_#{Time.now.to_i}.sql",
       content_type: 'text/plain'
@@ -74,8 +74,8 @@ class SqlQuery < ApplicationRecord
     queries = SqlQuery.where(user: user, db_server: db_server)
     return if queries.count <= QUERY_COUNT_PER_SERVER_AND_USER
 
-    to_delete = queries.order('is_favorite desc', 'updated_at asc').offset(QUERY_COUNT_PER_SERVER_AND_USER)
+    to_delete = queries.order('is_favorite desc',
+                              'created_at desc').offset(QUERY_COUNT_PER_SERVER_AND_USER)
     to_delete.destroy_all
   end
 end
-  
