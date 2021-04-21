@@ -11,6 +11,14 @@ class GroupPolicy < ApplicationPolicy
     true
   end
 
+  def join?
+    record.public?
+  end
+
+  def leave?
+    record.public?
+  end
+
   def update?
     record.admin?(user)
   end

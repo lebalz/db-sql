@@ -188,7 +188,7 @@ class Group < ApplicationRecord
   # @param user [User]
   def remove_user(user:)
     group_members.find_by(user_id: user.id)&.destroy
-    reload!
+    reload
     return unless user_count.zero?
 
     destroy!
