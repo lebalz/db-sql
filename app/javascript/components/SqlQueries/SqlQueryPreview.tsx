@@ -84,7 +84,7 @@ export default class SqlQueryPreview extends React.Component<Props> {
             </div>
           </div>
           <PrismCode
-            code={this.sqlQuery.query}
+            code={this.sqlQuery.preview}
             language="sql"
             plugins={['line-numbers']}
             style={{ maxHeight: '22em', fontSize: 'smaller' }}

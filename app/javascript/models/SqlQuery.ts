@@ -61,6 +61,15 @@ export default class SqlQuery extends Sql {
   }
 
   @computed
+  get preview() {
+    const len = this.query.length
+    if (len < 3000) {
+      return this.query
+    }
+    return `${this.query.slice(0, 2000)}\n...\n${this.query.slice(len-1000)}`
+  }
+
+  @computed
   get scope() {
     return `${this.dbServerId}-${this.dbName}`;
   }
