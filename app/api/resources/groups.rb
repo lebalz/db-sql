@@ -31,6 +31,7 @@ module Resources
                          desc: 'maximal number of returned groups, -1 returns all groups')
         optional(:offset, type: Integer,  default: 0,
                           desc: 'offset of returned groups')
+        optional(:order, type: Symbol, values: %i[asc desc], default: :asc, desc: 'sort order')
       end
       resource :public do
         get do
@@ -47,6 +48,7 @@ module Resources
 
           present(
             public_groups
+              .reorder(name: params[:order])
               .offset(params[:offset])
               .limit(params[:limit]),
             with: Entities::Group,

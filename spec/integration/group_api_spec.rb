@@ -175,23 +175,25 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       )
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]["name"]).to eq("Random SQL")
-      expect(json[0]["members"].find do |u|
+
+      expect(json[0]["name"]).to eq("Fancy Pancy")
+      expect(json[0]["db_servers"].count).to be(1)
+      expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
+      expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
+      expect(json[0]["members"]).to be_nil
+
+
+      expect(json[1]["name"]).to eq("Random SQL")
+      expect(json[1]["members"].find do |u|
                u['user_id'] == @user1.id
              end             ['is_admin']).to be_truthy
 
-      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }
+      db_servers = json[1]['db_servers'].sort_by { |h| h['name'] }
       expect(db_servers.count).to be(2)
       expect(db_servers[0]['name']).to eq("db_server1")
       expect(db_servers[0]['username']).to eq("foobar")
       expect(db_servers[1]['name']).to eq("db_server2")
       expect(db_servers[1]['username']).to eq("chocolate")
-
-      expect(json[1]["name"]).to eq("Fancy Pancy")
-      expect(json[1]["db_servers"].count).to be(1)
-      expect(json[1]["db_servers"][0]['name']).to eq("db_server3")
-      expect(json[1]["db_servers"][0]['username']).to eq("bliblablu")
-      expect(json[1]["members"]).to be_nil
 
       get(
         "/api/users/#{@user2.id}/groups",
@@ -214,19 +216,19 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
         "/api/users/#{@user3.id}/groups",
         headers: @user3_headers
       )
-      # queries are ordered
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]["name"]).to eq("Public Shizzle")
 
-      expect(json[1]["name"]).to eq("Fancy Pancy")
-      expect(json[1]["db_servers"].count).to be(1)
-      expect(json[1]["db_servers"][0]['username']).to eq("bliblablu")
-      expect(json[1]["db_servers"][0]['name']).to eq("db_server3")
-      u3member = json[1]["members"].find do |u|
+      expect(json[0]["name"]).to eq("Fancy Pancy")
+      expect(json[0]["db_servers"].count).to be(1)
+      expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
+      expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
+      u3member = json[0]["members"].find do |u|
         u['user_id'] == @user3.id
       end
       expect(u3member['is_admin']).to be_truthy
+
+      expect(json[1]["name"]).to eq("Public Shizzle")
     end
 
   end

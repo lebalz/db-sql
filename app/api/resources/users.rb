@@ -160,9 +160,11 @@ module Resources
         get :groups do
           authorize Group, :index?
 
-          groups = current_user.groups
-          Group.update_outdated_group_members(user: current_user,
-                                              pkey: current_user.private_key(crypto_key))
+          groups = current_user.groups.reorder(name: :asc)
+          Group.update_outdated_group_members(
+            user: current_user,
+            pkey: current_user.private_key(crypto_key)
+          )
           present(
             groups,
             with: Entities::Group,
