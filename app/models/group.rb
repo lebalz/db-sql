@@ -185,9 +185,11 @@ class Group < ApplicationRecord
     db_servers.size
   end
 
-  # @param user [User]
-  def remove_user(user:)
-    group_members.find_by(user_id: user.id)&.destroy
+  # @param user [User] provide either a user...
+  # @param user_id [string] ...or the user_id
+  def remove_user(user: nil, user_id: nil)
+    user_id ||= user&.id
+    group_members.find_by(user_id: user_id)&.destroy
     reload
     return unless user_count.zero?
 

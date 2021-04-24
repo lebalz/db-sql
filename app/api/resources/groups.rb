@@ -214,11 +214,7 @@ module Resources
               else
                 authorize current_group, :remove_member?
               end
-
-              group_member = current_group.group_members.find_by(user_id: params[:user_id])
-              error!('User not found', 302) unless group_member
-
-              group_member.destroy
+              current_group.remove_user(user_id: params[:user_id])
               status :no_content
             end
 
