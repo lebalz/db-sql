@@ -1,13 +1,10 @@
 import React from 'react';
-import { Button, Menu, Icon, Dimmer, Loader } from 'semantic-ui-react';
+import { Button, Menu, Icon, Loader } from 'semantic-ui-react';
 import DbServerStore from '../../stores/db_server_store';
 import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 import { RouterStore } from 'mobx-react-router';
 import DbServer from '../../models/DbServer';
-import { RouteComponentProps } from 'react-router';
-import { computed } from 'mobx';
-import { string } from 'prop-types';
 
 interface Props {
   activeId: string;
@@ -49,7 +46,11 @@ export default class DbServerIndex extends React.Component<Props> {
       >
         {loadedDbServers.map((dbServer, i) => {
           if (!dbServer) {
-            return <Menu.Item key={i}><Loader indeterminate content="Loading..." /></Menu.Item>
+            return (
+              <Menu.Item key={i}>
+                <Loader indeterminate content="Loading..." />
+              </Menu.Item>
+            );
           }
           return (
             <Menu.Item
