@@ -284,7 +284,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       @user1.reload
     end
 
-    it 'allows admins to destroy groups' do
+    it 'allows owners to destroy groups' do
       expect(@user1.groups.count).to be(3)
       expect(@user1.all_db_servers.count).to be(4)
       delete(
@@ -298,7 +298,7 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(@user1.all_db_servers.count).to be(3)
     end
 
-    it 'non admins can not destroy groups' do
+    it 'non owners can not destroy groups' do
       expect(@user1.all_db_servers.count).to be(4)
       expect(@user2.groups.count).to be(2)
       delete(
@@ -310,6 +310,59 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(@user1.groups.count).to be(3)
       expect(@user2.groups.count).to be(2)
       expect(@user1.all_db_servers.count).to be(4)
+    end
+  end
+
+  describe 'POST /api/groups/:id/generate_new_crypto_key' do
+    before(:each) do
+      @temp_group = FactoryBot.create(:group, name: 'Random SQL')
+      key = Group.random_crypto_key
+
+      @temp_group.add_user(user: @user1, group_key: key, is_admin: true)
+      @temp_group.add_user(user: @user2, group_key: key, is_admin: false)
+      FactoryBot.create(
+        :db_server,
+        :group,
+        db_type: :psql,
+        username: 'foobar',
+        db_password: 'bliblablu',
+        port: 5432,
+        group: @temp_group
+      )
+      @user1.reload
+    end
+    after(:each) do
+      @temp_group.destroy
+      @user1.reload
+    end
+
+    it 'allows group admins to recrypt' do
+      post(
+        "/api/groups/#{@temp_group.id}/generate_new_crypto_key",
+        headers: @user1_headers
+      )
+      expect(response.successful?).to be_truthy
+    end
+
+    it 'prevents non group admins to recrypt' do
+      post(
+        "/api/groups/#{@temp_group.id}/generate_new_crypto_key",
+        headers: @user2_headers
+      )
+      expect(response.successful?).to be_falsey
+    end
+
+    it 'recryption resets all db server passwords' do
+      crypto_key=@temp_group.crypto_key(@user1, @user1.private_key(@user1_key))
+      expect(@temp_group.db_servers.first.password(crypto_key)).to eq('bliblablu')
+      post(
+        "/api/groups/#{@temp_group.id}/generate_new_crypto_key",
+        headers: @user1_headers
+      )
+      expect(response.successful?).to be_truthy
+      @temp_group.reload
+      crypto_key=@temp_group.crypto_key(@user1, @user1.private_key(@user1_key))
+      expect(@temp_group.db_servers.first.password(crypto_key)).to eq('-')
     end
   end
 
