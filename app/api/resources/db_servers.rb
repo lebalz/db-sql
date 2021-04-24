@@ -228,6 +228,7 @@ module Resources
             db_server.owner.touch
             sql_query = SqlQuery.new(db_server: db_server, user: current_user,
                                      db_name: db_name)
+            sql_query.query = params[:query]
             t0 = Time.now
 
             begin
@@ -238,7 +239,7 @@ module Resources
             rescue StandardError => e
               sql_query.exec_time = Time.now - t0
               sql_query.is_valid = false
-              sql_query.error = [{ query_idx: 0, error: e.message }]
+              sql_query.add_error(query_index: 0, msg: e.message)
               sql_query.save
               return present(
                 {
@@ -279,7 +280,7 @@ module Resources
 
             sql_query = SqlQuery.new(db_server: db_server, user: current_user,
                                      db_name: db_name)
-            sql_query.query = params[:queries].join("\n")
+            sql_query.query = "#{params[:queries].join(";\n")};"
             exec_start = Time.now
             errors = []
 
@@ -309,7 +310,7 @@ module Resources
                 rescue StandardError => e
                   db_server.increment!(:error_query_count, 1)
                   error_occured = true
-                  errors << { query_idx: idx, error: e.message }
+                  sql_query.add_error(query_index: idx, msg: e.message)
                   results << {
                     error: e.message,
                     state: 'error',
@@ -320,7 +321,6 @@ module Resources
             end
             sql_query.is_valid = !error_occured
             sql_query.exec_time = Time.now - exec_start
-            sql_query.error = errors
             sql_query.save!
 
             present({
@@ -351,13 +351,12 @@ module Resources
             end
             t_end = Time.now - t0
 
-            if results[:type] == :error
+            if results[:state] == :error
               db_server.increment!(:error_query_count, 1)
             end
-            sql_query.is_valid = results[:type] != :error
-            if results[:type] == :error
-              sql_query.error = [{ query_idx: 0,
-                                   error: results[:error] }]
+            sql_query.is_valid = results[:state] != :error
+            if results[:state] == :error
+              sql_query.add_error(query_index: 0, msg: results[:error])
             end
             sql_query.exec_time = t_end
             sql_query.save!

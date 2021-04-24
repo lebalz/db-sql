@@ -4,13 +4,13 @@ module Resources
   class SqlQueries < Grape::API
     helpers do
       def sql_query
-        return @quey unless @quey.nil?
+        return @query unless @query.nil?
 
-        query = policy_scope(SqlQuery).includes(:db_server).find(params[:id])
+        query = SqlQuery.includes(:db_server).find(params[:id])
 
         authorize query, :show?
 
-        @quey = query
+        @query = query
       end
     end
 
@@ -47,15 +47,17 @@ module Resources
       route_param :id, type: String, desc: 'update sql query id' do
         desc 'get sql query'
         get do
+          query = SqlQuery.includes(:db_server).find(params[:id])
+          authorize query, :show?
+  
           present(sql_query, with: Entities::SqlQuery)
         end
 
-        desc 'update the description of a sql query'
+        desc 'update props of an sql query'
         params do
           requires :data, type: Hash do
             optional(:is_private, type: Boolean, desc: 'is_private')
-            optional(:is_favorite, type: String, desc: 'is_faforite')
-            optional(:description, type: String, desc: 'name')
+            optional(:is_favorite, type: String, desc: 'is_favorite')
           end
         end
         put do
@@ -65,8 +67,7 @@ module Resources
           sql_query.update!(
             change.permit(
               :is_private,
-              :is_favorite,
-              :description
+              :is_favorite
             )
           )
           present(sql_query, with: Entities::SqlQuery)

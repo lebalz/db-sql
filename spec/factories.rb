@@ -78,4 +78,16 @@ FactoryBot.define do
       user { nil }
     end
   end
+
+  factory :sql_query do
+    db_server { DbServer.first || FactoryBot.create(:db_server)}
+    user { User.first || FactoryBot.create(:user) }
+    db_name { 'foobar' }
+    is_private { true }
+    is_favorite { false }
+    is_valid { true }
+    exec_time { 0.3 }
+    error {[]}
+  end
+
 end

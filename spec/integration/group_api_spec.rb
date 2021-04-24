@@ -2,7 +2,7 @@
 
 require_relative '../rails_helper'
 
-RSpec.describe "API::Resources::DatabaseSchemaQuery" do
+RSpec.describe "API::Resources::Group" do
   before(:all) do
     @user1 = FactoryBot.create(:user)
     @user2 = FactoryBot.create(:user)
