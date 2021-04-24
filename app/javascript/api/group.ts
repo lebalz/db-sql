@@ -31,8 +31,8 @@ export interface Group extends ChangeableProps {
   members?: GroupMember[];
 }
 
-export function getGroups(cancelToken: CancelTokenSource): AxiosPromise<Group[]> {
-  return api.get('groups', { cancelToken: cancelToken.token });
+export function getGroups(id: string, cancelToken: CancelTokenSource): AxiosPromise<Group[]> {
+  return api.get(`users/${id}/groups`, { cancelToken: cancelToken.token });
 }
 
 export function getGroup(id: string): AxiosPromise<Group> {
@@ -61,11 +61,11 @@ export function setAdminPermission(
 }
 
 export function removeMember(groupId: string, userId: string): AxiosPromise<void> {
-  return api.delete(`groups/${groupId}/members/${userId}`);
+  return api.patch(`groups/${groupId}/members/${userId}`);
 }
 
 export function addGroupMember(groupId: string, newMemberId: string): AxiosPromise<GroupMember> {
-  return api.post(`groups/${groupId}/members`, { user_id: newMemberId });
+  return api.patch(`groups/${groupId}/members`, { user_id: newMemberId });
 }
 
 export function update(groupId: string, data: ChangeableProps): AxiosPromise<Group> {

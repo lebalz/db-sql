@@ -2,7 +2,7 @@
 
 require_relative '../rails_helper'
 
-RSpec.describe "API::Resources::DatabaseSchemaQuery" do
+RSpec.describe "API::Resources::Group" do
   before(:all) do
     @user1 = FactoryBot.create(:user)
     @user2 = FactoryBot.create(:user)
@@ -36,12 +36,15 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
 
     @group1_key = Group.random_crypto_key
     @group2_key = Group.random_crypto_key
+    @group3_key = Group.random_crypto_key
 
     @group1.add_user(user: @user1, group_key: @group1_key, is_admin: true)
     @group1.add_user(user: @user2, group_key: @group1_key, is_admin: false)
 
     @group2.add_user(user: @user1, group_key: @group2_key, is_admin: false)
     @group2.add_user(user: @user3, group_key: @group2_key, is_admin: true)
+
+    @group3.add_user(user: @user3, group_key: @group3_key, is_admin: true)
 
     FactoryBot.create(
       :db_server,
@@ -75,35 +78,36 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
 
   end
 
-  describe 'GET /api/groups' do
+  describe 'GET /api/users/:id/groups' do
     it 'returns all groups of a user' do
       get(
-        "/api/groups",
+        "/api/users/#{@user1.id}/groups",
         headers: @user1_headers
       )
-
       expect(response.successful?).to be_truthy
       expect(json.size).to be(2)
-      expect(json[0]["name"]).to eq("Random SQL")
-      expect(json[0]["members"].find do |u|
+
+      expect(json[0]["name"]).to eq("Fancy Pancy")
+      expect(json[0]["db_servers"].count).to be(1)
+      expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
+      expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
+      expect(json[0]["members"]).to be_nil
+
+
+      expect(json[1]["name"]).to eq("Random SQL")
+      expect(json[1]["members"].find do |u|
                u['user_id'] == @user1.id
              end             ['is_admin']).to be_truthy
 
-      db_servers = json[0]['db_servers'].sort_by { |h| h['name'] }
+      db_servers = json[1]['db_servers'].sort_by { |h| h['name'] }
       expect(db_servers.count).to be(2)
       expect(db_servers[0]['name']).to eq("db_server1")
       expect(db_servers[0]['username']).to eq("foobar")
       expect(db_servers[1]['name']).to eq("db_server2")
       expect(db_servers[1]['username']).to eq("chocolate")
 
-      expect(json[1]["name"]).to eq("Fancy Pancy")
-      expect(json[1]["db_servers"].count).to be(1)
-      expect(json[1]["db_servers"][0]['name']).to eq("db_server3")
-      expect(json[1]["db_servers"][0]['username']).to eq("bliblablu")
-      expect(json[1]["members"]).to be_nil
-
       get(
-        "/api/groups",
+        "/api/users/#{@user2.id}/groups",
         headers: @user2_headers
       )
 
@@ -120,49 +124,76 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       expect(db_servers[1]['username']).to eq("chocolate")
 
       get(
-        "/api/groups",
+        "/api/users/#{@user3.id}/groups",
         headers: @user3_headers
       )
-      # queries are ordered
       expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
+      expect(json.size).to be(2)
+
       expect(json[0]["name"]).to eq("Fancy Pancy")
       expect(json[0]["db_servers"].count).to be(1)
       expect(json[0]["db_servers"][0]['username']).to eq("bliblablu")
       expect(json[0]["db_servers"][0]['name']).to eq("db_server3")
-      expect(json[0]["members"].find do |u|
-               u['user_id'] == @user3.id
-             end             ['is_admin']).to be_truthy
-    end
+      u3member = json[0]["members"].find do |u|
+        u['user_id'] == @user3.id
+      end
+      expect(u3member['is_admin']).to be_truthy
 
-    it 'returns all public available groups' do
-      get(
-        "/api/groups/public",
-        headers: @user1_headers
+      expect(json[1]["name"]).to eq("Public Shizzle")
+    end
+  end
+
+  describe 'POST /api/groups' do
+    it 'allows users to add new groups' do
+      expect(@user1.groups.count).to be(2)
+      post(
+        "/api/groups",
+        headers: @user1_headers,
+        params: {
+          name: 'test group',
+          is_private: true
+        }
       )
-      # queries are ordered
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
-      expect(json.first['is_member']).to be_falsey
+      @user1.reload
+      expect(@user1.groups.count).to be(3)
+    ensure
+      Group.find_by(name: 'test group').destroy
     end
+  end
 
-    it 'returns count of the public available groups' do
-      get(
-        "/api/groups/counts"
+  
+  describe '/api/groups/:id' do
+    before(:each) do
+      @temp_group = FactoryBot.create(:group, name: 'Random SQL')
+      key = Group.random_crypto_key
+      
+      @temp_group.add_user(user: @user1, group_key: key, is_admin: true)
+      @temp_group.add_user(user: @user2, group_key: key, is_admin: false)
+      FactoryBot.create(
+        :db_server,
+        :group,
+        db_type: :psql,
+        username: 'foobar',
+        db_password: 'bliblablu',
+        port: 5432,
+        group: @temp_group
       )
-      # queries are ordered
-      expect(response.successful?).to be_truthy
-      expect(json.size).to be(1)
+      @user1.reload
     end
-
-    describe 'can update outdated group members' do
+    after(:each) do
+      @temp_group.destroy
+      @user1.reload
+    end
+    
+    describe 'GET' do
       before(:each) do
+        # create outdated group member
         user = FactoryBot.create(:user)
 
         @group1.reload
         expect(@group1.members.length).to be(2)
 
-        post(
+        patch(
           "/api/groups/#{@group1.id}/members",
           headers: @user1_headers,
           params: {
@@ -185,6 +216,23 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
 
       after(:each) do
         @group_user&.destroy
+        @group1.reload
+      end
+
+      it 'can get details of a joined group' do
+        get(
+          "/api/groups/#{@group1.id}",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['name']).to eq('Random SQL')
+        expect(json['members'].size).to be(3)
+        u1_user = json['members'].find { |u| u['user_id'] == @user1.id }
+        expect(u1_user['is_admin']).to be_truthy
+        expect(json['db_servers'].size).to be(2)
+        expect(json['is_member']).to be_truthy
+        expect(json['is_private']).to be_truthy
+
       end
 
       it 'updates outdated group members' do
@@ -226,128 +274,406 @@ RSpec.describe "API::Resources::DatabaseSchemaQuery" do
       end
     end
 
-  end
-
-  describe 'POST /api/groups' do
-    it 'allows users to add new groups' do
-      expect(@user1.groups.count).to be(2)
-      post(
-        "/api/groups",
-        headers: @user1_headers,
-        params: {
-          name: 'test group',
-          is_private: true
-        }
-      )
-      @user1.reload
-      expect(@user1.groups.count).to be(3)
-    ensure
-      Group.find_by(name: 'test group').destroy
+    describe 'POST /generate_new_crypto_key' do
+      it 'allows group admins to recrypt' do
+        post(
+          "/api/groups/#{@temp_group.id}/generate_new_crypto_key",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+      end
+  
+      it 'prevents non group admins to recrypt' do
+        post(
+          "/api/groups/#{@temp_group.id}/generate_new_crypto_key",
+          headers: @user2_headers
+        )
+        expect(response.successful?).to be_falsey
+      end
+  
+      it 'recryption resets all db server passwords' do
+        crypto_key=@temp_group.crypto_key(@user1, @user1.private_key(@user1_key))
+        expect(@temp_group.db_servers.first.password(crypto_key)).to eq('bliblablu')
+        post(
+          "/api/groups/#{@temp_group.id}/generate_new_crypto_key",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+        @temp_group.reload
+        crypto_key=@temp_group.crypto_key(@user1, @user1.private_key(@user1_key))
+        expect(@temp_group.db_servers.first.password(crypto_key)).to eq('-')
+      end
     end
-  end
-
-  describe 'DELETE /api/groups/:id' do
-    before(:each) do
-      @temp_group = FactoryBot.create(:group, name: 'Random SQL')
-      key = Group.random_crypto_key
-
-      @temp_group.add_user(user: @user1, group_key: key, is_admin: true)
-      @temp_group.add_user(user: @user2, group_key: key, is_admin: false)
-      FactoryBot.create(
-        :db_server,
-        :group,
-        db_type: :psql,
-        username: 'foobar',
-        port: 5432,
-        group: @temp_group
-      )
-      @user1.reload
-    end
-    after(:each) do
-      @temp_group.destroy
-      @user1.reload
-    end
-
-    it 'allows admins to destroy groups' do
-      expect(@user1.groups.count).to be(3)
-      expect(@user1.all_db_servers.count).to be(4)
-      delete(
-        "/api/groups/#{@temp_group.id}",
-        headers: @user1_headers
-      )
-      expect(response.successful?).to be_truthy
-      @user1.reload
-      expect(@user1.groups.count).to be(2)
-      expect(@user2.groups.count).to be(1)
-      expect(@user1.all_db_servers.count).to be(3)
-    end
-
-    it 'non admins can not destroy groups' do
-      expect(@user1.all_db_servers.count).to be(4)
-      expect(@user2.groups.count).to be(2)
-      delete(
-        "/api/groups/#{@temp_group.id}",
-        headers: @user2_headers
-      )
-      expect(response.successful?).to be_falsey
-      @user2.reload
-      expect(@user1.groups.count).to be(3)
-      expect(@user2.groups.count).to be(2)
-      expect(@user1.all_db_servers.count).to be(4)
-    end
-  end
-
-  describe 'PUT /api/groups/:id' do
-    before(:each) do
-      @temp_group = FactoryBot.create(:group, name: 'Random SQL')
-      key = Group.random_crypto_key
-
-      @temp_group.add_user(user: @user1, group_key: key, is_admin: true)
-      @temp_group.add_user(user: @user2, group_key: key, is_admin: false)
-      FactoryBot.create(
-        :db_server,
-        :group,
-        db_type: :psql,
-        username: 'foobar',
-        port: 5432,
-        group: @temp_group
-      )
-      @user1.reload
-    end
-    after(:each) do
-      @temp_group.destroy
-      @user1.reload
-    end
-
-    it 'allows admins to rename groups' do
-      put(
-        "/api/groups/#{@temp_group.id}",
-        headers: @user1_headers,
-        params: {
-          data: {
-            name: 'Guguseli'
+    
+    describe 'PUT' do
+      it 'allows admins to rename groups' do
+        put(
+          "/api/groups/#{@temp_group.id}",
+          headers: @user1_headers,
+          params: {
+            data: {
+              name: 'Guguseli'
+            }
           }
-        }
-      )
-      expect(response.successful?).to be_truthy
-      expect(json['name']).to eq('Guguseli')
-      @temp_group.reload
-      expect(@temp_group.name).to eq('Guguseli')
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['name']).to eq('Guguseli')
+        @temp_group.reload
+        expect(@temp_group.name).to eq('Guguseli')
+      end
+  
+      it 'non admins can not update groups' do
+        put(
+          "/api/groups/#{@temp_group.id}",
+          headers: @user2_headers,
+          params: {
+            data: {
+              name: 'Guguseli'
+            }
+          }
+        )
+        expect(response.successful?).to be_falsey
+        @temp_group.reload
+        expect(@temp_group.name).to eq('Random SQL')
+      end
     end
 
-    it 'non admins can not update groups' do
-      put(
-        "/api/groups/#{@temp_group.id}",
-        headers: @user2_headers,
-        params: {
-          data: {
-            name: 'Guguseli'
-          }
-        }
-      )
-      expect(response.successful?).to be_falsey
-      @temp_group.reload
-      expect(@temp_group.name).to eq('Random SQL')
+
+    describe 'DELETE' do
+      it 'allows owners to destroy groups' do
+        expect(@user1.groups.count).to be(3)
+        expect(@user1.all_db_servers.count).to be(4)
+        delete(
+          "/api/groups/#{@temp_group.id}",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+        @user1.reload
+        expect(@user1.groups.count).to be(2)
+        expect(@user2.groups.count).to be(1)
+        expect(@user1.all_db_servers.count).to be(3)
+      end
+
+      it 'non owners can not destroy groups' do
+        expect(@user1.all_db_servers.count).to be(4)
+        expect(@user2.groups.count).to be(2)
+        delete(
+          "/api/groups/#{@temp_group.id}",
+          headers: @user2_headers
+        )
+        expect(response.successful?).to be_falsey
+        @user2.reload
+        expect(@user1.groups.count).to be(3)
+        expect(@user2.groups.count).to be(2)
+        expect(@user1.all_db_servers.count).to be(4)
+      end
+    end
+
+    describe '/members' do
+      describe 'PATCH' do
+        it 'lets group admins add new members' do
+          expect(@temp_group.member? @user3).to be_falsey
+          patch(
+            "/api/groups/#{@temp_group.id}/members",
+            headers: @user1_headers,
+            params: {
+              user_id: @user3.id
+            }
+          )
+          expect(response.successful?).to be_truthy
+  
+          @temp_group.reload
+          expect(@temp_group.members.size).to eq(3)
+          expect(@temp_group.member? @user3).to be_truthy
+        end
+  
+        it 'prevents non group admins to add new members' do
+          expect(@temp_group.member? @user3).to be_falsey
+          patch(
+            "/api/groups/#{@temp_group.id}/members",
+            headers: @user2_headers,
+            params: {
+              user_id: @user3.id
+            }
+          )
+          expect(response.successful?).to be_falsey
+  
+        end
+      end
+
+      describe '/:user_id' do
+        describe 'PATCH' do
+          it 'lets group admins to remove members' do
+            patch(
+              "/api/groups/#{@temp_group.id}/members/#{@user2.id}",
+              headers: @user1_headers
+            )
+            expect(response.successful?).to be_truthy
+    
+            @temp_group.reload
+            expect(@temp_group.members.size).to eq(1)
+            expect(@temp_group.member? @user2).to be_falsey
+          end
+  
+          it 'destroys group when last member is removed' do
+            patch(
+              "/api/groups/#{@temp_group.id}/members/#{@user2.id}",
+              headers: @user1_headers
+            )
+            expect(response.successful?).to be_truthy
+            patch(
+              "/api/groups/#{@temp_group.id}/members/#{@user1.id}",
+              headers: @user1_headers
+            )
+            expect(response.successful?).to be_truthy
+            expect(Group.exists?(id: @temp_group.id)).to be_falsey
+          end
+  
+          it 'single group admin can\'t remove itself when members are present' do
+            patch(
+              "/api/groups/#{@temp_group.id}/members/#{@user1.id}",
+              headers: @user1_headers
+            )
+            expect(response.successful?).to be_falsey
+          end
+  
+          it 'group admin can remove itself when another admin is present' do
+            # grant user2 admin permission
+            u2 = @temp_group.group_members.find_by(user_id: @user2.id)
+            u2.update!(
+              is_admin: true
+            )
+  
+            patch(
+              "/api/groups/#{@temp_group.id}/members/#{@user1.id}",
+              headers: @user1_headers
+            )
+            expect(response.successful?).to be_truthy
+            @temp_group.reload
+            expect(@temp_group.members.size).to be(1)
+            expect(@temp_group.admins.size).to be(1)
+            expect(@temp_group.member? @user1).to be_falsey
+            expect(@temp_group.admin? @user1).to be_falsey
+          end
+          
+          it 'prevents non group admins to remove members' do
+            patch(
+              "/api/groups/#{@temp_group.id}/members/#{@user1.id}",
+              headers: @user2_headers
+            )
+            expect(response.successful?).to be_falsey
+          end
+  
+        end
+        describe 'POST /set_admin_permission' do
+          it 'lets group admins grant admin permissions to members' do
+            post(
+              "/api/groups/#{@temp_group.id}/members/#{@user2.id}/set_admin_permission",
+              headers: @user1_headers,
+              params: {
+                is_admin: true
+              }
+            )
+            expect(response.successful?).to be_truthy
+            @temp_group.reload
+            expect(@temp_group.admins.size).to be(2)
+            expect(@temp_group.admin? @user2).to be_truthy
+          end
+
+          it 'lets group admins revoke admin permissions from members' do
+            # grant user2 admin permission
+            # grant user2 admin permission
+            u2 = @temp_group.group_members.find_by(user_id: @user2.id)
+            u2.update!(
+              is_admin: true
+            )
+            expect(@temp_group.admin? @user2).to be_truthy
+
+            post(
+              "/api/groups/#{@temp_group.id}/members/#{@user2.id}/set_admin_permission",
+              headers: @user1_headers,
+              params: {
+                is_admin: false
+              }
+            )
+            expect(response.successful?).to be_truthy
+            @temp_group.reload
+            expect(@temp_group.admins.size).to be(1)
+            expect(@temp_group.admin? @user2).to be_falsey
+          end
+
+          it 'prevents non group admins to grant admin permissions to themself' do
+            post(
+              "/api/groups/#{@temp_group.id}/members/#{@user2.id}/set_admin_permission",
+              headers: @user2_headers,
+              params: {
+                is_admin: true
+              }
+            )
+            expect(response.successful?).to be_falsey
+
+            expect(@temp_group.admins.size).to be(1)
+            expect(@temp_group.admin? @user1).to be_truthy
+
+          end
+
+          it 'prevents non group admins to grant admin permissions to others' do
+            post(
+              "/api/groups/#{@temp_group.id}/members/#{@user3.id}/set_admin_permission",
+              headers: @user2_headers,
+              params: {
+                is_admin: true
+              }
+            )
+            expect(response.successful?).to be_falsey
+
+            expect(@temp_group.admins.size).to be(1)
+            expect(@temp_group.admin? @user1).to be_truthy
+
+          end
+        end
+
+      end
+
+
+
+    end
+
+
+    describe 'join and leave groups' do
+      after(:each) do
+        @group3.users.each do |user|
+          @group3.remove_user(user: user) unless @group3.admin? user
+        end
+        @group3.reload
+        expect(@group3.users.size).to be(1)
+      end
+      describe 'PATCH /api/groups/:id/join' do
+        it 'can join public groups' do
+          expect(@group3.public?).to be_truthy
+          expect(@group3.members.size).to be(1)
+          patch(
+            "/api/groups/#{@group3.id}/join",
+            headers: @user1_headers
+          )
+  
+          expect(response.successful?).to be_truthy
+          @group3.reload
+          expect(@group3.members.size).to be(2)
+        end
+  
+        it 'can not join private groups' do
+          expect(@group1.private?).to be_truthy
+          expect(@group1.public?).to be_falsey
+          expect(@group1.members.size).to be(2)
+          patch(
+            "/api/groups/#{@group1.id}/join",
+            headers: @user3_headers
+          )
+          expect(response.successful?).to be_falsey
+          @group1.reload
+          expect(@group1.members.size).to be(2)
+        end
+      end
+  
+      describe 'PATCH /api/groups/:id/leave' do
+        before(:each) do
+          patch(
+            "/api/groups/#{@group3.id}/join",
+            headers: @user1_headers
+          )
+          @group3.reload
+          expect(@group3.users.size).to be(2)
+          expect(@group3.member?(@user1)).to be_truthy
+        end
+  
+        it 'can leave public groups' do
+          expect(@group3.member?(@user1)).to be_truthy
+          patch(
+            "/api/groups/#{@group3.id}/leave",
+            headers: @user1_headers
+          )
+  
+          expect(response.successful?).to be_truthy
+          expect(@group3.member?(@user1)).to be_falsey
+        end
+  
+        it 'can not leave private groups' do
+          expect(@group1.private?).to be_truthy
+          expect(@group1.member?(@user1)).to be_truthy
+          patch(
+            "/api/groups/#{@group1.id}/leave",
+            headers: @user1_headers
+          )
+          expect(response.successful?).to be_falsey
+          @group1.reload
+          expect(@group1.member?(@user1)).to be_truthy
+        end
+  
+      end
     end
   end
+
+  describe '/api/groups/public' do
+    after(:each) do
+      @group3.users.each do |user|
+        @group3.remove_user(user: user) unless @group3.admin? user
+      end
+      expect(@group3.users.size).to be(1)
+    end
+
+    describe 'GET /api/groups/public/count' do
+      it 'returns count of the public available groups' do
+        get("/api/groups/public/count")
+        expect(response.successful?).to be_truthy
+        expect(json['count']).to be(1)
+      end
+      it 'returns count of the public available, unjoined groups' do
+        get(
+          "/api/groups/public/count",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['count']).to be(1)
+        get(
+          "/api/groups/public/count",
+          headers: @user3_headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json['count']).to be(0)
+      end
+    end
+  
+    describe 'GET /api/group/public' do  
+      it 'returns all public groups, exluding joined groups' do
+        get(
+          "/api/groups/public",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(1)
+        expect(json[0]['is_private']).to be_falsey
+        expect(json[0]['is_member']).to be_falsey
+        expect(json[0]['members']).to be_nil
+  
+        # now join this group
+        patch(
+          "/api/groups/#{@group3.id}/join",
+          headers: @user1_headers
+        )
+  
+        expect(response.successful?).to be_truthy
+  
+        # no unjoined public groups available
+        get(
+          "/api/groups/public",
+          headers: @user1_headers
+        )
+        expect(response.successful?).to be_truthy
+        expect(json.size).to be(0)
+      end
+  
+    end
+  end
+
 end

@@ -42,21 +42,23 @@ module Helpers
     { db_type: :mariadb, username: 'root', port: 3410, version: 'mariadb_10.5.3' }
   ].freeze
 
-  def db_server_for(version, owner_type:, is_admin: true)
+  def db_server_for(version, owner_type:, is_admin: true, email: 'sqler1@db.ch')
     config = DATABSE_CONFIGS.find { |conf| conf[:version] == version }
+    user = User.find_by(email: email) || FactoryBot.create(:user, email: email)
+
     case owner_type
     when :user
       FactoryBot.create(
         :db_server,
         db_type: config[:db_type],
         username: config[:username],
-        port: config[:port]
+        port: config[:port],
+        user: user
       )
     when :group
       group = FactoryBot.create(:group)
-      user = User.find_by(email: 'sqler1@db.ch') ||
-               FactoryBot.create(:user, email: 'sqler1@db.ch')
-      group.add_user(user: user, group_key: Group.random_crypto_key, is_admin: true)
+      @group_crypto_key = Group.random_crypto_key
+      group.add_user(user: user, group_key: @group_crypto_key, is_admin: true)
       db_server = FactoryBot.create(
         :db_server,
         :group,
@@ -69,8 +71,8 @@ module Helpers
     end
   end
 
-  def config_for(db_version:, owner_type: :user, read_only_access: false)
-    @db_server = db_server_for(db_version, owner_type: owner_type, is_admin: read_only_access)
+  def config_for(db_version:, owner_type: :user, read_only_access: false, email: 'sqler1@db.ch')
+    @db_server = db_server_for(db_version, owner_type: owner_type, is_admin: read_only_access, email: email)
     @owner = @db_server.owner
     case @db_server.owner_type
     when :user
@@ -107,5 +109,11 @@ module Helpers
       'Authorization' => login_token.token,
       'Crypto-Key' => @crypto_key
     }
+  end
+
+  def sql_query(query, config: {})
+    q = FactoryBot.create(:sql_query, config)
+    q.query = query
+    q
   end
 end

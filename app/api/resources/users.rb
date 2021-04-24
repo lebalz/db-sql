@@ -12,6 +12,13 @@ module Resources
 
         login_token.destroy!
       end
+
+      def crypto_key
+        has_key = request.headers.key?('Crypto-Key')
+        error!('Crypto-Key is required', 400) unless has_key
+
+        request.headers['Crypto-Key']
+      end
     end
 
     resource :users do
@@ -40,7 +47,7 @@ module Resources
         )
       end
 
-      desc 'get all users available to build groups'
+      desc 'get all users available to add to groups'
       get :group_users do
         authorize User, :group_index?
 
@@ -148,6 +155,23 @@ module Resources
       end
 
       route_param :id, type: String, desc: 'Id of a user' do
+
+        desc 'Get all groups of the current user'
+        get :groups do
+          authorize Group, :index?
+
+          groups = current_user.groups.reorder(name: :asc)
+          Group.update_outdated_group_members(
+            user: current_user,
+            pkey: current_user.private_key(crypto_key)
+          )
+          present(
+            groups,
+            with: Entities::Group,
+            user: current_user
+          )
+        end
+
         route_setting :auth, disabled: true
         desc 'Activate a useraccount'
         params do

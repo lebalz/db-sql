@@ -25,54 +25,53 @@ module Resources
       end
     end
     resource :groups do
-      desc 'Get all groups of the current user'
-      get do
-        authorize Group, :index?
-
-        groups = current_user.groups
-        Group.update_outdated_group_members(user: current_user,
-                                            pkey: current_user.private_key(crypto_key))
-        present(
-          groups,
-          with: Entities::Group,
-          user: current_user
-        )
-      end
-
-      desc 'Get public groups, by default 20 with no offset'
+      desc 'Get public groups'
       params do
         optional(:limit, type: Integer, default: -1,
                          desc: 'maximal number of returned groups, -1 returns all groups')
         optional(:offset, type: Integer,  default: 0,
                           desc: 'offset of returned groups')
+        optional(:order, type: Symbol, values: %i[asc desc], default: :asc, desc: 'sort order')
       end
-      get :public do
-        authorize Group, :index?
+      resource :public do
+        get do
+          authorize Group, :index?
 
-        public_groups = Group.public_available.where.not(
-          'id in (?)', current_user.groups.select(:id)
-        ).includes(:group_members, :db_servers, :users)
+          public_groups = Group.public_available.where.not(
+            'id in (?)', current_user.groups.select(:id)
+          ).includes(:group_members, :db_servers, :users)
 
-        if (params[:limit] || 0) < 0
-          return present(public_groups, with: Entities::Group,
-                                        user: current_user)
+          if (params[:limit] || 0) < 0
+            return present(public_groups, with: Entities::Group,
+                                          user: current_user)
+          end
+
+          present(
+            public_groups
+              .reorder(name: params[:order])
+              .offset(params[:offset])
+              .limit(params[:limit]),
+            with: Entities::Group,
+            user: current_user
+          )
         end
 
-        present(
-          public_groups
-            .offset(params[:offset])
-            .limit(params[:limit]),
-          with: Entities::Group,
-          user: current_user
-        )
-      end
+        desc 'Get number of available groups'
+        route_setting :auth, disabled: true
+        get :count do
+          authorize Group, :index?
+          unless request.headers['Authorization'].nil?
+            authenticate()
+          end
+          if current_user.nil?
+            return { count: Group.public_available.count }
+          end
+          public_groups = Group.public_available.where.not(
+            'id in (?)', current_user.groups.select(:id)
+          )
+          { count: public_groups.count }
 
-      desc 'Get number of available groups'
-      route_setting :auth, disabled: true
-      get :counts do
-        authorize Group, :index?
-
-        { count: Group.public_available.count }
+        end
       end
 
       desc 'Create a new group'
@@ -192,7 +191,7 @@ module Resources
           params do
             requires(:user_id, type: String, desc: 'user id of the new member')
           end
-          post do
+          patch do
             authorize current_group, :add_member?
 
             new_member = User.find(params[:user_id])
@@ -208,18 +207,14 @@ module Resources
 
           route_param :user_id, type: String, desc: 'Group ID' do
             desc 'remove member'
-            delete do
+            patch do
               is_self = current_user.id == params[:user_id]
               if is_self
                 authorize current_group, :leave?
               else
                 authorize current_group, :remove_member?
               end
-
-              group_member = current_group.group_members.find_by(user_id: params[:user_id])
-              error!('User not found', 302) unless group_member
-
-              group_member.destroy
+              current_group.remove_user(user_id: params[:user_id])
               status :no_content
             end
 
@@ -247,6 +242,32 @@ module Resources
             end
           end
 
+        end
+
+        desc 'Join group'
+        patch :join do
+          authorize current_group, :join?
+
+          new_member = current_user
+          if current_group.member? new_member
+            status :no_content
+            return
+          end
+          group_member = current_group.add_user(
+            user: new_member,
+            group_key: current_group.crypto_key(
+              new_member,
+              new_member.private_key(crypto_key)
+            )
+          )
+          status :no_content
+        end
+
+        desc 'Leave public group'
+        patch :leave do
+          authorize current_group, :leave?
+
+          current_group.remove_user(user: current_user)
         end
 
       end

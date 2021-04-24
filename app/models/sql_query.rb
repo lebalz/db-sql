@@ -43,6 +43,13 @@ class SqlQuery < ApplicationRecord
     @query ||= raw_query.attached? ? raw_query.blob.download : ''
   end
 
+  # @param query_index [int] 0 based
+  # @param msg [string]
+  def add_error(query_index:, msg:)
+    self.error ||= []
+    self.error << {query_index: query_index, error: msg}
+  end
+
   def query=(value)
     @query = value
     raw_query.purge if raw_query.attached?
@@ -53,19 +60,16 @@ class SqlQuery < ApplicationRecord
     )
   end
 
-  # @param user [User]
-  def authorized?(user)
-    return user_id == user.id if private?
-
-    db_server.authorized?(user)
-  end
-
   def private?
     is_private
   end
 
   def public?
     !is_private
+  end
+
+  def favorite?
+    is_favorite
   end
 
   private

@@ -234,7 +234,7 @@ class GroupStore implements Store {
 
   @action
   loadGroups(): Promise<boolean> {
-    return getGroups(this.root.cancelToken).then(({ data }) => {
+    return getGroups(this.root.session.currentUser.id, this.root.cancelToken).then(({ data }) => {
       data.forEach((group) => {
         const hasDbServers = group.db_servers.length > 0;
         const isOutdated = group.members?.some(

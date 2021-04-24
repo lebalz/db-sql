@@ -38,13 +38,14 @@ class GroupMember < ApplicationRecord
     is_outdated
   end
 
-  def destroy
-    self.class.where(user: user, group: group).first.destroy
-  end
+  # def destroy
+  #   require 'pry'; binding.pry
+  #   self.class.where(user: user, group: group).first.destroy
+  # end
 
-  def destroy!
-    self.class.where(user: user, group: group).first.destroy!
-  end
+  # def destroy!
+  #   self.class.where(user: user, group: group).first.destroy!
+  # end
 
   # @param private_key [OpenSSL::PKey::RSA]
   # @return [string] decrypted, Base64 encoded, crypto key

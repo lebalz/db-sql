@@ -12,7 +12,6 @@ import { REST } from '../../declarations/REST';
 import _ from 'lodash';
 import GroupProps from './Groups/GroupProps';
 import Editable from './Groups/Editable';
-import QueryLog from '../QueryLog';
 
 interface InjectedProps {
   groupStore: GroupStore;
@@ -104,9 +103,6 @@ export default class Groups extends React.Component {
                       size="mini"
                     />
                   )}
-                </div>
-                <div style={{ flexGrow: 2, marginLeft: '1em' }}>
-                  <QueryLog basic groupId={this.activeGroup.id} />
                 </div>
               </div>
             </Fragment>

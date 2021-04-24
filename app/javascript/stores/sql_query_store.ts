@@ -54,6 +54,24 @@ class SqlQueryStore implements Store {
     return _.orderBy(this.state.sqlQueries, ['isFavorite', 'createdAt'], ['desc', 'desc']);
   }
 
+
+  @computed
+  get filteredSqlQueries() {
+    let queries = this.sqlQueries.slice();
+    const { sqlQueryLogFilter } = this.root.viewStateStore;
+    if (sqlQueryLogFilter.executionState) {
+      const eqTo = sqlQueryLogFilter.executionState === 'success' ? true : false;
+      queries = queries.filter((q) => q.isValid === eqTo);
+    }
+    if (sqlQueryLogFilter.dbServerId) {
+      queries = queries.filter((q) => q.dbServerId === sqlQueryLogFilter.dbServerId);
+    }
+    if (sqlQueryLogFilter.dbName) {
+      queries = queries.filter((q) => q.dbName === sqlQueryLogFilter.dbName);
+    }
+    return queries;
+  }
+
   find = computedFn(
     function (this: SqlQueryStore, id?: string): SqlQuery | undefined {
       if (!id) {

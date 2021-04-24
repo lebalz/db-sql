@@ -2,7 +2,11 @@
 
 class SqlQueryPolicy < ApplicationPolicy
   def show?
-    record.public? || record.user_id == user.id
+    return true if record.user_id == user.id
+    return false unless record.public?
+    return false unless record.db_server.owner_type == :group
+
+    record.db_server.owner.member? user
   end
 
   def create?
@@ -10,9 +14,9 @@ class SqlQueryPolicy < ApplicationPolicy
   end
 
   def update?
-    record.user_id == user.id || (
-      record.db_server.owner_type == :group && record.db_server.owner.admin?(user)
-    )
+    return true if record.user_id == user.id
+    return false unless record.db_server.owner_type == :group
+    record.db_server.owner.admin? user
   end
 
   def destroy?

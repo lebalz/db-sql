@@ -2,6 +2,7 @@
 [![codecov](https://codecov.io/gh/lebalz/db-sql/branch/master/graph/badge.svg)](https://codecov.io/gh/lebalz/db-sql)
 
 # [DB-SQL](https://db-sql.ch)
+
 ![db-sql](docs/db-sql.gif)
 
 Try it out: [db-sql.ch](https://db-sql.ch)
@@ -9,6 +10,7 @@ Try it out: [db-sql.ch](https://db-sql.ch)
 ## Setup
 
 ### PreRequirements
+
 - Ruby v2.6.2
 - bundler `gem install bundler`
 - [Yarn](https://yarnpkg.com/en/docs/install)
@@ -18,20 +20,22 @@ Try it out: [db-sql.ch](https://db-sql.ch)
 1. `EDITOR=nano rails credentials:edit` and set the [env variables](#env-variables)
 2. `yarn install`
 3. `bundle`
-4.  (on first time setup, see [configure postgres](#configure-postgres))
+4. (on first time setup, see [configure postgres](#configure-postgres))
 5. `rails db:setup`
 
 In development, `rails db:setup` will seed a default user `rails db:seed` with the password `asdfasdf` and some db connections for this user.
 To customize your seeds, see [Custom Seeds](#custom-seeds)
 
 To reseed, run
+
 ```sh
 bundle exec rails db:drop db:setup
 ```
 
 ### ENV Variables
+
 | Key                      | example                | ENV                 |
-|:-------------------------|:-----------------------|:--------------------|
+| :----------------------- | :--------------------- | :------------------ |
 | RAILS_MASTER_KEY         | `config/master.key`(1) | production, staging |
 | DB_SQL_DATABASE_USER     | postgres               | development, test   |
 | DB_SQL_DATABASE_PASSWORD | ""                     | development, test   |
@@ -44,14 +48,17 @@ bundle exec rails db:drop db:setup
 2. Currently `RAILS_SERVE_STATIC_FILES` is set to `true` on the dokku host to enable serving of static assets. This could lead to bad performance and could be optimized through cdns or volume in the container and serving the assets by nginx.
 
 ## DB-SQL Concepts
+
 - [Security concepts](docs/security_concepts.md)
 
 ## Start Rails
 
 Rails is expected to run on port `3000`. Start it with
+
 ```sh
 bundle exec rails server
 ```
+
 and visit [http://localhost:3000](http://localhost:3000)
 
 ### Webpacker
@@ -65,6 +72,7 @@ bin/wepacker-dev-server
 ### configure postgres
 
 To create a new postgres user for this project:
+
 ```sh
 sudo -u postgres psql
 postgres=# CREATE USER foo WITH ENCRYPTED PASSWORD 'bar';
@@ -72,6 +80,7 @@ postgres=# ALTER ROLE foo WITH superuser;
 ```
 
 If pgcrypto is not installed for a database, install it to the public schema:
+
 ```sh
 $ sudo -u postgres psql
 postgres=# CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA public;
@@ -84,11 +93,10 @@ If you need for development custom seeds of DbServers with confidential credenti
 ```sh
 cp seed_db_servers.example.yaml seed_db_servers.yaml
 ```
+
 edit it to your needs and reseed.
 
 The fields `db_initial_db` and `db_initial_table` ar optional.
-
-
 
 ## Mailing
 
@@ -106,13 +114,14 @@ node swagger_ui.js
 
 will start swagger on [http://localhost:4000](http://localhost:4000).
 
-
 ## Generate Documentation
 
 Run `bin/generate_docs`. This will generate the documentation of the rails models, located at `./doc/`.
 
 ## Testing
+
 Requirements:
+
 - [docker](https://docs.docker.com/engine/install/)
 - [docker-compose](https://docs.docker.com/compose/install/)
 
@@ -145,7 +154,6 @@ rake db:stop_spec_dbs
 Use the mailcatcher gem to receive emails in development: `bundle exec mailcatcher`.
 Mails sent with `:smtp` to [http://localhost:1025](http://localhost:1025) are catched by mailcatcher and can be seen in the inbox at [http://localhost:1080](http://localhost:1080).
 
-
 ## Deploy
 
 The app can be deployed with dokku (thorough the usage of this [Dockerfile](Dockerfile)).
@@ -167,5 +175,40 @@ to easyly
 
 Set the all [ENV variables](#env-variables) through `dokku config:set <app-name> <ENV_VAR_NAME>=<ENV_VAR_VALUE>`
 
+## Dokku
+
+```sh
+APP="db-sql"
+RAILS_MASTER_KEY="xxxxx-xxxxxx-xxxxx"
+dokku apps:create $APP
+dokku postgres:create $APP
+dokku postgres:link $APP $APP
+
+# mount storage for ActiveStorage
+mkdir -p /var/lib/dokku/data/storage/$APP/active-storage
+dokku storage:mount $APP /var/lib/dokku/data/storage/$APP/active-storage:/app/storage
+
+
+# db connection url - since executed from within the postgres container, change host to localhost
+DB_URL=$(dokku config:get ${APP} DATABASE_URL | sed 's/@.*:/@localhost:/')
+
+# ensure postgres extension 'pgcrypto' is installed
+dokku postgres:enter $APP psql $DB_URL -c 'CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA public;'
+
+# configure the rails app
+dokku config:set $APP RAILS_MASTER_KEY="$RAILS_MASTER_KEY"
+dokku config:set $APP} RAILS_SERVE_STATIC_FILES="1" RAILS_ENV="production" NO_VHOST="0" DOKKU_DOCKERFILE_PORTS="3000"
+dokku proxy:ports-set $APP "http:80:3000"
+
+dokku nginx:set $APP client-max-body-size 15m
+
+dokku docker-options:add $APP build "--build-arg RAILS_MASTER_KEY=$RAILS_MASTER_KEY"
+
+dokku domains:add $APP "foo.bar.ch"
+dokku config:set --no-restart $APP DOKKU_LETSENCRYPT_EMAIL=foo@bar.ch
+dokku letsencrypt $APP
+```
+
 ### Letsencrypt
+
 See [this post](https://github.com/dokku/dokku-letsencrypt#dockerfile-deploys) to see how to configure letsencrypt

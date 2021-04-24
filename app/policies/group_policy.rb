@@ -11,6 +11,14 @@ class GroupPolicy < ApplicationPolicy
     true
   end
 
+  def join?
+    record.public?
+  end
+
+  def leave?
+    record.public?
+  end
+
   def update?
     record.admin?(user)
   end
@@ -30,7 +38,12 @@ class GroupPolicy < ApplicationPolicy
   end
 
   def leave?
-    record.public? && !record.admin?(user)
+    return true if record.public?
+    return false unless record.admin? user
+
+    return true if record.admins.size > 1
+    return true if record.members.size == 1
+    false
   end
 
   def remove_member?
