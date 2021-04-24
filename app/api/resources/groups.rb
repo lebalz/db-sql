@@ -58,10 +58,19 @@ module Resources
 
         desc 'Get number of available groups'
         route_setting :auth, disabled: true
-        get :counts do
+        get :count do
           authorize Group, :index?
+          unless request.headers['Authorization'].nil?
+            authenticate()
+          end
+          if current_user.nil?
+            return { count: Group.public_available.count }
+          end
+          public_groups = Group.public_available.where.not(
+            'id in (?)', current_user.groups.select(:id)
+          )
+          { count: public_groups.count }
 
-          { count: Group.public_available.count }
         end
       end
 
@@ -182,7 +191,7 @@ module Resources
           params do
             requires(:user_id, type: String, desc: 'user id of the new member')
           end
-          post do
+          patch do
             authorize current_group, :add_member?
 
             new_member = User.find(params[:user_id])

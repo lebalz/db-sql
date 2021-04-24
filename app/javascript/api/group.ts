@@ -65,7 +65,7 @@ export function removeMember(groupId: string, userId: string): AxiosPromise<void
 }
 
 export function addGroupMember(groupId: string, newMemberId: string): AxiosPromise<GroupMember> {
-  return api.post(`groups/${groupId}/members`, { user_id: newMemberId });
+  return api.patch(`groups/${groupId}/members`, { user_id: newMemberId });
 }
 
 export function update(groupId: string, data: ChangeableProps): AxiosPromise<Group> {
