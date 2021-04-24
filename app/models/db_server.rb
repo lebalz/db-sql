@@ -97,16 +97,6 @@ class DbServer < ApplicationRecord
     owner.id
   end
 
-  # @param user [User]
-  def authorized?(user)
-    case owner_type
-    when :user
-      user_id == user.id
-    when :group
-      group.member?(user)
-    end
-  end
-
   # @param key [String] base64 encoded crypto key from the user
   # @return [String] cleartext password for the db connection
   def password(key)

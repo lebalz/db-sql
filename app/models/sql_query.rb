@@ -60,13 +60,6 @@ class SqlQuery < ApplicationRecord
     )
   end
 
-  # @param user [User]
-  def authorized?(user)
-    return user_id == user.id if private?
-
-    db_server.authorized?(user)
-  end
-
   def private?
     is_private
   end

@@ -217,7 +217,56 @@ RSpec.describe "API::Resources::SqlQuery" do
           expect(json[1]['error'][0]['query_index']).to be(0)
         end
       end
+
+      describe 'only the latest 100 queries per server and user are stored, favorites are kept' do
+        it 'stores the moste recent 100 queries per server and user' do
+          expect(@user1.sql_queries.size).to be(3)
+          97.times do |n|
+            post(
+              "/api/db_servers/#{@private_db.id}/ninja_turtles_db/query",
+              headers: @user1_headers,
+              params: {query: "SELECT * FROM ninja_turtles LIMIT #{n + 4}"}
+            )
+            expect(response.successful?).to be_truthy
+          end
+          expect(@user1.sql_queries.size).to be(100)
+          get('/api/sql_queries', headers: @user1_headers)
+          expect(json[0]['query']).to eq('# USER 1 private favorite query')
+          expect(json[1]['query']).to eq('SELECT * FROM ninja_turtles LIMIT 100')
+          expect(json[99]['query']).to eq('# USER 1 private query')
+
+          post(
+            "/api/db_servers/#{@private_db.id}/ninja_turtles_db/query",
+            headers: @user1_headers,
+            params: {query: "SELECT * FROM ninja_turtles LIMIT 101"}
+          )
+          expect(response.successful?).to be_truthy
+          expect(@user1.sql_queries.size).to be(100)
+          get('/api/sql_queries', headers: @user1_headers)
+
+          expect(json[0]['query']).to eq('# USER 1 private favorite query')
+          expect(json[1]['query']).to eq('SELECT * FROM ninja_turtles LIMIT 101')
+          expect(json[2]['query']).to eq('SELECT * FROM ninja_turtles LIMIT 100')
+          expect(json[99]['query']).to eq('USER 1 erroneous query')
+
+
+          post(
+            "/api/db_servers/#{@shared_db.id}/ninja_turtles_db/query",
+            headers: @user1_headers,
+            params: {query: "SELECT * FROM ninja_turtles; # other server!"}
+          )
+          expect(response.successful?).to be_truthy
+          expect(@user1.sql_queries.size).to be(101)
+          get('/api/sql_queries', headers: @user1_headers)
+
+          expect(json[0]['query']).to eq('# USER 1 private favorite query')
+          expect(json[1]['query']).to eq('SELECT * FROM ninja_turtles; # other server!')
+          expect(json[2]['query']).to eq('SELECT * FROM ninja_turtles LIMIT 101')
+          expect(json[100]['query']).to eq('USER 1 erroneous query')
+        end
+      end
     end
+
     describe 'GET /shared' do
       it 'gets all shared queries for a given group' do
         get(
