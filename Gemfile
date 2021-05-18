@@ -9,7 +9,7 @@ gem 'pg', '~> 1.1'
 gem 'mysql2', '~>0.5.3'
 
 # Use Puma as the app server
-gem 'puma', '~> 5.2.2'
+gem 'puma', '~> 5.3.1'
 
 gem 'redis'
 gem 'hiredis'
