@@ -11,7 +11,7 @@ Try it out: [db-sql.ch](https://db-sql.ch)
 
 ### PreRequirements
 
-- Ruby v2.6.2
+- Ruby v3.0.1
 - bundler `gem install bundler`
 - [Yarn](https://yarnpkg.com/en/docs/install)
 
