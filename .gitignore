@@ -60,6 +60,7 @@ yarn-debug.log*
 .browserslistrc
 
 db_servers.yaml
+db_connections.yaml
 
 .antlr
 *.interp

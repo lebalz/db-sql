@@ -17,6 +17,12 @@ Try it out: [db-sql.ch](https://db-sql.ch)
 
 ### Install
 
+0. Install postgres and node:
+```sh
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
 1. `EDITOR=nano rails credentials:edit` and set the [env variables](#env-variables)
 2. `yarn install`
 3. `bundle`
