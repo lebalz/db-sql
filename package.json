@@ -70,6 +70,7 @@
     "antlr4tsGenerate": "antlr4ts -visitor app/javascript/antlr/QuerySeparationGrammar.g4"
   },
   "engines": {
-    "node": "16.x"
+    "node": "16.x",
+    "yarn": "1.x"
   }
 }
