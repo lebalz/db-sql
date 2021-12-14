@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.0.1'
+ruby '3.0.2'
 gem 'sassc-rails'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1.3'
@@ -50,10 +50,11 @@ gem 'bootsnap', '>= 1.7.3', require: false
 gem 'travis'
 
 group :development, :test do
-  gem 'pry'
-  gem 'pry-doc'
-  gem 'pry-byebug'
-  gem 'pry-rails'
+  gem 'pry', '0.14.1'
+  gem 'pry-doc', '1.2.0'
+  # 14.12.2021: not compatible with pry 0.14.1
+  # gem 'pry-byebug', '3.9.0'
+  gem 'pry-rails', '0.3.9'
 
   gem 'dotenv-rails'
   gem 'simplecov'
