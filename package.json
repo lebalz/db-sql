@@ -68,5 +68,8 @@
   },
   "scripts": {
     "antlr4tsGenerate": "antlr4ts -visitor app/javascript/antlr/QuerySeparationGrammar.g4"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }
