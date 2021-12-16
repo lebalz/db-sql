@@ -1,10 +1,8 @@
-import React, { Fragment } from 'react';
-import { Icon, Label, Message, Segment } from 'semantic-ui-react';
+import React from 'react';
+import { Label, Segment } from 'semantic-ui-react';
 import { inject, observer } from 'mobx-react';
-import Tooltip from '../../shared/Tooltip';
 import { computed } from 'mobx';
 import SqlQuery from '../../models/SqlQuery';
-import { OwnerType } from '../../api/db_server';
 import { PrismCode } from '../Workbench/SqlResult/PrismCode';
 import ViewStateStore from '../../stores/view_state_store';
 import SqlQueryActions from './SqlQueryActions';

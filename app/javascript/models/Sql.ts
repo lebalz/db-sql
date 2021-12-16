@@ -1,4 +1,4 @@
-import { observable, computed } from 'mobx';
+import { observable } from 'mobx';
 import Database from './Database';
 import { AceSqlType } from '../components/Workbench/QueryEditor/SqlEditor';
 
