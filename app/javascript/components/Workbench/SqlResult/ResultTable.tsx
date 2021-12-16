@@ -267,6 +267,20 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
       if (cell === '') {
         return <span>-</span>;
       }
+      if (/\{|\[/.test(cell)) {
+        try {
+          const jsonCell = JSON.parse(cell);
+          return (
+            <span>
+              <pre>
+                <code>{JSON.stringify(jsonCell, undefined, 1).replace('\\n', '\n')}</code>
+              </pre>
+            </span>
+          );
+        } catch {
+          return <span>{cell}</span>;
+        }
+      }
       return <span>{cell}</span>;
     case 'number':
       return <span>{cell}</span>;
