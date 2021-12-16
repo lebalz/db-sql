@@ -175,9 +175,7 @@ export default class SqlQuery extends Sql {
   @action
   insertInEditor() {
     if (this.database && this.database.activeQuery) {
-      const newContent = `${this.database.activeQuery.query}${
-        this.database.activeQuery.query.length > 0 ? '\n' : ''
-      }${this.query}`;
+      const newContent = this.query;
       this.database.activeQuery.onSqlChange(newContent, this.database.activeQuery.lineCount);
     }
   }
