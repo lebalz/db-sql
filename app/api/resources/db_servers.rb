@@ -280,7 +280,7 @@ module Resources
 
             sql_query = SqlQuery.new(db_server: db_server, user: current_user,
                                      db_name: db_name)
-            sql_query.query = "#{params[:queries].join("\n")};"
+            sql_query.query = params[:queries].join("\n")
             exec_start = Time.now
             errors = []
 

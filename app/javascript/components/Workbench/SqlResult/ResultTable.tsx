@@ -245,7 +245,15 @@ class ResultTable extends React.Component<Props> {
                 <Table.Row key={i}>
                   {Object.values(val).map((cell, j) => {
                     return (
-                      <Table.Cell key={j} className={cx(colorMap[j], { selected: selectionMap[j] })}>
+                      <Table.Cell 
+                        key={j} 
+                        className={cx(colorMap[j], { selected: selectionMap[j] })}
+                        style={{
+                          maxWidth: '30em',
+                          overflow: 'auto',
+                          verticalAlign: 'text-top'
+                        }}
+                      >
                         <CellContent cell={cell} />
                       </Table.Cell>
                     );
@@ -267,19 +275,26 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
       if (cell === '') {
         return <span>-</span>;
       }
+      let json: string | undefined;
       if (/\{|\[/.test(cell)) {
         try {
-          const jsonCell = JSON.parse(cell);
-          return (
-            <span>
-              <pre>
-                <code>{JSON.stringify(jsonCell, undefined, 1).replace('\\n', '\n')}</code>
-              </pre>
-            </span>
-          );
+          json = JSON.parse(cell);
         } catch {
-          return <span>{cell}</span>;
+          if (/\{.*\}/.test(cell)) {
+            try {
+              json = JSON.parse(cell.replace(/\{(.*)\}/, '\[$1\]').replace(/"{/g, '{').replace(/}"/g, '}').replace(/\\"/g, '"'));
+            } catch {}
+          }
         }
+      }
+      if (json) {
+        return (
+          <span>
+            <pre>
+              <code>{JSON.stringify(json, undefined, 1).replace(/\\\\?n/g, "\n")}</code>
+            </pre>
+          </span>
+        );
       }
       return <span>{cell}</span>;
     case 'number':
