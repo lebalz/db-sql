@@ -75,6 +75,20 @@ export default class ResultPanelHeader extends React.Component<Props> {
               />
             </CopyToClipboard>
           </Tooltip>
+          <Tooltip content="Copy Results as JSON" position="top right" delayed>
+            <CopyToClipboard text={JSON.stringify(result.tableData)} onCopy={(_, success) => result.onCopy(success)}>
+              <Button
+                size="mini"
+                loading={result.copyState === CopyState.Copying}
+                icon={
+                  <Icon.Group>
+                    <Icon name={copyIcon(result.copyState)} color={copyIconColor(result.copyState)} />
+                  </Icon.Group>
+                }
+                onClick={(e) => e.stopPropagation()}
+              />
+            </CopyToClipboard>
+          </Tooltip>
           {result.state === ResultState.Success && (
             <Tooltip content="Show graph" position="top right" delayed>
               <Button
