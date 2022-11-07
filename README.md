@@ -21,7 +21,13 @@ Try it out: [db-sql.ch](https://db-sql.ch)
 ```sh
 curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 sudo apt-get install -y nodejs
+
+# on ubuntu: dependency for pg gem
+sudo apt-get install libpq-dev
+# on ubuntu: dependency for mysql2 gem
+sudo apt -y install libmysqlclient-dev
 ```
+
 
 1. `EDITOR=nano rails credentials:edit` and set the [env variables](#env-variables)
 2. `yarn install`
@@ -40,14 +46,14 @@ bundle exec rails db:drop db:setup
 
 ### ENV Variables
 
-| Key                      | example                | ENV                 |
-| :----------------------- | :--------------------- | :------------------ |
-| RAILS_MASTER_KEY         | `config/master.key`(1) | production, staging |
-| DB_SQL_DATABASE_USER     | postgres               | development, test   |
-| DB_SQL_DATABASE_PASSWORD | ""                     | development, test   |
-| SENDGRID_USERNAME        | apikey                 | development         |
-| SENDGRID_API_KEY         |                        | development         |
-| RAILS_SERVE_STATIC_FILES | `true` (2)             | production, staging |
+| Key                      | example                | ENV                     |
+| :----------------------- | :--------------------- | :---------------------- |
+| RAILS_MASTER_KEY         | `config/master.key`(1) | production, staging     |
+| DB_SQL_DATABASE_USER     | postgres               | development, test       |
+| DB_SQL_DATABASE_PASSWORD | ""                     | development, test       |
+| SMTP_USERNAME            | info@foobar.ch         | production, development |
+| SMTP_PW                  |                        | production, development |
+| RAILS_SERVE_STATIC_FILES | `true` (2)             | production, staging     |
 
 1. `config/master.key` will be created automatically when calling `rails credentials:edit`. It must not be set in development. Copy this value to your deploy server and set the value from your local `master.key`. Make sure you don't version control `master.key`. See [this blog](https://medium.com/cedarcode/rails-5-2-credentials-9b3324851336) for more about rails credentials.
 
@@ -103,10 +109,6 @@ cp seed_db_servers.example.yaml seed_db_servers.yaml
 edit it to your needs and reseed.
 
 The fields `db_initial_db` and `db_initial_table` ar optional.
-
-## Mailing
-
-In production [Sendgrid](https://sendgrid.com) is used to send mails. Set your credentials with `rails credentials:edit` to work with sendgrid. You find your API Keys in Sendgrid under `API Keys > Create API Key > Full Access`.
 
 # Development
 

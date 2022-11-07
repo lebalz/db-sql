@@ -114,11 +114,11 @@ Rails.application.configure do
 
   ActionMailer::Base.delivery_method = :smtp
   ActionMailer::Base.smtp_settings = {
-    address: 'smtp.sendgrid.net',
+    address: 'mail.gandi.net',
     port: 587,
     domain: 'db-sql.ch',
-    user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SENDGRID_USERNAME],
-    password: (Rails.application.credentials[Rails.env.to_sym] || {})[:SENDGRID_API_KEY],
+    user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_USERNAME],
+    password: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_PW],
     authentication: :login,
     enable_starttls_auto: true
   }
