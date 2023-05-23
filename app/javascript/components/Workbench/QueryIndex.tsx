@@ -76,8 +76,8 @@ export default class QueryIndex extends React.Component<Props> {
                     size="mini"
                     color={color}
                     onClick={(event) => this.onClick(event.currentTarget, q.scope, q.id)}
-                    onMouseOver={() => this.injected.viewStateStore.setPreviewQuery(q.scope, q.id)}
-                    onMouseLeave={() => this.injected.viewStateStore.unsetPreviewQuery(q.scope, q.id)}
+                    // onMouseOver={() => this.injected.viewStateStore.setPreviewQuery(q.scope, q.id)}
+                    // onMouseLeave={() => this.injected.viewStateStore.unsetPreviewQuery(q.scope, q.id)}
                     key={idx}
                   >
                     {q.isFavorite && <Icon name="star" color="yellow" />}
