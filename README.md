@@ -11,9 +11,38 @@ Try it out: [db-sql.ch](https://db-sql.ch)
 
 ### PreRequirements
 
-- Ruby v3.0.1
+- Ruby v3.0.2
 - bundler `gem install bundler`
 - [Yarn](https://yarnpkg.com/en/docs/install)
+
+<details><summary>Mit RVM Installieren - Konfiguration von OpenSSL1.1</summary>
+
+The root cause of the problem stems from the fact that Ubuntu 22.04 only provides OpenSSL 3.0, which is only supported by some latest Ruby versions 3.1 and above.
+[GitHub Discussion](https://github.com/rbenv/ruby-build/discussions/1940#discussioncomment-2663209)
+
+```bash
+sudo apt install build-essential checkinstall zlib1g-dev
+# Download OpenSSL 1.1.1
+cd ~/Downloads
+wget https://www.openssl.org/source/openssl-1.1.1q.tar.gz
+tar xf openssl-1.1.1q.tar.gz
+
+# Compile it
+cd ~/Downloads/openssl-1.1.1q
+./config --prefix=/opt/openssl-1.1.1q --openssldir=/opt/openssl-1.1.1q shared zlib
+make
+make test
+sudo make install
+
+# Link the system's certs to OpenSSL 1.1.1 directory
+sudo rm -rf /opt/openssl-1.1.1q/certs
+sudo ln -s /etc/ssl/certs /opt/openssl-1.1.1q
+
+# Install Ruby with OpenSSL 1.1.1
+rvm install ruby-3.0.2 --with-openssl-dir=/opt/openssl-1.1.1q
+```
+
+</details>
 
 ### Install
 
