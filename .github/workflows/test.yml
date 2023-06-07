@@ -1,0 +1,39 @@
+name: RSpec Test
+on:
+  push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.0.2
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - run: |
+        bundle exec rails db:create db:migrate
+        bundle exec rspec
+      env:
+        RAILS_ENV: test
+        DB_SQL_DATABASE_USER: postgres
+        DB_SQL_DATABASE_PASSWORD: postgres
+        DATABASE_URL: localhost
+    - uses: actions/upload-artifact@v3
+      with:
+        name: coverage
+        path: coverage
+    services:
+      postgres:
+        image: postgres:14.2
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: db_sql_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432

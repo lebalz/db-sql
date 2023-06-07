@@ -186,6 +186,12 @@ rake db:start_spec_dbs
 rake db:stop_spec_dbs
 ```
 
+The UI tests show no browser by default. To show Chrome while the tests are running, set CHROME_DISPLAY_WINDOW=0:
+
+```bash
+CHROME_DISPLAY_WINDOW=0 bundle exec rspec
+```
+
 ### Mails in Development
 
 Use the mailcatcher gem to receive emails in development: `bundle exec mailcatcher`.
