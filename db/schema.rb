@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_17_105746) do
-
+ActiveRecord::Schema[7.0].define(version: 2023_06_07_081029) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -22,7 +21,7 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.string "record_type", null: false
     t.uuid "record_id", null: false
     t.bigint "blob_id", null: false
-    t.datetime "created_at", null: false
+    t.datetime "created_at", precision: nil, null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
@@ -33,8 +32,8 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.string "content_type"
     t.text "metadata"
     t.bigint "byte_size", null: false
-    t.string "checksum", null: false
-    t.datetime "created_at", null: false
+    t.string "checksum"
+    t.datetime "created_at", precision: nil, null: false
     t.string "service_name", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
@@ -53,8 +52,8 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.boolean "is_private", default: false, null: false
     t.uuid "author_id", null: false
     t.string "query", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["author_id"], name: "index_database_schema_queries_on_author_id"
   end
 
@@ -68,8 +67,8 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.string "initialization_vector"
     t.string "initial_db"
     t.string "initial_table"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.string "username"
     t.integer "query_count", default: 0
     t.integer "error_query_count", default: 0
@@ -86,8 +85,8 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.string "crypto_key_encrypted"
     t.boolean "is_admin", default: false, null: false
     t.boolean "is_outdated", default: false, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["group_id"], name: "index_group_members_on_group_id"
     t.index ["user_id", "group_id"], name: "index_group_members_on_user_id_and_group_id", unique: true
     t.index ["user_id"], name: "index_group_members_on_user_id"
@@ -98,15 +97,15 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.string "description", default: ""
     t.string "public_crypto_key"
     t.boolean "is_private", default: true, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "login_tokens", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "token"
     t.uuid "user_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["user_id"], name: "index_login_tokens_on_user_id"
   end
 
@@ -117,8 +116,8 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
     t.boolean "is_valid", default: false
     t.boolean "is_favorite", default: false
     t.boolean "is_private", default: true
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.float "exec_time"
     t.json "error", default: []
     t.index ["db_server_id"], name: "index_sql_queries_on_db_server_id"
@@ -128,14 +127,14 @@ ActiveRecord::Schema.define(version: 2021_04_17_105746) do
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.integer "login_count", default: 0
     t.integer "role", default: 0
     t.string "activation_digest"
-    t.datetime "activated_at"
+    t.datetime "activated_at", precision: nil
     t.string "reset_password_digest"
-    t.datetime "reset_password_mail_sent_at"
+    t.datetime "reset_password_mail_sent_at", precision: nil
     t.string "private_key_pem"
     t.string "public_key_pem"
     t.index ["email"], name: "index_users_on_email", unique: true
