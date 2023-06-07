@@ -14,3 +14,8 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym 'RESTful'
 # end
+
+# Zeitwerk expects files named api.rb to define the class "Api". This overrides that behaviour to instead accept "API"
+ActiveSupport::Inflector.inflections do |inflect|
+  inflect.acronym 'API'
+end
