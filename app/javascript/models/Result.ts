@@ -1,5 +1,5 @@
 import { Result as ApiResult, ResultTable as ResultTableData, ResultState } from '../api/db_server';
-import { observable, action } from 'mobx';
+import { observable, action, computed } from 'mobx';
 
 export enum ResultType {
   Multi = 'multi_query',
@@ -66,10 +66,43 @@ const markdownHeader = (headers: string[], maxChars: number[], types: ('number' 
   return mdHeader;
 };
 
+/**
+ * @example for headers: ['hello', 'foo', 'baz'], maxChars: [8, 6, 3] and types: ['string', 'number', 'string']
+ *  it returns
+ * 
+ *     hello  |  foo  |  baz   
+ *    --------+-------+--------
+ */
+const sqlHeader = (headers: string[], maxChars: number[], types: ('number' | 'string')[]): string => {
+  let sqlHeader = '';
+  /* fill in the column names */
+  headers.forEach((val, idx) => {
+    if (idx > 0) {
+      sqlHeader += '|';
+    }
+    sqlHeader += ` ${val.padStart(Math.floor(maxChars[idx] / 2), ' ').padEnd(maxChars[idx], ' ')} `;
+  });
+  sqlHeader += '\n';
+
+  /* insert the sql header divider */
+  headers.forEach((_, idx) => {
+    if (idx > 0) {
+      sqlHeader += '+-';
+    } else {
+      sqlHeader += '-';
+    }
+    sqlHeader += `${''.padEnd(maxChars[idx], '-')}-`;
+  });
+  sqlHeader += '\n';
+  return sqlHeader;
+};
+
 class Result<ResultData extends ApiResult> {
   data: ResultData;
   id: number;
   @observable copyState: CopyState = CopyState.Ready;
+  @observable displayMode: 'table' | 'sql' | 'markdown' | 'json' = 'table';
+
   constructor(data: ResultData, id: number) {
     this.data = data;
     this.id = id;
@@ -105,6 +138,26 @@ class Result<ResultData extends ApiResult> {
     return this.tableData.result;
   }
 
+  @computed
+  get resultString() {
+    if (this.displayMode === 'table') {
+      return this.sqlString;
+    }
+    switch (this.displayMode) {
+      case 'sql':
+        return this.sqlString;
+      case 'markdown':
+        return this.mdString;
+      case 'json':
+        return this.jsonString;
+    }
+  }
+
+  @action
+  setDisplayMode(mode: 'table' | 'sql' | 'markdown' | 'json') {
+    this.displayMode = mode;
+  }
+
   @action
   onCopy(success: boolean) {
     if (success) {
@@ -120,7 +173,57 @@ class Result<ResultData extends ApiResult> {
     }, 2000);
   }
 
-  get markdownTable() {
+  get sqlString() {
+    if (this.tableData.state === ResultState.Error) {
+      return this.tableData.error;
+    }
+    if (this.tableData.state === ResultState.Skipped) {
+      return 'No result, execution skipped';
+    }
+    const headerCount = this.headers?.length;
+    if (!this.result || !this.headers || !headerCount || this.result.length === 0) {
+      return 'Successful query execution without result data';
+    }
+
+    /* one additional row for the header */
+    const rowCount = this.result.length + 1;
+    const columns = this.headers.map((c) => [c]);
+
+    /* column based representaition */
+    this.result.forEach((row) => {
+      Object.values(row).forEach((val, idx) => {
+        columns[idx].push((val ?? '').toString());
+      });
+    });
+
+    /* get the maximal character count of each column  */
+    const maxChars = columns.map((col) => Math.max(...col.map((val) => val.length)));
+
+    /* distinguish between text and numbers to align the values left or right sided */
+    const types = Object.values(this.result[0] ?? {}).map((val) =>
+      typeof val === 'number' ? 'number' : 'string'
+    );
+
+    let sqlTable = sqlHeader(this.headers, maxChars, types);
+
+    /* fill in the table data */
+    for (let i = 1; i < rowCount; i++) {
+      for (let j = 0; j < headerCount; j++) {
+        if (j > 0) {
+          sqlTable += '|';
+        }
+        if (types[j] === 'number') {
+          sqlTable += ` ${columns[j][i].padStart(maxChars[j], ' ')} `;
+        } else {
+          sqlTable += ` ${columns[j][i].padEnd(maxChars[j], ' ')} `;
+        }
+      }
+      sqlTable += '\n';
+    }
+    return sqlTable;
+  }
+
+  get mdString() {
     /* return message when no result table is present*/
     if (this.tableData.state === ResultState.Error) {
       return this.tableData.error;
@@ -166,6 +269,19 @@ class Result<ResultData extends ApiResult> {
       mdTable += '|\n';
     }
     return mdTable;
+  }
+
+  get jsonString() {
+    if (this.tableData.state === ResultState.Error) {
+      return this.tableData.error;
+    }
+    if (this.tableData.state === ResultState.Skipped) {
+      return 'No result, execution skipped';
+    }
+    if (!this.result || this.result.length === 0) {
+      return 'Successful query execution without result data';
+    }
+    return JSON.stringify(this.result, null, 2);
   }
 }
 

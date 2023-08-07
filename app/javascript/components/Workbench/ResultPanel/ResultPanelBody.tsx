@@ -6,6 +6,7 @@ import { QueryResult } from '../../../models/QueryEditor';
 import ViewStateStore from '../../../stores/view_state_store';
 import Graph from '../SqlResult/Graph';
 import { SqlResult } from '../SqlResult/SqlResult';
+import { SuccessTableData } from '../../../models/Result';
 
 interface Props {
   index: number;
@@ -38,9 +39,9 @@ export default class ResultPanelBody extends React.Component<Props> {
     return (
       <Fragment>
         {result.data.state === ResultState.Success && this.viewState.showGraph && (
-          <Graph data={result.data} id={resultId} />
+          <Graph data={result.data as SuccessTableData} id={resultId} />
         )}
-        <SqlResult result={result.data} viewStateKey={resultId} queryIndex={idx} key={idx} />
+        <SqlResult result={result} viewStateKey={resultId} queryIndex={idx} key={idx} />
       </Fragment>
     );
   }

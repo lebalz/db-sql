@@ -2,17 +2,6 @@ import { SemanticCOLORS, SemanticICONS } from 'semantic-ui-react';
 import { ResultState } from '../api/db_server';
 import { CopyState, TableData } from '../models/Result';
 
-export const labelColor = (result: TableData): SemanticCOLORS => {
-  switch (result.state) {
-    case ResultState.Error:
-      return 'red';
-    case ResultState.Skipped:
-      return 'yellow';
-    case ResultState.Success:
-      return 'green';
-  }
-};
-
 export const copyIconColor = (state: CopyState): SemanticCOLORS | undefined => {
   switch (state) {
     case CopyState.Error:

@@ -119,29 +119,4 @@ class ResultIndex extends React.Component<Props> {
   }
 }
 
-export const TimeLabel = ({ result }: { result: TableData }) => {
-  const { time } = result;
-  if (time === undefined) {
-    return null;
-  }
-
-  let popup: string;
-  let label: string;
-  switch (result.state) {
-    case ResultState.Error:
-      popup = `Time: ${time}s`;
-      label = `${time.toFixed(2)}s`;
-      break;
-    case ResultState.Success:
-      popup = `Time: ${time}s`;
-      label = `${result.result.length} in ${time.toFixed(2)}s`;
-      break;
-    case ResultState.Skipped:
-      popup = `Time: ${time}s`;
-      label = `${time.toFixed(2)}s`;
-      break;
-  }
-  return <Popup content={popup} trigger={<Label as="a" tag color="blue" content={label} />} />;
-};
-
 export default ResultIndex;

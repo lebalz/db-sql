@@ -86,6 +86,7 @@ export default class SqlQueryPreview extends React.Component<Props> {
             language="sql"
             plugins={['line-numbers']}
             style={{ maxHeight: '22em', fontSize: 'smaller' }}
+            trim
           />
           <SqlQueryErrors sqlQuery={this.sqlQuery} />
         </div>

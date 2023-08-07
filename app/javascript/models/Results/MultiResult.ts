@@ -1,5 +1,5 @@
 import Result, { ResultType, TableData } from "../Result";
-import { MultiQueryResult } from "../../api/db_server";
+import { MultiQueryResult, ResultState } from "../../api/db_server";
 
 
 

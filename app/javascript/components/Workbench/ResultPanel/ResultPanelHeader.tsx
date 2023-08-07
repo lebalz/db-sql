@@ -2,14 +2,13 @@ import { action, computed } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import React, { Fragment } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
-import { Button, Icon, Label } from 'semantic-ui-react';
-import { ResultState } from '../../../api/db_server';
+import { Button, ButtonGroup, ButtonProps, Icon, Label, Popup, SemanticCOLORS } from 'semantic-ui-react';
+import { MultiQueryResult, ResultState } from '../../../api/db_server';
 import { QueryResult } from '../../../models/QueryEditor';
-import { CopyState } from '../../../models/Result';
-import { copyIcon, copyIconColor, labelColor } from '../../../shared/helpers';
+import Result, { CopyState, TableData } from '../../../models/Result';
+import { copyIcon, copyIconColor } from '../../../shared/helpers';
 import Tooltip from '../../../shared/Tooltip';
 import ViewStateStore from '../../../stores/view_state_store';
-import { TimeLabel } from '../ResultIndex';
 import { PrismCode } from '../SqlResult/PrismCode';
 
 interface Props {
@@ -23,6 +22,43 @@ interface Props {
 interface InjectedProps extends Props {
   viewStateStore: ViewStateStore;
 }
+
+const labelColor = (result: Result<MultiQueryResult>): SemanticCOLORS => {
+  switch (result.state) {
+    case ResultState.Error:
+      return 'red';
+    case ResultState.Skipped:
+      return 'yellow';
+    case ResultState.Success:
+      return 'green';
+  }
+};
+
+const TimeLabel = ({result}: {result: Result<MultiQueryResult>}) => {
+  const { time } = result;
+  if (time === undefined) {
+    return null;
+  }
+
+  let popup: string;
+  let label: string;
+  switch (result.state) {
+    case ResultState.Error:
+      popup = `Time: ${time}s`;
+      label = `${time.toFixed(2)}s`;
+      break;
+    case ResultState.Success:
+      popup = `Time: ${time}s`;
+      label = `${result.result?.length || 0} in ${time.toFixed(2)}s`;
+      break;
+    case ResultState.Skipped:
+      popup = `Time: ${time}s`;
+      label = `${time.toFixed(2)}s`;
+      break;
+  }
+  return <Popup content={popup} trigger={<Label as="a" tag color="blue" content={label} />} />;
+};
+
 
 @inject('viewStateStore')
 @observer
@@ -43,40 +79,41 @@ export default class ResultPanelHeader extends React.Component<Props> {
     event.stopPropagation();
     this.viewState.showGraph = !this.viewState.showGraph;
   }
+  onDisplayMode = (mode: 'table' | 'sql' | 'markdown' | 'json') => {
+    return (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      this.props.result.setDisplayMode(mode);
+    }
+  }
   render() {
     const result = this.props.result;
     return (
       <Fragment>
         <Tooltip
-          content={<PrismCode code={this.props.rawQuery} language="sql" plugins={['line-numbers']} />}
+          content={<PrismCode trim code={this.props.rawQuery} language="sql" plugins={['line-numbers']} />}
           disabled={this.props.disabled}
         >
           <Label
             size="large"
-            color={labelColor(result.data)}
+            color={labelColor(result)}
             content={`Query #${this.props.index + 1}`}
             style={{ marginRight: '1em', color: 'black' }}
           />
         </Tooltip>
-        {<TimeLabel result={result.data} />}
+        {<TimeLabel result={result} />}
         <div className="spacer" />
         <Fragment>
-          <Tooltip content="Copy Results as Markdown table" position="top right" delayed>
-            <CopyToClipboard text={result.markdownTable} onCopy={(_, success) => result.onCopy(success)}>
-              <Button
-                size="mini"
-                loading={result.copyState === CopyState.Copying}
-                icon={
-                  <Icon.Group>
-                    <Icon name={copyIcon(result.copyState)} color={copyIconColor(result.copyState)} />
-                  </Icon.Group>
-                }
-                onClick={(e) => e.stopPropagation()}
-              />
-            </CopyToClipboard>
-          </Tooltip>
-          <Tooltip content="Copy Results as JSON" position="top right" delayed>
-            <CopyToClipboard text={JSON.stringify(result.tableData)} onCopy={(_, success) => result.onCopy(success)}>
+          <ButtonGroup 
+            size="mini"
+            buttons={[
+              { key: 'table', content: 'Table', active: result.displayMode === 'table', onClick: (e: React.MouseEvent<HTMLButtonElement>) => {e.stopPropagation(); result.setDisplayMode('table')} },
+              { key: 'md', content: 'MD', active: result.displayMode === 'markdown', onClick: (e: React.MouseEvent<HTMLButtonElement>) => {e.stopPropagation(); result.setDisplayMode('markdown')} },
+              { key: 'sql', content: 'RAW', active: result.displayMode === 'sql', onClick: (e: React.MouseEvent<HTMLButtonElement>) => {e.stopPropagation(); result.setDisplayMode('sql')} },
+              { key: 'json', content: 'JSON', active: result.displayMode === 'json', onClick: (e: React.MouseEvent<HTMLButtonElement>) => {e.stopPropagation(); result.setDisplayMode('json')} },
+            ]}
+          />
+          <Tooltip content="Copy Result" position="top right" delayed>
+            <CopyToClipboard text={result.resultString} onCopy={(_, success) => result.onCopy(success)}>
               <Button
                 size="mini"
                 loading={result.copyState === CopyState.Copying}
