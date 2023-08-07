@@ -24,9 +24,36 @@ interface InjectedProps extends Props {
 @inject('sqlQueryStore', 'viewStateStore')
 @observer
 export default class QueryIndex extends React.Component<Props> {
+  state = {
+    ctrlKey: false
+  }
+
+  onCtrlKey = (e: KeyboardEvent) => {
+    const key = e.key.toLowerCase();
+    if (key === 'control' || key === 'meta') {
+      this.setState({ ctrlKey: true });
+    }
+  }
+  onCtrlKeyUp = (e: KeyboardEvent) => {
+    const key = e.key.toLowerCase();
+    if (key === 'control' || key === 'meta') {
+      this.setState({ ctrlKey: false });
+    }
+  }
+
   @computed
   get injected() {
     return this.props as InjectedProps;
+  }
+
+  componentDidMount() {
+    document.addEventListener('keydown', this.onCtrlKey);
+    document.addEventListener('keyup', this.onCtrlKeyUp);
+  }
+
+  onComponentWillUnmount() {
+    document.removeEventListener('keydown', this.onCtrlKey);
+    document.removeEventListener('keyup', this.onCtrlKeyUp);
   }
 
   @computed
@@ -76,8 +103,14 @@ export default class QueryIndex extends React.Component<Props> {
                     size="mini"
                     color={color}
                     onClick={(event) => this.onClick(event.currentTarget, q.scope, q.id)}
-                    // onMouseOver={() => this.injected.viewStateStore.setPreviewQuery(q.scope, q.id)}
-                    // onMouseLeave={() => this.injected.viewStateStore.unsetPreviewQuery(q.scope, q.id)}
+                    onMouseOver={() => {
+                      if (this.state.ctrlKey) {
+                        this.injected.viewStateStore.setPreviewQuery(q.scope, q.id)
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      this.injected.viewStateStore.unsetPreviewQuery(q.scope, q.id)
+                    }}
                     key={idx}
                   >
                     {q.isFavorite && <Icon name="star" color="yellow" />}
