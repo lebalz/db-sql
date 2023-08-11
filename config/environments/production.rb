@@ -114,9 +114,8 @@ Rails.application.configure do
 
   ActionMailer::Base.delivery_method = :smtp
   ActionMailer::Base.smtp_settings = {
-    address: 'mail.gandi.net',
+    address: 'smtp-relay.sendinblue.com',
     port: 587,
-    domain: 'db-sql.ch',
     user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_USERNAME],
     password: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_PW],
     authentication: :login,
