@@ -234,7 +234,7 @@ dokku postgres:enter $APP psql $DB_URL -c 'CREATE EXTENSION IF NOT EXISTS "pgcry
 
 # configure the rails app
 dokku config:set $APP RAILS_MASTER_KEY="$RAILS_MASTER_KEY"
-dokku config:set $APP} RAILS_SERVE_STATIC_FILES="1" RAILS_ENV="production" NO_VHOST="0" DOKKU_DOCKERFILE_PORTS="3000"
+dokku config:set $APP RAILS_SERVE_STATIC_FILES="1" RAILS_ENV="production" NO_VHOST="0" DOKKU_DOCKERFILE_PORTS="3000"
 dokku proxy:ports-set $APP "http:80:3000"
 
 dokku nginx:set $APP client-max-body-size 15m
