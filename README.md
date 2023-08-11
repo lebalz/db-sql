@@ -223,6 +223,7 @@ dokku postgres:link $APP $APP
 
 # mount storage for ActiveStorage
 mkdir -p /var/lib/dokku/data/storage/$APP/active-storage
+chown -R dokku:dokku /var/lib/dokku/data/storage/$APP/active-storage
 dokku storage:mount $APP /var/lib/dokku/data/storage/$APP/active-storage:/app/storage
 
 
