@@ -107,7 +107,7 @@ and visit [http://localhost:3000](http://localhost:3000)
 To use webpacker, start it with
 
 ```sh
-bin/wepack-dev-server
+bin/webpack-dev-server
 ```
 
 ### configure postgres

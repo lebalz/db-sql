@@ -1,4 +1,4 @@
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, runInAction } from 'mobx';
 import { DbServer as DbServerProps, OwnerType } from '../api/db_server';
 import _ from 'lodash';
 import Database from './Database';
@@ -9,6 +9,7 @@ import QueryEditor from './QueryEditor';
 import DbTable from './DbTable';
 import SchemaQuery from './SchemaQuery';
 import SchemaQueryStore from '../stores/schema_query_store';
+import { string } from 'prop-types';
 
 export enum DbType {
   Psql = 'psql',
@@ -21,6 +22,9 @@ export enum QueryState {
   Success,
   Error
 }
+
+const DB_CONNECTION_URI_REGEX = /^(?<type>(postgres(ql)?|mysql)):\/\/(?<user>\w+)?(?<password>:[^@]+@)?(?<host>[a-zA-Z-_.]+)?(?<port>:\d+)?(?<db>\/\w+)?/i
+
 
 export const DEFAULT_DB_SERVER: DbServerProps = {
   created_at: new Date().toISOString(),
@@ -232,6 +236,34 @@ export default class DbServer {
   @computed
   get activeDatabaseName(): string | undefined {
     return this.dbServerStore.activeDatabaseName(this.id);
+  }
+
+  @computed
+  get connectionString(): string {
+    const protocol = this.dbType === DbType.Psql ? 'postgresql' : 'mysql';
+    const pw = this.password ? `:${this.password}` : '';
+    const db = this.initDb ? `/${this.initDb}` : '';
+    this.initTable
+    return `${protocol}://${this.username}${pw}@${this.host || 'localhost'}:${this.port}${db}`;
+  }
+
+  @action
+  setConnectionString(cString: string) {
+    if (!DB_CONNECTION_URI_REGEX.test(cString)) {
+      return;
+    }
+    const match = cString.match(DB_CONNECTION_URI_REGEX);
+    if (!match?.groups) {
+      return;
+    }
+    const groups = match.groups as {type: 'postgres' | 'postgresql' | 'mysql', user?: string, password?: string, host?: string, port?: string, db?: string};
+    console.log(groups)
+    this.dbType = groups.type === 'mysql' ? DbType.MySql : DbType.Psql;
+    this.username = groups.user || '';
+    this.password = groups.password?.slice(1, -1) || undefined;
+    this.host = groups.host || '';
+    this.port = parseInt(groups.port?.slice(1) || (this.dbType === DbType.Psql ? '5432' : '3306'), 10);
+    this.initDb = groups.db?.slice(1) || undefined;
   }
 
   /**

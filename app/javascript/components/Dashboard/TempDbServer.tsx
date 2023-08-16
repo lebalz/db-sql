@@ -340,6 +340,18 @@ export class TempDbServer extends React.Component {
                   />
                 </Grid.Column>
               </Grid.Row>
+              <Grid.Row columns={1}>
+                <Grid.Column>
+                  <Label as="a" color="teal" ribbon content="DB-Connection String" />
+                  <Form.Input
+                      fluid
+                      placeholder={this.dbServer.dbType === DbType.Psql ? 'postgres://...' : 'mysql://...'}
+                      value={this.dbServer.connectionString ?? ''}
+                      onChange={(e) => (this.dbServer.setConnectionString(e.target.value))}
+                      type="text"
+                    />
+                </Grid.Column>
+              </Grid.Row>
             </Grid>
             <Accordion style={{ marginTop: '1em' }}>
               <Accordion.Title
