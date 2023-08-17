@@ -1,11 +1,12 @@
 import React from 'react';
-import { Table, Placeholder, Label } from 'semantic-ui-react';
+import { Table, Placeholder, Label, Popup, Embed } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultTable as ResulTableData } from '../../../api/db_server';
 import { computed, action } from 'mobx';
 import { observer, inject } from 'mobx-react';
 import ViewStateStore from '../../../stores/view_state_store';
 import cx from 'classnames';
+import PreviewImage from './PreviewImage';
 
 /**
  * show 200 rows at a time
@@ -275,8 +276,18 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
       if (cell === '') {
         return <span>-</span>;
       }
+      if (/^https?:\/\/.*/.test(cell)) {
+        return (
+          <span>
+            <Popup trigger={<a href={cell} target="_blank">{cell}</a>} flowing hoverable>
+              <PreviewImage url={cell} />
+            </Popup>
+            
+          </span>
+        )
+      }
       let json: string | undefined;
-      if (/\{|\[/.test(cell)) {
+      if (/^\{|\[/.test(cell)) {
         try {
           json = JSON.parse(cell);
         } catch {

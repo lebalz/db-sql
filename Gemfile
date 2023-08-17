@@ -49,6 +49,9 @@ gem 'bootsnap', '>= 1.7.3', require: false
 # run tests from github
 gem 'travis'
 
+# for http requests
+gem "http"
+
 group :development, :test do
   gem 'pry', '0.14.1'
   gem 'pry-doc', '1.2.0'
