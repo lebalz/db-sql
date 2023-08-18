@@ -54,7 +54,7 @@
     "react-router-dom": "5.2.0",
     "react-wordcloud": "^1.2.2",
     "react_ujs": "^2.6.1",
-    "recharts": "^1.8.5",
+    "recharts": "^1.8.6",
     "semantic-ui-react": "2.0.3",
     "style-loader": "^2.0.0",
     "tslint": "^6.0.0",

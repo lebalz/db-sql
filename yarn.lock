@@ -1051,9 +1051,9 @@
   integrity sha512-EF0lWZ4tg7oDFg4YQFlbOU3936e3a9UmoQ2IXlBy1+cv2c2Pv7knhKUzGlH5Hq2sF/KeDTH1amiRPey2rrLMQA==
 
 "@types/d3-shape@^1":
-  version "1.3.5"
-  resolved "https://registry.yarnpkg.com/@types/d3-shape/-/d3-shape-1.3.5.tgz#c0164c1be1429473016f855871d487f806c4e968"
-  integrity sha512-aPEax03owTAKynoK8ZkmkZEDZvvT4Y5pWgii4Jp4oQt0gH45j6siDl9gNDVC5kl64XHN2goN9jbYoHK88tFAcA==
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/@types/d3-shape/-/d3-shape-1.3.8.tgz#c3c15ec7436b4ce24e38de517586850f1fea8e89"
+  integrity sha512-gqfnMz6Fd5H6GOLYixOZP/xlrMtJms9BaS+6oWxTKHNqPGZ93BkWWupQSCYm6YHqx6h9wjRupuJb90bun6ZaYg==
   dependencies:
     "@types/d3-path" "^1"
 
@@ -1163,9 +1163,9 @@
     csstype "^3.0.2"
 
 "@types/recharts@^1.8.9":
-  version "1.8.19"
-  resolved "https://registry.yarnpkg.com/@types/recharts/-/recharts-1.8.19.tgz#047f72cf4c25df545aa1085fe3a085e58a2483c1"
-  integrity sha512-Fd2cYnBlWz/ga8rLmjwsZNBAc4CzXZiuTYPPqMIgrtQ02yI/OTm8WPM6ZyUuYlSdyangtsvFmHWzZ7W4tuknDA==
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@types/recharts/-/recharts-1.8.24.tgz#2eb3a857291e0aa216c83a3fea6acec113eab3ca"
+  integrity sha512-PGugStujgxjMOUUJuGIrw71MIhTtl/FeNzuWZVDTS7Kq8NdiQfMrlC6GXJIvlQcrsUIn9IcXbi6sZJjK+6kfLQ==
   dependencies:
     "@types/d3-shape" "^1"
     "@types/react" "*"
@@ -1625,7 +1625,7 @@ babel-plugin-polyfill-regenerator@^0.2.0:
 balanced-match@^0.4.2:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-0.4.2.tgz#cb3f3e3c732dc0f01ee70b403f302e61d7709838"
-  integrity sha1-yz8+PHMtwPAe5wtAPzAuYddwmDg=
+  integrity sha512-STw03mQKnGUYtoNjmowo4F2cRmIIxYEGiMsjjwla/u5P1lxadj/05WkNaFjNiKTgJkj8KiXbgAiRTmcQRwQNtg==
 
 balanced-match@^1.0.0:
   version "1.0.2"
@@ -2301,15 +2301,15 @@ core-js-compat@^3.9.0, core-js-compat@^3.9.1:
     browserslist "^4.16.6"
     semver "7.0.0"
 
-core-js@^2.6.10:
-  version "2.6.12"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.12.tgz#d9333dfa7b065e347cc5682219d6f690859cc2ec"
-  integrity sha512-Kb2wC0fvsWfQrgk8HU5lW6U/Lcs8+9aaYcy4ZFc6DDlo4nZ7n70dEgE5rtR0oG6ufKDUnrwfWL1mXR5ljDatrQ==
-
 core-js@^3.12.1:
   version "3.13.1"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.13.1.tgz#30303fabd53638892062d8b4e802cac7599e9fb7"
   integrity sha512-JqveUc4igkqwStL2RTRn/EPFGBOfEZHxJl/8ej1mXJR75V3go2mFF4bmUYkEIT1rveHKnkUlcJX/c+f1TyIovQ==
+
+core-js@^3.4.2:
+  version "3.32.0"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.32.0.tgz#7643d353d899747ab1f8b03d2803b0312a0fb3b6"
+  integrity sha512-rd4rYZNlF3WuoYuRIDEmbR/ga9CeuWX9U05umAvgrrZoHY4Z++cp/xwPQMvUpBB4Ag6J8KfD80G0zwCyaSxDww==
 
 core-util-is@~1.0.0:
   version "1.0.2"
@@ -4514,7 +4514,7 @@ lodash.memoize@^4.1.2:
 lodash.throttle@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/lodash.throttle/-/lodash.throttle-4.1.1.tgz#c23e91b710242ac70c37f1e1cda9274cc39bf2f4"
-  integrity sha1-wj6RtxAkKscMN/HhzaknTMOb8vQ=
+  integrity sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==
 
 lodash.uniq@^4.5.0:
   version "4.5.0"
@@ -4595,9 +4595,9 @@ map-visit@^1.0.0:
     object-visit "^1.0.0"
 
 math-expression-evaluator@^1.2.14:
-  version "1.3.7"
-  resolved "https://registry.yarnpkg.com/math-expression-evaluator/-/math-expression-evaluator-1.3.7.tgz#1b62225db86af06f7ea1fd9576a34af605a5b253"
-  integrity sha512-nrbaifCl42w37hYd6oRLvoymFK42tWB+WQTMFtksDGQMi5GvlJwnz/CsS30FFAISFLtX+A0csJ0xLiuuyyec7w==
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/math-expression-evaluator/-/math-expression-evaluator-1.4.0.tgz#3d66031117fbb7b9715ea6c9c68c2cd2eebd37e2"
+  integrity sha512-4vRUvPyxdO8cWULGTh9dZWL2tZK6LDBvj+OGHBER7poH9Qdt7kXEoj20wiz4lQUbUXQZFjPbe5mVDo9nutizCw==
 
 md5.js@^1.3.4:
   version "1.3.5"
@@ -5363,7 +5363,7 @@ pbkdf2@^3.0.3:
 performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
-  integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
+  integrity sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==
 
 picomatch@^2.0.4, picomatch@^2.2.1:
   version "2.3.0"
@@ -6132,7 +6132,7 @@ promise-inflight@^1.0.1:
   resolved "https://registry.yarnpkg.com/promise-inflight/-/promise-inflight-1.0.1.tgz#98472870bf228132fcbdd868129bad12c3c029e3"
   integrity sha1-mEcocL8igTL8vdhoEputEsPAKeM=
 
-prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.5.8, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -6140,6 +6140,15 @@ prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
     loose-envify "^1.4.0"
     object-assign "^4.1.1"
     react-is "^16.8.1"
+
+prop-types@^15.6.0:
+  version "15.8.1"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
+  integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
+  dependencies:
+    loose-envify "^1.4.0"
+    object-assign "^4.1.1"
+    react-is "^16.13.1"
 
 proxy-addr@~2.0.5:
   version "2.0.7"
@@ -6377,7 +6386,7 @@ react-highlight-words@^0.17.0:
     memoize-one "^4.0.0"
     prop-types "^15.5.8"
 
-react-is@^16.12.0, react-is@^16.6.0, react-is@^16.6.3, react-is@^16.7.0, react-is@^16.8.1:
+react-is@^16.12.0, react-is@^16.13.1, react-is@^16.6.0, react-is@^16.6.3, react-is@^16.7.0, react-is@^16.8.1:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
@@ -6544,13 +6553,13 @@ recharts-scale@^0.4.2:
   dependencies:
     decimal.js-light "^2.4.1"
 
-recharts@^1.8.5:
-  version "1.8.5"
-  resolved "https://registry.yarnpkg.com/recharts/-/recharts-1.8.5.tgz#ca94a3395550946334a802e35004ceb2583fdb12"
-  integrity sha512-tM9mprJbXVEBxjM7zHsIy6Cc41oO/pVYqyAsOHLxlJrbNBuLs0PHB3iys2M+RqCF0//k8nJtZF6X6swSkWY3tg==
+recharts@^1.8.6:
+  version "1.8.6"
+  resolved "https://registry.yarnpkg.com/recharts/-/recharts-1.8.6.tgz#ba651a4610dbac936da5001f8cb556b36a170410"
+  integrity sha512-UlfSEOnZRAxxaH33Fc86yHEcqN+IRauPP31NfVvlGudtwVZEIb2RFI5b1J3npQo7XyoSnkUodg3Ha6EupkV+SQ==
   dependencies:
     classnames "^2.2.5"
-    core-js "^2.6.10"
+    core-js "^3.4.2"
     d3-interpolate "^1.3.0"
     d3-scale "^2.1.0"
     d3-shape "^1.2.0"
@@ -6564,7 +6573,7 @@ recharts@^1.8.5:
 reduce-css-calc@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/reduce-css-calc/-/reduce-css-calc-1.3.0.tgz#747c914e049614a4c9cfbba629871ad1d2927716"
-  integrity sha1-dHyRTgSWFKTJz7umKYca0dKSdxY=
+  integrity sha512-0dVfwYVOlf/LBA2ec4OwQ6p3X9mYxn/wOl2xTcLwjnPYrkgEfPx3VI4eGCH3rQLlPISG5v9I9bkZosKsNRTRKA==
   dependencies:
     balanced-match "^0.4.2"
     math-expression-evaluator "^1.2.14"

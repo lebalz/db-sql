@@ -43,6 +43,7 @@ const PreviewImage = (props: Props) => {
             header={meta.title}
             meta={meta.site_name}
             description={meta.description}
+            className='sql-result-preview-image'
         />
     )
 }
