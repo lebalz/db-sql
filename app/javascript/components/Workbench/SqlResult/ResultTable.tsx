@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Placeholder, Label, Popup, Embed, Image, Card } from 'semantic-ui-react';
+import { Table, Placeholder, Label, Popup, Embed, Image, Card, Comment } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultTable as ResulTableData } from '../../../api/db_server';
 import { computed, action } from 'mobx';
@@ -278,11 +278,17 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
       }
       if (/^https?:\/\/.*/.test(cell)) {
         if (/\.(jpeg|jpg|gif|png|gif|svg|bpm|webp)$/i.test(cell)) {
-          return <Card
-            image={cell}
-            header={cell.split('/').pop() || undefined}
-            extra={<a href={cell} target="_blank">{cell}</a>}  
-          />;
+          return (
+            <Comment.Group>
+              <Comment>
+                <Comment.Avatar as='a' src={cell} className='comment-avatar-mini' />
+                <Comment.Content>
+                  <Comment.Text>{<a href={cell} target="_blank">{cell}</a>}</Comment.Text>
+                  <Comment.Metadata>{cell.split('/').pop()}</Comment.Metadata>
+                </Comment.Content>
+              </Comment>
+            </Comment.Group>
+          );
         }
         return (
           <span>
