@@ -88,6 +88,37 @@ class LineGraph extends React.Component<Props> {
     return Object.keys(this.props.data.result[0]);
   }
 
+  @computed
+  get dataValues() {
+    return this.props.data.result.map((row) => this.graph.yColumns.map((k) => row[ this.headers[k]])).reduce((prev, curr) => prev.concat(curr)) as number[]
+  }
+
+  @computed
+  get yMin(): number | undefined {
+    const y = Math.min(...this.dataValues)
+    if (typeof y !== 'number' || Number.isNaN(y)) {
+      return undefined;
+    }
+    return y < 0 ? 1.1 * y : 0.9 * y;
+  }
+
+  @computed
+  get yMax(): number | undefined {
+    const y = Math.max(...this.dataValues)
+    if (typeof y !== 'number' || Number.isNaN(y)) {
+      return undefined;
+    }
+    return y < 0 ? 0.9 * y : 1.1 * y;
+  }
+
+  @computed
+  get domain(): [number, number] | undefined {
+    if (this.yMin === undefined || this.yMax === undefined) {
+      return undefined;
+    }
+    return [this.yMin, this.yMax];
+  }
+
   render() {
     return (
       <div ref={this.chartWrapper} style={{ width: '100%' }}>
@@ -103,7 +134,7 @@ class LineGraph extends React.Component<Props> {
               <XAxis
                 dataKey={this.graph.xColumn !== undefined ? this.headers[this.graph.xColumn] : undefined}
               />
-              <YAxis />
+              <YAxis domain={this.domain} padding={{ top: 20, bottom: 20 }} allowDataOverflow={true} tickFormatter={(val) => val.toFixed(2)}/>
               <Tooltip />
               <Legend />
               {this.graph.yColumns.map((idx) => {
