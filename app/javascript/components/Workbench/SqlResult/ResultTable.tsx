@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Placeholder, Label, Popup, Embed } from 'semantic-ui-react';
+import { Table, Placeholder, Label, Popup, Embed, Image, Card } from 'semantic-ui-react';
 import _ from 'lodash';
 import { ResultTable as ResulTableData } from '../../../api/db_server';
 import { computed, action } from 'mobx';
@@ -277,12 +277,18 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
         return <span>-</span>;
       }
       if (/^https?:\/\/.*/.test(cell)) {
+        if (/\.(jpeg|jpg|gif|png|gif|svg|bpm|webp)$/i.test(cell)) {
+          return <Card
+            image={cell}
+            header={cell.split('/').pop() || undefined}
+            extra={<a href={cell} target="_blank">{cell}</a>}  
+          />;
+        }
         return (
           <span>
             <Popup trigger={<a href={cell} target="_blank">{cell}</a>} flowing hoverable>
               <PreviewImage url={cell} />
             </Popup>
-            
           </span>
         )
       }
