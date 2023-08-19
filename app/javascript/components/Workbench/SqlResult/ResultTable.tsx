@@ -283,7 +283,7 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
               <Comment>
                 <Comment.Avatar as='a' src={cell} className='comment-avatar-mini' />
                 <Comment.Content>
-                  <Comment.Text>{<a href={cell} target="_blank">{cell}</a>}</Comment.Text>
+                  <Comment.Text>{<PreviewImage url={cell} />}</Comment.Text>
                   <Comment.Metadata className='comment-metadata'>{cell.split('/').pop()}</Comment.Metadata>
                 </Comment.Content>
               </Comment>
