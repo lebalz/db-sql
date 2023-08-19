@@ -110,6 +110,13 @@ To use webpacker, start it with
 bin/webpack-dev-server
 ```
 
+### Compile scss/assets
+Run 
+
+```bash
+rails assets:precompile
+```
+
 ### configure postgres
 
 To create a new postgres user for this project:

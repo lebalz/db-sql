@@ -1,7 +1,8 @@
 @import "colors";
-.ui.comments {
+.ui.comments.img-comments {
+  position: inherit;
   .comment {
-  
+    position: inherit;
     .avatar.comment-avatar-mini {
       width: 4.5em;
       border: 1px solid var(--highlight-grey-50);

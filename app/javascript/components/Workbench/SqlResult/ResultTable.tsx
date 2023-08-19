@@ -279,7 +279,7 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
       if (/^https?:\/\/.*/.test(cell)) {
         if (/\.(jpeg|jpg|gif|png|gif|svg|bpm|webp)$/i.test(cell)) {
           return (
-            <Comment.Group>
+            <Comment.Group className='img-comments'>
               <Comment>
                 <Comment.Avatar as='a' src={cell} className='comment-avatar-mini' />
                 <Comment.Content>
