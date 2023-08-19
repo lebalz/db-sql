@@ -284,7 +284,7 @@ const CellContent = ({ cell }: { cell: number | string | undefined | null }) => 
                 <Comment.Avatar as='a' src={cell} className='comment-avatar-mini' />
                 <Comment.Content>
                   <Comment.Text>{<a href={cell} target="_blank">{cell}</a>}</Comment.Text>
-                  <Comment.Metadata>{cell.split('/').pop()}</Comment.Metadata>
+                  <Comment.Metadata className='comment-metadata'>{cell.split('/').pop()}</Comment.Metadata>
                 </Comment.Content>
               </Comment>
             </Comment.Group>

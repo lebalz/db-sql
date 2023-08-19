@@ -1,0 +1,19 @@
+@import "colors";
+.ui.comments {
+  .comment {
+  
+    .avatar.comment-avatar-mini {
+      width: 4.5em;
+      border: 1px solid var(--highlight-grey-50);
+      margin-right: 8px;
+      border-radius: 8px;
+      img {
+        border-radius: 8px;
+      }
+    }
+
+    .metadata.comment-metadata {
+      margin-left: 0;
+    }
+  }
+}
