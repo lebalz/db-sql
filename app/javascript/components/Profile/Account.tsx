@@ -5,15 +5,13 @@ import SessionStore from '../../stores/session_store';
 import User from '../../models/User';
 import DbServerStore from '../../stores/db_server_store';
 import { computed } from 'mobx';
-import GroupStore from '../../stores/group_store';
 
 interface InjectedProps {
   sessionStore: SessionStore;
   dbServerStore: DbServerStore;
-  groupStore: GroupStore;
 }
 
-@inject('sessionStore', 'dbServerStore', 'groupStore')
+@inject('sessionStore', 'dbServerStore')
 @observer
 export default class Account extends React.Component {
   get injected() {
@@ -21,21 +19,13 @@ export default class Account extends React.Component {
   }
 
   @computed
-  get dbServers() {
-    const fromGroups = this.injected.groupStore.joinedGroups
-      .map(g => g.dbServers)
-      .reduce((acc, dbServers) => acc.concat(dbServers), []);
-    return [...this.injected.dbServerStore.dbServers, ...fromGroups];
-  }
-
-  @computed
   get queryCount() {
-    return this.dbServers.reduce((cnt, dbServer) => cnt + dbServer.queryCount, 0);
+    return this.injected.dbServerStore.dbServers.reduce((cnt, dbServer) => cnt + dbServer.queryCount, 0);
   }
 
   @computed
   get errorQueryCount() {
-    return this.dbServers.reduce((cnt, dbServer) => cnt + dbServer.errorQueryCount, 0);
+    return this.injected.dbServerStore.dbServers.reduce((cnt, dbServer) => cnt + dbServer.errorQueryCount, 0);
   }
 
   render() {
