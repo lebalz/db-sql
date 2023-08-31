@@ -88,11 +88,11 @@ class User < ApplicationRecord
   end
 
   def query_count
-    db_servers.map { |db_server| db_server.query_count }.sum
+    all_db_servers.map { |db_server| db_server.query_count }.sum
   end
 
   def error_query_count
-    db_servers.map { |db_server| db_server.error_query_count }.sum
+    all_db_servers.map { |db_server| db_server.error_query_count }.sum
   end
 
   def activated?
