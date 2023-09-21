@@ -93,7 +93,18 @@ const SqlMetaData = ({ column }: MetaProps) => {
     {
       name: 'References',
       value: column.references?.locationName || undefined
-    }
+    },
+    
+    {
+      name: 'Constraints',
+      value: column.constraints.length > 0 ? (
+        <List
+          bulleted
+          style={{ textAlign: 'left' }}
+          items={column.constraints.map((r) => r.name)}
+        />
+      ) : undefined 
+    },
   ];
 
   return (
