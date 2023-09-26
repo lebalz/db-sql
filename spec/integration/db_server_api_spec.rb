@@ -140,7 +140,7 @@ RSpec.describe "API::Resources::DbServer" do
         expect(json['result'][0]["state"]).to eq("error")
         expect(json['result'][0]["result"]).to be_nil
         if @db_server.psql?
-          expect(json['result'][0]["error"]).to start_with 'PG::UndefinedColumn: ERROR:  column "no_row" does not exist'
+          expect(json['result'][0]["error"]).to start_with 'ERROR:  column "no_row" does not exist'
         elsif @db_server.mysql? || @db_server.mariadb?
           expect(json['result'][0]["error"]).to start_with "Mysql2::Error: Unknown column 'no_row' in 'field list'"
         end
@@ -778,9 +778,9 @@ RSpec.describe "API::Resources::DbServer" do
 
     end
 
-    describe 'with psql 12' do
+    describe 'with psql 15' do
       before(:all) do
-        config_for(db_version: 'p12', owner_type: @owner_type,
+        config_for(db_version: 'p15', owner_type: @owner_type,
                    read_only_access: @read_only_access)
       end
       after(:all) do

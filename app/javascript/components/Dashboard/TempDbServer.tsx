@@ -264,6 +264,15 @@ export class TempDbServer extends React.Component {
                     </div>
                   </Form>
                 </Grid.Column>
+                <Grid.Column>
+                  <Label as="a" color="teal" ribbon content="Max. returned Rows" />
+                  <Form.Input
+                    required
+                    value={this.dbServer.defaultSqlLimit}
+                    onChange={(e) => (this.dbServer.defaultSqlLimit = parseInt(e.target.value, 10))}
+                    type="number"
+                  />
+                </Grid.Column>
               </Grid.Row>
               <Grid.Row>
                 <Grid.Column>

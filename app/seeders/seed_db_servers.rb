@@ -33,7 +33,7 @@ class SeedDbServers
       { db_type: :psql, username: 'postgres', port: 5009, version: '9.3' },
       { db_type: :psql, username: 'postgres', port: 5010, version: '10' },
       { db_type: :psql, username: 'postgres', port: 5011, version: '11' },
-      { db_type: :psql, username: 'postgres', port: 5012, version: '12' },
+      { db_type: :psql, username: 'postgres', port: 5015, version: '15' },
       { db_type: :mysql, username: 'root', port: 3356, version: '5.6' },
       { db_type: :mysql, username: 'root', port: 3357, version: '5.7' },
       { db_type: :mysql, username: 'root', port: 3380, version: '8.0' },

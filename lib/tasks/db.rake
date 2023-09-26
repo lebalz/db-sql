@@ -36,10 +36,10 @@ namespace :db do
   desc "startup test databases"
   task start_spec_dbs: :environment do
     puts `docker-compose -f #{Rails.root.join('spec', 'docker-compose.yml')} up -d`
-    %w[postgres9 postgres10 postgres11 postgres12].each do |service|
+    %w[postgres9 postgres10 postgres11 postgres15].each do |service|
       print "Waiting for #{service} to start"
       retries = 0
-      until system("docker exec -it spec_#{service}_1 su postgres -c 'psql -c \"SELECT version();\"'", :out => File::NULL)
+      until system("docker exec -it spec-#{service}-1 su postgres -c 'psql -c \"SELECT version();\"'", :out => File::NULL)
         retries += 1
         print '.'
         sleep(1)
@@ -50,7 +50,7 @@ namespace :db do
     %w[mysql5_6 mysql5_7 mysql8].each do |service|
       print "Waiting for #{service} to start"
       retries = 0
-      until system("docker exec -it spec_#{service}_1 mysql -u root --password=safe-db-password -e 'SELECT version();'", :out => File::NULL)
+      until system("docker exec -it spec-#{service}-1 mysql -u root --password=safe-db-password -e 'SELECT version();'", :out => File::NULL)
         retries += 1
         print '.'
         sleep(1)
@@ -61,7 +61,7 @@ namespace :db do
     %w[mariadb10_5].each do |service|
       print "Waiting for #{service} to start"
       retries = 0
-      until system("docker exec -it spec_#{service}_1 mysql -u root --password=safe-db-password -e 'SELECT version();'", :out => File::NULL)
+      until system("docker exec -it spec-#{service}-1 mysql -u root --password=safe-db-password -e 'SELECT version();'", :out => File::NULL)
         retries += 1
         print '.'
         sleep(1)
@@ -74,12 +74,12 @@ namespace :db do
   desc "checks if the test databases are running"
   task check_spec_db_containers_running: :environment do
     # wait until all database services are started up
-    [5009, 5010, 5011, 5012, 3356, 3357, 3380, 3410].each do |port|
+    [5009, 5010, 5011, 5015, 3356, 3357, 3380, 3410].each do |port|
       Socket.tcp('127.0.0.1', port, connect_timeout: 5) do
         true
       end
     rescue StandardError
-      puts "Could not find running databases on ports 5009, 5010, 5011, 5012, 3356, 3357, 3380, 3410"
+      puts "Could not find running databases on ports 5009, 5010, 5011, 5015, 3356, 3357, 3380, 3410"
       puts "Start dbs with 'rake db:start_dbs'"
       puts "or disable the check by setting 'SKIP_DB=1'"
       exit 1

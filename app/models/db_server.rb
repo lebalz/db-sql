@@ -10,6 +10,7 @@ end
 #
 #  id                       :uuid             not null, primary key
 #  db_type                  :integer
+#  default_sql_limit        :integer          default(10000)
 #  error_query_count        :integer          default(0)
 #  host                     :string
 #  initial_db               :string
@@ -259,16 +260,25 @@ class DbServer < ApplicationRecord
           state: :success
         }
       elsif psql?
-        results = []
+        results = [[]]
         error = nil
         begin
           connection.raw_connection.send_query(yield)
-          while result = connection.raw_connection.get_result
+          connection.raw_connection.set_single_row_mode
+          while (result = connection.raw_connection.get_result) &&
+              results.last.length < default_sql_limit
+            if result.ntuples.zero?
+              results << []
+            end
             if result.error_message.empty?
-              results << result
+              results.last << result.first if result.first
             else
               error = result.error_message
             end
+            result.clear until result.cleared?
+          end
+          if results.last.length.zero?
+            results.pop
           end
         rescue StandardError => e
           return {
@@ -286,6 +296,7 @@ class DbServer < ApplicationRecord
         end
         return {
           result: results,
+          limit_reached: results.length >= default_sql_limit,
           state: :success
         }
       end
