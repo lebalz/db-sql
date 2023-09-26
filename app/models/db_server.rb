@@ -296,7 +296,7 @@ class DbServer < ApplicationRecord
         end
         return {
           result: results,
-          limit_reached: results.length >= default_sql_limit,
+          limit_reached: results[0].length >= default_sql_limit,
           state: :success
         }
       end
