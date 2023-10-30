@@ -29,7 +29,7 @@ const DB_CONNECTION_URI_REGEX = /^(?<type>(postgres(ql)?|mysql)):\/\/(?<user>\w+
 export const DEFAULT_DB_SERVER: DbServerProps = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  default_sql_limit: 10000,
+  default_sql_limit: 500,
   owner_type: OwnerType.User,
   owner_id: '',
   db_type: DbType.Psql,
