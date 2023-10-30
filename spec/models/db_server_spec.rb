@@ -6,7 +6,7 @@
 #
 #  id                       :uuid             not null, primary key
 #  db_type                  :integer
-#  default_sql_limit        :integer          default(10000)
+#  default_sql_limit        :integer          default(500)
 #  error_query_count        :integer          default(0)
 #  host                     :string
 #  initial_db               :string

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_09_26_151305) do
+ActiveRecord::Schema.define(version: 2023_10_30_070138) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -75,7 +75,7 @@ ActiveRecord::Schema.define(version: 2023_09_26_151305) do
     t.integer "error_query_count", default: 0
     t.uuid "database_schema_query_id"
     t.uuid "group_id"
-    t.integer "default_sql_limit", default: 10000
+    t.integer "default_sql_limit", default: 500
     t.index ["database_schema_query_id"], name: "index_db_servers_on_database_schema_query_id"
     t.index ["group_id"], name: "index_db_servers_on_group_id"
     t.index ["user_id"], name: "index_db_servers_on_user_id"
