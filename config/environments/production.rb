@@ -114,7 +114,7 @@ Rails.application.configure do
 
   ActionMailer::Base.delivery_method = :smtp
   ActionMailer::Base.smtp_settings = {
-    address: 'smtp-relay.sendinblue.com',
+    address: 'gbsl_fs-info@edubern365.ch',
     port: 587,
     user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_USERNAME],
     password: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_PW],
