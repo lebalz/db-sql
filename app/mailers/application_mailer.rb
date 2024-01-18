@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
 class ApplicationMailer < ActionMailer::Base
-  default from: 'no-reply@db-sql.ch'
+  default from: 'gbsl_fs-info@edubern365.ch'
   layout 'mailer'
 end
