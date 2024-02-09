@@ -114,11 +114,11 @@ Rails.application.configure do
 
   ActionMailer::Base.delivery_method = :smtp
   ActionMailer::Base.smtp_settings = {
-    address: 'gbsl_fs-info@edubern365.ch',
+    address: 'authsmtp.securemail.pro',
     port: 587,
     user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_USERNAME],
     password: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_PW],
-    authentication: :login,
+    authentication: :plain,
     enable_starttls_auto: true
   }
   config.action_mailer.delivery_method = :smtp
