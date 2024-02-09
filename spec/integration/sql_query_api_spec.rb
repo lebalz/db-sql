@@ -123,7 +123,9 @@ RSpec.describe "API::Resources::SqlQuery" do
           post(
             "/api/db_servers/#{@private_db.id}/ninja_turtles_db/multi_query",
             headers: @user1_headers,
-            params: {queries: ['SELECT * FROM ninja_turtles', 'SELECT * FROM fights']}
+            params: {
+              queries: ['SELECT * FROM ninja_turtles;', 'SELECT * FROM fights;']
+            }
           )
           expect(response.successful?).to be_truthy
           expect(SqlQuery.all.size).to be(6)
@@ -141,9 +143,9 @@ RSpec.describe "API::Resources::SqlQuery" do
             headers: @user1_headers,
             params: {
               queries: [
-                'SELECT * FROM ninja_turtles',
-                'SELECT * FROM fighters',
-                'SELECT * FROM fights'
+                'SELECT * FROM ninja_turtles;',
+                'SELECT * FROM fighters;',
+                'SELECT * FROM fights;'
               ],
               proceed_after_error: true
             }
@@ -158,7 +160,8 @@ RSpec.describe "API::Resources::SqlQuery" do
           expect(json[1]['query']).to eq("SELECT * FROM ninja_turtles;\nSELECT * FROM fighters;\nSELECT * FROM fights;")
           expect(json[1]['is_valid']).to be_falsey
 
-          err = 'PG::UndefinedTable: ERROR:  relation "fighters" does not exist'
+          # err = 'PG::UndefinedTable: ERROR:  relation "fighters" does not exist'
+          err = 'ERROR:  relation "fighters" does not exist'
           expect(json[1]['error'][0]['error'].starts_with? err).to be_truthy
           expect(json[1]['error'][0]['query_index']).to be(1)
         end

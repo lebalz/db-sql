@@ -17,6 +17,7 @@ export interface DbServer {
   port: number;
   username: string;
   initial_db?: string;
+  default_sql_limit: number;
   initial_table?: string;
   query_count: number;
   error_query_count: number;
@@ -115,6 +116,7 @@ export enum ResultState {
 export interface Result {
   time: number;
   state: ResultState;
+  limit_reached?: boolean;
 }
 
 interface Response extends Result {
@@ -140,6 +142,7 @@ export interface SkippedQuery extends Result {
 interface SuccessRawQuery extends Response {
   result: ResultTable[];
   state: ResultState.Success;
+  limit_reached?: boolean;
 }
 
 interface MultiQueryResponse extends Response {

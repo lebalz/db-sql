@@ -48,8 +48,13 @@ const TimeLabel = ({result}: {result: Result<MultiQueryResult>}) => {
       label = `${time.toFixed(2)}s`;
       break;
     case ResultState.Success:
-      popup = `Time: ${time}s`;
-      label = `${result.result?.length || 0} in ${time.toFixed(2)}s`;
+      if (result.limitReached) {
+        popup = `Time: ${time}s, the limit of ${result.result?.length || 0} rows was reached. Further rows were not fetched.`;
+        label = `MAX LENGTH* in ${time.toFixed(2)}s`;
+      } else {
+        popup = `Time: ${time}s`;
+        label = `${result.result?.length || 0} in ${time.toFixed(2)}s`;
+      }
       break;
     case ResultState.Skipped:
       popup = `Time: ${time}s`;

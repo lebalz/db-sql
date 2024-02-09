@@ -15,6 +15,7 @@ module Entities
     expose :initial_db
     expose :initial_table
     expose :query_count
+    expose :default_sql_limit
     expose :error_query_count
     expose :database_schema_query_id
     expose :created_at

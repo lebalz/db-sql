@@ -24,12 +24,12 @@ services:
       - 5011:5432
     volumes:
       - ./fixtures/database/psql:/docker-entrypoint-initdb.d
-  postgres12:
-    image: postgres:12
+  postgres15:
+    image: postgres:15.4-bullseye
     environment:
       - POSTGRES_PASSWORD=safe-db-password
     ports:
-      - 5012:5432
+      - 5015:5432
     volumes:
       - ./fixtures/database/psql:/docker-entrypoint-initdb.d
   mysql5_6:

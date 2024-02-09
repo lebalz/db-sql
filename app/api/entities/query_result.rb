@@ -4,6 +4,7 @@ module Entities
   class QueryResult < Grape::Entity
     with_options(expose_nil: false) do
       expose :result
+      expose :limit_reached
       expose :error
       expose :time
       expose :state
