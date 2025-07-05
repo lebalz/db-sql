@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS rubybuild
+FROM ubuntu:24.04 AS rubybuild
 
 # build with
 # docker build . -t lebalz/ubuntu-ruby:latest
@@ -42,15 +42,15 @@ RUN apt-get update && \
     libxslt1-dev \
     libsqlite3-dev
 
-RUN git clone git://github.com/rbenv/ruby-build.git $RUBY_PATH/plugins/ruby-build && \
+RUN git clone https://github.com/rbenv/ruby-build.git $RUBY_PATH/plugins/ruby-build && \
     $RUBY_PATH/plugins/ruby-build/install.sh
 RUN ruby-build $RUBY_VERSION $RUBY_PATH/
 
 # ditch unused dev dependencies
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 ENV RUBY_PATH=/usr/local
 
-ENV PATH $RUBY_PATH/bin:$PATH
+ENV PATH=$RUBY_PATH/bin:$PATH
 RUN apt-get update && \
     apt-get install -y \
     git \
