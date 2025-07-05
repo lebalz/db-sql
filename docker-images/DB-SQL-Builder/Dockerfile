@@ -39,7 +39,13 @@ WORKDIR /app
 RUN echo "# Update bundler" && \
       gem install bundler:2.2.27 --no-document
 
-RUN echo "Install python2" && apt install -y python2 
+RUN echo "Install python2" && wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz && \
+      tar -xzf Python-2.7.18.tgz && \
+      cd Python-2.7.18 && \
+      ./configure --enable-shared && \
+      make -j4 && \
+      make install && \
+      cd .. && rm -rf Python-2.7.18*
 # Install standard Node modules
 COPY package.json yarn.lock /app/
 RUN yarn install
