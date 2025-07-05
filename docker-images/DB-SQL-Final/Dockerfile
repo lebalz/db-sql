@@ -42,8 +42,8 @@ ONBUILD ENV COMMIT_SHA=${COMMIT_SHA}
 ONBUILD ENV COMMIT_TIME=${COMMIT_TIME}
 
 # Add user
-ONBUILD RUN addgroup --system --gid 1000 app && \
-            adduser --system --uid 1000 app --ingroup app
+# ONBUILD RUN addgroup --system --gid 1000 app && \
+#             adduser --system --uid 1000 app --ingroup app
 
 # Copy app with gems from former build stage
 ONBUILD COPY --from=Builder /usr/local/bundle/ /usr/local/bundle/
