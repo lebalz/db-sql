@@ -165,6 +165,7 @@ module Resources
             change.permit(
               :name,
               :db_type,
+              :default_sql_limit,
               :host,
               :port,
               :username,
@@ -299,14 +300,36 @@ module Resources
                 t0 = Time.now
                 begin
                   db_server.increment!(:query_count, 1)
-                  results << {
-                    result: conn.exec_query(key: crypto_key,
+
+                  # results << {
+                  #   result: conn.exec_query(key: crypto_key,
+                  #                           database_name: db_name) do
+                  #             query
+                  #           end.to_a,
+                  #   state: 'success',
+                  #   time: Time.now - t0
+                  # }
+                  res = conn.exec_raw_query(key: crypto_key,
                                             database_name: db_name) do
-                              query
-                            end.to_a,
-                    state: 'success',
-                    time: Time.now - t0
-                  }
+                    query
+                  end
+                  if res[:state] == :success
+                    results << {
+                      result: res[:result][0],
+                      limit_reached: res[:limit_reached],
+                      state: 'success',
+                      time: Time.now - t0
+                    }
+                  else # error
+                    db_server.increment!(:error_query_count, 1)
+                    error_occured = true
+                    sql_query.add_error(query_index: idx, msg: res[:error])
+                    results << {
+                      error: res[:error],
+                      state: 'error',
+                      time: Time.now - t0
+                    }
+                  end
                 rescue StandardError => e
                   db_server.increment!(:error_query_count, 1)
                   error_occured = true

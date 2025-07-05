@@ -35,7 +35,7 @@ module Helpers
     { db_type: :psql, username: 'postgres', port: 5009, version: 'p9.3' },
     { db_type: :psql, username: 'postgres', port: 5010, version: 'p10' },
     { db_type: :psql, username: 'postgres', port: 5011, version: 'p11' },
-    { db_type: :psql, username: 'postgres', port: 5012, version: 'p12' },
+    { db_type: :psql, username: 'postgres', port: 5015, version: 'p15' },
     { db_type: :mysql, username: 'root', port: 3356, version: 'm5.6' },
     { db_type: :mysql, username: 'root', port: 3357, version: 'm5.7' },
     { db_type: :mysql, username: 'root', port: 3380, version: 'm8' },

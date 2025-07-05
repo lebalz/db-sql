@@ -29,6 +29,7 @@ const DB_CONNECTION_URI_REGEX = /^(?<type>(postgres(ql)?|mysql)):\/\/(?<user>\w+
 export const DEFAULT_DB_SERVER: DbServerProps = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  default_sql_limit: 500,
   owner_type: OwnerType.User,
   owner_id: '',
   db_type: DbType.Psql,
@@ -57,6 +58,7 @@ export default class DbServer {
   @observable errorQueryCount: number;
   @observable name: string;
   @observable dbType: DbType;
+  @observable defaultSqlLimit: number;
   @observable host: string;
   @observable port: number;
   @observable username: string;
@@ -85,6 +87,7 @@ export default class DbServer {
     this.ownerType = props.owner_type;
     this.ownerId = props.owner_id;
     this.dbType = props.db_type;
+    this.defaultSqlLimit = props.default_sql_limit;
     this.host = props.host;
     this.port = props.port;
     this.username = props.username;
@@ -140,6 +143,7 @@ export default class DbServer {
       owner_type: this.ownerType,
       owner_id: this.ownerId,
       db_type: this.dbType,
+      default_sql_limit: this.defaultSqlLimit,
       host: this.host,
       port: this.port,
       username: this.username,
@@ -159,6 +163,7 @@ export default class DbServer {
       id: this.id,
       name: this.name,
       db_type: this.dbType,
+      default_sql_limit: this.defaultSqlLimit,
       host: this.host,
       port: this.port,
       username: this.username,

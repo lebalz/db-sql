@@ -57,6 +57,7 @@ FactoryBot.define do
     db_type { :psql }
     host { '127.0.0.1' }
     port { DbServer::DEFAULT_PORT_PSQL }
+    default_sql_limit { 100 }
     username { 'foo' }
     initialization_vector { crypt[:initialization_vector] }
     password_encrypted { crypt[:encrypted_password] }

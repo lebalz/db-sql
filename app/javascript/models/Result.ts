@@ -124,6 +124,10 @@ class Result<ResultData extends ApiResult> {
     return this.data.time;
   }
 
+  get limitReached() {
+    return !!this.data.limit_reached;
+  }
+
   get headers(): string[] | undefined {
     if (!this.result || this.result.length === 0) {
       return;

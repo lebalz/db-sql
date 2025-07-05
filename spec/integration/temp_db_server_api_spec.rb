@@ -306,9 +306,9 @@ RSpec.describe "API::Resources::TempDbServer" do
     include_examples 'common temp database specs'
   end
 
-  describe 'with psql 12' do
+  describe 'with psql 15' do
     before(:all) do
-      temp_db_config_for(db_version: 'p12')
+      temp_db_config_for(db_version: 'p15')
     end
     include_examples 'common temp database specs'
   end
