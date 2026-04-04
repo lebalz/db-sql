@@ -3,10 +3,7 @@
 require 'json'
 
 class API < Grape::API
-
-  # Strings from Redis don't need to be serialized.
-  # In return we must guarantee that strings directly returned in grape
-  # endpoints are valid JSON (--> call #to_json)
+  # Let endpoints return plain JSON strings directly while encoding other objects.
   module JsonFormatter
     def self.call(obj, _env)
       return obj if obj.is_a?(String)
@@ -32,6 +29,7 @@ class API < Grape::API
     disabled_auth = route.settings.dig(:auth, :disabled)
     authenticate unless disabled_auth
   end
+
   helpers do
     def authenticate
       token = request.headers['Authorization']
@@ -66,6 +64,6 @@ class API < Grape::API
   mount Resources::SqlQueries
   mount Resources::OgMeta
 
-  # Keep setup bootable even if grape-swagger integration is incompatible.
+  # Enable docs explicitly to avoid startup breakage from version mismatches.
   add_swagger_documentation if ENV['ENABLE_SWAGGER_DOCS'] == 'true'
 end
