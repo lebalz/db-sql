@@ -1,0 +1,28 @@
+{
+  "name": "DB-SQL Rails 8.1",
+  "image": "mcr.microsoft.com/devcontainers/ruby:4.0",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "forwardPorts": [3000, 3035, 5432, 6379],
+  "postCreateCommand": "bundle install && yarn install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["Shopify.ruby-lsp", "rebornix.Ruby", "misogi.ruby-rubocop", "castwide.solargraph"],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "containerEnv": {
+    "RAILS_ENV": "development",
+    "DATABASE_URL": "db"
+  },
+  "runServices": ["db", "redis"],
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace"
+}

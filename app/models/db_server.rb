@@ -42,7 +42,7 @@ end
 
 class DbServer < ApplicationRecord
   DB_TYPES = %i[psql mysql mariadb].freeze
-  enum db_type: DbServer::DB_TYPES
+  enum :db_type, DB_TYPES
   DEFAULT_PORT_PSQL = 5432
   DEFAULT_PORT_MYSQL = 3306
   DEFAULT_PORT_MARIADB = 3306
@@ -159,27 +159,24 @@ class DbServer < ApplicationRecord
     database_name ||= default_database_name
     return yield @active_connection if @active_connection&.active?
 
-    @connection ||= ActiveRecord::ConnectionAdapters::ConnectionHandler.new
-    @conn_key ||= connection_key(database_name: database_name)
-
     # don't let a user connect to the servers localhost
-    db_host = ENV['RAILS_ENV'] == 'production' && localhost? ? nil : host
-    unless @connection.connected?(@conn_key)
-      @connection.establish_connection({
-        as: :hash,
-        adapter: DEFAULT_AR_DB_ADAPTER[db_type],
-        host: db_host,
-        port: port,
-        username: username,
-        password: password(key),
-        database: database_name,
-        name: @conn_key,
-        flags: ["MULTI_STATEMENTS"],
-        sslmode: :prefer,
-        **db_specific_connection_options
-      }, owner_name: @conn_key)
-    end
-    @active_connection = @connection.retrieve_connection(@conn_key)
+    db_host = Rails.env.production? && localhost? ? nil : host
+
+    @connection_model = Class.new(ActiveRecord::Base) { self.abstract_class = true }
+    @connection_model.connection_specification_name = "external_#{id}_#{SecureRandom.hex(8)}"
+
+    @connection_model.establish_connection(
+      adapter: DEFAULT_AR_DB_ADAPTER[db_type],
+      host: db_host,
+      port: port,
+      username: username,
+      password: password(key),
+      database: database_name,
+      flags: ["MULTI_STATEMENTS"],
+      sslmode: :prefer,
+      **db_specific_connection_options
+    )
+    @active_connection = @connection_model.lease_connection
     yield(@active_connection)
   ensure
     close_connection unless @keep_connection
@@ -196,10 +193,8 @@ class DbServer < ApplicationRecord
   end
 
   def close_connection
-    # ActiveRecord::ConnectionAdapters::ConnectionHandler#remove_connection
-    # will close active connection and the defined connection
-    @connection&.remove_connection_pool(@conn_key)
-    @connection = @conn_key = @active_connection = nil
+    @connection_model&.remove_connection
+    @connection_model = @active_connection = nil
   end
 
   # @param key [String] base64 encoded crypto key from the user
@@ -230,7 +225,7 @@ class DbServer < ApplicationRecord
   # @return [ActiveRecord::Result]
   def exec_query(key:, database_name: nil)
     connect(key: key, database_name: database_name) do |connection|
-      connection.exec_query(yield)
+      connection.select_all(yield)
     end
   end
 
@@ -583,12 +578,6 @@ class DbServer < ApplicationRecord
 
   def default_database_name
     initial_db || DEFAULT_DATABASE_NAME[db_type]
-  end
-
-  # @return [String] unique key for a db connection
-  def connection_key(database_name:)
-    database_name ||= default_database_name
-    "#{id}-#{database_name}-#{DateTime.now.strftime('%Q')}"
   end
 
   # @return [Hash]

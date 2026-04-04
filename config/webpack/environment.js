@@ -1,4 +1,4 @@
-const { environment } = require('@rails/webpacker')
+const { environment } = require('shakapacker');
 
 environment.loaders.append('typescript', {
   test: /\.tsx?$/,
@@ -6,10 +6,9 @@ environment.loaders.append('typescript', {
   loader: 'awesome-typescript-loader'
 });
 
-environment.loaders.append('css', 
-{
-    test: /\.css/,
-    loader: 'style-loader!css-loader'
+environment.loaders.append('css', {
+  test: /\.css/,
+  loader: 'style-loader!css-loader'
 });
 
-module.exports = environment
+module.exports = environment;

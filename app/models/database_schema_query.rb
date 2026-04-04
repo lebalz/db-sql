@@ -27,7 +27,7 @@ class DatabaseSchemaQuery < ApplicationRecord
   has_many :db_servers
   belongs_to :author, class_name: 'User', inverse_of: :database_schema_queries
 
-  enum db_type: DbServer::DB_TYPES
+  enum :db_type, DbServer::DB_TYPES
   validate :only_one_default_by_db_type
   validate :check_not_referenced_when_private
   validate :default_is_not_private
@@ -44,7 +44,9 @@ class DatabaseSchemaQuery < ApplicationRecord
   # @param user [User]
   # @return [DatabaseSchemaQuery::ActiveRecord_Relation]
   def self.available(db_type, user)
-    escaped_id = ActiveRecord::Base.connection.quote(user.id)
+    order_clause = sanitize_sql_array(
+      ["is_default DESC, author_id = %s DESC, updated_at DESC", user.id]
+    )
     DatabaseSchemaQuery
       .where(is_private: false, db_type: db_type)
       .or(
@@ -55,7 +57,7 @@ class DatabaseSchemaQuery < ApplicationRecord
         )
       )
       .order(
-        Arel.sql("is_default DESC, author_id = #{escaped_id} DESC, updated_at DESC")
+        Arel.sql(order_clause)
       )
   end
 
