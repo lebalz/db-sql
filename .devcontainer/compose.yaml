@@ -1,13 +1,14 @@
 services:
-  app:
+  rails-app:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
     volumes:
-      - ..:/workspace:cached
+      - ../..:/workspaces:cached
     command: sleep infinity
     depends_on:
-      - db
+      - postgres
+      - selenium
       - redis
     environment:
       DATABASE_URL: db
@@ -15,8 +16,10 @@ services:
       DB_SQL_DATABASE_PASSWORD: db_sql
       REDIS_URL: redis://redis:6379/1
 
-  db:
-    image: postgres:16
+  postgres:
+    image: postgres:17.2
+    networks:
+      - default
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -25,9 +28,21 @@ services:
       POSTGRES_PASSWORD: db_sql
       POSTGRES_DB: db_sql_development
 
+  selenium:
+    image: selenium/standalone-chromium
+    networks:
+      - default
+    environment:
+      - SCREEN_WIDTH=1280
+      - SCREEN_HEIGHT=800
+      - SE_VNC_NO_PASSWORD=1
+    ports:
+      - 7900:7900
   redis:
-    image: redis:7
-    restart: unless-stopped
+    image: redis:8.2.2
+    volumes:
+      - redis-data:/data
 
 volumes:
   postgres-data:
+  redis-data:

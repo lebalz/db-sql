@@ -1,28 +1,78 @@
+// For format details, see https://containers.dev/implementors/json_reference/.
+// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ruby
 {
-  "name": "DB-SQL Rails 8.1",
-  "image": "mcr.microsoft.com/devcontainers/ruby:4.0",
+  "name": "DB-SQL",
+  "dockerComposeFile": "compose.yaml",
+  "service": "rails-app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
+      "version": "22.19.0"
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/rails/devcontainer/features/activestorage": {},
+    "ghcr.io/rails/devcontainer/features/postgres-client": {
+      "version": "17"
+    },
+    "ghcr.io/code-fabrik/features/dokku-cli:latest": {},
+    "ghcr.io/georglauterbach/dev-container-features/cache-vscode-extensions:0": {}
   },
-  "forwardPorts": [3000, 3035, 5432, 6379],
-  "postCreateCommand": "bundle install && yarn install",
+  "containerEnv": {
+    "DB_HOST": "postgres",
+    "SELENIUM_HOST": "selenium",
+    "REDIS_URL": "redis://redis:6379/1",
+    "GIT_REV": "ae35c5341b88c9244b932528c427e0330608f06f"
+  },
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [3000],
+  // Configure tool-specific properties.
   "customizations": {
     "vscode": {
-      "extensions": ["Shopify.ruby-lsp", "rebornix.Ruby", "misogi.ruby-rubocop", "castwide.solargraph"],
+      "extensions": [
+        "shardulm94.trailing-spaces",
+        "tomoki1207.pdf",
+        "ms-ossdata.vscode-pgsql",
+        "GitHub.copilot"
+      ],
       "settings": {
-        "editor.formatOnSave": true
+        "rubyLsp.rubyVersionManager": {
+          "identifier": "none"
+        },
+        "rubyLsp.formatter": "auto",
+        "editor.formatOnSaveMode": "file",
+        "pgsql.serverGroups": [
+          {
+            "name": "Servers",
+            "id": "A36247BC-2F81-44CA-8371-3748FB5F3D29",
+            "isDefault": true
+          }
+        ],
+        "pgsql.connections": [
+          {
+            "id": "3C1C5DCB-B1E6-443D-B00B-19DF88705087",
+            "groupId": "A36247BC-2F81-44CA-8371-3748FB5F3D29",
+            "authenticationType": "SqlLogin",
+            "connectTimeout": 15,
+            "applicationName": "vscode-pgsql",
+            "clientEncoding": "utf8",
+            "sslmode": "disable",
+            "server": "postgres",
+            "user": "db_sql",
+            "port": "5432",
+            "database": "db_sql_development",
+            "password": "db_sql",
+            "savePassword": true,
+            "profileName": "DB-SQL",
+            "copilotAccessMode": "ro",
+            "expiresOn": 0
+          }
+        ]
       }
     }
   },
-  "containerEnv": {
-    "RAILS_ENV": "development",
-    "DATABASE_URL": "db"
-  },
-  "runServices": ["db", "redis"],
-  "dockerComposeFile": "docker-compose.yml",
-  "service": "app",
-  "workspaceFolder": "/workspace"
+  // Uncomment to connect as root instead. More info: https://containers.dev/implementors/json_reference/#remoteUser.
+  // "remoteUser": "root",
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "bin/setup --skip-server"
 }

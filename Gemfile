@@ -3,9 +3,11 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '4.0.2'
 
-gem 'rails', '~> 8.1.3'
+gem 'mysql2', '~> 0.5.7'
+gem 'observer'
+gem 'ostruct'
 gem 'pg', '~> 1.5'
-gem 'mysql2', '~> 0.5'
+gem 'rails', '~> 8.1.3'
 
 # Use Puma as the app server
 gem 'puma', '>= 6.0'
@@ -26,8 +28,8 @@ gem 'multi_json'
 
 # DSL for writing APIs
 gem 'grape'
-gem 'grape-swagger'
 gem 'grape-entity'
+gem 'grape-swagger'
 
 # Authorization
 gem 'pundit'
@@ -36,15 +38,15 @@ gem 'pundit'
 gem 'sidekiq', '>= 7.0'
 
 # Asset pipeline
-gem 'sprockets-rails'
 gem 'sassc-rails'
 gem 'semantic-ui-sass'
+gem 'sprockets-rails'
 
 # Webpacker successor (maintained fork) for frontend bundling
 gem 'shakapacker'
 
 # Reduces boot times through caching; required in config/boot.rb
-gem 'bootsnap', require: false
+gem 'bootsnap', '>= 1.18.0', require: false
 
 # for http requests
 gem 'http'
@@ -63,7 +65,7 @@ group :development, :test do
 
   gem 'database_cleaner-active_record'
 
-  gem 'sqlite3'
+  gem 'sqlite3', '~> 2.7'
 end
 
 group :development do
@@ -76,4 +78,4 @@ group :development do
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
