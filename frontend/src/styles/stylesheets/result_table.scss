@@ -1,13 +1,17 @@
-@import "colors";
+@use "colors";
+
 .ui.comments.img-comments {
   position: inherit;
+
   .comment {
     position: inherit;
+
     .avatar.comment-avatar-mini {
       width: 4.5em;
       border: 1px solid var(--highlight-grey-50);
       margin-right: 8px;
       border-radius: 8px;
+
       img {
         border-radius: 8px;
       }

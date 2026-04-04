@@ -1,4 +1,4 @@
-@import 'colors';
+@use 'colors';
 
 .dirty::before {
   content: '*';
@@ -7,6 +7,7 @@
   left: 3px;
   z-index: 999;
 }
+
 .dirty-right::before {
   content: '*';
   position: absolute;
@@ -33,6 +34,7 @@
     flex-direction: row;
     justify-content: space-between;
   }
+
   .editable {
     grid-area: editable;
     position: relative;
@@ -41,9 +43,11 @@
   .name {
     grid-area: name;
     position: relative;
+
     .ui.input {
       width: 100%;
-      > input {
+
+      >input {
         padding: 4px 8px;
       }
     }
@@ -75,8 +79,10 @@
     display: flex;
     justify-content: flex-end;
     flex-wrap: wrap;
+
     button {
       flex-basis: 9.5em;
+
       &.toggle-privacy {
         position: relative;
       }
@@ -91,6 +97,7 @@
     margin: 0.5em 0px;
     padding: 1em;
     box-shadow: 0 1px 2px var(--semantic-lightgrey);
+
     .card-labels {
       display: flex;
       flex-direction: row;
@@ -98,6 +105,7 @@
       justify-content: flex-end;
       margin-bottom: 0.4em;
     }
+
     .meta {
       color: gray;
       margin-bottom: 0.4em;
@@ -109,22 +117,27 @@
 .cards-container {
   height: max-content;
   padding: 2px;
+
   .db-sql-card {
     position: relative;
     display: flex;
     width: 100% !important;
+
     .main-label {
       position: absolute;
       top: 4px;
       right: 4px;
       display: flex;
     }
+
     .stats {
       display: flex;
     }
+
     &.active {
       background: var(--highlight-teal-50);
     }
+
     &:hover {
       background: var(--highlight-grey-50) !important;
       -webkit-transform: unset !important;
@@ -138,12 +151,15 @@
     .member {
       display: flex;
       padding: 0.3em;
+
       &:nth-child(even) {
         background: var(--highlight-grey-20);
       }
+
       &:nth-child(odd) {
         background: var(--highlight-grey-10);
       }
+
       &:hover {
         background: var(--highlight-grey-50);
       }
