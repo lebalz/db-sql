@@ -31,11 +31,6 @@ gem 'pundit'
 # For background jobs
 gem 'sidekiq', '>= 7.0'
 
-# Asset pipeline
-gem 'sassc-rails'
-gem 'semantic-ui-sass'
-gem 'sprockets-rails'
-
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.18.0', require: false
 

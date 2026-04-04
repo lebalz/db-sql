@@ -1,4 +1,5 @@
 import 'rc-slider/assets/index.css';
+import 'semantic-ui-css/semantic.min.css';
 import '../styles/stylesheets/application.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';

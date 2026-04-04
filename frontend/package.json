@@ -53,6 +53,7 @@
         "regenerator-runtime": "^0.14.1",
         "sass": "^1.77.8",
         "sass-loader": "^10.5.2",
+        "semantic-ui-css": "^2.5.0",
         "semantic-ui-react": "2.0.3",
         "style-loader": "^2.0.0",
         "tslint": "^6.0.0",
@@ -66,6 +67,7 @@
         "@types/react": "^17.0.3",
         "@webpack-cli/serve": "^3.0.1",
         "antlr4ts-cli": "^0.5.0-alpha.3",
+        "file-loader": "^6.2.0",
         "html-webpack-plugin": "^4.5.2"
     },
     "engines": {

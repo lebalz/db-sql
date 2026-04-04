@@ -30,6 +30,13 @@ module.exports = {
       {
         test: /\.s[ac]ss$/,
         use: ['style-loader', 'css-loader', 'sass-loader']
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg|eot|ttf|woff2?)$/i,
+        loader: 'file-loader',
+        options: {
+          name: 'assets/[name].[ext]'
+        }
       }
     ]
   },
