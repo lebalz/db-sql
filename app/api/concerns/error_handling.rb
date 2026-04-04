@@ -2,18 +2,20 @@
 
 module ErrorHandling
   def self.included(base)
-    return if Rails.env.development?
-
-    # Generate a properly formatted 404 error for all unmatched routes,
-    # except '/'
+    # Generate a consistent API 404 for all unmatched API routes.
     base.route :any, '*path' do
+      status_code = 404
       error!(
         {
-          error: 'Not Found',
-          detail: "No such route '#{request.path}'",
-          status: '404'
+          error: {
+            code: 'route_not_found',
+            message: 'The requested API route does not exist',
+            path: request.path
+          },
+          status: status_code,
+          timestamp: Time.current.iso8601
         },
-        404
+        status_code
       )
     end
 
