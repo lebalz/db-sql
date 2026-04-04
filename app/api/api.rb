@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 
-Oj.optimize_rails
-
-require_relative 'concerns/error_handling'
-require_relative 'entities'
-Dir[File.expand_path('entities/*.rb', __dir__)].sort.each { |f| require f }
-require_relative 'resources'
-Dir[File.expand_path('resources/*.rb', __dir__)].sort.each { |f| require f }
+require 'json'
 
 class API < Grape::API
 
@@ -17,7 +11,7 @@ class API < Grape::API
     def self.call(obj, _env)
       return obj if obj.is_a?(String)
 
-      MultiJson.dump(obj)
+      JSON.generate(obj)
     end
   end
 

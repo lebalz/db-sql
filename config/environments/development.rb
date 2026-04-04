@@ -61,8 +61,7 @@ Rails.application.configure do
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 
-  ActionMailer::Base.delivery_method = :smtp
-  ActionMailer::Base.smtp_settings = {
+  config.action_mailer.smtp_settings = {
     address: 'localhost',
     port: 1025,
     domain: 'db-sql.ch'

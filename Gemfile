@@ -20,12 +20,6 @@ gem 'bcrypt', '~> 3.1'
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem 'rack-cors', require: 'rack/cors'
 
-# for faster JSON parsing/encoding
-gem 'oj'
-
-# A generic swappable back-end for JSON handling
-gem 'multi_json'
-
 # DSL for writing APIs
 gem 'grape'
 gem 'grape-entity'

@@ -90,8 +90,7 @@ Rails.application.configure do
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 
-  ActionMailer::Base.delivery_method = :smtp
-  ActionMailer::Base.smtp_settings = {
+  config.action_mailer.smtp_settings = {
     address: 'authsmtp.securemail.pro',
     port: 587,
     user_name: (Rails.application.credentials[Rails.env.to_sym] || {})[:SMTP_USERNAME],
