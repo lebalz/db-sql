@@ -2,6 +2,7 @@
 
 class SeedDbServers
   def self.perform
+    connection_config = ActiveRecord::Base.connection_db_config.configuration_hash
     user = User.find_by(email: 'test@user.ch')
     encrypted_password = DbServer.encrypt(
       key: user.crypto_key('asdfasdf'),
@@ -10,12 +11,12 @@ class SeedDbServers
     DbServer.create!(
       name: 'dev',
       db_type: :psql,
-      host: ActiveRecord::Base.connection_config[:host],
+      host: connection_config[:host],
       port: 5432,
       initialization_vector: encrypted_password[:initialization_vector],
       username: Rails.configuration.database_configuration[Rails.env]['username'],
       password_encrypted: encrypted_password[:encrypted_password],
-      initial_db: ActiveRecord::Base.connection_config[:database],
+      initial_db: connection_config[:database],
       user: user,
       database_schema_query: DatabaseSchemaQuery.default(:psql)
     )

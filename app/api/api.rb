@@ -2,6 +2,12 @@
 
 Oj.optimize_rails
 
+require_relative 'concerns/error_handling'
+require_relative 'entities'
+Dir[File.expand_path('entities/*.rb', __dir__)].sort.each { |f| require f }
+require_relative 'resources'
+Dir[File.expand_path('resources/*.rb', __dir__)].sort.each { |f| require f }
+
 class API < Grape::API
 
   # Strings from Redis don't need to be serialized.
@@ -21,7 +27,6 @@ class API < Grape::API
 
   include ErrorHandling
   helpers Pundit
-
 
   # This before block has to be run after the route error handling blocks
   before do
@@ -65,12 +70,8 @@ class API < Grape::API
   mount Resources::DatabaseSchemaQueries
   mount Resources::Groups
   mount Resources::SqlQueries
-  mount Resources::OGMeta
+  mount Resources::OgMeta
 
-  # This needs to happen at the very end of this file.
-  add_swagger_documentation(
-    info: {
-      title: "DB SQL"
-    }
-  )
+  # Keep setup bootable even if grape-swagger integration is incompatible.
+  add_swagger_documentation if ENV['ENABLE_SWAGGER_DOCS'] == 'true'
 end
