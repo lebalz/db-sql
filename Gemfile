@@ -36,9 +36,6 @@ gem 'sassc-rails'
 gem 'semantic-ui-sass'
 gem 'sprockets-rails'
 
-# Webpacker successor (maintained fork) for frontend bundling
-gem 'shakapacker'
-
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.18.0', require: false
 
