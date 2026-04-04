@@ -26,7 +26,8 @@ class API < Grape::API
     header['Access-Control-Allow-Methods'] = http_methods
     header['Access-Control-Allow-Headers'] = '*'
     header['Access-Control-Request-Method'] = '*'
-    disabled_auth = route.settings.dig(:auth, :disabled)
+    disabled_auth = route.settings.dig(:auth,
+                                       :disabled) || request.path.include?('/swagger_doc')
     authenticate unless disabled_auth
   end
 
@@ -64,6 +65,7 @@ class API < Grape::API
   mount Resources::SqlQueries
   mount Resources::OgMeta
 
-  # Enable docs explicitly to avoid startup breakage from version mismatches.
-  add_swagger_documentation if ENV['ENABLE_SWAGGER_DOCS'] == 'true'
+  if Rails.env.development? || Rails.env.test? || ENV['ENABLE_SWAGGER_DOCS'] == 'true'
+    add_swagger_documentation
+  end
 end
