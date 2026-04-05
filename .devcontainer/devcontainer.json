@@ -1,14 +1,12 @@
-// For format details, see https://containers.dev/implementors/json_reference/.
-// For config options, see the README at: https://github.com/devcontainers/templates/tree/main/src/ruby
 {
-  "name": "DB-SQL",
+  "name": "DB-SQL Monorepo",
   "dockerComposeFile": "compose.yaml",
-  "service": "rails-app",
+  "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  // Features to add to the dev container. More info: https://containers.dev/features.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "22.19.0"
+      "version": "16"
     },
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/rails/devcontainer/features/activestorage": {},
@@ -21,12 +19,20 @@
   "containerEnv": {
     "DB_HOST": "postgres",
     "SELENIUM_HOST": "selenium",
-    "REDIS_URL": "redis://redis:6379/1",
-    "GIT_REV": "ae35c5341b88c9244b932528c427e0330608f06f"
+    "REDIS_URL": "redis://redis:6379/1"
   },
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [3000],
-  // Configure tool-specific properties.
+  "forwardPorts": [3000, 3035, 7900],
+  "portsAttributes": {
+    "3000": {
+      "label": "Rails API"
+    },
+    "3035": {
+      "label": "React Dev Server"
+    },
+    "7900": {
+      "label": "Selenium VNC"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -71,8 +77,5 @@
       }
     }
   },
-  // Uncomment to connect as root instead. More info: https://containers.dev/implementors/json_reference/#remoteUser.
-  // "remoteUser": "root",
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "bin/setup --skip-server"
+  "postCreateCommand": "cd backend && bin/setup --skip-server && yarn install && cd ../frontend && yarn install"
 }

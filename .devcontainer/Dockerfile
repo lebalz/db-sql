@@ -1,4 +1,4 @@
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version
+# Make sure RUBY_VERSION matches the Ruby version in backend/.ruby-version
 ARG RUBY_VERSION=4.0.2
 FROM ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION
 
