@@ -3,7 +3,6 @@
   "dockerComposeFile": "compose.yaml",
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "16"
@@ -77,5 +76,5 @@
       }
     }
   },
-  "postCreateCommand": "cd backend && bin/setup --skip-server && yarn install && cd ../frontend && yarn install"
+  "postCreateCommand": "(cd backend && bin/setup --skip-server) && (cd frontend && yarn install)"
 }

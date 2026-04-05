@@ -1,8 +1,11 @@
+name: "db-sql"
 services:
   app:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
     command: sleep infinity
     depends_on:
       - postgres
